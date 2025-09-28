@@ -1,8 +1,9 @@
 {
-  "name": "client",
-  "private": true,
-  "version": "0.0.0",
+  "name": "dentify-client",
+  "description": "Dental Practice Management System - Frontend",
+  "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
