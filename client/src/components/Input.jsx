@@ -30,8 +30,7 @@ const Input = forwardRef(({
             block w-full rounded-lg border border-gray-300 px-3 py-3 text-sm
             placeholder-gray-500 shadow-sm transition-all duration-200
             focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20
-            ${Icon ? 'pl-10' : 'pl-3'}
-            ${type === 'password' || placeholder?.toLowerCase().includes('password') ? 'pr-10' : 'pr-3'}
+            ${Icon ? 'pl-10 pr-3' : 'px-3'}
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
           `}
           {...props}

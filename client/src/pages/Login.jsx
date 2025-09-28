@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaEnvelope, FaLock } from 'react-icons/fa'
 import Logo from '../components/Logo'
 import Button from '../components/Button'
 import Input from '../components/Input'
@@ -11,7 +11,6 @@ const Login = () => {
     email: '',
     password: ''
   })
-  const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
 
   const handleInputChange = (e) => {
@@ -79,25 +78,16 @@ const Login = () => {
               />
 
               {/* Password Input */}
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  error={errors.password}
-                  icon={FaLock}
-                />
-                <button
-                  type="button"
-                  className="absolute right-2 top-11 p-1.5 text-gray-400 hover:text-teal-600 transition-colors duration-200 focus:outline-none focus:text-teal-600 rounded hover:bg-gray-50"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FaEyeSlash className="h-4 w-4" /> : <FaEye className="h-4 w-4" />}
-                </button>
-              </div>
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                icon={FaLock}
+              />
 
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">

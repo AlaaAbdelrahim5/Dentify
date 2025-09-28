@@ -1,23 +1,58 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FaUser, FaEnvelope, FaLock, FaPhone, FaCalendarAlt, FaMapMarkerAlt, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa'
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaCalendarAlt, FaMapMarkerAlt, FaCheck } from 'react-icons/fa'
 import Logo from '../components/Logo'
 import Button from '../components/Button'
 import Input from '../components/Input'
+import Select from '../components/Select'
+import PhoneInput from '../components/PhoneInput'
 import Card from '../components/Card'
 
 const SignUp = () => {
+  // Palestinian cities list (alphabetically sorted)
+  const palestinianCities = [
+    { value: 'acre', label: 'Acre (Akka)' },
+    { value: 'al_bireh', label: 'Al-Bireh' },
+    { value: 'beersheba', label: 'Beersheba (Bir as-Saba)' },
+    { value: 'beit_hanoun', label: 'Beit Hanoun' },
+    { value: 'beit_jala', label: 'Beit Jala' },
+    { value: 'beit_lahia', label: 'Beit Lahia' },
+    { value: 'beit_sahour', label: 'Beit Sahour' },
+    { value: 'bethlehem', label: 'Bethlehem (Beit Lahm)' },
+    { value: 'deir_al_balah', label: 'Deir al-Balah' },
+    { value: 'gaza', label: 'Gaza' },
+    { value: 'haifa', label: 'Haifa' },
+    { value: 'hebron', label: 'Hebron (Al-Khalil)' },
+    { value: 'jabalya', label: 'Jabalya' },
+    { value: 'jaffa', label: 'Jaffa (Yafa)' },
+    { value: 'jenin', label: 'Jenin' },
+    { value: 'jericho', label: 'Jericho (Ariha)' },
+    { value: 'jerusalem', label: 'Jerusalem (Al-Quds)' },
+    { value: 'khan_yunis', label: 'Khan Yunis' },
+    { value: 'lydd', label: 'Lydd (Al-Ludd)' },
+    { value: 'nablus', label: 'Nablus' },
+    { value: 'nazareth', label: 'Nazareth (An-Nasira)' },
+    { value: 'qalqilya', label: 'Qalqilya' },
+    { value: 'rafah', label: 'Rafah' },
+    { value: 'ramallah', label: 'Ramallah' },
+    { value: 'ramla', label: 'Ramla (Ar-Ramla)' },
+    { value: 'safad', label: 'Safad' },
+    { value: 'salfit', label: 'Salfit' },
+    { value: 'tiberias', label: 'Tiberias (Tabariyyah)' },
+    { value: 'tubas', label: 'Tubas' },
+    { value: 'tulkarm', label: 'Tulkarm' }
+  ]
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
+    countryCode: '+970', // Default to Palestine
+    phoneNumber: '',
     dateOfBirth: '',
-    address: '',
+    city: '',
     password: '',
     confirmPassword: ''
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
@@ -37,6 +72,37 @@ const SignUp = () => {
     }
   }
 
+  const handleCountryCodeChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      countryCode: e.target.value
+    }))
+    
+    // Clear phone error when country code changes
+    if (errors.phone) {
+      setErrors(prev => ({
+        ...prev,
+        phone: ''
+      }))
+    }
+  }
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '') // Remove non-digits
+    setFormData(prev => ({
+      ...prev,
+      phoneNumber: value
+    }))
+    
+    // Clear phone error when user starts typing
+    if (errors.phone) {
+      setErrors(prev => ({
+        ...prev,
+        phone: ''
+      }))
+    }
+  }
+
   const validateForm = () => {
     const newErrors = {}
     
@@ -44,9 +110,10 @@ const SignUp = () => {
     if (!formData.email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
     
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.phoneNumber) newErrors.phone = 'Phone number is required'
+    else if (formData.phoneNumber.length < 7) newErrors.phone = 'Phone number must be at least 7 digits'
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required'
-    if (!formData.address.trim()) newErrors.address = 'Address is required'
+    if (!formData.city) newErrors.city = 'Please select your city'
     
     if (!formData.password) newErrors.password = 'Password is required'
     else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters'
@@ -70,7 +137,11 @@ const SignUp = () => {
     }
 
     // Handle signup logic here
-    console.log('Signup attempt:', formData)
+    const fullPhoneNumber = `${formData.countryCode}${formData.phoneNumber}`
+    console.log('Signup attempt:', { 
+      ...formData, 
+      fullPhone: fullPhoneNumber 
+    })
   }
 
   const passwordStrength = () => {
@@ -142,13 +213,13 @@ const SignUp = () => {
               />
 
               {/* Phone */}
-              <Input
+              <PhoneInput
                 label="Phone Number"
-                type="tel"
-                name="phone"
+                countryCode={formData.countryCode}
+                phoneNumber={formData.phoneNumber}
+                onCountryChange={handleCountryCodeChange}
+                onPhoneChange={handlePhoneNumberChange}
                 placeholder="Enter your phone number"
-                value={formData.phone}
-                onChange={handleInputChange}
                 error={errors.phone}
                 icon={FaPhone}
               />
@@ -164,90 +235,72 @@ const SignUp = () => {
                 icon={FaCalendarAlt}
               />
 
-              {/* Address */}
-              <Input
-                label="Address"
-                type="text"
-                name="address"
-                placeholder="Enter your address"
-                value={formData.address}
+              {/* City Selection */}
+              <Select
+                label="City"
+                name="city"
+                placeholder="Select your city"
+                options={palestinianCities}
+                value={formData.city}
                 onChange={handleInputChange}
-                error={errors.address}
+                error={errors.city}
                 icon={FaMapMarkerAlt}
               />
 
               {/* Password */}
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  error={errors.password}
-                  icon={FaLock}
-                />
-                <button
-                  type="button"
-                  className="absolute right-2 top-11 p-1.5 text-gray-400 hover:text-teal-600 transition-colors duration-200 focus:outline-none focus:text-teal-600 rounded hover:bg-gray-50"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FaEyeSlash className="h-4 w-4" /> : <FaEye className="h-4 w-4" />}
-                </button>
-                
-                {/* Password Strength Indicator */}
-                {formData.password && (
-                  <div className="mt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${passwordInfo.color}`}
-                          style={{ width: `${(passwordInfo.strength / 5) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-gray-600">{passwordInfo.text}</span>
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                placeholder="Create a strong password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={errors.password}
+                icon={FaLock}
+              />
+              
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${passwordInfo.color}`}
+                        style={{ width: `${(passwordInfo.strength / 5) * 100}%` }}
+                      ></div>
                     </div>
+                    <span className="text-xs text-gray-600">{passwordInfo.text}</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Confirm Password */}
-              <div className="relative">
-                <Input
-                  label="Confirm Password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  error={errors.confirmPassword}
-                  icon={FaLock}
-                />
-                <button
-                  type="button"
-                  className="absolute right-2 top-11 p-1.5 text-gray-400 hover:text-teal-600 transition-colors duration-200 focus:outline-none focus:text-teal-600 rounded hover:bg-gray-50"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <FaEyeSlash className="h-4 w-4" /> : <FaEye className="h-4 w-4" />}
-                </button>
-                
-                {/* Password Match Indicator */}
-                {formData.confirmPassword && formData.password && (
-                  <div className="mt-2">
-                    {formData.password === formData.confirmPassword ? (
-                      <div className="flex items-center gap-2 text-green-600 text-sm">
-                        <FaCheck className="text-xs" />
-                        <span>Passwords match</span>
-                      </div>
-                    ) : (
-                      <div className="text-red-600 text-sm">
-                        Passwords do not match
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <Input
+                label="Confirm Password"
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={errors.confirmPassword}
+                icon={FaLock}
+              />
+              
+              {/* Password Match Indicator */}
+              {formData.confirmPassword && formData.password && (
+                <div className="mt-2">
+                  {formData.password === formData.confirmPassword ? (
+                    <div className="flex items-center gap-2 text-green-600 text-sm">
+                      <FaCheck className="text-xs" />
+                      <span>Passwords match</span>
+                    </div>
+                  ) : (
+                    <div className="text-red-600 text-sm">
+                      Passwords do not match
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Terms and Conditions */}
               <div>
