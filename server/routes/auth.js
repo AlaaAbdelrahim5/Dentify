@@ -1,5 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
+const { generateTokens, verifyToken } = require('../utils/jwt');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -73,11 +75,15 @@ router.post('/signup', async (req, res) => {
 
     const savedUser = await newUser.save();
 
+    // Generate JWT tokens
+    const tokens = generateTokens(savedUser);
+
     // Return success response (password will be excluded by toJSON method)
     res.status(201).json({
       success: true,
       message: 'Account created successfully! Welcome to Dentify.',
-      user: savedUser
+      user: savedUser,
+      tokens
     });
 
   } catch (error) {
@@ -155,10 +161,14 @@ router.post('/login', async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
+    // Generate JWT tokens
+    const tokens = generateTokens(user);
+
     res.json({
       success: true,
       message: 'Login successful',
-      user: user // Password will be excluded by toJSON method
+      user: user, // Password will be excluded by toJSON method
+      tokens
     });
 
   } catch (error) {
@@ -194,6 +204,121 @@ router.post('/check-email', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+});
+
+// Refresh token route
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token is required'
+      });
+    }
+
+    // Verify refresh token
+    const decoded = verifyToken(refreshToken);
+    
+    // Get user from database
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid refresh token'
+      });
+    }
+
+    // Generate new tokens
+    const tokens = generateTokens(user);
+
+    res.json({
+      success: true,
+      message: 'Tokens refreshed successfully',
+      tokens
+    });
+
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired refresh token'
+    });
+  }
+});
+
+// Logout route (optional - for token blacklisting if needed)
+router.post('/logout', authenticate, async (req, res) => {
+  try {
+    // In a more advanced implementation, you might want to blacklist the token
+    // For now, we'll just return success as the client should remove the token
+    
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Logout failed'
+    });
+  }
+});
+
+// Get current user route (protected)
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user information'
+    });
+  }
+});
+
+// Verify token route
+router.post('/verify', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      });
+    }
+
+    const decoded = verifyToken(token);
+    
+    // Get user to ensure they still exist and are active
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    res.json({
+      success: true,
+      valid: true,
+      user
+    });
+
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      valid: false,
+      message: 'Invalid or expired token'
     });
   }
 });

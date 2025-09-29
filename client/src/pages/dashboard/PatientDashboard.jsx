@@ -26,20 +26,27 @@ const PatientDashboard = () => {
 
   // Check authentication and get user data
   useEffect(() => {
-    const user = authUtils.getCurrentUser()
-    if (!user) {
-      // If no user is logged in, redirect to login
-      navigate('/login', { replace: true })
-      return
-    }
-    setCurrentUser(user)
+    const checkAuth = async () => {
+      const isAuthenticated = await authUtils.isAuthenticated()
+      
+      if (!isAuthenticated) {
+        // If not authenticated, redirect to login
+        navigate('/login', { replace: true })
+        return
+      }
+      
+      const user = authUtils.getCurrentUser()
+      setCurrentUser(user)
 
-    // Check for welcome message from login
-    if (location.state?.message) {
-      setWelcomeMessage(location.state.message)
-      // Clear the message after 5 seconds
-      setTimeout(() => setWelcomeMessage(''), 5000)
+      // Check for welcome message from login
+      if (location.state?.message) {
+        setWelcomeMessage(location.state.message)
+        // Clear the message after 5 seconds
+        setTimeout(() => setWelcomeMessage(''), 5000)
+      }
     }
+
+    checkAuth()
   }, [navigate, location.state])
 
   const handleLogout = () => {

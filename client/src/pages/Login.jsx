@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { Logo, Button, Input, Card, LoadingSpinner } from "../components";
 import { authAPI } from "../services/api";
+import { authUtils } from "../utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -77,14 +78,8 @@ const Login = () => {
       });
 
       if (response.success) {
-        // Store user data in localStorage if remember me is checked
-        if (rememberMe) {
-          localStorage.setItem("dentify_user", JSON.stringify(response.user));
-          localStorage.setItem("dentify_remember", "true");
-        } else {
-          // Store in sessionStorage for session-only login
-          sessionStorage.setItem("dentify_user", JSON.stringify(response.user));
-        }
+        // Store user data and tokens using auth utils
+        authUtils.login(response.user, response.tokens, rememberMe);
 
         // Clear any existing error states
         setApiError("");
@@ -184,24 +179,43 @@ const Login = () => {
               />
 
               {/* Password Input with Toggle */}
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  error={errors.password}
-                  icon={FaLock}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className={`
+                  relative flex items-center rounded-lg border shadow-sm transition-all duration-200
+                  ${errors.password 
+                    ? 'border-red-300 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:ring-opacity-20' 
+                    : 'border-gray-300 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-opacity-20'
+                  }
+                `}>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaLock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="flex-1 block w-full border-0 pl-10 pr-3 py-3 text-sm placeholder-gray-500 focus:ring-0 focus:outline-none bg-transparent rounded-l-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="px-3 py-3 text-gray-400 hover:text-teal-600 focus:outline-none transition-colors duration-200 rounded-r-lg"
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="h-5 w-5" />
+                    ) : (
+                      <FaEye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
 
               {/* Remember Me & Forgot Password */}

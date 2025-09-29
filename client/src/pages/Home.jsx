@@ -204,7 +204,7 @@ const Home = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="secondary" size="xl" className="bg-white text-teal-600 hover:bg-gray-50">
-                  <Link to="/signup">Start Free Trial</Link>
+                  <Link to="/signup">Create Account</Link>
                 </Button>
                 <Button variant="ghost" size="xl" className="text-white border-white hover:bg-white/10">
                   <Link to="/login">Sign In Now</Link>
