@@ -1,7 +1,7 @@
 {
-  "name": "arabic-server",
+  "name": "dentify-server",
   "version": "1.0.0",
-  "description": "Server for Arabic application",
+  "description": "Server for Dentify application",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
