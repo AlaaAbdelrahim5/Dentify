@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { 
   FaCalendarAlt, 
   FaTooth, 
@@ -10,16 +10,42 @@ import {
   FaExclamationTriangle,
   FaBell,
   FaSearch,
-  FaFilter
+  FaFilter,
+  FaSignOutAlt
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
-import Logo from '../../components/Logo'
-import Card from '../../components/Card'
-import Button from '../../components/Button'
-import Input from '../../components/Input'
+import { Logo, Card, Button, Input } from '../../components'
+import { authUtils } from '../../utils/auth'
 
 const PatientDashboard = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState('appointments')
+  const [currentUser, setCurrentUser] = useState(null)
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+
+  // Check authentication and get user data
+  useEffect(() => {
+    const user = authUtils.getCurrentUser()
+    if (!user) {
+      // If no user is logged in, redirect to login
+      navigate('/login', { replace: true })
+      return
+    }
+    setCurrentUser(user)
+
+    // Check for welcome message from login
+    if (location.state?.message) {
+      setWelcomeMessage(location.state.message)
+      // Clear the message after 5 seconds
+      setTimeout(() => setWelcomeMessage(''), 5000)
+    }
+  }, [navigate, location.state])
+
+  const handleLogout = () => {
+    authUtils.logout()
+    navigate('/login', { replace: true })
+  }
 
   // Sample data
   const upcomingAppointments = [
@@ -95,6 +121,18 @@ const PatientDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
+      {/* Welcome Message */}
+      {welcomeMessage && (
+        <div className="bg-green-50 border-b border-green-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3">
+              <FaCheckCircle className="text-green-600" />
+              <p className="text-green-800 font-medium">{welcomeMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,9 +152,22 @@ const PatientDashboard = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">JD</span>
+                  <span className="text-white text-sm font-medium">
+                    {currentUser ? authUtils.getUserInitials() : 'U'}
+                  </span>
                 </div>
-                <span className="hidden md:block text-sm font-medium text-gray-700">John Doe</span>
+                <span className="hidden md:block text-sm font-medium text-gray-700">
+                  {currentUser ? authUtils.getUserName() : 'User'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-gray-500 hover:text-red-600"
+                  title="Logout"
+                >
+                  <FaSignOutAlt />
+                </Button>
               </div>
             </div>
           </div>
@@ -126,7 +177,9 @@ const PatientDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {currentUser ? currentUser.fullName.split(' ')[0] : 'User'}!
+          </h1>
           <p className="text-gray-600">Here's an overview of your dental care journey.</p>
         </div>
 
