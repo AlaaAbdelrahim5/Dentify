@@ -47,11 +47,20 @@ export const authUtils = {
     try {
       // Check localStorage first (remember me)
       let token = localStorage.getItem(authUtils.ACCESS_TOKEN_KEY);
-      if (token) return token;
+      if (token) {
+        console.log('Access token found in localStorage');
+        return token;
+      }
 
       // Check sessionStorage (session only)
       token = sessionStorage.getItem(authUtils.ACCESS_TOKEN_KEY);
-      return token;
+      if (token) {
+        console.log('Access token found in sessionStorage');
+        return token;
+      }
+      
+      console.log('No access token found');
+      return null;
     } catch (error) {
       console.error('Error getting access token:', error);
       return null;
@@ -89,18 +98,24 @@ export const authUtils = {
   },
   setTokens: (tokens, remember = false) => {
     try {
+      console.log('Setting tokens:', { hasAccess: !!tokens.accessToken, hasRefresh: !!tokens.refreshToken, remember });
       const storage = remember ? localStorage : sessionStorage;
       
       if (tokens.accessToken) {
         storage.setItem(authUtils.ACCESS_TOKEN_KEY, tokens.accessToken);
+        console.log('Access token stored in:', remember ? 'localStorage' : 'sessionStorage');
       }
       
       if (tokens.refreshToken) {
         storage.setItem(authUtils.REFRESH_TOKEN_KEY, tokens.refreshToken);
+        console.log('Refresh token stored in:', remember ? 'localStorage' : 'sessionStorage');
       }
 
       if (remember) {
         localStorage.setItem(authUtils.REMEMBER_KEY, 'true');
+        console.log('Remember preference saved');
+      } else {
+        localStorage.removeItem(authUtils.REMEMBER_KEY);
       }
     } catch (error) {
       console.error('Error setting tokens:', error);
@@ -164,9 +179,11 @@ export const authUtils = {
 
   // Login user with tokens
   login: (user, tokens, remember = false) => {
+    console.log('Auth utils login called:', { user: user?.email, tokens: !!tokens, remember });
     authUtils.setRememberMe(remember);
     authUtils.setUser(user, remember);
     authUtils.setTokens(tokens, remember);
+    console.log('Login complete, tokens stored in:', remember ? 'localStorage' : 'sessionStorage');
   },
 
   // Logout user
@@ -187,17 +204,28 @@ export const authUtils = {
 
   // Initialize authentication state (call on app startup)
   initializeAuth: async () => {
+    console.log('Initializing auth...');
     const token = authUtils.getAccessToken();
     const refreshToken = authUtils.getRefreshToken();
     const user = authUtils.getCurrentUser();
+    const shouldRemember = authUtils.shouldRemember();
+    
+    console.log('Auth state check:', { 
+      hasToken: !!token, 
+      hasRefreshToken: !!refreshToken, 
+      hasUser: !!user, 
+      shouldRemember 
+    });
 
     if (!user) {
+      console.log('No user found, logging out');
       authUtils.logout();
       return false;
     }
 
     if (!token) {
       if (refreshToken) {
+        console.log('No access token, trying to refresh...');
         // Try to refresh the token
         try {
           const response = await fetch('http://localhost:5000/api/auth/refresh', {
@@ -211,10 +239,12 @@ export const authUtils = {
           const data = await response.json();
           
           if (data.success) {
+            console.log('Token refresh successful');
             const remember = authUtils.shouldRemember();
             authUtils.setTokens(data.tokens, remember);
             return true;
           } else {
+            console.log('Token refresh failed:', data.message);
             authUtils.logout();
             return false;
           }
@@ -224,11 +254,13 @@ export const authUtils = {
           return false;
         }
       } else {
+        console.log('No refresh token available, logging out');
         authUtils.logout();
         return false;
       }
     }
 
+    console.log('Auth initialization successful');
     return true;
   },
 
