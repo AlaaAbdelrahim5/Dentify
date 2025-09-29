@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FaTooth, FaHome, FaArrowLeft } from 'react-icons/fa'
-import Button from '../components/Button'
-import Card from '../components/Card'
+import { Button, Card } from '../components'
 
 const NotFound = () => {
   return (

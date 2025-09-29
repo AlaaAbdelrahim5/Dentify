@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck } from 'react-icons/fa'
 import { MdDashboard, MdSchedule, MdMedicalServices } from 'react-icons/md'
-import Navbar from '../components/Navbar'
-import Button from '../components/Button'
-import Card from '../components/Card'
-import Logo from '../components/Logo'
+import { Navbar, Button, Card, Logo } from '../components'
 
 const Home = () => {
   const features = [
