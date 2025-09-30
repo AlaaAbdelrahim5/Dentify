@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
   FaHospital, 
   FaPlus, 
@@ -20,6 +20,7 @@ import ClinicModal from './ClinicModal'
 const ClinicsManagement = () => {
   const [clinics, setClinics] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -28,6 +29,9 @@ const ClinicsManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedClinic, setSelectedClinic] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const searchTimeoutRef = useRef(null)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -47,15 +51,20 @@ const ClinicsManagement = () => {
   ]
 
   // Fetch clinics
-  const fetchClinics = async () => {
+  const fetchClinics = async (isFiltering = false) => {
     try {
-      setLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setLoading(true)
+      }
+      
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
       const params = new URLSearchParams({
         page: currentPage,
         limit: 10,
-        ...(searchTerm && { search: searchTerm }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
         ...(filterCity && { city: filterCity }),
         ...(filterStatus && { isActive: filterStatus })
       })
@@ -76,7 +85,11 @@ const ClinicsManagement = () => {
     } catch (error) {
       console.error('Error fetching clinics:', error)
     } finally {
-      setLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setLoading(false)
+      }
     }
   }
 
@@ -105,7 +118,32 @@ const ClinicsManagement = () => {
   useEffect(() => {
     fetchClinics()
     fetchStats()
-  }, [currentPage, searchTerm, filterCity, filterStatus])
+    setIsFirstLoad(false)
+  }, [])
+
+  // Debounce search term
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300) // 300ms delay
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
+
+  // Separate effect for filtering that doesn't show full page loading
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchClinics(true) // Pass true to indicate this is filtering
+    }
+  }, [currentPage, debouncedSearchTerm, filterCity, filterStatus, isFirstLoad])
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
@@ -154,7 +192,7 @@ const ClinicsManagement = () => {
   const handleClinicSave = (savedClinic, action) => {
     if (action === 'created') {
       // Refresh the list to show new clinic
-      fetchClinics()
+      fetchClinics(true) // Use filtering state instead of full loading
       fetchStats()
     } else if (action === 'updated') {
       // Update the clinic in the current list
@@ -279,14 +317,21 @@ const ClinicsManagement = () => {
               placeholder="Search for clinic..."
               value={searchTerm}
               onChange={handleSearch}
-              className="pl-10"
+              className="pl-10 pr-8"
+              disabled={filtering}
             />
+            {searchTerm !== debouncedSearchTerm && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
           </div>
 
           <select
             value={filterCity}
             onChange={handleCityFilter}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            disabled={filtering}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
           >
             <option value="">All Cities</option>
             {cities.map(city => (
@@ -297,7 +342,8 @@ const ClinicsManagement = () => {
           <select
             value={filterStatus}
             onChange={handleStatusFilter}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            disabled={filtering}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
           >
             <option value="">All Status</option>
             <option value="true">Active</option>
@@ -307,22 +353,34 @@ const ClinicsManagement = () => {
           <Button
             onClick={() => {
               setSearchTerm('')
+              setDebouncedSearchTerm('')
               setFilterCity('')
               setFilterStatus('')
               setCurrentPage(1)
             }}
             variant="outline"
             className="flex items-center gap-2"
+            disabled={filtering}
           >
-            <FaFilter className="w-4 h-4" />
-            Clear Filters
+            {filtering ? (
+              <LoadingSpinner className="w-4 h-4" />
+            ) : (
+              <FaFilter className="w-4 h-4" />
+            )}
+            {filtering ? 'Filtering...' : 'Clear Filters'}
           </Button>
         </div>
       </Card>
 
       {/* Clinics List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {clinics.map((clinic) => {
+      <div className="relative">
+        {filtering && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+            <LoadingSpinner />
+          </div>
+        )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {clinics.map((clinic) => {
           const StatusIcon = getStatusIcon(clinic.isActive)
           return (
             <Card key={clinic._id} className="p-6 hover:shadow-lg transition-shadow">
@@ -407,21 +465,22 @@ const ClinicsManagement = () => {
             </Card>
           )
         })}
-      </div>
+        </div>
 
-      {clinics.length === 0 && !loading && (
-        <Card className="p-12 text-center">
-          <FaHospital className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">No Clinics Found</h3>
-          <p className="text-gray-500 mb-4">No clinics match your search criteria</p>
-          <Button
-            onClick={handleAddClinic}
-            className="bg-gradient-to-r from-teal-600 to-cyan-600"
-          >
-            Add New Clinic
-          </Button>
-        </Card>
-      )}
+        {clinics.length === 0 && !loading && (
+          <Card className="p-12 text-center">
+            <FaHospital className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">No Clinics Found</h3>
+            <p className="text-gray-500 mb-4">No clinics match your search criteria</p>
+            <Button
+              onClick={handleAddClinic}
+              className="bg-gradient-to-r from-teal-600 to-cyan-600"
+            >
+              Add New Clinic
+            </Button>
+          </Card>
+        )}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -447,13 +506,6 @@ const ClinicsManagement = () => {
           >
             Next
           </Button>
-        </div>
-      )}
-
-      {/* Loading overlay */}
-      {loading && clinics.length > 0 && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-40">
-          <LoadingSpinner />
         </div>
       )}
 

@@ -14,7 +14,13 @@ router.get('/', authenticate, authorize(['Admin']), async (req, res) => {
     const filter = {};
     
     if (search) {
-      filter.$text = { $search: search };
+      // Use regex for partial matching instead of text search
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { 'address.fullAddress': { $regex: search, $options: 'i' } },
+        { 'address.street': { $regex: search, $options: 'i' } }
+      ];
     }
     
     if (city) {
