@@ -8,6 +8,7 @@ const DatabaseHealthCheck = require('./utils/dbHealthCheck');
 const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/auth');
 const clinicRoutes = require('./routes/clinics');
+const radiologyCenterRoutes = require('./routes/radiologyCenters');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/clinics', clinicRoutes);
+app.use('/api/radiology-centers', radiologyCenterRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

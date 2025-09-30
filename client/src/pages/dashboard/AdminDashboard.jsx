@@ -18,6 +18,7 @@ import { MdDashboard, MdPendingActions } from 'react-icons/md'
 import { Logo, Card, Button, Input } from '../../components'
 import { authUtils } from '../../utils/auth'
 import ClinicsManagement from './admin/ClinicsManagement'
+import RadiologyManagement from './admin/RadiologyManagement'
 
 const AdminDashboard = () => {
   const navigate = useNavigate()
@@ -223,14 +224,7 @@ const AdminDashboard = () => {
           </div>
         )
       case 'radiology':
-        return (
-          <div className="text-center py-12">
-            <FaXRay className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">Radiology Centers</h3>
-            <p className="text-gray-500 mb-6">This section will be implemented next</p>
-            <Button variant="primary">Coming Soon</Button>
-          </div>
-        )
+        return <RadiologyManagement />
       case 'analytics':
         return (
           <div className="text-center py-12">
@@ -315,13 +309,15 @@ const AdminDashboard = () => {
           </nav>
 
           {/* Logout Button */}
-          <div className="absolute bottom-6 left-4 right-4">
+          <div className="p-4">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+              className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 text-left"
             >
-              <FaSignOutAlt className="w-5 h-5" />
-              <span className="font-medium">Logout</span>
+              <FaSignOutAlt className="w-5 h-5 text-red-600" />
+              <div className="flex-1">
+                <div className="font-medium">Logout</div>
+              </div>
             </button>
           </div>
         </div>

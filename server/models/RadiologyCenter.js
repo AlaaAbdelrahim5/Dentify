@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
-const clinicSchema = new mongoose.Schema({
+const radiologyCenterSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Clinic name is required'],
+    required: [true, 'Center name is required'],
     trim: true,
-    minlength: [2, 'Clinic name must be at least 2 characters'],
-    maxlength: [100, 'Clinic name cannot exceed 100 characters']
+    minlength: [2, 'Center name must be at least 2 characters'],
+    maxlength: [100, 'Center name cannot exceed 100 characters']
   },
   address: {
     street: {
@@ -116,35 +116,63 @@ const clinicSchema = new mongoose.Schema({
       latitude: Number,
       longitude: Number
     },
-    description: String
+    address: String
   },
   services: [{
     type: String,
     enum: [
-      'general_dentistry',
-      'orthodontics',
-      'oral_surgery',
-      'endodontics',
-      'periodontics',
-      'prosthodontics',
-      'pediatric_dentistry',
-      'cosmetic_dentistry',
-      'oral_pathology',
-      'dental_implants'
+      'panoramic_xray',
+      'periapical_xray', 
+      'bitewing_xray',
+      'cephalometric_xray',
+      'ct_scan',
+      'cbct',
+      'mri',
+      'ultrasound',
+      'digital_imaging',
+      'tmj_imaging'
     ]
   }],
-  doctors: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  secretaries: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  equipment: [{
+    type: String,
+    enum: [
+      'digital_xray_machine',
+      'panoramic_machine',
+      'cephalometric_machine',
+      'cbct_scanner',
+      'ct_scanner',
+      'mri_machine',
+      'ultrasound_machine',
+      'intraoral_camera',
+      'film_processor',
+      'lead_aprons'
+    ]
   }],
   isActive: {
     type: Boolean,
     default: true
   },
+  certifications: [{
+    name: String,
+    issuer: String,
+    issueDate: Date,
+    expiryDate: Date,
+    certificateNumber: String
+  }],
+  operatingLicense: {
+    number: String,
+    issueDate: Date,
+    expiryDate: Date,
+    issuingAuthority: String
+  },
+  radiologists: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  technicians: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   registrationNumber: {
     type: String,
     unique: true,
@@ -159,7 +187,7 @@ const clinicSchema = new mongoose.Schema({
 });
 
 // Create full address before saving
-clinicSchema.pre('save', function(next) {
+radiologyCenterSchema.pre('save', function(next) {
   if (this.address && this.address.street && this.address.city) {
     this.address.fullAddress = `${this.address.street}, ${this.address.city}`;
   }
@@ -172,9 +200,9 @@ clinicSchema.pre('save', function(next) {
 });
 
 // Virtual for formatted working hours
-clinicSchema.virtual('formattedWorkingHours').get(function() {
+radiologyCenterSchema.virtual('formattedWorkingHours').get(function() {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
   return days.map((day, index) => ({
     day: dayNames[index],
@@ -182,8 +210,8 @@ clinicSchema.virtual('formattedWorkingHours').get(function() {
   }));
 });
 
-// Instance method to check if clinic is open now
-clinicSchema.methods.isOpenNow = function() {
+// Instance method to check if center is open now
+radiologyCenterSchema.methods.isOpenNow = function() {
   const now = new Date();
   const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][now.getDay()];
   const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
@@ -196,6 +224,6 @@ clinicSchema.methods.isOpenNow = function() {
 };
 
 // Index for search
-clinicSchema.index({ name: 'text', 'address.city': 'text', description: 'text' });
+radiologyCenterSchema.index({ name: 'text', 'address.city': 'text', description: 'text' });
 
-module.exports = mongoose.model('Clinic', clinicSchema);
+module.exports = mongoose.model('RadiologyCenter', radiologyCenterSchema);

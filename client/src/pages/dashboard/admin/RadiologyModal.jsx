@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { 
   FaTimes, 
-  FaHospital, 
+  FaXRay, 
   FaMapMarkerAlt, 
   FaPhone, 
   FaEnvelope,
@@ -11,7 +11,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
 
-const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
+const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     address: {
@@ -35,7 +35,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       friday: { isOpen: false, start: '09:00', end: '17:00' },
       saturday: { isOpen: true, start: '09:00', end: '17:00' }
     },
-    services: []
+    services: [],
+    equipment: []
   })
 
   const [errors, setErrors] = useState({})
@@ -75,16 +76,29 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
   ]
 
   const availableServices = [
-    { value: 'general_dentistry', label: 'General Dentistry' },
-    { value: 'orthodontics', label: 'Orthodontics' },
-    { value: 'oral_surgery', label: 'Oral Surgery' },
-    { value: 'endodontics', label: 'Endodontics' },
-    { value: 'periodontics', label: 'Periodontics' },
-    { value: 'prosthodontics', label: 'Prosthodontics' },
-    { value: 'pediatric_dentistry', label: 'Pediatric Dentistry' },
-    { value: 'cosmetic_dentistry', label: 'Cosmetic Dentistry' },
-    { value: 'oral_pathology', label: 'Oral Pathology' },
-    { value: 'dental_implants', label: 'Dental Implants' }
+    { value: 'panoramic_xray', label: 'Panoramic X-Ray' },
+    { value: 'periapical_xray', label: 'Periapical X-Ray' },
+    { value: 'bitewing_xray', label: 'Bitewing X-Ray' },
+    { value: 'cephalometric_xray', label: 'Cephalometric X-Ray' },
+    { value: 'ct_scan', label: 'CT Scan' },
+    { value: 'cbct', label: 'CBCT (Cone Beam CT)' },
+    { value: 'mri', label: 'MRI' },
+    { value: 'ultrasound', label: 'Ultrasound' },
+    { value: 'digital_imaging', label: 'Digital Imaging' },
+    { value: 'tmj_imaging', label: 'TMJ Imaging' }
+  ]
+
+  const availableEquipment = [
+    { value: 'digital_xray_machine', label: 'Digital X-Ray Machine' },
+    { value: 'panoramic_machine', label: 'Panoramic Machine' },
+    { value: 'cephalometric_machine', label: 'Cephalometric Machine' },
+    { value: 'cbct_scanner', label: 'CBCT Scanner' },
+    { value: 'ct_scanner', label: 'CT Scanner' },
+    { value: 'mri_machine', label: 'MRI Machine' },
+    { value: 'ultrasound_machine', label: 'Ultrasound Machine' },
+    { value: 'intraoral_camera', label: 'Intraoral Camera' },
+    { value: 'film_processor', label: 'Film Processor' },
+    { value: 'lead_aprons', label: 'Lead Aprons' }
   ]
 
   const dayNames = {
@@ -97,26 +111,26 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     saturday: 'Saturday'
   }
 
-  // Reset form when modal opens/closes or clinic changes
+  // Reset form when modal opens/closes or center changes
   useEffect(() => {
     if (isOpen) {
-      if (clinic) {
-        // Editing existing clinic
+      if (center) {
+        // Editing existing center
         setFormData({
-          name: clinic.name || '',
+          name: center.name || '',
           address: {
-            street: clinic.address?.street || '',
-            city: clinic.address?.city || ''
+            street: center.address?.street || '',
+            city: center.address?.city || ''
           },
           phone: {
-            countryCode: clinic.phone?.countryCode || '+970',
-            number: clinic.phone?.number || ''
+            countryCode: center.phone?.countryCode || '+970',
+            number: center.phone?.number || ''
           },
-          email: clinic.email || '',
-          website: clinic.website || '',
-          description: clinic.description || '',
-          registrationNumber: clinic.registrationNumber || '',
-          workingHours: clinic.workingHours || {
+          email: center.email || '',
+          website: center.website || '',
+          description: center.description || '',
+          registrationNumber: center.registrationNumber || '',
+          workingHours: center.workingHours || {
             sunday: { isOpen: true, start: '09:00', end: '17:00' },
             monday: { isOpen: true, start: '09:00', end: '17:00' },
             tuesday: { isOpen: true, start: '09:00', end: '17:00' },
@@ -125,10 +139,11 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
             friday: { isOpen: false, start: '09:00', end: '17:00' },
             saturday: { isOpen: true, start: '09:00', end: '17:00' }
           },
-          services: clinic.services || []
+          services: center.services || [],
+          equipment: center.equipment || []
         })
       } else {
-        // Adding new clinic - reset to defaults
+        // Adding new center - reset to defaults
         setFormData({
           name: '',
           address: {
@@ -152,12 +167,13 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
             friday: { isOpen: false, start: '09:00', end: '17:00' },
             saturday: { isOpen: true, start: '09:00', end: '17:00' }
           },
-          services: []
+          services: [],
+          equipment: []
         })
       }
       setErrors({})
     }
-  }, [isOpen, clinic])
+  }, [isOpen, center])
 
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
@@ -207,11 +223,20 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     }))
   }
 
+  const handleEquipmentToggle = (equipmentValue) => {
+    setFormData(prev => ({
+      ...prev,
+      equipment: prev.equipment.includes(equipmentValue)
+        ? prev.equipment.filter(e => e !== equipmentValue)
+        : [...prev.equipment, equipmentValue]
+    }))
+  }
+
   const validateForm = () => {
     const newErrors = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Clinic name is required'
+      newErrors.name = 'Center name is required'
     }
 
     if (!formData.address.street.trim()) {
@@ -252,11 +277,11 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     try {
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
-      const url = clinic 
-        ? `http://localhost:5000/api/clinics/${clinic._id}`
-        : 'http://localhost:5000/api/clinics'
+      const url = center 
+        ? `http://localhost:5000/api/radiology-centers/${center._id}`
+        : 'http://localhost:5000/api/radiology-centers'
       
-      const method = clinic ? 'PUT' : 'POST'
+      const method = center ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
@@ -270,18 +295,18 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       const data = await response.json()
 
       if (data.success) {
-        onSave(data.data, clinic ? 'updated' : 'created')
+        onSave(data.data, center ? 'updated' : 'created')
         onClose()
       } else {
         // Handle specific validation errors
         if (response.status === 400 && data.errors) {
           setErrors(data.errors)
         } else {
-          setErrors({ general: data.message || 'An error occurred while saving the clinic' })
+          setErrors({ general: data.message || 'An error occurred while saving the center' })
         }
       }
     } catch (error) {
-      console.error('Error saving clinic:', error)
+      console.error('Error saving center:', error)
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         setErrors({ general: 'Unable to connect to server. Please check if the server is running.' })
       } else {
@@ -305,9 +330,9 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-3">
-              <FaHospital className="w-6 h-6 text-teal-600" />
+              <FaXRay className="w-6 h-6 text-teal-600" />
               <h2 className="text-xl font-semibold text-gray-800">
-                {clinic ? 'Edit Clinic' : 'Add New Clinic'}
+                {center ? 'Edit Radiology Center' : 'Add New Radiology Center'}
               </h2>
             </div>
             <button
@@ -323,8 +348,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* General Error */}
               {errors.general && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 text-sm">{errors.general}</p>
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                  {errors.general}
                 </div>
               )}
 
@@ -332,17 +357,16 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Clinic Name *
+                    Center Name *
                   </label>
                   <Input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Enter clinic name"
+                    placeholder="Enter center name"
                     error={errors.name}
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Registration Number
@@ -357,14 +381,13 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 </div>
               </div>
 
-              {/* Address */}
+              {/* Address Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-4">
                   <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
-                  Address Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Address Information</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Street Address *
@@ -377,7 +400,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       error={errors['address.street']}
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       City *
@@ -385,13 +407,15 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                     <select
                       value={formData.address.city}
                       onChange={(e) => handleInputChange('address.city', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
+                      className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
                         errors['address.city'] ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
                       <option value="">Select a city</option>
-                      {cities.map(city => (
-                        <option key={city.value} value={city.value}>{city.label}</option>
+                      {cities.map((city) => (
+                        <option key={city.value} value={city.value}>
+                          {city.label}
+                        </option>
                       ))}
                     </select>
                     {errors['address.city'] && (
@@ -403,12 +427,11 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
 
               {/* Contact Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-4">
                   <FaPhone className="w-5 h-5 text-teal-600" />
-                  Contact Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Contact Information</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number *
@@ -417,23 +440,23 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       <select
                         value={formData.phone.countryCode}
                         onChange={(e) => handleInputChange('phone.countryCode', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50"
+                        className="px-3 py-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                       >
                         <option value="+970">+970</option>
                         <option value="+972">+972</option>
                         <option value="+962">+962</option>
+                        <option value="+961">+961</option>
                       </select>
                       <Input
-                        type="text"
+                        type="tel"
                         value={formData.phone.number}
-                        onChange={(e) => handleInputChange('phone.number', e.target.value.replace(/\D/g, ''))}
-                        placeholder="123456789"
+                        onChange={(e) => handleInputChange('phone.number', e.target.value)}
+                        placeholder="599888152"
                         className="rounded-l-none"
                         error={errors['phone.number']}
                       />
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email
@@ -442,11 +465,10 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="clinic@example.com"
+                      placeholder="center@example.com"
                       error={errors.email}
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Website
@@ -455,7 +477,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       type="url"
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder="https://www.clinic.com"
+                      placeholder="https://example.com"
                       error={errors.website}
                     />
                   </div>
@@ -470,29 +492,27 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Brief description of the clinic"
+                  placeholder="Brief description of the radiology center..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   maxLength={500}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-sm text-gray-500">
                   {formData.description.length}/500 characters
                 </p>
               </div>
 
-              {/* Services */}
+              {/* Services Offered */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Services Offered
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {availableServices.map(service => (
-                    <label key={service.value} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Services Offered</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {availableServices.map((service) => (
+                    <label key={service.value} className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.services.includes(service.value)}
                         onChange={() => handleServiceToggle(service.value)}
-                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                       />
                       <span className="text-sm text-gray-700">{service.label}</span>
                     </label>
@@ -500,48 +520,61 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 </div>
               </div>
 
+              {/* Equipment */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Available Equipment</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {availableEquipment.map((equipment) => (
+                    <label key={equipment.value} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.equipment.includes(equipment.value)}
+                        onChange={() => handleEquipmentToggle(equipment.value)}
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="text-sm text-gray-700">{equipment.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Working Hours */}
               <div>
-                <h3 className="text-lg font-medium text-gray-800 flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4">
                   <FaClock className="w-5 h-5 text-teal-600" />
-                  Working Hours
-                </h3>
-                
+                  <h3 className="text-lg font-semibold text-gray-800">Working Hours</h3>
+                </div>
                 <div className="space-y-3">
-                  {Object.keys(dayNames).map(day => (
+                  {Object.keys(dayNames).map((day) => (
                     <div key={day} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
                       <div className="w-24">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.workingHours[day].isOpen}
-                            onChange={(e) => handleWorkingHoursChange(day, 'isOpen', e.target.checked)}
-                            className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">{dayNames[day]}</span>
-                        </label>
+                        <span className="font-medium text-gray-700">{dayNames[day]}</span>
                       </div>
-                      
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.workingHours[day].isOpen}
+                          onChange={(e) => handleWorkingHoursChange(day, 'isOpen', e.target.checked)}
+                          className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 mr-2"
+                        />
+                        <span className="text-sm text-gray-600">Open</span>
+                      </label>
                       {formData.workingHours[day].isOpen && (
                         <div className="flex items-center gap-2">
                           <input
                             type="time"
                             value={formData.workingHours[day].start}
                             onChange={(e) => handleWorkingHoursChange(day, 'start', e.target.value)}
-                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                           />
                           <span className="text-gray-500">to</span>
                           <input
                             type="time"
                             value={formData.workingHours[day].end}
                             onChange={(e) => handleWorkingHoursChange(day, 'end', e.target.value)}
-                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                           />
                         </div>
-                      )}
-                      
-                      {!formData.workingHours[day].isOpen && (
-                        <span className="text-sm text-gray-500 italic">Closed</span>
                       )}
                     </div>
                   ))}
@@ -552,8 +585,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
-                  onClick={onClose}
                   variant="outline"
+                  onClick={onClose}
                   disabled={loading}
                 >
                   Cancel
@@ -564,11 +597,11 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                   className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
                 >
                   {loading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <LoadingSpinner size="sm" />
                   ) : (
                     <FaSave className="w-4 h-4" />
                   )}
-                  {loading ? 'Saving...' : (clinic ? 'Update Clinic' : 'Add Clinic')}
+                  {center ? 'Update Center' : 'Create Center'}
                 </Button>
               </div>
             </form>
@@ -579,4 +612,4 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
   )
 }
 
-export default ClinicModal
+export default RadiologyModal
