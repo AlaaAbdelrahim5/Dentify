@@ -70,7 +70,7 @@ router.post('/signup', async (req, res) => {
       },
       dateOfBirth: new Date(dateOfBirth),
       city,
-      role: 'patient'
+      role: 'Patient'
     });
 
     const savedUser = await newUser.save();
@@ -319,6 +319,69 @@ router.post('/verify', async (req, res) => {
       success: false,
       valid: false,
       message: 'Invalid or expired token'
+    });
+  }
+});
+
+// Test route to create admin user (remove in production)
+router.post('/create-admin', async (req, res) => {
+  try {
+    const {
+      fullName = 'System Administrator',
+      email = 'admin@dentify.com',
+      password = 'admin123456',
+      phoneNumber = '1234567',
+      countryCode = '+970',
+      city = 'ramallah'
+    } = req.body;
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email: email.toLowerCase() });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin user already exists'
+      });
+    }
+
+    // Create admin user
+    const adminUser = new User({
+      fullName,
+      email: email.toLowerCase(),
+      password,
+      phone: {
+        countryCode,
+        number: phoneNumber,
+        full: `${countryCode}${phoneNumber}`
+      },
+      dateOfBirth: new Date('1990-01-01'),
+      city,
+      role: 'Admin',
+      isActive: true,
+      isEmailVerified: true
+    });
+
+    await adminUser.save();
+
+    // Generate tokens
+    const tokens = generateTokens(adminUser._id);
+
+    // Remove password from response
+    const userResponse = adminUser.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin user created successfully',
+      user: userResponse,
+      tokens
+    });
+
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred while creating admin user'
     });
   }
 });

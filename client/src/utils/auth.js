@@ -298,6 +298,25 @@ export const authUtils = {
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
     return user.fullName[0].toUpperCase();
+  },
+
+  // Get dashboard route based on user role
+  getDashboardRoute: () => {
+    const user = authUtils.getCurrentUser();
+    if (!user || !user.role) return '/dashboard';
+    
+    switch (user.role) {
+      case 'Admin':
+        return '/admin/dashboard';
+      case 'Patient':
+        return '/patient/dashboard';
+      case 'Dentist':
+        return '/dentist/dashboard'; // For future implementation
+      case 'Secretary':
+        return '/secretary/dashboard'; // For future implementation
+      default:
+        return '/dashboard';
+    }
   }
 };
 

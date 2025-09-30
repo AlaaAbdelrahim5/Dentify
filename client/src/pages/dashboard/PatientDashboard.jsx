@@ -36,6 +36,16 @@ const PatientDashboard = () => {
       }
       
       const user = authUtils.getCurrentUser()
+      
+      // Check if user should be redirected to a different dashboard
+      if (user && user.role !== 'Patient') {
+        const dashboardRoute = authUtils.getDashboardRoute()
+        if (dashboardRoute !== '/patient/dashboard') {
+          navigate(dashboardRoute, { replace: true })
+          return
+        }
+      }
+      
       setCurrentUser(user)
 
       // Check for welcome message from login

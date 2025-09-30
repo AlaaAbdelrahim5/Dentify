@@ -85,8 +85,9 @@ const Login = () => {
         setApiError("");
         setErrors({});
 
-        // Navigate to dashboard
-        navigate("/dashboard", {
+        // Navigate to appropriate dashboard based on user role
+        const dashboardRoute = authUtils.getDashboardRoute();
+        navigate(dashboardRoute, {
           replace: true,
           state: {
             message: `Welcome back, ${response.user.fullName}!`,

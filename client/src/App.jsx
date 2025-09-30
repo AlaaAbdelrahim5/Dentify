@@ -4,6 +4,8 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import PatientDashboard from './pages/dashboard/PatientDashboard'
+import AdminDashboard from './pages/dashboard/AdminDashboard'
+import AdminSetup from './pages/AdminSetup'
 import NotFound from './pages/NotFound'
 import LoadingSpinner from './components/LoadingSpinner'
 import { authUtils } from './utils/auth'
@@ -43,6 +45,8 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<PatientDashboard />} />
           <Route path="/patient/dashboard" element={<PatientDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
