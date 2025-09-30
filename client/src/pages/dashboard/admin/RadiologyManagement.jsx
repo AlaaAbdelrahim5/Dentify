@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
   FaXRay, 
   FaPlus, 
@@ -21,6 +21,7 @@ import RadiologyModal from './RadiologyModal'
 const RadiologyManagement = () => {
   const [centers, setCenters] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -29,6 +30,9 @@ const RadiologyManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedCenter, setSelectedCenter] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const searchTimeoutRef = useRef(null)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -69,15 +73,20 @@ const RadiologyManagement = () => {
   ]
 
   // Fetch centers
-  const fetchCenters = async () => {
+  const fetchCenters = async (isFiltering = false) => {
     try {
-      setLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setLoading(true)
+      }
+      
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
       const params = new URLSearchParams({
         page: currentPage,
         limit: 10,
-        ...(searchTerm && { search: searchTerm }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
         ...(filterCity && { city: filterCity }),
         ...(filterStatus && { isActive: filterStatus })
       })
@@ -106,7 +115,11 @@ const RadiologyManagement = () => {
       console.error('Error fetching centers:', error)
       setCenters([])
     } finally {
-      setLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setLoading(false)
+      }
     }
   }
 
@@ -142,7 +155,32 @@ const RadiologyManagement = () => {
   useEffect(() => {
     fetchCenters()
     fetchStats()
-  }, [currentPage, searchTerm, filterCity, filterStatus])
+    setIsFirstLoad(false)
+  }, [])
+
+  // Debounce search term
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300) // 300ms delay
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
+
+  // Separate effect for filtering that doesn't show full page loading
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchCenters(true) // Pass true to indicate this is filtering
+    }
+  }, [currentPage, debouncedSearchTerm, filterCity, filterStatus, isFirstLoad])
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
@@ -161,6 +199,7 @@ const RadiologyManagement = () => {
 
   const clearFilters = () => {
     setSearchTerm('')
+    setDebouncedSearchTerm('')
     setFilterCity('')
     setFilterStatus('')
     setCurrentPage(1)
@@ -174,7 +213,7 @@ const RadiologyManagement = () => {
   const handleCenterSave = (savedCenter, action) => {
     if (action === 'created') {
       // Refresh the list to show new center
-      fetchCenters()
+      fetchCenters(true) // Use filtering state instead of full loading
       fetchStats()
     } else if (action === 'updated') {
       // Update the center in the current list
@@ -299,53 +338,66 @@ const RadiologyManagement = () => {
               placeholder="Search for center..."
               value={searchTerm}
               onChange={handleSearch}
-              className="pl-10"
+              className="pl-10 pr-8"
+              disabled={filtering}
             />
+            {searchTerm !== debouncedSearchTerm && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
           </div>
 
-          <div className="relative">
-            <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <select
-              value={filterCity}
-              onChange={handleCityFilter}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-            >
-              <option value="">All Cities</option>
-              {cities.map((city) => (
-                <option key={city.value} value={city.value}>
-                  {city.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={filterCity}
+            onChange={handleCityFilter}
+            disabled={filtering}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+          >
+            <option value="">All Cities</option>
+            {cities.map((city) => (
+              <option key={city.value} value={city.value}>
+                {city.label}
+              </option>
+            ))}
+          </select>
 
-          <div className="relative">
-            <FaCog className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <select
-              value={filterStatus}
-              onChange={handleStatusFilter}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-            >
-              <option value="">All Status</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-          </div>
+          <select
+            value={filterStatus}
+            onChange={handleStatusFilter}
+            disabled={filtering}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+          >
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
 
           <Button
             onClick={clearFilters}
             variant="outline"
             className="flex items-center gap-2"
+            disabled={filtering}
           >
-            <FaFilter className="w-4 h-4" />
-            Clear Filters
+            {filtering ? (
+              <LoadingSpinner className="w-4 h-4" />
+            ) : (
+              <FaFilter className="w-4 h-4" />
+            )}
+            {filtering ? 'Filtering...' : 'Clear Filters'}
           </Button>
         </div>
       </Card>
 
       {/* Centers List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {centers.map((center) => (
+      <div className="relative">
+        {filtering && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+            <LoadingSpinner />
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {centers.map((center) => (
           <Card key={center._id} className="p-6 hover:shadow-lg transition-shadow duration-200">
             <div className="space-y-4">
               {/* Header */}
@@ -451,21 +503,22 @@ const RadiologyManagement = () => {
             </div>
           </Card>
         ))}
-      </div>
+        </div>
 
-      {centers.length === 0 && !loading && (
-        <Card className="p-12 text-center">
-          <FaXRay className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">No Radiology Centers Found</h3>
-          <p className="text-gray-500 mb-4">No radiology centers match your search criteria</p>
-          <Button
-            onClick={handleAddCenter}
-            className="bg-gradient-to-r from-teal-600 to-cyan-600"
-          >
-            Add New Center
-          </Button>
-        </Card>
-      )}
+        {centers.length === 0 && !loading && (
+          <Card className="p-12 text-center">
+            <FaXRay className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">No Radiology Centers Found</h3>
+            <p className="text-gray-500 mb-4">No radiology centers match your search criteria</p>
+            <Button
+              onClick={handleAddCenter}
+              className="bg-gradient-to-r from-teal-600 to-cyan-600"
+            >
+              Add New Center
+            </Button>
+          </Card>
+        )}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
