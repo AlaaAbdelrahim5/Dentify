@@ -6,7 +6,7 @@ import {
   FaXRay, 
   FaUserMd, 
   FaClock, 
-  FaCheckCircle, 
+  FaCheckCircle,
   FaExclamationTriangle,
   FaBell,
   FaSearch,
@@ -14,7 +14,7 @@ import {
   FaSignOutAlt
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
-import { Logo, Card, Button, Input } from '../../components'
+import { Navbar, Card, Button, Input } from '../../components'
 import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
 
@@ -24,7 +24,6 @@ const PatientDashboard = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('appointments')
   const [currentUser, setCurrentUser] = useState(null)
-  const [welcomeMessage, setWelcomeMessage] = useState('')
 
   // Check authentication and get user data
   useEffect(() => {
@@ -49,13 +48,6 @@ const PatientDashboard = () => {
       }
       
       setCurrentUser(user)
-
-      // Check for welcome message from login
-      if (location.state?.message) {
-        setWelcomeMessage(location.state.message)
-        // Clear the message after 5 seconds
-        setTimeout(() => setWelcomeMessage(''), 5000)
-      }
     }
 
     checkAuth()
@@ -63,7 +55,7 @@ const PatientDashboard = () => {
 
   const handleLogout = () => {
     authUtils.logout()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   // Sample data
@@ -144,68 +136,10 @@ const PatientDashboard = () => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800'
         : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
-      {/* Welcome Message */}
-      {welcomeMessage && (
-        <div className="bg-green-50 border-b border-green-200 px-4 py-3">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-3">
-              <FaCheckCircle className="text-green-600" />
-              <p className="text-green-800 font-medium">{welcomeMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Unified Header */}
+      <Navbar showDashboardInfo={true} dashboardTitle="Patient Dashboard" />
 
-      {/* Header */}
-      <header className={`shadow-sm border-b transition-colors duration-300 ${
-        isDarkMode 
-          ? 'bg-gray-800 border-gray-700'
-          : 'bg-white border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Logo size="text-xl" />
-              <div className="hidden md:flex items-center space-x-2">
-                <MdDashboard className="text-gray-400" />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Patient Dashboard</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <FaBell className="text-gray-400 hover:text-teal-600 cursor-pointer" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">2</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {currentUser ? authUtils.getUserInitials() : 'U'}
-                  </span>
-                </div>
-                <span className={`hidden md:block text-sm font-medium ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {currentUser ? authUtils.getUserName() : 'User'}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-gray-500 hover:text-red-600"
-                  title="Logout"
-                >
-                  <FaSignOutAlt />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className={`text-3xl font-bold mb-2 ${
@@ -221,14 +155,22 @@ const PatientDashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
+            <Card key={index} className={`hover:shadow-lg transition-shadow duration-200 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'
+            }`}>
               <Card.Content className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className={`text-sm font-medium ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}>{stat.label}</p>
+                    <p className={`text-2xl font-bold ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>{stat.value}</p>
                   </div>
-                  <div className={`p-3 rounded-lg bg-gray-50`}>
+                  <div className={`p-3 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+                  }`}>
                     <stat.icon className={`text-xl ${stat.color}`} />
                   </div>
                 </div>
@@ -239,7 +181,9 @@ const PatientDashboard = () => {
 
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className={`border-b ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
@@ -253,7 +197,11 @@ const PatientDashboard = () => {
                     flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                     ${activeTab === tab.id
                       ? 'border-teal-500 text-teal-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : `border-transparent ${
+                          isDarkMode 
+                            ? 'text-gray-400 hover:text-gray-300 hover:border-gray-600' 
+                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`
                     }
                   `}
                 >
@@ -271,7 +219,9 @@ const PatientDashboard = () => {
             <div className="space-y-6">
               {/* Quick Actions */}
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <h2 className="text-xl font-semibold text-gray-900">Your Appointments</h2>
+                <h2 className={`text-xl font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>Your Appointments</h2>
                 <div className="flex gap-3">
                   <Input
                     placeholder="Search appointments..."
@@ -290,27 +240,37 @@ const PatientDashboard = () => {
               </div>
 
               {/* Upcoming Appointments */}
-              <Card>
+              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
                 <Card.Header>
-                  <h3 className="text-lg font-medium text-gray-900">Upcoming Appointments</h3>
+                  <h3 className={`text-lg font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>Upcoming Appointments</h3>
                 </Card.Header>
                 <Card.Content className="p-0">
                   {upcomingAppointments.length > 0 ? (
-                    <div className="divide-y divide-gray-200">
+                    <div className={`divide-y ${
+                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
+                    }`}>
                       {upcomingAppointments.map((appointment) => {
                         const StatusIcon = getStatusIcon(appointment.status)
                         return (
-                          <div key={appointment.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                          <div key={appointment.id} className={`p-6 transition-colors duration-200 ${
+                            isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                          }`}>
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-3 mb-2">
-                                  <h4 className="font-medium text-gray-900">{appointment.service}</h4>
+                                  <h4 className={`font-medium ${
+                                    isDarkMode ? 'text-white' : 'text-gray-900'
+                                  }`}>{appointment.service}</h4>
                                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(appointment.status)}`}>
                                     <StatusIcon className="mr-1" />
                                     {appointment.status}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                                <div className={`grid grid-cols-1 md:grid-cols-3 gap-2 text-sm ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                }`}>
                                   <div className="flex items-center">
                                     <FaUserMd className="mr-2" />
                                     {appointment.dentist}
@@ -336,33 +296,45 @@ const PatientDashboard = () => {
                     </div>
                   ) : (
                     <div className="p-6 text-center">
-                      <FaCalendarAlt className="mx-auto text-4xl text-gray-300 mb-4" />
-                      <p className="text-gray-500">No upcoming appointments</p>
+                      <FaCalendarAlt className={`mx-auto text-4xl mb-4 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
+                      }`} />
+                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                        No upcoming appointments
+                      </p>
                     </div>
                   )}
                 </Card.Content>
               </Card>
 
               {/* Past Appointments */}
-              <Card>
+              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
                 <Card.Header>
-                  <h3 className="text-lg font-medium text-gray-900">Recent Appointments</h3>
+                  <h3 className={`text-lg font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>Recent Appointments</h3>
                 </Card.Header>
                 <Card.Content className="p-0">
                   {pastAppointments.length > 0 ? (
-                    <div className="divide-y divide-gray-200">
+                    <div className={`divide-y ${
+                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
+                    }`}>
                       {pastAppointments.map((appointment) => (
                         <div key={appointment.id} className="p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
-                                <h4 className="font-medium text-gray-900">{appointment.service}</h4>
+                                <h4 className={`font-medium ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>{appointment.service}</h4>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   <FaCheckCircle className="mr-1" />
                                   Completed
                                 </span>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                              <div className={`grid grid-cols-1 md:grid-cols-3 gap-2 text-sm ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
                                 <div className="flex items-center">
                                   <FaUserMd className="mr-2" />
                                   {appointment.dentist}
@@ -384,8 +356,12 @@ const PatientDashboard = () => {
                     </div>
                   ) : (
                     <div className="p-6 text-center">
-                      <FaCalendarAlt className="mx-auto text-4xl text-gray-300 mb-4" />
-                      <p className="text-gray-500">No past appointments</p>
+                      <FaCalendarAlt className={`mx-auto text-4xl mb-4 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
+                      }`} />
+                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                        No past appointments
+                      </p>
                     </div>
                   )}
                 </Card.Content>
@@ -396,7 +372,9 @@ const PatientDashboard = () => {
           {activeTab === 'xrays' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">X-ray Results</h2>
+                <h2 className={`text-xl font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>X-ray Results</h2>
                 <Input
                   placeholder="Search X-rays..."
                   icon={FaSearch}
@@ -404,21 +382,29 @@ const PatientDashboard = () => {
                 />
               </div>
 
-              <Card>
+              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
                 <Card.Content className="p-0">
                   {xrayResults.length > 0 ? (
-                    <div className="divide-y divide-gray-200">
+                    <div className={`divide-y ${
+                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
+                    }`}>
                       {xrayResults.map((xray) => (
-                        <div key={xray.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                        <div key={xray.id} className={`p-6 transition-colors duration-200 ${
+                          isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                        }`}>
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
-                                <h4 className="font-medium text-gray-900">{xray.type}</h4>
+                                <h4 className={`font-medium ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>{xray.type}</h4>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                   Available
                                 </span>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
+                              <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mb-2 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
                                 <div className="flex items-center">
                                   <FaCalendarAlt className="mr-2" />
                                   {xray.date}
@@ -428,7 +414,9 @@ const PatientDashboard = () => {
                                   {xray.dentist}
                                 </div>
                               </div>
-                              <p className="text-sm text-gray-700">{xray.result}</p>
+                              <p className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>{xray.result}</p>
                             </div>
                             <div className="flex space-x-2 ml-4">
                               <Button variant="outline" size="sm">View Image</Button>
@@ -440,8 +428,12 @@ const PatientDashboard = () => {
                     </div>
                   ) : (
                     <div className="p-6 text-center">
-                      <FaXRay className="mx-auto text-4xl text-gray-300 mb-4" />
-                      <p className="text-gray-500">No X-ray results available</p>
+                      <FaXRay className={`mx-auto text-4xl mb-4 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
+                      }`} />
+                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                        No X-ray results available
+                      </p>
                     </div>
                   )}
                 </Card.Content>
@@ -451,16 +443,24 @@ const PatientDashboard = () => {
 
           {activeTab === 'history' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">Medical History</h2>
+              <h2 className={`text-xl font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>Medical History</h2>
               
-              <Card>
+              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
                 <Card.Header>
-                  <h3 className="text-lg font-medium text-gray-900">Treatment Timeline</h3>
+                  <h3 className={`text-lg font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>Treatment Timeline</h3>
                 </Card.Header>
                 <Card.Content>
                   <div className="text-center py-8">
-                    <FaTooth className="mx-auto text-4xl text-gray-300 mb-4" />
-                    <p className="text-gray-500">Your treatment history will appear here</p>
+                    <FaTooth className={`mx-auto text-4xl mb-4 ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-300'
+                    }`} />
+                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                      Your treatment history will appear here
+                    </p>
                   </div>
                 </Card.Content>
               </Card>

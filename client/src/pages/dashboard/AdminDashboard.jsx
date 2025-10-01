@@ -15,7 +15,7 @@ import {
   FaCog
 } from 'react-icons/fa'
 import { MdDashboard, MdPendingActions } from 'react-icons/md'
-import { Logo, Card, Button, Input, ThemeToggle } from '../../components'
+import { Navbar, Card, Button, Input, ThemeToggle } from '../../components'
 import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
 import ClinicsManagement from './admin/ClinicsManagement'
@@ -27,7 +27,6 @@ const AdminDashboard = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('overview')
   const [currentUser, setCurrentUser] = useState(null)
-  const [welcomeMessage, setWelcomeMessage] = useState('')
   const [stats, setStats] = useState({
     totalClinics: 0,
     pendingDentists: 0,
@@ -54,11 +53,6 @@ const AdminDashboard = () => {
       }
       
       setCurrentUser(user)
-
-      if (location.state?.message) {
-        setWelcomeMessage(location.state.message)
-        setTimeout(() => setWelcomeMessage(''), 5000)
-      }
     }
 
     checkAuth()
@@ -67,7 +61,7 @@ const AdminDashboard = () => {
   // Handle logout
   const handleLogout = async () => {
     await authUtils.logout()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   // Mock data - Replace with actual API calls later
@@ -267,42 +261,16 @@ const AdminDashboard = () => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
-      {/* Welcome Message */}
-      {welcomeMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeInUp">
-          <div className="flex items-center gap-2">
-            <FaBell className="w-4 h-4" />
-            <span>{welcomeMessage}</span>
-          </div>
-        </div>
-      )}
+      {/* Unified Header */}
+      <Navbar showDashboardInfo={true} dashboardTitle="Admin Dashboard" />
 
-      <div className="flex">
+      <div className="flex pt-20">
         {/* Sidebar */}
-        <div className={`w-80 shadow-xl min-h-screen ${
+        <div className={`w-80 shadow-xl ${
           isDarkMode ? 'bg-gray-800 border-r border-gray-700' : 'bg-white'
-        }`}>
-          {/* Header */}
-          <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <Link to="/" className="flex items-center gap-3">
-                <Logo size="text-xl" />
-              </Link>
-              <ThemeToggle />
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-semibold">
-                {currentUser.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div>
-                <h3 className={`font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{currentUser.name || 'Admin'}</h3>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>System Administrator</p>
-              </div>
-            </div>
-          </div>
-
+        }`} style={{minHeight: 'calc(100vh - 5rem)'}}>
           {/* Navigation */}
-          <nav className="p-4">
+          <nav className="p-4 pt-6">
             <div className="space-y-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon
@@ -333,22 +301,7 @@ const AdminDashboard = () => {
             </div>
           </nav>
 
-          {/* Logout Button */}
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-left ${
-                isDarkMode 
-                  ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <FaSignOutAlt className="w-5 h-5 text-red-600" />
-              <div className="flex-1">
-                <div className="font-medium">Logout</div>
-              </div>
-            </button>
-          </div>
+
         </div>
 
         {/* Main Content */}
