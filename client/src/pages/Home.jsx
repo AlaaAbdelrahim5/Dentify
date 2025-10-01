@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom'
 import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck } from 'react-icons/fa'
 import { MdDashboard, MdSchedule, MdMedicalServices } from 'react-icons/md'
 import { Navbar, Button, Card, Logo } from '../components'
+import { useTheme } from '../contexts/ThemeContext'
 
 const Home = () => {
+  const { isDarkMode, theme } = useTheme()
+  
   const features = [
     {
       icon: FaUserMd,
@@ -71,7 +74,11 @@ const Home = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white' 
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50 text-gray-900'
+    }`}>
       <Navbar />
       
       {/* Hero Section */}
@@ -81,14 +88,18 @@ const Home = () => {
             <Logo className="justify-center" size="text-4xl" />
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className={`text-5xl md:text-7xl font-bold mb-6 leading-tight ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
             Modern Dental
             <span className="block bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
               Practice Management
             </span>
           </h1>
           
-          <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className={`text-xl mb-10 max-w-3xl mx-auto leading-relaxed ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Streamline your dental clinic operations with our comprehensive management system. 
             From patient care to administrative tasks, we've got you covered.
           </p>
@@ -112,13 +123,17 @@ const Home = () => {
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className={`text-4xl font-bold mb-4 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               Everything You Need to
               <span className="block bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                 Run Your Practice
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className={`text-xl max-w-2xl mx-auto ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Powerful features designed specifically for modern dental practices
             </p>
           </div>
@@ -130,10 +145,14 @@ const Home = () => {
                   <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
                     <feature.icon className="text-3xl text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  <h3 className={`text-xl font-semibold mb-4 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className={`leading-relaxed ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
                     {feature.description}
                   </p>
                 </Card.Content>
@@ -144,16 +163,22 @@ const Home = () => {
       </section>
 
       {/* User Types Section */}
-      <section className="py-20 px-4 bg-white/50">
+      <section className={`py-20 px-4 ${
+        isDarkMode ? 'bg-gray-800/50' : 'bg-white/50'
+      }`}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className={`text-4xl font-bold mb-4 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               Built for Every Role in
               <span className="block bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
                 Your Dental Practice
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className={`text-xl max-w-2xl mx-auto ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Tailored experiences for administrators, dentists, patients, and support staff
             </p>
           </div>
@@ -167,15 +192,21 @@ const Home = () => {
                       <user.icon className="text-2xl text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                      <h3 className={`text-2xl font-semibold mb-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {user.type}
                       </h3>
-                      <p className="text-gray-600 mb-4">
+                      <p className={`mb-4 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
                         {user.description}
                       </p>
                       <ul className="space-y-2">
                         {user.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                          <li key={idx} className={`flex items-center gap-2 text-sm ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                          }`}>
                             <FaCheck className="text-teal-500 text-xs" />
                             {feature}
                           </li>
@@ -216,7 +247,9 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4">
+      <footer className={`text-white py-12 px-4 ${
+        isDarkMode ? 'bg-gray-950' : 'bg-gray-900'
+      }`}>
         <div className="max-w-7xl mx-auto text-center">
           <Logo className="justify-center mb-6" />
           <p className="text-gray-400 mb-4">

@@ -16,9 +16,11 @@ import {
   FaCog
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { useTheme } from '../../../contexts/ThemeContext'
 import RadiologyModal from './RadiologyModal'
 
 const RadiologyManagement = () => {
+  const { isDarkMode } = useTheme()
   const [centers, setCenters] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtering, setFiltering] = useState(false)
@@ -283,8 +285,8 @@ const RadiologyManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Radiology Centers Management</h2>
-          <p className="text-gray-600">Manage and add registered radiology centers in the system</p>
+          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>Radiology Centers Management</h2>
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Manage and add registered radiology centers in the system</p>
         </div>
         <Button
           onClick={handleAddCenter}
@@ -297,33 +299,39 @@ const RadiologyManagement = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className={`p-6 border ${isDarkMode 
+          ? 'bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700/30' 
+          : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-600 text-sm font-medium">Total Centers</p>
-              <p className="text-3xl font-bold text-blue-800">{stats.total}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Total Centers</p>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.total}</p>
             </div>
-            <FaXRay className="w-8 h-8 text-blue-600" />
+            <FaXRay className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className={`p-6 border ${isDarkMode 
+          ? 'bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700/30' 
+          : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-600 text-sm font-medium">Active Centers</p>
-              <p className="text-3xl font-bold text-green-800">{stats.active}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Active Centers</p>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.active}</p>
             </div>
-            <FaCheckCircle className="w-8 h-8 text-green-600" />
+            <FaCheckCircle className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className={`p-6 border ${isDarkMode 
+          ? 'bg-gradient-to-br from-red-900/20 to-red-800/20 border-red-700/30' 
+          : 'bg-gradient-to-br from-red-50 to-red-100 border-red-200'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-600 text-sm font-medium">Inactive Centers</p>
-              <p className="text-3xl font-bold text-red-800">{stats.inactive}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Inactive Centers</p>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-red-300' : 'text-red-800'}`}>{stats.inactive}</p>
             </div>
-            <FaTimesCircle className="w-8 h-8 text-red-600" />
+            <FaTimesCircle className={`w-8 h-8 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
           </div>
         </Card>
       </div>
@@ -352,7 +360,11 @@ const RadiologyManagement = () => {
             value={filterCity}
             onChange={handleCityFilter}
             disabled={filtering}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+            className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
           >
             <option value="">All Cities</option>
             {cities.map((city) => (
@@ -366,7 +378,11 @@ const RadiologyManagement = () => {
             value={filterStatus}
             onChange={handleStatusFilter}
             disabled={filtering}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+            className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
           >
             <option value="">All Status</option>
             <option value="true">Active</option>
@@ -392,7 +408,9 @@ const RadiologyManagement = () => {
       {/* Centers List */}
       <div className="relative">
         {filtering && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+          <div className={`absolute inset-0 bg-opacity-75 flex items-center justify-center z-10 rounded-lg ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
             <LoadingSpinner />
           </div>
         )}
@@ -407,7 +425,7 @@ const RadiologyManagement = () => {
                     <FaXRay className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">{center.name}</h3>
+                    <h3 className={`font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{center.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         center.isActive 
@@ -467,7 +485,7 @@ const RadiologyManagement = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+              <div className={`flex gap-2 mt-4 pt-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                 <Button
                   onClick={() => setSelectedCenter(center)}
                   variant="outline"
@@ -507,9 +525,9 @@ const RadiologyManagement = () => {
 
         {centers.length === 0 && !loading && (
           <Card className="p-12 text-center">
-            <FaXRay className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">No Radiology Centers Found</h3>
-            <p className="text-gray-500 mb-4">No radiology centers match your search criteria</p>
+            <FaXRay className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>No Radiology Centers Found</h3>
+            <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>No radiology centers match your search criteria</p>
             <Button
               onClick={handleAddCenter}
               className="bg-gradient-to-r from-teal-600 to-cyan-600"
@@ -532,7 +550,7 @@ const RadiologyManagement = () => {
             Previous
           </Button>
           
-          <span className="flex items-center px-4 py-2 text-sm text-gray-600">
+          <span className={`flex items-center px-4 py-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Page {currentPage} of {totalPages}
           </span>
           

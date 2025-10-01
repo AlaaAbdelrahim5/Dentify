@@ -20,9 +20,11 @@ import {
   LoadingSpinner,
 } from "../components";
 import { authAPI } from "../services/api";
+import { useTheme } from "../contexts/ThemeContext";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   // Palestinian cities list (alphabetically sorted)
   const palestinianCities = [
     { value: "acre", label: "Acre (Akka)" },
@@ -236,12 +238,18 @@ const SignUp = () => {
   const passwordInfo = passwordStrength();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50 py-12 px-4">
+    <div className={`min-h-screen py-12 px-4 transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+    }`}>
       <div className="max-w-md mx-auto">
         {/* Logo */}
         <div className="text-center mb-8">
           <Logo className="justify-center" size="text-3xl" />
-          <p className="mt-4 text-gray-600">
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Create your patient account to get started.
           </p>
         </div>
@@ -249,10 +257,14 @@ const SignUp = () => {
         {/* Signup Form */}
         <Card className="shadow-2xl">
           <Card.Header>
-            <h2 className="text-2xl font-bold text-gray-900 text-center">
+            <h2 className={`text-2xl font-bold text-center ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               Create Account
             </h2>
-            <p className="text-sm text-gray-600 text-center mt-2">
+            <p className={`text-sm text-center mt-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Join thousands of patients managing their dental care
             </p>
           </Card.Header>

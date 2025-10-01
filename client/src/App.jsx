@@ -8,10 +8,12 @@ import AdminDashboard from './pages/dashboard/AdminDashboard'
 import AdminSetup from './pages/AdminSetup'
 import NotFound from './pages/NotFound'
 import LoadingSpinner from './components/LoadingSpinner'
+import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { authUtils } from './utils/auth'
 import './styles/App.css'
 
-function App() {
+const AppContent = () => {
+  const { isDarkMode } = useTheme()
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -30,7 +32,11 @@ function App() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
         <LoadingSpinner />
       </div>
     );
@@ -38,7 +44,11 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -51,6 +61,14 @@ function App() {
         </Routes>
       </div>
     </Router>
+  )
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 }
 

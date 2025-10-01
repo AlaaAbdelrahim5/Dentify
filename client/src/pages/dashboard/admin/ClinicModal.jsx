@@ -10,8 +10,10 @@ import {
   FaSave
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
+  const { isDarkMode } = useTheme()
   const [formData, setFormData] = useState({
     name: '',
     address: {

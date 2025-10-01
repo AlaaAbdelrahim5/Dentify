@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom'
 import { FaTooth, FaHome, FaArrowLeft } from 'react-icons/fa'
 import { Button, Card } from '../components'
+import { useTheme } from '../contexts/ThemeContext'
 
 const NotFound = () => {
+  const { isDarkMode } = useTheme()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50 flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+    }`}>
       <div className="max-w-md w-full text-center">
         {/* Animated Tooth Icon */}
         <div className="mb-8">
@@ -18,11 +24,15 @@ const NotFound = () => {
 
         <Card className="shadow-2xl">
           <Card.Content className="p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className={`text-3xl font-bold mb-4 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               Oops! Page Not Found
             </h1>
             
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className={`mb-6 leading-relaxed ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               The page you're looking for seems to have wandered off like a wisdom tooth! 
               Let's get you back to familiar territory.
             </p>

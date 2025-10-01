@@ -16,10 +16,12 @@ import {
 import { MdDashboard } from 'react-icons/md'
 import { Logo, Card, Button, Input } from '../../components'
 import { authUtils } from '../../utils/auth'
+import { useTheme } from '../../contexts/ThemeContext'
 
 const PatientDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('appointments')
   const [currentUser, setCurrentUser] = useState(null)
   const [welcomeMessage, setWelcomeMessage] = useState('')
@@ -137,7 +139,11 @@ const PatientDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+        : 'bg-gradient-to-br from-teal-50 to-blue-50'
+    }`}>
       {/* Welcome Message */}
       {welcomeMessage && (
         <div className="bg-green-50 border-b border-green-200 px-4 py-3">
@@ -151,14 +157,20 @@ const PatientDashboard = () => {
       )}
 
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className={`shadow-sm border-b transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gray-800 border-gray-700'
+          : 'bg-white border-gray-200'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <Logo size="text-xl" />
               <div className="hidden md:flex items-center space-x-2">
                 <MdDashboard className="text-gray-400" />
-                <span className="text-gray-600 text-sm">Patient Dashboard</span>
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>Patient Dashboard</span>
               </div>
             </div>
             
@@ -173,7 +185,9 @@ const PatientDashboard = () => {
                     {currentUser ? authUtils.getUserInitials() : 'U'}
                   </span>
                 </div>
-                <span className="hidden md:block text-sm font-medium text-gray-700">
+                <span className={`hidden md:block text-sm font-medium ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {currentUser ? authUtils.getUserName() : 'User'}
                 </span>
                 <Button
@@ -194,10 +208,14 @@ const PatientDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className={`text-3xl font-bold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
             Welcome back, {currentUser ? currentUser.fullName.split(' ')[0] : 'User'}!
           </h1>
-          <p className="text-gray-600">Here's an overview of your dental care journey.</p>
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+            Here's an overview of your dental care journey.
+          </p>
         </div>
 
         {/* Stats Grid */}

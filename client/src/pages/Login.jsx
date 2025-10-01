@@ -11,9 +11,11 @@ import {
 import { Logo, Button, Input, Card, LoadingSpinner } from "../components";
 import { authAPI } from "../services/api";
 import { authUtils } from "../utils/auth";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { isDarkMode } = useTheme();
   const location = useLocation();
 
   const [formData, setFormData] = useState({
@@ -117,12 +119,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50 flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+    }`}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Logo className="justify-center" size="text-3xl" />
-          <p className="mt-4 text-gray-600">
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Welcome to Dentify! Please sign in to continue.
           </p>
         </div>
@@ -130,10 +138,14 @@ const Login = () => {
         {/* Login Form */}
         <Card className="shadow-2xl">
           <Card.Header>
-            <h2 className="text-2xl font-bold text-gray-900 text-center">
+            <h2 className={`text-2xl font-bold text-center ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               Sign In
             </h2>
-            <p className="text-sm text-gray-600 text-center mt-2">
+            <p className={`text-sm text-center mt-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Access your Dentify account
             </p>
           </Card.Header>
