@@ -1,11 +1,61 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck } from 'react-icons/fa'
 import { MdDashboard, MdSchedule, MdMedicalServices } from 'react-icons/md'
 import { Navbar, Button, Card, Logo } from '../components'
 import { useTheme } from '../contexts/ThemeContext'
+import { authUtils } from '../utils/auth'
 
 const Home = () => {
-  const { isDarkMode, theme } = useTheme()
+  const { isDarkMode, theme } = useTheme()  
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // If user just logged out, don't redirect
+        if (authUtils.wasLoggedOut()) {
+          console.log('Home: User just logged out, staying on home page and clearing logout flag')
+          setIsAuthenticated(false)
+          setIsChecking(false)
+          // Clear the logout flag since we handled it
+          authUtils.clearLogoutFlag()
+          return
+        }
+
+        const authResult = await authUtils.isAuthenticated()
+        setIsAuthenticated(authResult)
+      } catch (error) {
+        console.error('Error checking authentication:', error)
+        setIsAuthenticated(false)
+      } finally {
+        setIsChecking(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  // If user is authenticated and didn't just logout, redirect to their dashboard
+  if (!isChecking && isAuthenticated) {
+    const dashboardRoute = authUtils.getDashboardRoute()
+    console.log('Home: Redirecting authenticated user to dashboard:', dashboardRoute)
+    return <Navigate to={dashboardRoute} replace />
+  }
+
+  // Show loading state while checking authentication
+  if (isChecking) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    )
+  }
   
   const features = [
     {

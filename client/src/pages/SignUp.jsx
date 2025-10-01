@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaUser,
@@ -20,6 +20,7 @@ import {
   LoadingSpinner,
 } from "../components";
 import { authAPI } from "../services/api";
+import { authUtils } from "../utils/auth";
 import { useTheme } from "../contexts/ThemeContext";
 
 const SignUp = () => {
@@ -74,6 +75,42 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const authResult = await authUtils.isAuthenticated();
+        if (authResult) {
+          const dashboardRoute = authUtils.getDashboardRoute();
+          navigate(dashboardRoute, { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className={`min-h-screen py-12 px-4 transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+          : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+      }`}>
+        <div className="max-w-md mx-auto flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

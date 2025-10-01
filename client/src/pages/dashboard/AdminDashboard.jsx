@@ -60,8 +60,17 @@ const AdminDashboard = () => {
 
   // Handle logout
   const handleLogout = async () => {
-    await authUtils.logout()
-    navigate('/', { replace: true })
+    try {
+      console.log('AdminDashboard: Starting logout process')
+      await authUtils.logout()
+      console.log('AdminDashboard: Logout completed, navigating to home page')
+      console.log('AdminDashboard: Current location before navigate:', window.location.pathname)
+      navigate('/', { replace: true })
+      console.log('AdminDashboard: Navigate to home page called')
+    } catch (error) {
+      console.error('AdminDashboard: Error during logout:', error)
+      navigate('/', { replace: true })
+    }
   }
 
   // Mock data - Replace with actual API calls later

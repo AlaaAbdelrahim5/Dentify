@@ -189,12 +189,29 @@ export const authUtils = {
   // Logout user
   logout: () => {
     try {
+      console.log('Logging out user...');
       authUtils.clearUser();
       authUtils.clearTokens();
       localStorage.removeItem(authUtils.REMEMBER_KEY);
+      // Clear any authentication flags
+      localStorage.removeItem('dentify_logout_performed');
+      sessionStorage.removeItem('dentify_logout_performed');
+      // Set a flag to indicate logout was performed
+      localStorage.setItem('dentify_logout_performed', 'true');
+      console.log('Logout completed successfully');
     } catch (error) {
       console.error('Error during logout:', error);
     }
+  },
+
+  // Check if logout was just performed (without consuming the flag)
+  wasLoggedOut: () => {
+    return localStorage.getItem('dentify_logout_performed') === 'true';
+  },
+
+  // Clear the logout flag
+  clearLogoutFlag: () => {
+    localStorage.removeItem('dentify_logout_performed');
   },
 
   // Check if tokens should be persisted
@@ -205,6 +222,17 @@ export const authUtils = {
   // Initialize authentication state (call on app startup)
   initializeAuth: async () => {
     console.log('Initializing auth...');
+    
+    // Check if user just logged out - this should always be the first check
+    if (authUtils.wasLoggedOut()) {
+      console.log('Auth: User just logged out, clearing any remaining auth data and skipping auth check');
+      // Make sure everything is cleaned up
+      authUtils.clearUser();
+      authUtils.clearTokens();
+      localStorage.removeItem(authUtils.REMEMBER_KEY);
+      return false;
+    }
+    
     const token = authUtils.getAccessToken();
     const refreshToken = authUtils.getRefreshToken();
     const user = authUtils.getCurrentUser();

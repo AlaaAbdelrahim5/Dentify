@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import {
   FaEnvelope,
   FaLock,
@@ -28,6 +28,37 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // If user just logged out, don't redirect - stay on login page
+        if (authUtils.wasLoggedOut()) {
+          console.log('Login: User just logged out, staying on login page and clearing logout flag');
+          setIsCheckingAuth(false);
+          // Clear the logout flag since we handled it
+          authUtils.clearLogoutFlag();
+          return;
+        }
+
+        const authResult = await authUtils.isAuthenticated();
+        if (authResult) {
+          const dashboardRoute = authUtils.getDashboardRoute();
+          console.log('Login: User is authenticated, redirecting to:', dashboardRoute);
+          navigate(dashboardRoute, { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Login: Error checking authentication:', error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   // Check for success message from signup
   useEffect(() => {
@@ -38,6 +69,19 @@ const Login = () => {
       }
     }
   }, [location.state]);
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+          : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+      }`}>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

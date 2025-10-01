@@ -32,8 +32,16 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
   }
 
   const handleLogout = async () => {
-    await authUtils.logout()
-    navigate('/', { replace: true })
+    try {
+      console.log('Navbar: Starting logout process')
+      await authUtils.logout()
+      console.log('Navbar: Logout completed, navigating to home page')
+      navigate('/', { replace: true })
+    } catch (error) {
+      console.error('Navbar: Error during logout:', error)
+      // Even if there's an error, try to navigate to home
+      navigate('/', { replace: true })
+    }
   }
 
   return (

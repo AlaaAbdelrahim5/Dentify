@@ -53,9 +53,16 @@ const PatientDashboard = () => {
     checkAuth()
   }, [navigate, location.state])
 
-  const handleLogout = () => {
-    authUtils.logout()
-    navigate('/', { replace: true })
+  const handleLogout = async () => {
+    try {
+      console.log('PatientDashboard: Starting logout process')
+      await authUtils.logout()
+      console.log('PatientDashboard: Logout completed, navigating to home page')
+      navigate('/', { replace: true })
+    } catch (error) {
+      console.error('PatientDashboard: Error during logout:', error)
+      navigate('/', { replace: true })
+    }
   }
 
   // Sample data
