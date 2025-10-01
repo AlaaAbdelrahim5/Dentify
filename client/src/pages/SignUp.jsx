@@ -378,7 +378,9 @@ const SignUp = () => {
                   {formData.password && (
                     <div className="mt-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div className={`flex-1 rounded-full h-2 ${
+                          isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+                        }`}>
                           <div
                             className={`h-2 rounded-full transition-all duration-300 ${passwordInfo.color}`}
                             style={{
@@ -386,7 +388,9 @@ const SignUp = () => {
                             }}
                           ></div>
                         </div>
-                        <span className="text-xs text-gray-600">
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>
                           {passwordInfo.text}
                         </span>
                       </div>
@@ -409,12 +413,16 @@ const SignUp = () => {
                   {formData.confirmPassword && formData.password && (
                     <div className="mt-2">
                       {formData.password === formData.confirmPassword ? (
-                        <div className="flex items-center gap-2 text-green-600 text-sm">
+                        <div className={`flex items-center gap-2 text-sm ${
+                          isDarkMode ? 'text-green-400' : 'text-green-600'
+                        }`}>
                           <FaCheck className="text-xs" />
                           <span>Passwords match</span>
                         </div>
                       ) : (
-                        <div className="text-red-600 text-sm">
+                        <div className={`text-sm ${
+                          isDarkMode ? 'text-red-400' : 'text-red-600'
+                        }`}>
                           Passwords do not match
                         </div>
                       )}
@@ -428,9 +436,13 @@ const SignUp = () => {
                         type="checkbox"
                         checked={acceptedTerms}
                         onChange={(e) => setAcceptedTerms(e.target.checked)}
-                        className="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50 mt-1"
+                        className={`rounded text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50 mt-1 ${
+                          isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'
+                        }`}
                       />
-                      <span className="text-sm text-gray-600 leading-relaxed">
+                      <span className={`text-sm leading-relaxed ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
                         I accept the{" "}
                         <Link
                           to="/terms"
@@ -448,7 +460,9 @@ const SignUp = () => {
                       </span>
                     </label>
                     {errors.terms && (
-                      <p className="mt-2 text-sm text-red-600">
+                      <p className={`mt-2 text-sm ${
+                        isDarkMode ? 'text-red-400' : 'text-red-600'
+                      }`}>
                         {errors.terms}
                       </p>
                     )}
@@ -476,8 +490,12 @@ const SignUp = () => {
           </Card.Content>
 
           {/* Login Link */}
-          <Card.Footer className="bg-gray-50 text-center">
-            <p className="text-sm text-gray-600">
+          <Card.Footer className={`text-center ${
+            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
+            <p className={`text-sm ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Already have an account?{" "}
               <Link
                 to="/login"
@@ -491,11 +509,19 @@ const SignUp = () => {
 
         {/* Additional Info */}
         <div className="mt-8 text-center">
-          <div className="bg-white/50 rounded-lg p-4 mb-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
+          <div className={`rounded-lg p-4 mb-4 ${
+            isDarkMode 
+              ? 'bg-gray-800/50 border border-gray-700'
+              : 'bg-white/50 border border-gray-200'
+          }`}>
+            <h3 className={`text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               Why create an account?
             </h3>
-            <ul className="text-xs text-gray-600 space-y-1">
+            <ul className={`text-xs space-y-1 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               <li className="flex items-center gap-2">
                 <FaCheck className="text-teal-500" />
                 Book appointments with your preferred dentist
@@ -511,7 +537,9 @@ const SignUp = () => {
             </ul>
           </div>
 
-          <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
+          <div className={`flex items-center justify-center space-x-4 text-xs ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             <Link to="/" className="hover:text-teal-600">
               Home
             </Link>

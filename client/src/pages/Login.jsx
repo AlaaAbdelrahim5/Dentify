@@ -193,18 +193,26 @@ const Login = () => {
 
               {/* Password Input with Toggle */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Password
                 </label>
                 <div className={`
                   relative flex items-center rounded-lg border shadow-sm transition-all duration-200
+                  ${isDarkMode 
+                    ? 'border-gray-600 bg-gray-700'
+                    : 'border-gray-300 bg-white'
+                  }
                   ${errors.password 
                     ? 'border-red-300 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:ring-opacity-20' 
-                    : 'border-gray-300 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-opacity-20'
+                    : 'focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-opacity-20'
                   }
                 `}>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaLock className="h-5 w-5 text-gray-400" />
+                    <FaLock className={`h-5 w-5 ${
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`} />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -212,12 +220,18 @@ const Login = () => {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="flex-1 block w-full border-0 pl-10 pr-3 py-3 text-sm placeholder-gray-500 focus:ring-0 focus:outline-none bg-transparent rounded-l-lg"
+                    className={`flex-1 block w-full border-0 pl-10 pr-3 py-3 text-sm focus:ring-0 focus:outline-none bg-transparent rounded-l-lg ${
+                      isDarkMode 
+                        ? 'text-white placeholder-gray-400'
+                        : 'text-gray-900 placeholder-gray-500'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="px-3 py-3 text-gray-400 hover:text-teal-600 focus:outline-none transition-colors duration-200 rounded-r-lg"
+                    className={`px-3 py-3 hover:text-teal-600 focus:outline-none transition-colors duration-200 rounded-r-lg ${
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`}
                   >
                     {showPassword ? (
                       <FaEyeSlash className="h-5 w-5" />
@@ -227,7 +241,9 @@ const Login = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                  <p className={`mt-2 text-sm ${
+                    isDarkMode ? 'text-red-400' : 'text-red-600'
+                  }`}>{errors.password}</p>
                 )}
               </div>
 
@@ -238,9 +254,13 @@ const Login = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-gray-300 text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50"
+                    className={`rounded text-teal-600 shadow-sm focus:border-teal-300 focus:ring focus:ring-teal-200 focus:ring-opacity-50 ${
+                      isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'
+                    }`}
                   />
-                  <span className="ml-2 text-sm text-gray-600">
+                  <span className={`ml-2 text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
                     Remember me
                   </span>
                 </label>
@@ -272,8 +292,12 @@ const Login = () => {
           </Card.Content>
 
           {/* Sign Up Link */}
-          <Card.Footer className="bg-gray-50 text-center">
-            <p className="text-sm text-gray-600">
+          <Card.Footer className={`text-center ${
+            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
+            <p className={`text-sm ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               Don't have an account?{" "}
               <Link
                 to="/signup"
@@ -287,7 +311,9 @@ const Login = () => {
 
         {/* Additional Info */}
         <div className="mt-8 text-center">
-          <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
+          <div className={`flex items-center justify-center space-x-4 text-xs ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             <Link to="/" className="hover:text-teal-600">
               Home
             </Link>
