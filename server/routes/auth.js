@@ -1,129 +1,42 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { generateTokens, verifyToken } = require('../utils/jwt');
-const { authenticate, authorize } = require('../middleware/auth');
+const Admin = require('../models/Admin');
+const Patient = require('../models/Patient');
+const Dentist = require('../models/Dentist');
+const Secretary = require('../models/Secretary');
+const Clinic = require('../models/Clinic');
+const RadiologyCenter = require('../models/RadiologyCenter');
 
 const router = express.Router();
 
-// Signup route
-router.post('/signup', async (req, res) => {
-  try {
-    const {
-      fullName,
-      email,
-      countryCode,
-      phoneNumber,
-      dateOfBirth,
-      city,
-      password,
-      confirmPassword
-    } = req.body;
+// Role model mapping
+const roleModels = {
+  Admin,
+  Patient,
+  Dentist,
+  Secretary,
+  Clinic,
+  RadiologyCenter
+};
 
-    // Validation
-    if (!fullName || !email || !phoneNumber || !dateOfBirth || !city || !password || !confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'All fields are required'
-      });
-    }
+// Generate JWT token
+const generateToken = (userId, role) => {
+  return jwt.sign(
+    { userId, role },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: '7d' }
+  );
+};
 
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Passwords do not match'
-      });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [
-        { email: email.toLowerCase() },
-        { 'phone.full': `${countryCode}${phoneNumber}` }
-      ]
-    });
-
-    if (existingUser) {
-      if (existingUser.email === email.toLowerCase()) {
-        return res.status(400).json({
-          success: false,
-          message: 'An account with this email already exists'
-        });
-      }
-      if (existingUser.phone.full === `${countryCode}${phoneNumber}`) {
-        return res.status(400).json({
-          success: false,
-          message: 'An account with this phone number already exists'
-        });
-      }
-    }
-
-    // Create new user
-    const newUser = new User({
-      fullName: fullName.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      phone: {
-        countryCode,
-        number: phoneNumber,
-        full: `${countryCode}${phoneNumber}`
-      },
-      dateOfBirth: new Date(dateOfBirth),
-      city,
-      role: 'Patient'
-    });
-
-    const savedUser = await newUser.save();
-
-    // Generate JWT tokens
-    const tokens = generateTokens(savedUser);
-
-    // Return success response (password will be excluded by toJSON method)
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully! Welcome to Dentify.',
-      user: savedUser,
-      tokens
-    });
-
-  } catch (error) {
-    console.error('Signup error:', error);
-
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const validationErrors = {};
-      Object.keys(error.errors).forEach(key => {
-        validationErrors[key] = error.errors[key].message;
-      });
-      
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: validationErrors
-      });
-    }
-
-    // Handle duplicate key errors
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
-      return res.status(400).json({
-        success: false,
-        message: `An account with this ${field} already exists`
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error. Please try again later.'
-    });
-  }
-});
-
-// Login route
+// @route   POST /api/auth/login
+// @desc    Unified login for all user types
+// @access  Public
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -132,256 +45,370 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
-    // Check if account is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Your account has been deactivated. Please contact support.'
-      });
-    }
-
-    // Compare password
+    // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Check if user is active
+    if (user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is suspended or deleted'
+      });
+    }
 
-    // Generate JWT tokens
-    const tokens = generateTokens(user);
+    // Get role-specific data
+    let roleData = null;
+    const RoleModel = roleModels[user.role];
+    
+    if (RoleModel) {
+      roleData = await RoleModel.findOne({ userId: user._id })
+        .populate('userId')
+        .populate('clinicId', 'clinicName address contactInfo'); // For dentists and secretaries
+    }
 
+    // Generate token
+    const token = generateToken(user._id, user.role);
+
+    // Return success response
     res.json({
       success: true,
       message: 'Login successful',
-      user: user, // Password will be excluded by toJSON method
-      tokens
+      data: {
+        token,
+        user: user.toPublicJSON(),
+        profile: roleData,
+        role: user.role
+      }
     });
 
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error. Please try again later.'
+      message: 'Server error during login'
     });
   }
 });
 
-// Check if email exists
-router.post('/check-email', async (req, res) => {
+// @route   POST /api/auth/register
+// @desc    Unified registration for all user types
+// @access  Public
+router.post('/register', async (req, res) => {
   try {
-    const { email } = req.body;
-    
-    if (!email) {
+    const { userData, profileData, role } = req.body;
+
+    // Validate required fields
+    if (!userData || !userData.email || !userData.password || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: 'Email, password, and role are required'
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    
-    res.json({
-      success: true,
-      exists: !!user
-    });
-
-  } catch (error) {
-    console.error('Check email error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// Refresh token route
-router.post('/refresh', async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    
-    if (!refreshToken) {
-      return res.status(401).json({
+    // Validate role
+    if (!roleModels[role]) {
+      return res.status(400).json({
         success: false,
-        message: 'Refresh token is required'
+        message: 'Invalid role specified'
       });
     }
 
-    // Verify refresh token
-    const decoded = verifyToken(refreshToken);
-    
-    // Get user from database
-    const user = await User.findById(decoded.id);
-    if (!user || !user.isActive) {
-      return res.status(401).json({
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: userData.email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({
         success: false,
-        message: 'Invalid refresh token'
+        message: 'User with this email already exists'
       });
     }
 
-    // Generate new tokens
-    const tokens = generateTokens(user);
+    // Create user with role-specific profile
+    const RoleModel = roleModels[role];
+    const result = await RoleModel.createWithUser(userData, profileData);
 
-    res.json({
+    // Generate token
+    const token = generateToken(result.user._id, result.user.role);
+
+    // Return success response
+    res.status(201).json({
       success: true,
-      message: 'Tokens refreshed successfully',
-      tokens
+      message: 'Registration successful',
+      data: {
+        token,
+        user: result.user.toPublicJSON(),
+        profile: result[role.toLowerCase()],
+        role: result.user.role
+      }
     });
 
   } catch (error) {
-    console.error('Refresh token error:', error);
-    res.status(401).json({
-      success: false,
-      message: 'Invalid or expired refresh token'
-    });
-  }
-});
-
-// Logout route (optional - for token blacklisting if needed)
-router.post('/logout', authenticate, async (req, res) => {
-  try {
-    // In a more advanced implementation, you might want to blacklist the token
-    // For now, we'll just return success as the client should remove the token
+    console.error('Registration error:', error);
     
-    res.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
-  } catch (error) {
-    console.error('Logout error:', error);
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: validationErrors
+      });
+    }
+
+    // Handle duplicate key error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `${field} already exists`
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Logout failed'
+      message: 'Server error during registration'
     });
   }
 });
 
-// Get current user route (protected)
-router.get('/me', authenticate, async (req, res) => {
+// @route   GET /api/auth/profile
+// @desc    Get current user profile
+// @access  Private
+router.get('/profile', async (req, res) => {
   try {
-    res.json({
-      success: true,
-      user: req.user
-    });
-  } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get user information'
-    });
-  }
-});
-
-// Verify token route
-router.post('/verify', async (req, res) => {
-  try {
-    const { token } = req.body;
+    const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: 'Token is required'
+        message: 'No token provided'
       });
     }
 
-    const decoded = verifyToken(token);
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Get user to ensure they still exist and are active
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user || !user.isActive) {
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token or inactive user'
+      });
+    }
+
+    // Get role-specific data
+    let roleData = null;
+    const RoleModel = roleModels[user.role];
+    
+    if (RoleModel) {
+      roleData = await RoleModel.findOne({ userId: user._id })
+        .populate('userId')
+        .populate('clinicId', 'clinicName address contactInfo');
+    }
+
+    res.json({
+      success: true,
+      data: {
+        user: user.toPublicJSON(),
+        profile: roleData,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
         message: 'Invalid token'
       });
     }
 
-    res.json({
-      success: true,
-      valid: true,
-      user
-    });
-
-  } catch (error) {
-    res.status(401).json({
+    res.status(500).json({
       success: false,
-      valid: false,
-      message: 'Invalid or expired token'
+      message: 'Server error fetching profile'
     });
   }
 });
 
-// Test route to create admin user (remove in production)
-router.post('/create-admin', async (req, res) => {
+// @route   PUT /api/auth/profile
+// @desc    Update current user profile
+// @access  Private
+router.put('/profile', async (req, res) => {
   try {
-    const {
-      fullName = 'System Administrator',
-      email = 'admin@dentify.com',
-      password = 'admin123456',
-      phoneNumber = '1234567',
-      countryCode = '+970',
-      city = 'ramallah'
-    } = req.body;
-
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: email.toLowerCase() });
-    if (existingAdmin) {
-      return res.status(400).json({
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
         success: false,
-        message: 'Admin user already exists'
+        message: 'No token provided'
       });
     }
 
-    // Create admin user
-    const adminUser = new User({
-      fullName,
-      email: email.toLowerCase(),
-      password,
-      phone: {
-        countryCode,
-        number: phoneNumber,
-        full: `${countryCode}${phoneNumber}`
-      },
-      dateOfBirth: new Date('1990-01-01'),
-      city,
-      role: 'Admin',
-      isActive: true,
-      isEmailVerified: true
-    });
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token or inactive user'
+      });
+    }
 
-    await adminUser.save();
+    const { userData, profileData } = req.body;
 
-    // Generate tokens
-    const tokens = generateTokens(adminUser._id);
+    // Update user data (email, phone, profileImage)
+    if (userData) {
+      const allowedUserFields = ['phone', 'profileImage'];
+      allowedUserFields.forEach(field => {
+        if (userData[field] !== undefined) {
+          user[field] = userData[field];
+        }
+      });
+      await user.save();
+    }
 
-    // Remove password from response
-    const userResponse = adminUser.toObject();
-    delete userResponse.password;
+    // Update role-specific data
+    if (profileData) {
+      const RoleModel = roleModels[user.role];
+      if (RoleModel) {
+        await RoleModel.findOneAndUpdate(
+          { userId: user._id },
+          { $set: profileData },
+          { new: true, runValidators: true }
+        );
+      }
+    }
 
-    res.status(201).json({
+    // Get updated profile
+    const RoleModel = roleModels[user.role];
+    let roleData = null;
+    
+    if (RoleModel) {
+      roleData = await RoleModel.findOne({ userId: user._id })
+        .populate('userId')
+        .populate('clinicId', 'clinicName address contactInfo');
+    }
+
+    res.json({
       success: true,
-      message: 'Admin user created successfully',
-      user: userResponse,
-      tokens
+      message: 'Profile updated successfully',
+      data: {
+        user: user.toPublicJSON(),
+        profile: roleData,
+        role: user.role
+      }
     });
 
   } catch (error) {
-    console.error('Create admin error:', error);
+    console.error('Profile update error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: validationErrors
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error occurred while creating admin user'
+      message: 'Server error updating profile'
+    });
+  }
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token or inactive user'
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Check current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Password change error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error changing password'
     });
   }
 });

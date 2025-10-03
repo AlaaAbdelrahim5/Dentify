@@ -1,229 +1,272 @@
 const mongoose = require('mongoose');
+const User = require('./User');
 
 const radiologyCenterSchema = new mongoose.Schema({
-  name: {
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+    index: true
+  },
+  centerName: {
     type: String,
-    required: [true, 'Center name is required'],
-    trim: true,
-    minlength: [2, 'Center name must be at least 2 characters'],
-    maxlength: [100, 'Center name cannot exceed 100 characters']
+    required: true,
+    trim: true
   },
   address: {
-    street: {
-      type: String,
-      required: [true, 'Street address is required'],
-      trim: true
-    },
     city: {
       type: String,
-      required: [true, 'City is required'],
-      enum: {
-        values: [
-          'acre', 'al_bireh', 'beersheba', 'beit_hanoun', 'beit_jala', 'beit_lahia',
-          'beit_sahour', 'bethlehem', 'deir_al_balah', 'gaza', 'haifa', 'hebron',
-          'jabalya', 'jaffa', 'jenin', 'jericho', 'jerusalem', 'khan_yunis', 'lydd',
-          'nablus', 'nazareth', 'qalqilya', 'rafah', 'ramallah', 'ramla', 'safad',
-          'salfit', 'tiberias', 'tubas', 'tulkarm'
-        ],
-        message: 'Please select a valid city'
-      }
+      required: true,
+      trim: true
     },
-    fullAddress: {
-      type: String
-    }
-  },
-  phone: {
-    countryCode: {
+    street: {
       type: String,
-      required: [true, 'Country code is required'],
-      default: '+970'
+      required: true,
+      trim: true
     },
-    number: {
-      type: String,
-      required: [true, 'Phone number is required'],
-      validate: {
-        validator: function(phone) {
-          return /^\d{7,}$/.test(phone);
-        },
-        message: 'Phone number must contain at least 7 digits'
-      }
-    },
-    full: {
-      type: String
-    }
-  },
-  workingHours: {
-    sunday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    monday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    tuesday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    wednesday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    thursday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    friday: {
-      isOpen: { type: Boolean, default: false },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    saturday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    }
-  },
-  email: {
-    type: String,
-    validate: {
-      validator: function(email) {
-        return !email || /^\S+@\S+\.\S+$/.test(email);
-      },
-      message: 'Please provide a valid email address'
-    }
-  },
-  website: {
-    type: String,
-    validate: {
-      validator: function(url) {
-        return !url || /^https?:\/\/.+/.test(url);
-      },
-      message: 'Please provide a valid website URL'
-    }
-  },
-  logo: {
-    type: String, // URL to logo image
-    default: null
+    building: String,
+    floor: String,
+    apartment: String,
+    postalCode: String
   },
   location: {
-    coordinates: {
-      latitude: Number,
-      longitude: Number
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
     },
-    address: String
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere'
+    },
+    description: String // Human readable location description
   },
-  services: [{
-    type: String,
-    enum: [
-      'panoramic_xray',
-      'periapical_xray', 
-      'bitewing_xray',
-      'cephalometric_xray',
-      'ct_scan',
-      'cbct',
-      'mri',
-      'ultrasound',
-      'digital_imaging',
-      'tmj_imaging'
-    ]
+  workingHours: [{
+    day: {
+      type: String,
+      enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      required: true
+    },
+    startTime: {
+      type: String,
+      required: true,
+      match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    },
+    endTime: {
+      type: String,
+      required: true,
+      match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    },
+    isOpen: {
+      type: Boolean,
+      default: true
+    }
+  }],
+  supportedTypes: [{
+    name: {
+      type: String,
+      required: true,
+      enum: [
+        'Panoramic X-Ray',
+        'CBCT (Cone Beam CT)',
+        'Intraoral X-Ray',
+        'Cephalometric X-Ray',
+        'TMJ X-Ray',
+        '3D Imaging',
+        'Digital X-Ray',
+        'Bitewing X-Ray',
+        'Periapical X-Ray'
+      ]
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    duration: {
+      type: Number, // in minutes
+      default: 15
+    },
+    description: String,
+    preparationInstructions: String
   }],
   equipment: [{
+    name: String,
+    model: String,
+    manufacturer: String,
+    installationDate: Date,
+    lastMaintenanceDate: Date,
+    nextMaintenanceDate: Date,
+    status: {
+      type: String,
+      enum: ['operational', 'maintenance', 'out_of_order'],
+      default: 'operational'
+    }
+  }],
+  contactInfo: {
+    landline: String,
+    whatsapp: String,
+    website: String,
+    emergencyContact: String,
+    socialMedia: {
+      facebook: String,
+      instagram: String,
+      twitter: String
+    }
+  },
+  facilities: [{
     type: String,
     enum: [
-      'digital_xray_machine',
-      'panoramic_machine',
-      'cephalometric_machine',
-      'cbct_scanner',
-      'ct_scanner',
-      'mri_machine',
-      'ultrasound_machine',
-      'intraoral_camera',
-      'film_processor',
-      'lead_aprons'
+      'Parking Available',
+      'Wheelchair Accessible',
+      'WiFi Available',
+      'Air Conditioning',
+      'Lead Aprons Available',
+      'Digital Reports',
+      'CD/DVD Copies',
+      'Online Report Access',
+      'Waiting Room',
+      'Emergency Services'
     ]
   }],
-  isActive: {
-    type: Boolean,
-    default: true
+  licenseNumber: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
+  establishedDate: {
+    type: Date,
+    required: true
+  },
+  capacity: {
+    maxPatientsPerDay: {
+      type: Number,
+      default: 100
+    },
+    avgProcessingTime: {
+      type: Number, // in hours for report delivery
+      default: 24
+    }
   },
   certifications: [{
     name: String,
-    issuer: String,
+    issuedBy: String,
     issueDate: Date,
     expiryDate: Date,
     certificateNumber: String
   }],
-  operatingLicense: {
-    number: String,
-    issueDate: Date,
-    expiryDate: Date,
-    issuingAuthority: String
-  },
-  radiologists: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  staff: [{
+    name: String,
+    role: {
+      type: String,
+      enum: ['Radiologist', 'Technician', 'Receptionist', 'Manager']
+    },
+    licenseNumber: String,
+    specialization: String
   }],
-  technicians: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  registrationNumber: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
-  description: {
-    type: String,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+  rating: {
+    average: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    totalReviews: {
+      type: Number,
+      default: 0
+    }
   }
 }, {
   timestamps: true
 });
 
-// Create full address before saving
-radiologyCenterSchema.pre('save', function(next) {
-  if (this.address && this.address.street && this.address.city) {
-    this.address.fullAddress = `${this.address.street}, ${this.address.city}`;
-  }
-  
-  if (this.phone && this.phone.countryCode && this.phone.number) {
-    this.phone.full = `${this.phone.countryCode}${this.phone.number}`;
-  }
-  
-  next();
+// Indexes
+radiologyCenterSchema.index({ 'address.city': 1 });
+radiologyCenterSchema.index({ 'location': '2dsphere' });
+radiologyCenterSchema.index({ 'supportedTypes.name': 1 });
+radiologyCenterSchema.index({ 'rating.average': -1 });
+
+// Virtual to populate user data
+radiologyCenterSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true
 });
 
-// Virtual for formatted working hours
-radiologyCenterSchema.virtual('formattedWorkingHours').get(function() {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  
-  return days.map((day, index) => ({
-    day: dayNames[index],
-    ...this.workingHours[day]
-  }));
-});
+// Ensure virtual fields are serialized
+radiologyCenterSchema.set('toJSON', { virtuals: true });
+radiologyCenterSchema.set('toObject', { virtuals: true });
 
-// Instance method to check if center is open now
-radiologyCenterSchema.methods.isOpenNow = function() {
-  const now = new Date();
-  const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][now.getDay()];
-  const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+// Method to check if center is open at a specific time
+radiologyCenterSchema.methods.isOpenAt = function(day, time) {
+  const daySchedule = this.workingHours.find(schedule => 
+    schedule.day === day && schedule.isOpen
+  );
   
-  const todayHours = this.workingHours[currentDay];
+  if (!daySchedule) return false;
   
-  if (!todayHours.isOpen) return false;
-  
-  return currentTime >= todayHours.start && currentTime <= todayHours.end;
+  return time >= daySchedule.startTime && time <= daySchedule.endTime;
 };
 
-// Index for search
-radiologyCenterSchema.index({ name: 'text', 'address.city': 'text', description: 'text' });
+// Method to get service by type
+radiologyCenterSchema.methods.getServiceByType = function(typeName) {
+  return this.supportedTypes.find(type => type.name === typeName);
+};
+
+// Method to check if a specific imaging type is supported
+radiologyCenterSchema.methods.supportsType = function(typeName) {
+  return this.supportedTypes.some(type => type.name === typeName);
+};
+
+// Static method to find centers by imaging type
+radiologyCenterSchema.statics.findByType = function(typeName) {
+  return this.find({
+    'supportedTypes.name': typeName,
+    status: 'active'
+  });
+};
+
+// Static method to find nearby centers
+radiologyCenterSchema.statics.findNearby = function(longitude, latitude, maxDistance = 10000) {
+  return this.find({
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        },
+        $maxDistance: maxDistance // in meters
+      }
+    },
+    status: 'active'
+  });
+};
+
+// Static method to create radiology center with user
+radiologyCenterSchema.statics.createWithUser = async function(userData, centerData) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    // Create user with RadiologyCenter role
+    const userDoc = new User({ ...userData, role: 'RadiologyCenter' });
+    await userDoc.save({ session });
+    
+    // Create radiology center profile
+    const centerDoc = new this({ ...centerData, userId: userDoc._id });
+    await centerDoc.save({ session });
+    
+    await session.commitTransaction();
+    return { user: userDoc, center: centerDoc };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
 
 module.exports = mongoose.model('RadiologyCenter', radiologyCenterSchema);

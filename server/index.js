@@ -5,8 +5,11 @@ require('dotenv').config();
 
 const { connectDB, getConnectionStatus } = require('./config/database');
 const DatabaseHealthCheck = require('./utils/dbHealthCheck');
-const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admins');
+const patientRoutes = require('./routes/patients');
+const dentistRoutes = require('./routes/dentists');
+const secretaryRoutes = require('./routes/secretaries');
 const clinicRoutes = require('./routes/clinics');
 const radiologyCenterRoutes = require('./routes/radiologyCenters');
 
@@ -33,8 +36,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admins', adminRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/dentists', dentistRoutes);
+app.use('/api/secretaries', secretaryRoutes);
 app.use('/api/clinics', clinicRoutes);
 app.use('/api/radiology-centers', radiologyCenterRoutes);
 

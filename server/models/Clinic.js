@@ -1,201 +1,248 @@
 const mongoose = require('mongoose');
+const User = require('./User');
 
 const clinicSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Clinic name is required'],
-    trim: true,
-    minlength: [2, 'Clinic name must be at least 2 characters'],
-    maxlength: [100, 'Clinic name cannot exceed 100 characters']
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+    index: true
   },
-  address: {
-    street: {
+  clinicName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  workingHours: [{
+    day: {
       type: String,
-      required: [true, 'Street address is required'],
-      trim: true
+      enum: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      required: true
     },
+    startTime: {
+      type: String,
+      required: true,
+      match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    },
+    endTime: {
+      type: String,
+      required: true,
+      match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    },
+    isOpen: {
+      type: Boolean,
+      default: true
+    }
+  }],
+  address: {
     city: {
       type: String,
-      required: [true, 'City is required'],
-      enum: {
-        values: [
-          'acre', 'al_bireh', 'beersheba', 'beit_hanoun', 'beit_jala', 'beit_lahia',
-          'beit_sahour', 'bethlehem', 'deir_al_balah', 'gaza', 'haifa', 'hebron',
-          'jabalya', 'jaffa', 'jenin', 'jericho', 'jerusalem', 'khan_yunis', 'lydd',
-          'nablus', 'nazareth', 'qalqilya', 'rafah', 'ramallah', 'ramla', 'safad',
-          'salfit', 'tiberias', 'tubas', 'tulkarm'
-        ],
-        message: 'Please select a valid city'
-      }
+      required: true,
+      trim: true
     },
-    fullAddress: {
-      type: String
-    }
-  },
-  phone: {
-    countryCode: {
+    street: {
       type: String,
-      required: [true, 'Country code is required'],
-      default: '+970'
+      required: true,
+      trim: true
     },
-    number: {
-      type: String,
-      required: [true, 'Phone number is required'],
-      validate: {
-        validator: function(phone) {
-          return /^\d{7,}$/.test(phone);
-        },
-        message: 'Phone number must contain at least 7 digits'
-      }
-    },
-    full: {
-      type: String
-    }
-  },
-  workingHours: {
-    sunday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    monday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    tuesday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    wednesday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    thursday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    friday: {
-      isOpen: { type: Boolean, default: false },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    },
-    saturday: {
-      isOpen: { type: Boolean, default: true },
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '17:00' }
-    }
-  },
-  email: {
-    type: String,
-    validate: {
-      validator: function(email) {
-        return !email || /^\S+@\S+\.\S+$/.test(email);
-      },
-      message: 'Please provide a valid email address'
-    }
-  },
-  website: {
-    type: String,
-    validate: {
-      validator: function(url) {
-        return !url || /^https?:\/\/.+/.test(url);
-      },
-      message: 'Please provide a valid website URL'
-    }
-  },
-  logo: {
-    type: String, // URL to logo image
-    default: null
+    building: String,
+    floor: String,
+    apartment: String,
+    postalCode: String
   },
   location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
     coordinates: {
-      latitude: Number,
-      longitude: Number
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere'
+    },
+    description: String // Human readable location description
+  },
+  servicesAvailable: [{
+    name: {
+      type: String,
+      required: true,
+      enum: [
+        'General Consultation',
+        'Teeth Cleaning',
+        'Tooth Extraction',
+        'Root Canal Treatment',
+        'Dental Filling',
+        'Crown and Bridge',
+        'Dental Implants',
+        'Orthodontic Treatment',
+        'Teeth Whitening',
+        'Periodontal Treatment',
+        'Oral Surgery',
+        'Pediatric Dentistry',
+        'Cosmetic Dentistry',
+        'Emergency Treatment'
+      ]
+    },
+    price: {
+      type: Number,
+      min: 0
+    },
+    duration: {
+      type: Number, // in minutes
+      default: 30
     },
     description: String
-  },
-  services: [{
-    type: String,
-    enum: [
-      'general_dentistry',
-      'orthodontics',
-      'oral_surgery',
-      'endodontics',
-      'periodontics',
-      'prosthodontics',
-      'pediatric_dentistry',
-      'cosmetic_dentistry',
-      'oral_pathology',
-      'dental_implants'
-    ]
   }],
-  doctors: [{
+  dentists: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Dentist'
   }],
   secretaries: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Secretary'
   }],
-  isActive: {
-    type: Boolean,
-    default: true
+  contactInfo: {
+    landline: String,
+    whatsapp: String,
+    website: String,
+    socialMedia: {
+      facebook: String,
+      instagram: String,
+      twitter: String
+    }
   },
-  registrationNumber: {
+  facilities: [{
     type: String,
+    enum: [
+      'Parking Available',
+      'Wheelchair Accessible',
+      'WiFi Available',
+      'Air Conditioning',
+      'X-Ray Equipment',
+      'Sterilization Equipment',
+      'Emergency Equipment',
+      'Kids Play Area',
+      'Waiting Room',
+      'Private Rooms'
+    ]
+  }],
+  licenseNumber: {
+    type: String,
+    required: true,
     unique: true,
-    sparse: true
+    index: true
   },
-  description: {
-    type: String,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+  establishedDate: {
+    type: Date,
+    required: true
+  },
+  capacity: {
+    maxPatientsPerDay: {
+      type: Number,
+      default: 50
+    },
+    numberOfChairs: {
+      type: Number,
+      default: 2
+    }
+  },
+  rating: {
+    average: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    totalReviews: {
+      type: Number,
+      default: 0
+    }
   }
 }, {
   timestamps: true
 });
 
-// Create full address before saving
-clinicSchema.pre('save', function(next) {
-  if (this.address && this.address.street && this.address.city) {
-    this.address.fullAddress = `${this.address.street}, ${this.address.city}`;
-  }
-  
-  if (this.phone && this.phone.countryCode && this.phone.number) {
-    this.phone.full = `${this.phone.countryCode}${this.phone.number}`;
-  }
-  
-  next();
+// Indexes
+clinicSchema.index({ 'address.city': 1 });
+clinicSchema.index({ 'location': '2dsphere' });
+clinicSchema.index({ 'servicesAvailable.name': 1 });
+clinicSchema.index({ 'rating.average': -1 });
+
+// Virtual to populate user data
+clinicSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true
 });
 
-// Virtual for formatted working hours
-clinicSchema.virtual('formattedWorkingHours').get(function() {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  
-  return days.map((day, index) => ({
-    day: dayNames[index],
-    ...this.workingHours[day]
-  }));
-});
+// Ensure virtual fields are serialized
+clinicSchema.set('toJSON', { virtuals: true });
+clinicSchema.set('toObject', { virtuals: true });
 
-// Instance method to check if clinic is open now
-clinicSchema.methods.isOpenNow = function() {
-  const now = new Date();
-  const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][now.getDay()];
-  const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+// Method to check if clinic is open at a specific time
+clinicSchema.methods.isOpenAt = function(day, time) {
+  const daySchedule = this.workingHours.find(schedule => 
+    schedule.day === day && schedule.isOpen
+  );
   
-  const todayHours = this.workingHours[currentDay];
+  if (!daySchedule) return false;
   
-  if (!todayHours.isOpen) return false;
-  
-  return currentTime >= todayHours.start && currentTime <= todayHours.end;
+  return time >= daySchedule.startTime && time <= daySchedule.endTime;
 };
 
-// Index for search
-clinicSchema.index({ name: 'text', 'address.city': 'text', description: 'text' });
+// Method to get available services by name
+clinicSchema.methods.getServiceByName = function(serviceName) {
+  return this.servicesAvailable.find(service => service.name === serviceName);
+};
+
+// Static method to find clinics by service
+clinicSchema.statics.findByService = function(serviceName) {
+  return this.find({
+    'servicesAvailable.name': serviceName,
+    status: 'active'
+  });
+};
+
+// Static method to find nearby clinics
+clinicSchema.statics.findNearby = function(longitude, latitude, maxDistance = 10000) {
+  return this.find({
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        },
+        $maxDistance: maxDistance // in meters
+      }
+    },
+    status: 'active'
+  });
+};
+
+// Static method to create clinic with user
+clinicSchema.statics.createWithUser = async function(userData, clinicData) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    // Create user with Clinic role
+    const userDoc = new User({ ...userData, role: 'Clinic' });
+    await userDoc.save({ session });
+    
+    // Create clinic profile
+    const clinicDoc = new this({ ...clinicData, userId: userDoc._id });
+    await clinicDoc.save({ session });
+    
+    await session.commitTransaction();
+    return { user: userDoc, clinic: clinicDoc };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
 
 module.exports = mongoose.model('Clinic', clinicSchema);
