@@ -26,6 +26,7 @@ router.get('/', optionalAuth, async (req, res) => {
       query.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
+        { licenseNumber: searchRegex },
         { specialization: { $in: [searchRegex] } }
       ];
     }
@@ -47,7 +48,7 @@ router.get('/', optionalAuth, async (req, res) => {
 
     const dentists = await Dentist.find(query)
       .populate('userId', 'email phone profileImage -_id')
-      .populate('clinicId', 'clinicName address contactInfo')
+      .populate('clinicId', 'clinicName city location website')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -60,14 +61,19 @@ router.get('/', optionalAuth, async (req, res) => {
       firstName: dentist.firstName,
       lastName: dentist.lastName,
       fullName: dentist.fullName,
+      licenseNumber: dentist.licenseNumber,
       specialization: dentist.specialization,
-      experience: dentist.experience,
-      consultationFee: dentist.consultationFee,
+      gender: dentist.gender,
+      birthDate: dentist.birthDate,
+      address: dentist.address,
       workingHours: dentist.workingHours,
+      appointmentDuration: dentist.appointmentDuration,
+      socialLinks: dentist.socialLinks,
       clinic: dentist.clinicId ? {
         _id: dentist.clinicId._id,
         clinicName: dentist.clinicId.clinicName,
-        address: dentist.clinicId.address
+        city: dentist.clinicId.city,
+        location: dentist.clinicId.location
       } : null,
       profileImage: dentist.userId?.profileImage
     }));
@@ -136,7 +142,7 @@ router.get('/:id', async (req, res) => {
   try {
     const dentist = await Dentist.findById(req.params.id)
       .populate('userId', 'email phone profileImage')
-      .populate('clinicId', 'clinicName address contactInfo workingHours');
+      .populate('clinicId', 'clinicName city location website workingHours');
 
     if (!dentist) {
       return res.status(404).json({
@@ -225,8 +231,8 @@ router.put('/:id', authenticate, async (req, res) => {
     // Update dentist data if provided
     if (dentistData) {
       const allowedFields = [
-        'firstName', 'lastName', 'specialization', 'address', 'workingHours',
-        'appointmentDuration', 'socialLinks', 'education', 'experience', 'consultationFee'
+        'firstName', 'lastName', 'specialization', 'birthDate', 'gender', 'address', 'workingHours',
+        'appointmentDuration', 'socialLinks'
       ];
 
       // License number can only be updated by admin

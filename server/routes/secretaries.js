@@ -29,7 +29,7 @@ router.get('/', authenticate, authorize(['Admin', 'Clinic']), async (req, res) =
     
     const secretaries = await Secretary.find(query)
       .populate('userId', '-password')
-      .populate('clinicId', 'clinicName address')
+      .populate('clinicId', 'clinicName city location')
       .sort({ createdAt: -1 });
 
     res.json({
@@ -174,13 +174,8 @@ router.put('/:id', authenticate, async (req, res) => {
     // Update secretary data if provided
     if (secretaryData) {
       const allowedFields = [
-        'firstName', 'lastName', 'address', 'workingHours', 'salary'
+        'firstName', 'lastName', 'birthDate', 'gender', 'address'
       ];
-
-      // Only admin can update sensitive fields
-      if (isAdmin && secretaryData.permissions) {
-        allowedFields.push('permissions');
-      }
 
       allowedFields.forEach(field => {
         if (secretaryData[field] !== undefined) {

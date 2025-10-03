@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
-const { connectDB } = require('./config/database');
-const Admin = require('./models/Admin');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const { connectDB } = require('../config/database');
+const Admin = require('../models/Admin');
 
 const createAdmin = async () => {
   try {
@@ -12,15 +13,14 @@ const createAdmin = async () => {
     // Admin data
     const userData = {
       email: 'admin@gmail.com',
-      password: '123123123',
+      password: '12345678',
       phone: '+1234567890' // Required field
     };
 
     const adminData = {
       firstName: 'System',
       lastName: 'Administrator',
-      gender: 'male',
-      permissions: ['manage_users', 'manage_clinics', 'manage_radiology_centers', 'view_reports']
+      gender: 'male'
     };
 
     // Check if admin already exists

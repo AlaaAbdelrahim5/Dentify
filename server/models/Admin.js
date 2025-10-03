@@ -23,10 +23,6 @@ const adminSchema = new mongoose.Schema({
     type: String,
     enum: ['male', 'female'],
     required: true
-  },
-  permissions: {
-    type: [String],
-    default: ['manage_users', 'manage_clinics', 'manage_radiology_centers', 'view_reports']
   }
 }, {
   timestamps: true
@@ -40,6 +36,11 @@ adminSchema.virtual('user', {
   localField: 'userId',
   foreignField: '_id',
   justOne: true
+});
+
+// Virtual for full name
+adminSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
 });
 
 // Ensure virtual fields are serialized

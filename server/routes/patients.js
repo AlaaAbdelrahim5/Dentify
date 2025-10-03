@@ -211,13 +211,12 @@ router.put('/:id', authenticate, async (req, res) => {
     // Update patient data if provided
     if (patientData) {
       const allowedFields = [
-        'firstName', 'lastName', 'gender', 'birthDate', 'address', 
-        'medicalHistory', 'emergencyContact'
+        'firstName', 'lastName', 'gender', 'birthDate', 'address'
       ];
       
       // If patient is updating their own profile, allow limited fields
       if (isOwnProfile && !isClinicStaff) {
-        const patientAllowedFields = ['firstName', 'lastName', 'address', 'emergencyContact'];
+        const patientAllowedFields = ['firstName', 'lastName', 'address'];
         allowedFields.splice(0, allowedFields.length, ...patientAllowedFields);
       }
 
@@ -255,51 +254,6 @@ router.put('/:id', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error updating patient'
-    });
-  }
-});
-
-// @route   PUT /api/patients/:id/medical-history
-// @desc    Update patient medical history (Clinic staff only)
-// @access  Private (Clinic staff only)
-router.put('/:id/medical-history', authenticate, clinicStaffOnly, async (req, res) => {
-  try {
-    const { medicalHistory } = req.body;
-
-    const patient = await Patient.findByIdAndUpdate(
-      req.params.id,
-      { medicalHistory },
-      { new: true, runValidators: true }
-    ).populate('userId', '-password');
-
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Patient not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Medical history updated successfully',
-      data: patient
-    });
-
-  } catch (error) {
-    console.error('Update medical history error:', error);
-    
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        errors: validationErrors
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Server error updating medical history'
     });
   }
 });

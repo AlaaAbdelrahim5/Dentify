@@ -23,8 +23,7 @@ const dentistSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true,
-    index: true
+    trim: true
   },
   specialization: {
     type: [String],
@@ -56,9 +55,7 @@ const dentistSchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true
-    },
-    street: String,
-    building: String
+    }
   },
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -80,10 +77,6 @@ const dentistSchema = new mongoose.Schema({
       type: String,
       required: true,
       match: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
-    },
-    isAvailable: {
-      type: Boolean,
-      default: true
     }
   }],
   appointmentDuration: {
@@ -98,19 +91,6 @@ const dentistSchema = new mongoose.Schema({
     instagram: String,
     whatsapp: String,
     tiktok: String
-  },
-  education: [{
-    degree: String,
-    institution: String,
-    year: Number
-  }],
-  experience: {
-    type: Number,
-    default: 0 // years of experience
-  },
-  consultationFee: {
-    type: Number,
-    min: 0
   }
 }, {
   timestamps: true
@@ -137,27 +117,16 @@ dentistSchema.virtual('clinic', {
   justOne: true
 });
 
-// Ensure virtual fields are serialized
-dentistSchema.set('toJSON', { virtuals: true });
-dentistSchema.set('toObject', { virtuals: true });
-
 // Virtual for full name
 dentistSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Virtual for age
-dentistSchema.virtual('age').get(function() {
-  if (!this.birthDate) return null;
-  const today = new Date();
-  const birthDate = new Date(this.birthDate);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-});
+// Ensure virtual fields are serialized
+dentistSchema.set('toJSON', { virtuals: true });
+dentistSchema.set('toObject', { virtuals: true });
+
+
 
 // Static method to create dentist with user
 dentistSchema.statics.createWithUser = async function(userData, dentistData) {

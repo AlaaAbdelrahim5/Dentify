@@ -33,31 +33,7 @@ const patientSchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true
-    },
-    street: {
-      type: String,
-      trim: true
-    },
-    building: {
-      type: String,
-      trim: true
     }
-  },
-  medicalHistory: {
-    allergies: [String],
-    medications: [String],
-    previousTreatments: [{
-      treatment: String,
-      date: Date,
-      dentist: String,
-      notes: String
-    }],
-    chronicConditions: [String]
-  },
-  emergencyContact: {
-    name: String,
-    relationship: String,
-    phone: String
   }
 }, {
   timestamps: true
@@ -83,18 +59,7 @@ patientSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Virtual for age
-patientSchema.virtual('age').get(function() {
-  if (!this.birthDate) return null;
-  const today = new Date();
-  const birthDate = new Date(this.birthDate);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-});
+
 
 // Static method to create patient with user
 patientSchema.statics.createWithUser = async function(userData, patientData) {

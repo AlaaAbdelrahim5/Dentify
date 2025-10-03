@@ -101,7 +101,7 @@ router.put('/:id', authenticate, adminOnly, async (req, res) => {
 
     // Update admin data if provided
     if (adminData) {
-      const allowedAdminFields = ['firstName', 'lastName', 'gender', 'permissions'];
+      const allowedAdminFields = ['firstName', 'lastName', 'gender'];
       const adminUpdateData = {};
       
       allowedAdminFields.forEach(field => {
