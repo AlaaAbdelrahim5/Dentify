@@ -25,19 +25,19 @@ router.get('/', optionalAuth, async (req, res) => {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
         { centerName: searchRegex },
-        { 'address.city': searchRegex },
-        { 'address.street': searchRegex }
+        { city: searchRegex },
+        { location: searchRegex }
       ];
     }
 
     // Filter by city
     if (city) {
-      query['address.city'] = new RegExp(city, 'i');
+      query.city = new RegExp(city, 'i');
     }
 
     // Filter by supported type
     if (type) {
-      query['supportedTypes.name'] = type;
+      query.supportedTypes = type;
     }
 
     const centers = await RadiologyCenter.find(query)
@@ -223,6 +223,182 @@ router.get('/types/list', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error fetching imaging types'
+    });
+  }
+});
+
+// @route   POST /api/radiology-centers
+// @desc    Create a new radiology center (Admin only)
+// @access  Private (Admin)
+router.post('/', authenticate, authorize(['Admin']), async (req, res) => {
+  try {
+    const {
+      // User data
+      email,
+      password,
+      phone,
+      // RadiologyCenter data
+      centerName,
+      registrationNumber,
+      city,
+      location,
+      website,
+      description,
+      supportedTypes,
+      workingHours
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !phone || !centerName || !registrationNumber || !city || !location) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'A user with this email already exists'
+      });
+    }
+
+    // Check if registration number already exists
+    const existingCenter = await RadiologyCenter.findOne({ registrationNumber });
+    if (existingCenter) {
+      return res.status(400).json({
+        success: false,
+        message: 'A radiology center with this registration number already exists'
+      });
+    }
+
+    // Create radiology center with user using the model's static method
+    const { user, center } = await RadiologyCenter.createWithUser(
+      {
+        email: email.toLowerCase(),
+        password,
+        phone,
+        role: 'RadiologyCenter'
+      },
+      {
+        centerName,
+        registrationNumber,
+        city,
+        location,
+        website,
+        description,
+        supportedTypes: supportedTypes || [],
+        workingHours: workingHours || []
+      }
+    );
+
+    // Populate user data for response
+    const populatedCenter = await RadiologyCenter.findById(center._id).populate('userId', 'email phone profileImage');
+
+    res.status(201).json({
+      success: true,
+      message: 'Radiology center created successfully',
+      data: populatedCenter
+    });
+
+  } catch (error) {
+    console.error('Create radiology center error:', error);
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `A radiology center with this ${field} already exists`
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Server error creating radiology center'
+    });
+  }
+});
+
+// @route   PUT /api/radiology-centers/:id
+// @desc    Update a radiology center (Admin only)
+// @access  Private (Admin)
+router.put('/:id', authenticate, authorize(['Admin']), async (req, res) => {
+  try {
+    const {
+      // User data
+      email,
+      password,
+      phone,
+      // RadiologyCenter data
+      centerName,
+      registrationNumber,
+      city,
+      location,
+      website,
+      description,
+      supportedTypes,
+      workingHours
+    } = req.body;
+
+    // Find the radiology center
+    const center = await RadiologyCenter.findById(req.params.id).populate('userId');
+    if (!center) {
+      return res.status(404).json({
+        success: false,
+        message: 'Radiology center not found'
+      });
+    }
+
+    // Update user data if provided
+    if (email || phone || password) {
+      const userUpdateData = {};
+      if (email) userUpdateData.email = email.toLowerCase();
+      if (phone) userUpdateData.phone = phone;
+      if (password) userUpdateData.password = password;
+
+      await User.findByIdAndUpdate(center.userId._id, userUpdateData);
+    }
+
+    // Prepare center update data
+    const centerUpdateData = {};
+    if (centerName) centerUpdateData.centerName = centerName;
+    if (registrationNumber) centerUpdateData.registrationNumber = registrationNumber;
+    if (city) centerUpdateData.city = city;
+    if (location) centerUpdateData.location = location;
+    if (website !== undefined) centerUpdateData.website = website;
+    if (description !== undefined) centerUpdateData.description = description;
+    if (supportedTypes) centerUpdateData.supportedTypes = supportedTypes;
+    if (workingHours) centerUpdateData.workingHours = workingHours;
+
+    // Update radiology center
+    const updatedCenter = await RadiologyCenter.findByIdAndUpdate(
+      req.params.id,
+      centerUpdateData,
+      { new: true, runValidators: true }
+    ).populate('userId', 'email phone profileImage');
+
+    res.json({
+      success: true,
+      message: 'Radiology center updated successfully',
+      data: updatedCenter
+    });
+
+  } catch (error) {
+    console.error('Update radiology center error:', error);
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `A radiology center with this ${field} already exists`
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating radiology center'
     });
   }
 });

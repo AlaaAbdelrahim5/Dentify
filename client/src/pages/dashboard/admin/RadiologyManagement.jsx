@@ -15,9 +15,8 @@ import {
   FaEye,
   FaCog
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, RadiologyModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import RadiologyModal from './RadiologyModal'
 
 const RadiologyManagement = () => {
   const { isDarkMode } = useTheme()

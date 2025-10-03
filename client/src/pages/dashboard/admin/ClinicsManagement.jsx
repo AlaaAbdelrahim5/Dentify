@@ -14,9 +14,8 @@ import {
   FaTimesCircle,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ClinicModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import ClinicModal from './ClinicModal'
 
 const ClinicsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -171,11 +170,18 @@ const ClinicsManagement = () => {
   }
 
   const formatWorkingHours = (workingHours) => {
-    if (!workingHours) return 'Not specified'
+    if (!workingHours || workingHours.length === 0) return 'Not specified'
     
+    // Handle array format from backend
+    if (Array.isArray(workingHours)) {
+      if (workingHours.length === 0) return 'Closed'
+      
+      const firstDay = workingHours[0]
+      return `${firstDay.startTime} - ${firstDay.endTime}`
+    }
+    
+    // Handle object format (legacy)
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    
     const openDays = days.filter(day => workingHours[day]?.isOpen)
     
     if (openDays.length === 0) return 'Closed'
