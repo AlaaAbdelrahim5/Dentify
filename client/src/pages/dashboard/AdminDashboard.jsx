@@ -2,8 +2,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { 
   FaHospital,
-  FaUserMd, 
-  FaXRay, 
   FaUsers,
   FaCalendarAlt,
   FaBell,
@@ -12,14 +10,17 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaChartBar,
-  FaCog
+  FaCog,
+  FaUserMd,
+  FaXRay
 } from 'react-icons/fa'
-import { MdDashboard, MdPendingActions } from 'react-icons/md'
+import { MdPendingActions } from 'react-icons/md'
 import { Navbar, Card, Button, Input, ThemeToggle } from '../../components'
 import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
 import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
+import AdminSidebar from '../../components/admin/AdminSidebar'
 
 const AdminDashboard = () => {
   const navigate = useNavigate()
@@ -83,40 +84,6 @@ const AdminDashboard = () => {
       totalPatients: 245
     })
   }, [])
-
-  const sidebarItems = [
-    { 
-      id: 'overview', 
-      label: 'Overview', 
-      icon: MdDashboard,
-      description: 'System overview and statistics'
-    },
-    { 
-      id: 'clinics', 
-      label: 'Clinics', 
-      icon: FaHospital,
-      description: 'Manage dental clinics'
-    },
-    { 
-      id: 'dentists', 
-      label: 'Dentist Approvals', 
-      icon: FaUserMd,
-      description: 'Review and approve dentist registrations',
-      badge: stats.pendingDentists > 0 ? stats.pendingDentists : null
-    },
-    { 
-      id: 'radiology', 
-      label: 'Radiology Centers', 
-      icon: FaXRay,
-      description: 'Manage radiology centers'
-    },
-    { 
-      id: 'analytics', 
-      label: 'Analytics', 
-      icon: FaChartBar,
-      description: 'System analytics and reports'
-    }
-  ]
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -273,48 +240,16 @@ const AdminDashboard = () => {
       {/* Unified Header */}
       <Navbar showDashboardInfo={true} dashboardTitle="Admin Dashboard" />
 
-      <div className="flex pt-20">
-        {/* Sidebar */}
-        <div className={`w-80 shadow-xl ${
-          isDarkMode ? 'bg-gray-800 border-r border-gray-700' : 'bg-white'
-        }`} style={{minHeight: 'calc(100vh - 5rem)'}}>
-          {/* Navigation */}
-          <nav className="p-4 pt-6">
-            <div className="space-y-2">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-left relative ${
-                      activeTab === item.id
-                        ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                        : isDarkMode 
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                          : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <div className="flex-1">
-                      <div className="font-medium">{item.label}</div>
-                    </div>
-                    {item.badge && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </nav>
+      {/* Fixed Sidebar */}
+      <AdminSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        stats={stats} 
+      />
 
-
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+      {/* Main Content with left margin to account for fixed sidebar */}
+      <div className="ml-80 pt-20">
+        <div className="p-8">
           {renderTabContent()}
         </div>
       </div>
