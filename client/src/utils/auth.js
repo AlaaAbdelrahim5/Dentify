@@ -338,6 +338,8 @@ export const authUtils = {
         return '/admin/dashboard';
       case 'Patient':
         return '/patient/dashboard';
+      case 'Clinic':
+        return '/clinic/dashboard';
       case 'Dentist':
         return '/dentist/dashboard'; // For future implementation
       case 'Secretary':
