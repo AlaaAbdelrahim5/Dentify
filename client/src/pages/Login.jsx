@@ -136,7 +136,7 @@ const Login = () => {
         navigate(dashboardRoute, {
           replace: true,
           state: {
-            message: `Welcome back, ${response.user.fullName}!`,
+            message: `Welcome back, ${response.user.fullName || response.user.email}!`,
             user: response.user,
           },
         });

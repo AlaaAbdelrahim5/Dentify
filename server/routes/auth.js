@@ -36,6 +36,8 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('🔐 Login attempt for email:', email);
+
     // Validate input
     if (!email || !password) {
       return res.status(400).json({
@@ -46,6 +48,8 @@ router.post('/login', async (req, res) => {
 
     // Find user by email
     const user = await User.findByEmail(email);
+    console.log('👤 User found:', user ? 'Yes' : 'No');
+    
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -55,6 +59,8 @@ router.post('/login', async (req, res) => {
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
+    console.log('🔑 Password valid:', isPasswordValid);
+    
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -70,29 +76,58 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log('📋 User role:', user.role);
+
     // Get role-specific data
     let roleData = null;
     const RoleModel = roleModels[user.role];
     
     if (RoleModel) {
-      roleData = await RoleModel.findOne({ userId: user._id })
-        .populate('userId')
-        .populate('clinicId', 'clinicName address contactInfo'); // For dentists and secretaries
+      console.log('🔍 Fetching role-specific data for:', user.role);
+      roleData = await RoleModel.findOne({ userId: user._id }).populate('userId');
+      console.log('📊 Role data found:', roleData ? 'Yes' : 'No');
+      
+      // Only populate clinicId for roles that have it (Dentist, Secretary)
+      if (user.role === 'Dentist' || user.role === 'Secretary') {
+        console.log('🏥 Populating clinicId for:', user.role);
+        roleData = await RoleModel.findOne({ userId: user._id })
+          .populate('userId')
+          .populate('clinicId', 'clinicName address contactInfo');
+      }
     }
 
-    // Generate token
-    const token = generateToken(user._id, user.role);
+    // Generate tokens (access token and refresh token)
+    const accessToken = generateToken(user._id, user.role);
+    const refreshToken = jwt.sign(
+      { userId: user._id, role: user.role, type: 'refresh' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '30d' }
+    );
+
+    console.log('🎫 Tokens generated');
+
+    // Prepare user object with additional info
+    const userResponse = user.toPublicJSON();
+    // Add fullName from role-specific profile if available
+    if (roleData && roleData.fullName) {
+      userResponse.fullName = roleData.fullName;
+    } else if (roleData && roleData.firstName && roleData.lastName) {
+      userResponse.fullName = `${roleData.firstName} ${roleData.lastName}`;
+    }
+
+    console.log('✅ Login successful for:', userResponse.email);
 
     // Return success response
     res.json({
       success: true,
       message: 'Login successful',
-      data: {
-        token,
-        user: user.toPublicJSON(),
-        profile: roleData,
-        role: user.role
-      }
+      user: userResponse,
+      tokens: {
+        accessToken,
+        refreshToken
+      },
+      profile: roleData,
+      role: user.role
     });
 
   } catch (error) {
@@ -100,6 +135,125 @@ router.post('/login', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during login'
+    });
+  }
+});
+
+// @route   POST /api/auth/refresh
+// @desc    Refresh access token using refresh token
+// @access  Public
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Refresh token is required'
+      });
+    }
+
+    // Verify refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
+    // Check if it's a refresh token
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token type'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found or inactive'
+      });
+    }
+
+    // Generate new tokens
+    const newAccessToken = generateToken(user._id, user.role);
+    const newRefreshToken = jwt.sign(
+      { userId: user._id, role: user.role, type: 'refresh' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '30d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Token refreshed successfully',
+      tokens: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during token refresh'
+    });
+  }
+});
+
+// @route   POST /api/auth/verify
+// @desc    Verify if a token is valid
+// @access  Public
+router.post('/verify', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      });
+    }
+
+    // Verify token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (error) {
+      return res.json({
+        success: true,
+        valid: false,
+        message: 'Invalid or expired token'
+      });
+    }
+
+    // Check if user exists and is active
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.json({
+        success: true,
+        valid: false,
+        message: 'User not found or inactive'
+      });
+    }
+
+    res.json({
+      success: true,
+      valid: true,
+      message: 'Token is valid'
+    });
+
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during token verification'
     });
   }
 });
@@ -187,6 +341,71 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// @route   GET /api/auth/me
+// @desc    Get current user info from token
+// @access  Private
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    // Verify token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token'
+      });
+    }
+
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found or inactive'
+      });
+    }
+
+    // Get role-specific data
+    let roleData = null;
+    const RoleModel = roleModels[user.role];
+    
+    if (RoleModel) {
+      roleData = await RoleModel.findOne({ userId: user._id }).populate('userId');
+      
+      // Only populate clinicId for roles that have it (Dentist, Secretary)
+      if (user.role === 'Dentist' || user.role === 'Secretary') {
+        roleData = await RoleModel.findOne({ userId: user._id })
+          .populate('userId')
+          .populate('clinicId', 'clinicName address contactInfo');
+      }
+    }
+
+    res.json({
+      success: true,
+      user: user.toPublicJSON(),
+      profile: roleData,
+      role: user.role
+    });
+
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching user info'
+    });
+  }
+});
+
 // @route   GET /api/auth/profile
 // @desc    Get current user profile
 // @access  Private
@@ -218,9 +437,14 @@ router.get('/profile', async (req, res) => {
     const RoleModel = roleModels[user.role];
     
     if (RoleModel) {
-      roleData = await RoleModel.findOne({ userId: user._id })
-        .populate('userId')
-        .populate('clinicId', 'clinicName address contactInfo');
+      roleData = await RoleModel.findOne({ userId: user._id }).populate('userId');
+      
+      // Only populate clinicId for roles that have it (Dentist, Secretary)
+      if (user.role === 'Dentist' || user.role === 'Secretary') {
+        roleData = await RoleModel.findOne({ userId: user._id })
+          .populate('userId')
+          .populate('clinicId', 'clinicName address contactInfo');
+      }
     }
 
     res.json({
@@ -305,9 +529,14 @@ router.put('/profile', async (req, res) => {
     let roleData = null;
     
     if (RoleModel) {
-      roleData = await RoleModel.findOne({ userId: user._id })
-        .populate('userId')
-        .populate('clinicId', 'clinicName address contactInfo');
+      roleData = await RoleModel.findOne({ userId: user._id }).populate('userId');
+      
+      // Only populate clinicId for roles that have it (Dentist, Secretary)
+      if (user.role === 'Dentist' || user.role === 'Secretary') {
+        roleData = await RoleModel.findOne({ userId: user._id })
+          .populate('userId')
+          .populate('clinicId', 'clinicName address contactInfo');
+      }
     }
 
     res.json({
