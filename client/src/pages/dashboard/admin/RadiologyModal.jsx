@@ -7,7 +7,8 @@ import {
   FaEnvelope,
   FaGlobe,
   FaClock,
-  FaSave
+  FaSave,
+  FaLock
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -28,6 +29,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
     website: '',
     description: '',
     registrationNumber: '',
+    password: '',
     workingHours: {
       sunday: { isOpen: true, start: '09:00', end: '17:00' },
       monday: { isOpen: true, start: '09:00', end: '17:00' },
@@ -132,6 +134,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           website: center.website || '',
           description: center.description || '',
           registrationNumber: center.registrationNumber || '',
+          password: '', // Password field should be empty when editing
           workingHours: center.workingHours || {
             sunday: { isOpen: true, start: '09:00', end: '17:00' },
             monday: { isOpen: true, start: '09:00', end: '17:00' },
@@ -160,6 +163,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           website: '',
           description: '',
           registrationNumber: '',
+          password: '',
           workingHours: {
             sunday: { isOpen: true, start: '09:00', end: '17:00' },
             monday: { isOpen: true, start: '09:00', end: '17:00' },
@@ -471,6 +475,21 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                       error={errors.email}
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password {!center && '*'}
+                    </label>
+                    <Input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder={center ? "Enter new password (optional)" : "Enter password"}
+                      error={errors.password}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mt-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Website
