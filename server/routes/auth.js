@@ -111,6 +111,8 @@ router.post('/register', async (req, res) => {
   try {
     const { userData, profileData, role } = req.body;
 
+    console.log('📝 Registration attempt:', { userData: { ...userData, password: '***' }, profileData, role });
+
     // Validate required fields
     if (!userData || !userData.email || !userData.password || !role) {
       return res.status(400).json({
@@ -156,11 +158,12 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
     
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', validationErrors);
       return res.status(400).json({
         success: false,
         message: 'Validation error',

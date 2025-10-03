@@ -121,7 +121,7 @@ class ApiService {
 
 // Auth API functions
 export const authAPI = {
-  signup: (userData) => ApiService.post('/auth/signup', userData),
+  signup: (userData) => ApiService.post('/auth/register', userData),
   login: (credentials) => ApiService.post('/auth/login', credentials),
   logout: () => ApiService.post('/auth/logout'),
   refresh: (refreshToken) => ApiService.post('/auth/refresh', { refreshToken }),

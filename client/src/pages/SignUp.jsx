@@ -9,6 +9,7 @@ import {
   FaMapMarkerAlt,
   FaCheck,
   FaExclamationTriangle,
+  FaVenusMars,
 } from "react-icons/fa";
 import {
   Logo,
@@ -61,11 +62,13 @@ const SignUp = () => {
   ];
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     countryCode: "+970", // Default to Palestine
     phoneNumber: "",
     dateOfBirth: "",
+    gender: "",
     city: "",
     password: "",
     confirmPassword: "",
@@ -162,7 +165,8 @@ const SignUp = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Email is invalid";
@@ -172,6 +176,7 @@ const SignUp = () => {
       newErrors.phone = "Phone number must be at least 7 digits";
     if (!formData.dateOfBirth)
       newErrors.dateOfBirth = "Date of birth is required";
+    if (!formData.gender) newErrors.gender = "Please select your gender";
     if (!formData.city) newErrors.city = "Please select your city";
 
     if (!formData.password) newErrors.password = "Password is required";
@@ -203,40 +208,50 @@ const SignUp = () => {
     setApiError("");
 
     try {
-      // Prepare data for API
+      // Prepare data for API in the format expected by backend
       const signupData = {
-        fullName: formData.fullName.trim(),
-        email: formData.email.toLowerCase().trim(),
-        countryCode: formData.countryCode,
-        phoneNumber: formData.phoneNumber,
-        dateOfBirth: formData.dateOfBirth,
-        city: formData.city,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
+        role: 'Patient',
+        userData: {
+          email: formData.email.toLowerCase().trim(),
+          password: formData.password,
+          phone: `${formData.countryCode}${formData.phoneNumber}`,
+        },
+        profileData: {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          gender: formData.gender,
+          birthDate: formData.dateOfBirth,
+          address: {
+            city: formData.city,
+          },
+        },
       };
+
+      console.log('Sending signup data:', { ...signupData, userData: { ...signupData.userData, password: '***' } });
 
       const response = await authAPI.signup(signupData);
 
       if (response.success) {
         setIsSuccess(true);
 
-        // Show success message for 2 seconds then redirect
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('role', response.data.role);
+
+        // Show success message for 2 seconds then redirect to dashboard
         setTimeout(() => {
-          navigate("/login", {
-            state: {
-              message:
-                "Account created successfully! Please sign in with your credentials.",
-              email: formData.email,
-            },
+          navigate("/patient/dashboard", {
+            replace: true,
           });
         }, 2000);
       }
     } catch (error) {
       console.error("Signup error:", error);
 
-      if (error.message.includes("email already exists")) {
+      if (error.message.includes("email already exists") || error.message.includes("email")) {
         setErrors({ email: "An account with this email already exists" });
-      } else if (error.message.includes("phone number already exists")) {
+      } else if (error.message.includes("phone") || error.message.includes("phoneNumber")) {
         setErrors({
           phone: "An account with this phone number already exists",
         });
@@ -275,34 +290,30 @@ const SignUp = () => {
   const passwordInfo = passwordStrength();
 
   return (
-    <div className={`min-h-screen py-12 px-4 transition-colors duration-300 ${
+    <div className={`min-h-screen py-8 px-4 transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
         : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
-      <div className="max-w-md mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <Logo className="justify-center" size="text-3xl" />
-          <p className={`mt-4 ${
+          <p className={`mt-3 text-sm ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Create your patient account to get started.
+            Create your patient account to get started
           </p>
         </div>
 
         {/* Signup Form */}
-        <Card className="shadow-2xl">
-          <Card.Header>
-            <h2 className={`text-2xl font-bold text-center ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Create Account
+        <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
+          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-blue-500'}>
+            <h2 className="text-2xl font-bold text-center text-white">
+              Patient Registration
             </h2>
-            <p className={`text-sm text-center mt-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              Join thousands of patients managing their dental care
+            <p className="text-sm text-center mt-1 text-white text-opacity-90">
+              Join our dental care community
             </p>
           </Card.Header>
 
@@ -337,57 +348,84 @@ const SignUp = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {!isSuccess && (
                 <>
-                  {/* Full Name */}
-                  <Input
-                    label="Full Name"
-                    type="text"
-                    name="fullName"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    error={errors.fullName}
-                    icon={FaUser}
-                  />
+                  {/* Row 1: First Name and Last Name */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="First Name"
+                      type="text"
+                      name="firstName"
+                      placeholder="Enter your first name"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      error={errors.firstName}
+                      icon={FaUser}
+                    />
+                    <Input
+                      label="Last Name"
+                      type="text"
+                      name="lastName"
+                      placeholder="Enter your last name"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      error={errors.lastName}
+                      icon={FaUser}
+                    />
+                  </div>
 
-                  {/* Email */}
-                  <Input
-                    label="Email Address"
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    error={errors.email}
-                    icon={FaEnvelope}
-                  />
+                  {/* Row 2: Email and Phone */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Email Address"
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      error={errors.email}
+                      icon={FaEnvelope}
+                    />
+                    <PhoneInput
+                      label="Phone Number"
+                      countryCode={formData.countryCode}
+                      phoneNumber={formData.phoneNumber}
+                      onCountryChange={handleCountryCodeChange}
+                      onPhoneChange={handlePhoneNumberChange}
+                      placeholder="Enter your phone number"
+                      error={errors.phone}
+                      icon={FaPhone}
+                    />
+                  </div>
 
-                  {/* Phone */}
-                  <PhoneInput
-                    label="Phone Number"
-                    countryCode={formData.countryCode}
-                    phoneNumber={formData.phoneNumber}
-                    onCountryChange={handleCountryCodeChange}
-                    onPhoneChange={handlePhoneNumberChange}
-                    placeholder="Enter your phone number"
-                    error={errors.phone}
-                    icon={FaPhone}
-                  />
+                  {/* Row 3: Date of Birth and Gender */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      label="Date of Birth"
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      error={errors.dateOfBirth}
+                      icon={FaCalendarAlt}
+                    />
+                    <Select
+                      label="Gender"
+                      name="gender"
+                      placeholder="Select your gender"
+                      options={[
+                        { value: "male", label: "Male" },
+                        { value: "female", label: "Female" },
+                      ]}
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      error={errors.gender}
+                      icon={FaVenusMars}
+                    />
+                  </div>
 
-                  {/* Date of Birth */}
-                  <Input
-                    label="Date of Birth"
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    error={errors.dateOfBirth}
-                    icon={FaCalendarAlt}
-                  />
-
-                  {/* City Selection */}
+                  {/* City Selection - Full Width */}
                   <Select
                     label="City"
                     name="city"
@@ -399,52 +437,53 @@ const SignUp = () => {
                     icon={FaMapMarkerAlt}
                   />
 
-                  {/* Password */}
-                  <Input
-                    label="Password"
-                    type="password"
-                    name="password"
-                    placeholder="Create a strong password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    error={errors.password}
-                    icon={FaLock}
-                  />
-
-                  {/* Password Strength Indicator */}
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`flex-1 rounded-full h-2 ${
-                          isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
-                        }`}>
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${passwordInfo.color}`}
-                            style={{
-                              width: `${(passwordInfo.strength / 5) * 100}%`,
-                            }}
-                          ></div>
+                  {/* Row 4: Password and Confirm Password */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Input
+                        label="Password"
+                        type="password"
+                        name="password"
+                        placeholder="Create a strong password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        error={errors.password}
+                        icon={FaLock}
+                      />
+                      {/* Password Strength Indicator */}
+                      {formData.password && (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`flex-1 rounded-full h-2 ${
+                              isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+                            }`}>
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${passwordInfo.color}`}
+                                style={{
+                                  width: `${(passwordInfo.strength / 5) * 100}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <span className={`text-xs ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                            }`}>
+                              {passwordInfo.text}
+                            </span>
+                          </div>
                         </div>
-                        <span className={`text-xs ${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                        }`}>
-                          {passwordInfo.text}
-                        </span>
-                      </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Confirm Password */}
-                  <Input
-                    label="Confirm Password"
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    error={errors.confirmPassword}
-                    icon={FaLock}
-                  />
+                    <Input
+                      label="Confirm Password"
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      error={errors.confirmPassword}
+                      icon={FaLock}
+                    />
+                  </div>
 
                   {/* Password Match Indicator */}
                   {formData.confirmPassword && formData.password && (
@@ -467,8 +506,10 @@ const SignUp = () => {
                   )}
 
                   {/* Terms and Conditions */}
-                  <div>
-                    <label className="flex items-start gap-3">
+                  <div className={`p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700 bg-opacity-50' : 'bg-gray-50'
+                  }`}>
+                    <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={acceptedTerms}
@@ -509,7 +550,7 @@ const SignUp = () => {
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -528,7 +569,7 @@ const SignUp = () => {
 
           {/* Login Link */}
           <Card.Footer className={`text-center ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-gradient-to-r from-gray-50 to-gray-100'
           }`}>
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -536,7 +577,7 @@ const SignUp = () => {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="font-medium text-teal-600 hover:text-teal-500"
+                className="font-semibold text-teal-600 hover:text-teal-500 transition-colors"
               >
                 Sign in here
               </Link>
@@ -545,45 +586,17 @@ const SignUp = () => {
         </Card>
 
         {/* Additional Info */}
-        <div className="mt-8 text-center">
-          <div className={`rounded-lg p-4 mb-4 ${
-            isDarkMode 
-              ? 'bg-gray-800/50 border border-gray-700'
-              : 'bg-white/50 border border-gray-200'
-          }`}>
-            <h3 className={`text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-700'
-            }`}>
-              Why create an account?
-            </h3>
-            <ul className={`text-xs space-y-1 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              <li className="flex items-center gap-2">
-                <FaCheck className="text-teal-500" />
-                Book appointments with your preferred dentist
-              </li>
-              <li className="flex items-center gap-2">
-                <FaCheck className="text-teal-500" />
-                View your treatment history and X-ray results
-              </li>
-              <li className="flex items-center gap-2">
-                <FaCheck className="text-teal-500" />
-                Receive appointment reminders and notifications
-              </li>
-            </ul>
-          </div>
-
-          <div className={`flex items-center justify-center space-x-4 text-xs ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            <Link to="/" className="hover:text-teal-600">
-              Home
+        <div className="mt-6 text-center">
+          <div className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
+            isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
+          } shadow-md`}>
+            <Link to="/" className="hover:text-teal-600 transition-colors flex items-center gap-1">
+              🏠 Home
             </Link>
             <span>•</span>
-            <span>Patient Registration</span>
+            <span className="flex items-center gap-1">🔒 Secure & Private</span>
             <span>•</span>
-            <span>Secure & Private</span>
+            <span className="flex items-center gap-1">⚡ Fast & Easy</span>
           </div>
         </div>
       </div>
