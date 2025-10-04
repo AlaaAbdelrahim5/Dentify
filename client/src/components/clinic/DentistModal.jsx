@@ -45,11 +45,13 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
-  // Syrian cities
+  // Palestinian cities
   const cities = [
-    'Damascus', 'Aleppo', 'Homs', 'Hama', 'Lattakia', 'Deir ez-Zor', 
-    'Raqqa', 'Daraa', 'Al-Hasakah', 'Qamishli', 'Tartus', 'Idlib',
-    'Douma', 'Jaramana', 'Al-Bab', 'Salamiyah', 'Safita', 'Manbij'
+    'Acre', 'Al-Bireh', 'Beersheba', 'Beit Hanoun', 'Beit Jala', 'Beit Lahia',
+    'Beit Sahour', 'Bethlehem', 'Deir al-Balah', 'Gaza', 'Haifa', 'Hebron',
+    'Jabalya', 'Jaffa', 'Jenin', 'Jericho', 'Jerusalem', 'Khan Yunis',
+    'Lydd', 'Nablus', 'Nazareth', 'Qalqilya', 'Rafah', 'Ramallah',
+    'Ramla', 'Safad', 'Salfit', 'Tiberias', 'Tubas', 'Tulkarm'
   ]
 
   // Specializations
@@ -143,10 +145,10 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       newErrors.email = 'Please enter a valid email address'
     }
 
-    // Phone validation (Syrian format)
-    const phoneRegex = /^(\+963|0)?[0-9]{9,10}$/
+    // Phone validation (Palestinian format)
+    const phoneRegex = /^(\+970|0)?[0-9]{8,9}$/
     if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid Syrian phone number'
+      newErrors.phone = 'Please enter a valid Palestinian phone number'
     }
 
     // Age validation (minimum 22 years for dentists)
@@ -203,7 +205,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         birthDate: formData.birthDate,
         gender: formData.gender,
         address: {
-          city: formData.city
+          city: formData.city || (dentist?.address?.city) || 'Ramallah'
         },
         appointmentDuration: parseInt(formData.appointmentDuration),
         workingHours: formData.workingHours,
@@ -215,8 +217,13 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         role: 'Dentist'
       }
 
+      console.log('🔍 Sending dentist data:', dentistData)
+      console.log('🔍 Working hours:', dentistData.workingHours)
+      console.log('🔍 Form city value:', formData.city)
+      console.log('🔍 Address object:', dentistData.address)
+
       await onSave(dentistData)
-      onClose() // Close modal on successful save
+      // Don't close modal here - let the parent component handle it after successful save
     } catch (error) {
       console.error('Error saving dentist:', error)
       setErrors({ submit: error.message || 'Failed to save dentist request. Please try again.' })
@@ -276,6 +283,10 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   }
 
   const updateWorkingHour = (index, field, value) => {
+    if (field === 'startTime' || field === 'endTime') {
+      console.log(`Time input ${field}:`, value, 'typeof:', typeof value)
+    }
+    
     setFormData(prev => ({
       ...prev,
       workingHours: prev.workingHours.map((schedule, i) =>
@@ -528,7 +539,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
-                        placeholder="+963-XXX-XXXXXX"
+                        placeholder="+970-XX-XXXXXXX"
                       />
                     </div>
                     {errors.phone && (
@@ -832,7 +843,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                         value={formData.socialLinks.whatsapp}
                         onChange={(e) => handleInputChange('socialLinks.whatsapp', e.target.value)}
                         className="pl-10"
-                        placeholder="+963-XXX-XXXXXX"
+                        placeholder="+970-XX-XXXXXXX"
                       />
                     </div>
                   </div>

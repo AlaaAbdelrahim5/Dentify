@@ -7,7 +7,7 @@ const router = express.Router();
 
 // @route   GET /api/dentists
 // @desc    Get all dentists
-// @access  Public
+// @access  Public/Private (optionally authenticated)
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, city, specialization, clinicId } = req.query;
@@ -41,8 +41,15 @@ router.get('/', optionalAuth, async (req, res) => {
       query.specialization = { $in: [specialization] };
     }
 
-    // Filter by clinic
-    if (clinicId) {
+    // Filter by clinic - prioritize user's clinic if they're authenticated as clinic
+    if (req.user && req.user.role === 'Clinic') {
+      // If user is a clinic, only show their dentists
+      const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+      if (clinic) {
+        query.clinicId = clinic._id;
+      }
+    } else if (clinicId) {
+      // Otherwise use the provided clinicId parameter
       query.clinicId = clinicId;
     }
 
@@ -94,6 +101,41 @@ router.get('/', optionalAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error fetching dentists'
+    });
+  }
+});
+
+// @route   GET /api/dentists/clinic
+// @desc    Get all dentists for the authenticated clinic
+// @access  Private (Clinic only)
+router.get('/clinic', authenticate, authorize(['Clinic']), async (req, res) => {
+  try {
+    // Get clinic ID for current user
+    const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+    if (!clinic) {
+      return res.status(404).json({
+        success: false,
+        message: 'Clinic profile not found for current user'
+      });
+    }
+
+    // Get all dentists for this clinic (including pending ones)
+    const dentists = await Dentist.find({ clinicId: clinic._id })
+      .populate('userId', '-password')
+      .populate('clinicId', 'clinicName city location')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: dentists,
+      count: dentists.length
+    });
+
+  } catch (error) {
+    console.error('Get clinic dentists error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching clinic dentists'
     });
   }
 });
@@ -352,6 +394,9 @@ router.post('/', authenticate, authorize(['Clinic']), async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
   try {
     const { userData, dentistData } = req.body;
+    console.log('📝 Updating dentist:', req.params.id);
+    console.log('📝 User data:', userData);
+    console.log('📝 Dentist data:', dentistData);
 
     const dentist = await Dentist.findById(req.params.id);
     if (!dentist) {
@@ -375,7 +420,7 @@ router.put('/:id', authenticate, async (req, res) => {
 
     // Update user data if provided
     if (userData) {
-      const allowedUserFields = ['phone', 'profileImage'];
+      const allowedUserFields = ['email', 'phone', 'profileImage', 'password'];
       const userUpdateData = {};
       
       allowedUserFields.forEach(field => {
@@ -385,6 +430,20 @@ router.put('/:id', authenticate, async (req, res) => {
       });
 
       if (Object.keys(userUpdateData).length > 0) {
+        // Check if email is being updated and if it already exists
+        if (userData.email) {
+          const existingUser = await User.findOne({ 
+            email: userData.email, 
+            _id: { $ne: dentist.userId } 
+          });
+          if (existingUser) {
+            return res.status(400).json({
+              success: false,
+              message: 'Email already exists'
+            });
+          }
+        }
+
         await User.findByIdAndUpdate(dentist.userId, userUpdateData, {
           new: true,
           runValidators: true
@@ -404,13 +463,39 @@ router.put('/:id', authenticate, async (req, res) => {
         allowedFields.push('licenseNumber');
       }
 
+      // Check for license number uniqueness if it's being updated
+      if (dentistData.licenseNumber && dentistData.licenseNumber !== dentist.licenseNumber) {
+        const existingDentist = await Dentist.findOne({ 
+          licenseNumber: dentistData.licenseNumber,
+          _id: { $ne: dentist._id }
+        });
+        
+        if (existingDentist) {
+          return res.status(400).json({
+            success: false,
+            message: 'License number already exists'
+          });
+        }
+      }
+
       allowedFields.forEach(field => {
         if (dentistData[field] !== undefined) {
-          dentist[field] = dentistData[field];
+          // Special handling for address to preserve existing city if not provided
+          if (field === 'address' && dentistData[field] && !dentistData[field].city) {
+            // If address is provided but city is empty, preserve existing city
+            dentist[field] = {
+              ...dentist[field],
+              ...dentistData[field],
+              city: dentist[field]?.city || dentistData[field].city
+            };
+          } else {
+            dentist[field] = dentistData[field];
+          }
         }
       });
 
-      await dentist.save();
+      // Use validateBeforeSave: false to avoid re-validating required fields that aren't being updated
+      await dentist.save({ validateBeforeSave: true });
     }
 
     // Get updated dentist
@@ -426,19 +511,32 @@ router.put('/:id', authenticate, async (req, res) => {
 
   } catch (error) {
     console.error('Update dentist error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      errors: error.errors
+    });
     
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', validationErrors);
       return res.status(400).json({
         success: false,
-        message: 'Validation error',
+        message: 'Validation error: ' + validationErrors.join(', '),
         errors: validationErrors
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duplicate entry error'
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Server error updating dentist'
+      message: 'Server error updating dentist: ' + error.message
     });
   }
 });

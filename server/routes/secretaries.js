@@ -46,6 +46,41 @@ router.get('/', authenticate, authorize(['Admin', 'Clinic']), async (req, res) =
   }
 });
 
+// @route   GET /api/secretaries/clinic
+// @desc    Get all secretaries for the authenticated clinic
+// @access  Private (Clinic only)
+router.get('/clinic', authenticate, authorize(['Clinic']), async (req, res) => {
+  try {
+    // Get clinic ID for current user
+    const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+    if (!clinic) {
+      return res.status(404).json({
+        success: false,
+        message: 'Clinic profile not found for current user'
+      });
+    }
+
+    // Get all secretaries for this clinic
+    const secretaries = await Secretary.find({ clinicId: clinic._id })
+      .populate('userId', '-password')
+      .populate('clinicId', 'clinicName city location')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: secretaries,
+      count: secretaries.length
+    });
+
+  } catch (error) {
+    console.error('Get clinic secretaries error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching clinic secretaries'
+    });
+  }
+});
+
 // @route   GET /api/secretaries/me
 // @desc    Get own secretary profile
 // @access  Private (Secretary only)
@@ -223,6 +258,9 @@ router.get('/:id', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
   try {
     const { userData, secretaryData } = req.body;
+    console.log('📝 Updating secretary:', req.params.id);
+    console.log('📝 User data:', userData);
+    console.log('📝 Secretary data:', secretaryData);
 
     const secretary = await Secretary.findById(req.params.id);
     if (!secretary) {
@@ -246,7 +284,7 @@ router.put('/:id', authenticate, async (req, res) => {
 
     // Update user data if provided
     if (userData) {
-      const allowedUserFields = ['phone', 'profileImage'];
+      const allowedUserFields = ['email', 'phone', 'profileImage', 'password'];
       const userUpdateData = {};
       
       allowedUserFields.forEach(field => {
@@ -256,6 +294,20 @@ router.put('/:id', authenticate, async (req, res) => {
       });
 
       if (Object.keys(userUpdateData).length > 0) {
+        // Check if email is being updated and if it already exists
+        if (userData.email) {
+          const existingUser = await User.findOne({ 
+            email: userData.email, 
+            _id: { $ne: secretary.userId } 
+          });
+          if (existingUser) {
+            return res.status(400).json({
+              success: false,
+              message: 'Email already exists'
+            });
+          }
+        }
+
         await User.findByIdAndUpdate(secretary.userId, userUpdateData, {
           new: true,
           runValidators: true
@@ -291,9 +343,32 @@ router.put('/:id', authenticate, async (req, res) => {
 
   } catch (error) {
     console.error('Update secretary error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      errors: error.errors
+    });
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', validationErrors);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error: ' + validationErrors.join(', '),
+        errors: validationErrors
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duplicate entry error'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error updating secretary'
+      message: 'Server error updating secretary: ' + error.message
     });
   }
 });

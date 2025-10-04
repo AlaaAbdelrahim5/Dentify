@@ -152,6 +152,9 @@ export const dentistsAPI = {
     return ApiService.get(`/dentists${params}`);
   },
   
+  // Get all dentists for the authenticated clinic
+  getForClinic: () => ApiService.get('/dentists/clinic'),
+  
   // Get dentist by ID
   getById: (id) => ApiService.get(`/dentists/${id}`),
   
@@ -184,6 +187,9 @@ export const secretariesAPI = {
     const params = clinicId ? `?clinicId=${clinicId}` : '';
     return ApiService.get(`/secretaries${params}`);
   },
+  
+  // Get all secretaries for the authenticated clinic
+  getForClinic: () => ApiService.get('/secretaries/clinic'),
   
   // Get secretary by ID
   getById: (id) => ApiService.get(`/secretaries/${id}`),

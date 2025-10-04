@@ -301,7 +301,18 @@ export const authUtils = {
   // Get user's full name
   getUserName: () => {
     const user = authUtils.getCurrentUser();
-    return user?.fullName || 'User';
+    if (user?.fullName) {
+      return user.fullName;
+    }
+    
+    // Fallback to email prefix for user-friendly display
+    if (user?.email) {
+      const emailPrefix = user.email.split('@')[0];
+      // Convert email prefix to more readable format
+      return emailPrefix.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    return 'User';
   },
 
   // Get user's email
@@ -319,13 +330,23 @@ export const authUtils = {
   // Get user's initials for avatar
   getUserInitials: () => {
     const user = authUtils.getCurrentUser();
-    if (!user?.fullName) return 'U';
+    let name = user?.fullName;
     
-    const names = user.fullName.split(' ');
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    // If no fullName, try to use email prefix
+    if (!name && user?.email) {
+      name = user.email.split('@')[0];
     }
-    return user.fullName[0].toUpperCase();
+    
+    if (!name) return 'U';
+    
+    // Handle multi-word names (e.g., "Smile Dental Center" -> "SD")
+    const words = name.split(' ').filter(word => word.length > 0);
+    if (words.length >= 2) {
+      return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+    }
+    
+    // Single word or fallback
+    return name[0].toUpperCase();
   },
 
   // Get dashboard route based on user role

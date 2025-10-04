@@ -74,7 +74,7 @@ const ClinicDashboard = () => {
     // Mock clinic data
     setClinicData({
       clinicName: "Smile Dental Center",
-      city: "Damascus",
+      city: "Ramallah",
       registrationNumber: "DC001",
       location: "Downtown Area"
     })

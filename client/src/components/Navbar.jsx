@@ -120,11 +120,20 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                         {currentUser ? authUtils.getUserInitials() : 'U'}
                       </span>
                     </div>
-                    <span className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      {currentUser ? authUtils.getUserName() : 'User'}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-medium ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {currentUser ? authUtils.getUserName() : 'User'}
+                      </span>
+                      {currentUser?.role && (
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {currentUser.role}
+                        </span>
+                      )}
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -220,9 +229,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                         {currentUser ? authUtils.getUserInitials() : 'U'}
                       </span>
                     </div>
-                    <span className="text-base font-medium">
-                      {currentUser ? authUtils.getUserName() : 'User'}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-base font-medium">
+                        {currentUser ? authUtils.getUserName() : 'User'}
+                      </span>
+                      {currentUser?.role && (
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {currentUser.role}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => {

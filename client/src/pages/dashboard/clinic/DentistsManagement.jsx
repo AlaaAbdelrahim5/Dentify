@@ -50,16 +50,19 @@ const DentistsManagement = () => {
       try {
         setLoading(true)
         setError(null)
-        const response = await dentistsAPI.getAll()
-        if (response.success) {
-          setDentists(response.data)
-          setFilteredDentists(response.data)
+        // Use clinic-specific API to get only dentists belonging to this clinic
+        const response = await dentistsAPI.getForClinic()
+        if (response && response.success) {
+          const dentistsData = response.data || []
+          setDentists(dentistsData)
+          setFilteredDentists(dentistsData)
         } else {
-          setError('Failed to load dentists')
+          setError(response?.message || 'Failed to load dentists')
         }
       } catch (error) {
         console.error('Error loading dentists:', error)
-        setError('Failed to load dentists. Please try again.')
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to load dentists. Please try again.'
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -74,17 +77,28 @@ const DentistsManagement = () => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(dentist =>
-        `${dentist.firstName} ${dentist.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dentist.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dentist.specialization.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        dentist.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter(dentist => {
+        const fullName = `${dentist.firstName} ${dentist.lastName}`.toLowerCase()
+        const licenseNumber = dentist.licenseNumber?.toLowerCase() || ''
+        const email = dentist.userId?.email?.toLowerCase() || ''
+        const searchLower = searchTerm.toLowerCase()
+        
+        // Check specializations safely
+        const specializationMatch = dentist.specialization && Array.isArray(dentist.specialization) 
+          ? dentist.specialization.some(spec => spec.toLowerCase().includes(searchLower))
+          : false
+        
+        return fullName.includes(searchLower) ||
+               licenseNumber.includes(searchLower) ||
+               specializationMatch ||
+               email.includes(searchLower)
+      })
     }
 
     // Specialization filter
     if (filterSpecialization) {
       filtered = filtered.filter(dentist => 
+        dentist.specialization && Array.isArray(dentist.specialization) &&
         dentist.specialization.includes(filterSpecialization)
       )
     }
@@ -117,16 +131,19 @@ const DentistsManagement = () => {
   const handleDeleteDentist = async (dentistId) => {
     if (window.confirm('Are you sure you want to delete this dentist? This action cannot be undone.')) {
       try {
+        setError(null) // Clear any existing errors
         const response = await dentistsAPI.delete(dentistId)
-        if (response.success) {
+        if (response && response.success) {
           setDentists(prev => prev.filter(d => d._id !== dentistId))
+          console.log('Dentist deleted successfully')
           // Show success message (you can add a toast notification here)
         } else {
-          setError('Failed to delete dentist')
+          setError(response?.message || 'Failed to delete dentist')
         }
       } catch (error) {
         console.error('Error deleting dentist:', error)
-        setError('Failed to delete dentist. Please try again.')
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete dentist. Please try again.'
+        setError(errorMessage)
       }
     }
   }
@@ -136,33 +153,58 @@ const DentistsManagement = () => {
       setError(null)
       
       if (selectedDentist) {
-        // Edit existing dentist
-        const response = await dentistsAPI.update(selectedDentist._id, dentistData)
+        // Edit existing dentist - structure data according to API expectations
+        const updateData = {
+          userData: {
+            email: dentistData.email,
+            phone: dentistData.phone,
+            ...(dentistData.password && { password: dentistData.password })
+          },
+          dentistData: {
+            firstName: dentistData.firstName,
+            lastName: dentistData.lastName,
+            licenseNumber: dentistData.licenseNumber,
+            specialization: dentistData.specialization,
+            birthDate: dentistData.birthDate,
+            gender: dentistData.gender,
+            address: dentistData.address,
+            appointmentDuration: dentistData.appointmentDuration,
+            workingHours: dentistData.workingHours,
+            socialLinks: dentistData.socialLinks
+          }
+        }
+        
+        const response = await dentistsAPI.update(selectedDentist._id, updateData)
         if (response.success) {
+          // Update the dentist in the list
           setDentists(prev => prev.map(d => 
             d._id === selectedDentist._id 
               ? response.data
               : d
           ))
           setIsModalOpen(false)
+          console.log('Dentist updated successfully')
         } else {
-          setError('Failed to update dentist')
+          setError(response.message || 'Failed to update dentist')
         }
       } else {
         // Add new dentist (send request to admin for approval)
         const response = await dentistsAPI.create(dentistData)
         if (response.success) {
+          // Add the new dentist to the list
           setDentists(prev => [response.data, ...prev])
           setIsModalOpen(false)
           // Show success message
           alert('Dentist request sent to admin for approval. You will be notified once approved.')
+          console.log('Dentist request created successfully')
         } else {
-          setError('Failed to create dentist request')
+          setError(response.message || 'Failed to create dentist request')
         }
       }
     } catch (error) {
       console.error('Error saving dentist:', error)
-      setError('Failed to save dentist. Please try again.')
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save dentist. Please try again.'
+      setError(errorMessage)
     }
   }
 

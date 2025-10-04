@@ -34,17 +34,20 @@ const SecretariesManagement = () => {
       try {
         setIsLoading(true)
         setError(null)
-        const response = await secretariesAPI.getAll()
+        // Use clinic-specific API to get only secretaries belonging to this clinic
+        const response = await secretariesAPI.getForClinic()
         
-        if (response.success) {
-          setSecretaries(response.data)
-          setFilteredSecretaries(response.data)
+        if (response && response.success) {
+          const secretariesData = response.data || []
+          setSecretaries(secretariesData)
+          setFilteredSecretaries(secretariesData)
         } else {
-          setError('Failed to fetch secretaries')
+          setError(response?.message || 'Failed to fetch secretaries')
         }
       } catch (error) {
         console.error('Error fetching secretaries:', error)
-        setError('Failed to load secretaries. Please try again.')
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to load secretaries. Please try again.'
+        setError(errorMessage)
       } finally {
         setIsLoading(false)
       }
@@ -59,11 +62,16 @@ const SecretariesManagement = () => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(secretary =>
-        `${secretary.firstName} ${secretary.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        secretary.userId.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        secretary.address.city.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter(secretary => {
+        const fullName = `${secretary.firstName} ${secretary.lastName}`.toLowerCase()
+        const email = secretary.userId?.email?.toLowerCase() || ''
+        const city = secretary.address?.city?.toLowerCase() || ''
+        const searchLower = searchTerm.toLowerCase()
+        
+        return fullName.includes(searchLower) ||
+               email.includes(searchLower) ||
+               city.includes(searchLower)
+      })
     }
 
     // Gender filter
@@ -85,19 +93,22 @@ const SecretariesManagement = () => {
   }
 
   const handleDeleteSecretary = async (secretaryId) => {
-    if (window.confirm('Are you sure you want to delete this secretary?')) {
+    if (window.confirm('Are you sure you want to delete this secretary? This action cannot be undone.')) {
       try {
+        setError(null) // Clear any existing errors
         const response = await secretariesAPI.delete(secretaryId)
         
-        if (response.success) {
+        if (response && response.success) {
           setSecretaries(prev => prev.filter(s => s._id !== secretaryId))
+          console.log('Secretary deleted successfully')
           // Show success message (you can add a toast notification here)
         } else {
-          setError('Failed to delete secretary')
+          setError(response?.message || 'Failed to delete secretary')
         }
       } catch (error) {
         console.error('Error deleting secretary:', error)
-        setError('Failed to delete secretary. Please try again.')
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete secretary. Please try again.'
+        setError(errorMessage)
       }
     }
   }
@@ -107,40 +118,72 @@ const SecretariesManagement = () => {
       setError(null)
       
       if (selectedSecretary) {
-        // Edit existing secretary
-        const response = await secretariesAPI.update(selectedSecretary._id, {
-          userData: secretaryData.userId,
+        // Edit existing secretary - structure data according to API expectations
+        const updateData = {
+          userData: {
+            email: secretaryData.userId.email,
+            phone: secretaryData.userId.phone,
+            ...(secretaryData.userId.password && { password: secretaryData.userId.password })
+          },
           secretaryData: {
             firstName: secretaryData.firstName,
             lastName: secretaryData.lastName,
             birthDate: secretaryData.birthDate,
             gender: secretaryData.gender,
-            address: secretaryData.address
+            address: {
+              city: secretaryData.address.city
+            }
           }
-        })
+        }
+        
+        const response = await secretariesAPI.update(selectedSecretary._id, updateData)
         
         if (response.success) {
+          // Update the secretary in the list
           setSecretaries(prev => prev.map(s => 
             s._id === selectedSecretary._id ? response.data : s
           ))
           setIsModalOpen(false)
+          // Show success message (you can add toast here)
+          console.log('Secretary updated successfully')
         } else {
-          setError('Failed to update secretary')
+          setError(response.message || 'Failed to update secretary')
         }
       } else {
-        // Add new secretary
-        const response = await secretariesAPI.create(secretaryData)
+        // Add new secretary - match the expected API structure
+        const createData = {
+          firstName: secretaryData.firstName,
+          lastName: secretaryData.lastName,
+          birthDate: secretaryData.birthDate,
+          gender: secretaryData.gender,
+          address: {
+            city: secretaryData.address.city
+          },
+          userId: {
+            email: secretaryData.userId.email,
+            phone: secretaryData.userId.phone,
+            password: secretaryData.userId.password,
+            role: 'Secretary',
+            status: 'active'
+          }
+        }
+        
+        const response = await secretariesAPI.create(createData)
         
         if (response.success) {
+          // Add the new secretary to the list
           setSecretaries(prev => [response.data, ...prev])
           setIsModalOpen(false)
+          // Show success message (you can add toast here)
+          console.log('Secretary created successfully')
         } else {
-          setError('Failed to create secretary')
+          setError(response.message || 'Failed to create secretary')
         }
       }
     } catch (error) {
       console.error('Error saving secretary:', error)
-      setError('Failed to save secretary. Please try again.')
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save secretary. Please try again.'
+      setError(errorMessage)
     }
   }
 

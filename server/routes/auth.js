@@ -113,6 +113,12 @@ router.post('/login', async (req, res) => {
       userResponse.fullName = roleData.fullName;
     } else if (roleData && roleData.firstName && roleData.lastName) {
       userResponse.fullName = `${roleData.firstName} ${roleData.lastName}`;
+    } else if (roleData && roleData.clinicName) {
+      // For clinic users, use the clinic name
+      userResponse.fullName = roleData.clinicName;
+    } else if (roleData && roleData.centerName) {
+      // For radiology center users, use the center name
+      userResponse.fullName = roleData.centerName;
     }
 
     console.log('✅ Login successful for:', userResponse.email);
