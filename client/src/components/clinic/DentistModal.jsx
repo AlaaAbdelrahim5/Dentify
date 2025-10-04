@@ -216,10 +216,10 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       }
 
       await onSave(dentistData)
-      // Modal will be closed by the parent component after successful save
+      onClose() // Close modal on successful save
     } catch (error) {
       console.error('Error saving dentist:', error)
-      setErrors({ submit: 'Failed to save dentist request. Please try again.' })
+      setErrors({ submit: error.message || 'Failed to save dentist request. Please try again.' })
     } finally {
       setIsLoading(false)
     }

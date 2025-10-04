@@ -187,6 +187,16 @@ router.get('/:id', async (req, res) => {
 // @access  Private (Clinic only)
 router.post('/', authenticate, authorize(['Clinic']), async (req, res) => {
   try {
+    console.log('📝 Creating dentist request with data:', {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      licenseNumber: req.body.licenseNumber,
+      specialization: req.body.specialization,
+      hasAddress: !!req.body.address,
+      userId: req.user._id
+    });
+
     const {
       firstName,
       lastName,
@@ -284,15 +294,54 @@ router.post('/', authenticate, authorize(['Clinic']), async (req, res) => {
 
   } catch (error) {
     console.error('Create dentist error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      keyPattern: error.keyPattern,
+      validationErrors: error.errors
+    });
     
     // Clean up if user was created but dentist creation failed
     if (error.name === 'ValidationError' && req.body.email) {
       await User.findOneAndDelete({ email: req.body.email });
     }
 
+    // Handle specific errors
+    if (error.code === 11000) {
+      if (error.keyPattern?.email) {
+        return res.status(400).json({
+          success: false,
+          message: 'User with this email already exists'
+        });
+      }
+      if (error.keyPattern?.licenseNumber) {
+        return res.status(400).json({
+          success: false,
+          message: 'Dentist with this license number already exists'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: 'Duplicate entry found'
+      });
+    }
+
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: `Validation error: ${messages.join(', ')}`
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error creating dentist request'
+      message: 'Server error creating dentist request',
+      ...(process.env.NODE_ENV === 'development' && { 
+        errorDetails: error.message,
+        validationErrors: error.errors 
+      })
     });
   }
 });

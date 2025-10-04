@@ -24,6 +24,7 @@ const DentistsManagement = () => {
   const [dentists, setDentists] = useState([])
   const [filteredDentists, setFilteredDentists] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSpecialization, setFilterSpecialization] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -48,15 +49,17 @@ const DentistsManagement = () => {
     const loadDentists = async () => {
       try {
         setLoading(true)
+        setError(null)
         const response = await dentistsAPI.getAll()
         if (response.success) {
           setDentists(response.data)
           setFilteredDentists(response.data)
         } else {
-          console.error('Failed to load dentists:', response.message)
+          setError('Failed to load dentists')
         }
       } catch (error) {
         console.error('Error loading dentists:', error)
+        setError('Failed to load dentists. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -117,20 +120,21 @@ const DentistsManagement = () => {
         const response = await dentistsAPI.delete(dentistId)
         if (response.success) {
           setDentists(prev => prev.filter(d => d._id !== dentistId))
-          console.log('Dentist deleted successfully')
+          // Show success message (you can add a toast notification here)
         } else {
-          console.error('Failed to delete dentist:', response.message)
-          alert('Failed to delete dentist. Please try again.')
+          setError('Failed to delete dentist')
         }
       } catch (error) {
         console.error('Error deleting dentist:', error)
-        alert('Error deleting dentist. Please try again.')
+        setError('Failed to delete dentist. Please try again.')
       }
     }
   }
 
   const handleModalSave = async (dentistData) => {
     try {
+      setError(null)
+      
       if (selectedDentist) {
         // Edit existing dentist
         const response = await dentistsAPI.update(selectedDentist._id, dentistData)
@@ -140,27 +144,25 @@ const DentistsManagement = () => {
               ? response.data
               : d
           ))
-          console.log('Dentist updated successfully')
+          setIsModalOpen(false)
         } else {
-          console.error('Failed to update dentist:', response.message)
-          throw new Error(response.message || 'Failed to update dentist')
+          setError('Failed to update dentist')
         }
       } else {
         // Add new dentist (send request to admin for approval)
         const response = await dentistsAPI.create(dentistData)
         if (response.success) {
           setDentists(prev => [response.data, ...prev])
-          console.log('Dentist request sent to admin for approval')
+          setIsModalOpen(false)
+          // Show success message
           alert('Dentist request sent to admin for approval. You will be notified once approved.')
         } else {
-          console.error('Failed to create dentist request:', response.message)
-          throw new Error(response.message || 'Failed to create dentist request')
+          setError('Failed to create dentist request')
         }
       }
-      setIsModalOpen(false)
     } catch (error) {
       console.error('Error saving dentist:', error)
-      throw error
+      setError('Failed to save dentist. Please try again.')
     }
   }
 
@@ -206,6 +208,32 @@ const DentistsManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="text-red-400">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+            <div className="ml-auto">
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-600"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

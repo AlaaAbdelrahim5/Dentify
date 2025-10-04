@@ -134,7 +134,7 @@ router.post('/', authenticate, authorize(['Admin', 'Clinic']), async (req, res) 
       {
         ...userId,
         role: 'Secretary',
-        status: 'active'
+        status: 'active' // Secretaries can be active immediately
       },
       {
         firstName,
