@@ -54,6 +54,12 @@ class ApiService {
         }
       }
 
+      // Check if response is HTML (error page) instead of JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -169,6 +175,33 @@ export const dentistsAPI = {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/dentists/search?${queryString}`);
   },
+};
+
+// Secretaries API functions
+export const secretariesAPI = {
+  // Get all secretaries for the clinic
+  getAll: (clinicId = null) => {
+    const params = clinicId ? `?clinicId=${clinicId}` : '';
+    return ApiService.get(`/secretaries${params}`);
+  },
+  
+  // Get secretary by ID
+  getById: (id) => ApiService.get(`/secretaries/${id}`),
+  
+  // Create new secretary
+  create: (secretaryData) => ApiService.post('/secretaries', secretaryData),
+  
+  // Update secretary
+  update: (id, secretaryData) => ApiService.put(`/secretaries/${id}`, secretaryData),
+  
+  // Delete secretary
+  delete: (id) => ApiService.delete(`/secretaries/${id}`),
+  
+  // Get current secretary profile (for secretary users)
+  getMyProfile: () => ApiService.get('/secretaries/me'),
+  
+  // Update current secretary profile
+  updateMyProfile: (data) => ApiService.put('/secretaries/me', data),
 };
 
 // Health check API

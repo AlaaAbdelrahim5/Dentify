@@ -83,6 +83,98 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
+// @route   POST /api/secretaries
+// @desc    Create new secretary
+// @access  Private (Clinic, Admin only)
+router.post('/', authenticate, authorize(['Admin', 'Clinic']), async (req, res) => {
+  try {
+    const { firstName, lastName, birthDate, gender, address, userId, clinicId } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !birthDate || !gender || !address?.city || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Determine clinicId
+    let targetClinicId = clinicId;
+    
+    // If user is a clinic, they can only create secretaries for their own clinic
+    if (req.user.role === 'Clinic') {
+      const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+      if (!clinic) {
+        return res.status(400).json({
+          success: false,
+          message: 'Clinic profile not found'
+        });
+      }
+      targetClinicId = clinic._id;
+    }
+
+    if (!targetClinicId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Clinic ID is required'
+      });
+    }
+
+    // Check if user email already exists
+    const existingUser = await User.findOne({ email: userId.email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address already exists'
+      });
+    }
+
+    // Create secretary with user using the static method
+    const { user, secretary } = await Secretary.createWithUser(
+      {
+        ...userId,
+        role: 'Secretary',
+        status: 'active'
+      },
+      {
+        firstName,
+        lastName,
+        birthDate,
+        gender,
+        address,
+        clinicId: targetClinicId
+      }
+    );
+
+    // Get the created secretary with populated fields
+    const populatedSecretary = await Secretary.findById(secretary._id)
+      .populate('userId', '-password')
+      .populate('clinicId', 'clinicName city location');
+
+    res.status(201).json({
+      success: true,
+      message: 'Secretary created successfully',
+      data: populatedSecretary
+    });
+
+  } catch (error) {
+    console.error('Create secretary error:', error);
+    
+    // Handle specific errors
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Secretary with this email already exists'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error creating secretary'
+    });
+  }
+});
+
 // @route   GET /api/secretaries/:id
 // @desc    Get secretary by ID
 // @access  Private (Own profile, Clinic, or Admin)
@@ -202,6 +294,63 @@ router.put('/:id', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error updating secretary'
+    });
+  }
+});
+
+// @route   DELETE /api/secretaries/:id
+// @desc    Delete secretary
+// @access  Private (Clinic, Admin only)
+router.delete('/:id', authenticate, authorize(['Admin', 'Clinic']), async (req, res) => {
+  try {
+    const secretary = await Secretary.findById(req.params.id);
+    
+    if (!secretary) {
+      return res.status(404).json({
+        success: false,
+        message: 'Secretary not found'
+      });
+    }
+
+    // Check permissions - clinic can only delete their own secretaries
+    if (req.user.role === 'Clinic') {
+      const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+      if (!clinic || clinic._id.toString() !== secretary.clinicId.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only delete your own secretaries.'
+        });
+      }
+    }
+
+    const session = await require('mongoose').startSession();
+    session.startTransaction();
+
+    try {
+      // Delete secretary profile
+      await Secretary.findByIdAndDelete(req.params.id).session(session);
+      
+      // Delete associated user account
+      await User.findByIdAndDelete(secretary.userId).session(session);
+      
+      await session.commitTransaction();
+      
+      res.json({
+        success: true,
+        message: 'Secretary deleted successfully'
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+
+  } catch (error) {
+    console.error('Delete secretary error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting secretary'
     });
   }
 });

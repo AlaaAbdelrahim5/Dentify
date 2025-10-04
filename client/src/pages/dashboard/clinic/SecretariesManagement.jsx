@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, Select } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { secretariesAPI } from '../../../services/api'
 import SecretaryModal from '../../../components/clinic/SecretaryModal'
 
 const SecretariesManagement = () => {
@@ -25,68 +26,31 @@ const SecretariesManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedSecretary, setSelectedSecretary] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Mock data - Replace with actual API calls
+  // Fetch secretaries from API
   useEffect(() => {
-    const mockSecretaries = [
-      {
-        _id: '1',
-        userId: {
-          _id: 'u1',
-          email: 'sarah.ahmed@email.com',
-          phone: '+963-123-456789',
-          status: 'active'
-        },
-        firstName: 'Sarah',
-        lastName: 'Ahmed',
-        birthDate: '1995-06-15',
-        gender: 'female',
-        address: {
-          city: 'Damascus'
-        },
-        createdAt: '2024-01-15T10:30:00Z'
-      },
-      {
-        _id: '2',
-        userId: {
-          _id: 'u2',
-          email: 'omar.hassan@email.com',
-          phone: '+963-987-654321',
-          status: 'active'
-        },
-        firstName: 'Omar',
-        lastName: 'Hassan',
-        birthDate: '1992-03-22',
-        gender: 'male',
-        address: {
-          city: 'Aleppo'
-        },
-        createdAt: '2024-02-10T14:20:00Z'
-      },
-      {
-        _id: '3',
-        userId: {
-          _id: 'u3',
-          email: 'layla.mohamed@email.com',
-          phone: '+963-555-123456',
-          status: 'active'
-        },
-        firstName: 'Layla',
-        lastName: 'Mohamed',
-        birthDate: '1998-11-08',
-        gender: 'female',
-        address: {
-          city: 'Damascus'
-        },
-        createdAt: '2024-01-28T09:15:00Z'
+    const fetchSecretaries = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await secretariesAPI.getAll()
+        
+        if (response.success) {
+          setSecretaries(response.data)
+          setFilteredSecretaries(response.data)
+        } else {
+          setError('Failed to fetch secretaries')
+        }
+      } catch (error) {
+        console.error('Error fetching secretaries:', error)
+        setError('Failed to load secretaries. Please try again.')
+      } finally {
+        setIsLoading(false)
       }
-    ]
+    }
 
-    setTimeout(() => {
-      setSecretaries(mockSecretaries)
-      setFilteredSecretaries(mockSecretaries)
-      setIsLoading(false)
-    }, 1000)
+    fetchSecretaries()
   }, [])
 
   // Filter secretaries based on search and filters
@@ -123,32 +87,61 @@ const SecretariesManagement = () => {
   const handleDeleteSecretary = async (secretaryId) => {
     if (window.confirm('Are you sure you want to delete this secretary?')) {
       try {
-        // TODO: API call to delete secretary
-        setSecretaries(prev => prev.filter(s => s._id !== secretaryId))
+        const response = await secretariesAPI.delete(secretaryId)
+        
+        if (response.success) {
+          setSecretaries(prev => prev.filter(s => s._id !== secretaryId))
+          // Show success message (you can add a toast notification here)
+        } else {
+          setError('Failed to delete secretary')
+        }
       } catch (error) {
         console.error('Error deleting secretary:', error)
+        setError('Failed to delete secretary. Please try again.')
       }
     }
   }
 
-  const handleModalSave = (secretaryData) => {
-    if (selectedSecretary) {
-      // Edit existing secretary
-      setSecretaries(prev => prev.map(s => 
-        s._id === selectedSecretary._id 
-          ? { ...s, ...secretaryData }
-          : s
-      ))
-    } else {
-      // Add new secretary
-      const newSecretary = {
-        _id: Date.now().toString(),
-        ...secretaryData,
-        createdAt: new Date().toISOString()
+  const handleModalSave = async (secretaryData) => {
+    try {
+      setError(null)
+      
+      if (selectedSecretary) {
+        // Edit existing secretary
+        const response = await secretariesAPI.update(selectedSecretary._id, {
+          userData: secretaryData.userId,
+          secretaryData: {
+            firstName: secretaryData.firstName,
+            lastName: secretaryData.lastName,
+            birthDate: secretaryData.birthDate,
+            gender: secretaryData.gender,
+            address: secretaryData.address
+          }
+        })
+        
+        if (response.success) {
+          setSecretaries(prev => prev.map(s => 
+            s._id === selectedSecretary._id ? response.data : s
+          ))
+          setIsModalOpen(false)
+        } else {
+          setError('Failed to update secretary')
+        }
+      } else {
+        // Add new secretary
+        const response = await secretariesAPI.create(secretaryData)
+        
+        if (response.success) {
+          setSecretaries(prev => [response.data, ...prev])
+          setIsModalOpen(false)
+        } else {
+          setError('Failed to create secretary')
+        }
       }
-      setSecretaries(prev => [newSecretary, ...prev])
+    } catch (error) {
+      console.error('Error saving secretary:', error)
+      setError('Failed to save secretary. Please try again.')
     }
-    setIsModalOpen(false)
   }
 
   const formatDate = (dateString) => {
@@ -176,6 +169,32 @@ const SecretariesManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="text-red-400">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+            <div className="ml-auto">
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-600"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

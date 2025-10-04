@@ -134,9 +134,10 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
       }
 
       await onSave(secretaryData)
+      onClose() // Close modal on successful save
     } catch (error) {
       console.error('Error saving secretary:', error)
-      setErrors({ submit: 'Failed to save secretary. Please try again.' })
+      setErrors({ submit: error.message || 'Failed to save secretary. Please try again.' })
     } finally {
       setIsLoading(false)
     }
