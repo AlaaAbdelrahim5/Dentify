@@ -138,6 +138,39 @@ export const userAPI = {
   delete: (id) => ApiService.delete(`/users/${id}`),
 };
 
+// Dentists API functions
+export const dentistsAPI = {
+  // Get all dentists for the clinic
+  getAll: (clinicId = null) => {
+    const params = clinicId ? `?clinicId=${clinicId}` : '';
+    return ApiService.get(`/dentists${params}`);
+  },
+  
+  // Get dentist by ID
+  getById: (id) => ApiService.get(`/dentists/${id}`),
+  
+  // Create new dentist (send request to admin)
+  create: (dentistData) => ApiService.post('/dentists', dentistData),
+  
+  // Update dentist
+  update: (id, dentistData) => ApiService.put(`/dentists/${id}`, dentistData),
+  
+  // Delete dentist
+  delete: (id) => ApiService.delete(`/dentists/${id}`),
+  
+  // Get current dentist profile (for dentist users)
+  getMyProfile: () => ApiService.get('/dentists/me'),
+  
+  // Update current dentist profile
+  updateMyProfile: (data) => ApiService.put('/dentists/me', data),
+  
+  // Search dentists with filters
+  search: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/dentists/search?${queryString}`);
+  },
+};
+
 // Health check API
 export const healthAPI = {
   check: () => ApiService.get('/health'),

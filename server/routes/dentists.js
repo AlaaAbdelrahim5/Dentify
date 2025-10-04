@@ -182,6 +182,121 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// @route   POST /api/dentists
+// @desc    Create new dentist (clinic request to admin)
+// @access  Private (Clinic only)
+router.post('/', authenticate, authorize(['Clinic']), async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      licenseNumber,
+      specialization,
+      birthDate,
+      gender,
+      address,
+      appointmentDuration = 30,
+      workingHours = [],
+      socialLinks = {}
+    } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !phone || !password || !licenseNumber || 
+        !specialization || !birthDate || !gender) {
+      return res.status(400).json({
+        success: false,
+        message: 'All required fields must be provided'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Check if license number already exists
+    const existingDentist = await Dentist.findOne({ licenseNumber });
+    if (existingDentist) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dentist with this license number already exists'
+      });
+    }
+
+    // Get clinic ID for current user
+    const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+    if (!clinic) {
+      return res.status(400).json({
+        success: false,
+        message: 'Clinic not found for current user'
+      });
+    }
+
+    // Create new user with pending status (awaiting admin approval)
+    const userData = {
+      email,
+      phone,
+      password,
+      role: 'Dentist',
+      isActive: false, // Will be activated by admin
+      status: 'pending' // Pending admin approval
+    };
+
+    const newUser = new User(userData);
+    await newUser.save();
+
+    // Create dentist profile
+    const dentistData = {
+      userId: newUser._id,
+      firstName,
+      lastName,
+      licenseNumber,
+      specialization: Array.isArray(specialization) ? specialization : [specialization],
+      birthDate,
+      gender,
+      address: address || {},
+      clinicId: clinic._id,
+      appointmentDuration: parseInt(appointmentDuration),
+      workingHours: workingHours || [],
+      socialLinks: socialLinks || {}
+    };
+
+    const newDentist = new Dentist(dentistData);
+    await newDentist.save();
+
+    // Populate and return the new dentist
+    const populatedDentist = await Dentist.findById(newDentist._id)
+      .populate('userId', '-password')
+      .populate('clinicId', 'clinicName city location');
+
+    res.status(201).json({
+      success: true,
+      message: 'Dentist request sent to admin for approval',
+      data: populatedDentist
+    });
+
+  } catch (error) {
+    console.error('Create dentist error:', error);
+    
+    // Clean up if user was created but dentist creation failed
+    if (error.name === 'ValidationError' && req.body.email) {
+      await User.findOneAndDelete({ email: req.body.email });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error creating dentist request'
+    });
+  }
+});
+
 // @route   PUT /api/dentists/:id
 // @desc    Update dentist
 // @access  Private (Own profile, Clinic, or Admin)
@@ -275,6 +390,52 @@ router.put('/:id', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error updating dentist'
+    });
+  }
+});
+
+// @route   DELETE /api/dentists/:id
+// @desc    Delete dentist
+// @access  Private (Admin, Clinic only)
+router.delete('/:id', authenticate, authorize(['Admin', 'Clinic']), async (req, res) => {
+  try {
+    const dentist = await Dentist.findById(req.params.id);
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dentist not found'
+      });
+    }
+
+    // Check permissions for clinic users
+    if (req.user.role === 'Clinic') {
+      const clinic = await require('../models/Clinic').findOne({ userId: req.user._id });
+      if (!clinic || dentist.clinicId.toString() !== clinic._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied - can only delete your own clinic dentists'
+        });
+      }
+    }
+
+    // Delete the dentist
+    await Dentist.findByIdAndDelete(req.params.id);
+
+    // Optionally delete the associated user account
+    if (dentist.userId) {
+      await User.findByIdAndDelete(dentist.userId);
+    }
+
+    res.json({
+      success: true,
+      message: 'Dentist deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete dentist error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error deleting dentist'
     });
   }
 });
