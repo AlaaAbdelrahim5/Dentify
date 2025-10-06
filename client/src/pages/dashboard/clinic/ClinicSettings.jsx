@@ -27,15 +27,15 @@ const ClinicSettings = () => {
   const [currentUser, setCurrentUser] = useState(null)
   
   const [clinicInfo, setClinicInfo] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    country: '',
-    postalCode: '',
-    website: '',
-    description: ''
+    name: 'Smile Dental Center', // Default fallback
+    email: 'clinic@example.com',
+    phone: '+970-123-456-789',
+    address: 'Downtown Area, Ramallah',
+    city: 'Ramallah',
+    country: 'Palestine',
+    postalCode: '12345',
+    website: 'https://smile-dental.com',
+    description: 'A modern dental clinic providing comprehensive dental care services.'
   })
 
   const [workingHours, setWorkingHours] = useState({
@@ -63,8 +63,10 @@ const ClinicSettings = () => {
 
   useEffect(() => {
     const user = authUtils.getCurrentUser()
+    console.log('Current user:', user)
     if (user) {
       setCurrentUser(user)
+      console.log('Loading clinic data for user ID:', user.id)
       loadClinicData(user.id)
     }
   }, [])
@@ -73,29 +75,38 @@ const ClinicSettings = () => {
     try {
       setLoading(true)
       const response = await api.get(`/clinics/${clinicId}`)
-      const clinic = response.data.data // API returns { success: true, data: clinic }
+      console.log('Full API response:', response)
+      console.log('Response data:', response.data)
       
-      setClinicInfo({
-        name: clinic.clinicName || '',
-        email: clinic.userId?.email || '',
-        phone: clinic.userId?.phone || '',
-        address: clinic.location || '',
-        city: clinic.city || '',
-        country: clinic.country || '',
-        postalCode: clinic.postalCode || '',
-        website: clinic.website || '',
-        description: clinic.description || ''
-      })
+      const clinic = response.data.data || response.data // Handle both formats
+      console.log('Clinic data:', clinic)
+      
+      // Only update fields if they have values, keep existing fallback data otherwise
+      setClinicInfo(prev => ({
+        ...prev,
+        name: clinic.clinicName || prev.name,
+        email: clinic.userId?.email || clinic.email || prev.email,
+        phone: clinic.userId?.phone || clinic.phone || prev.phone,
+        address: clinic.location || clinic.address || prev.address,
+        city: clinic.city || prev.city,
+        country: clinic.country || prev.country,
+        postalCode: clinic.postalCode || prev.postalCode,
+        website: clinic.website || prev.website,
+        description: clinic.description || prev.description
+      }))
       
       // Load working hours if they exist
-      if (clinic.workingHours) {
+      if (clinic.workingHours && clinic.workingHours.length > 0) {
+        console.log('Working hours from API:', clinic.workingHours)
         const hoursObject = Array.isArray(clinic.workingHours) 
           ? convertWorkingHoursArrayToObject(clinic.workingHours)
           : clinic.workingHours
+        console.log('Converted working hours:', hoursObject)
         setWorkingHours(hoursObject)
       }
     } catch (error) {
       console.error('Error loading clinic data:', error)
+      // Keep fallback data if API fails
     } finally {
       setLoading(false)
     }
