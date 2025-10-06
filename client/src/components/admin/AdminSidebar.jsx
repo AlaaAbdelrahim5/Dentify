@@ -3,7 +3,8 @@ import {
   FaHospital,
   FaUserMd, 
   FaXRay, 
-  FaChartBar
+  FaChartBar,
+  FaUserShield
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -36,6 +37,12 @@ const AdminSidebar = ({ activeTab, setActiveTab, stats }) => {
       label: 'Radiology Centers', 
       icon: FaXRay,
       description: 'Manage radiology centers'
+    },
+    { 
+      id: 'admins', 
+      label: 'Admin Management', 
+      icon: FaUserShield,
+      description: 'Manage system administrators'
     },
     { 
       id: 'analytics', 

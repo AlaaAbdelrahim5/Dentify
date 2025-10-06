@@ -21,6 +21,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
 import DentistsManagement from './admin/DentistsManagement'
+import AdminsManagement from './admin/AdminsManagement'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 
 const AdminDashboard = () => {
@@ -244,6 +245,8 @@ const AdminDashboard = () => {
         return <DentistsManagement />
       case 'radiology':
         return <RadiologyManagement />
+      case 'admins':
+        return <AdminsManagement />
       case 'analytics':
         return (
           <div className="text-center py-12">

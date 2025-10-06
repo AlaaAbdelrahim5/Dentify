@@ -5,6 +5,64 @@ const { authenticate, adminOnly } = require('../middleware/auth');
 
 const router = express.Router();
 
+// @route   POST /api/admins
+// @desc    Create new admin (Admin only)
+// @access  Private (Admin only)
+router.post('/', authenticate, adminOnly, async (req, res) => {
+  try {
+    const { email, password, phone, firstName, lastName, gender } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create admin with user using the static method
+    const { user, admin } = await Admin.createWithUser(
+      { email, password, phone },
+      { firstName, lastName, gender }
+    );
+
+    // Get the created admin with populated user data
+    const populatedAdmin = await Admin.findById(admin._id)
+      .populate('userId', '-password');
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin created successfully',
+      data: populatedAdmin
+    });
+
+  } catch (error) {
+    console.error('Create admin error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: validationErrors
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error creating admin'
+    });
+  }
+});
+
 // @route   GET /api/admins
 // @desc    Get all admins (Admin only)
 // @access  Private (Admin only)
