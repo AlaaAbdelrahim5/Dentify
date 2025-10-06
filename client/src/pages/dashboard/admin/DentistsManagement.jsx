@@ -294,15 +294,32 @@ const DentistsManagement = () => {
     if (!dentist) return null
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className={`max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl ${
-          isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'
-        }`}>
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-transparent transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div
+            className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
+              isDarkMode
+                ? "bg-gray-800 border border-gray-700"
+                : "bg-white border border-gray-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* Header */}
-          <div className={`sticky top-0 z-10 px-6 py-4 border-b ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-          }`}>
-            <div className="flex items-center justify-between">
+          <div
+            className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+              isDarkMode
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
                   <FaUserMd className="w-6 h-6 text-white" />
@@ -327,8 +344,9 @@ const DentistsManagement = () => {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-6">
+          {/* Form Container with Scroll */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6 space-y-6">
             {/* Status and Actions */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -526,7 +544,9 @@ const DentistsManagement = () => {
             )}
           </div>
         </div>
+        </div>
       </div>
+    </div>
     )
   }
 
