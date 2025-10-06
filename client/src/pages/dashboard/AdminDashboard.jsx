@@ -20,6 +20,7 @@ import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
 import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
+import DentistsManagement from './admin/DentistsManagement'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 
 const AdminDashboard = () => {
@@ -74,15 +75,60 @@ const AdminDashboard = () => {
     }
   }
 
-  // Mock data - Replace with actual API calls later
+  // Fetch dashboard statistics
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
+      
+      // Fetch dentist stats
+      const dentistStatsResponse = await fetch('http://localhost:5000/api/dentists/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      // Fetch clinic stats (you can create this endpoint later)
+      const clinicStatsResponse = await fetch('http://localhost:5000/api/clinics/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).catch(() => ({ ok: false })) // Handle if endpoint doesn't exist yet
+      
+      // Fetch radiology stats (you can create this endpoint later)
+      const radiologyStatsResponse = await fetch('http://localhost:5000/api/radiology-centers/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).catch(() => ({ ok: false })) // Handle if endpoint doesn't exist yet
+
+      const dentistStats = dentistStatsResponse.ok ? (await dentistStatsResponse.json()).data : { pending: 0 }
+      const clinicStats = clinicStatsResponse.ok ? (await clinicStatsResponse.json()).data : { total: 12 }
+      const radiologyStats = radiologyStatsResponse.ok ? (await radiologyStatsResponse.json()).data : { total: 8 }
+
+      setStats({
+        totalClinics: clinicStats.total || 12,
+        pendingDentists: dentistStats.pending || 0,
+        radiologyCenters: radiologyStats.total || 8,
+        totalPatients: 245 // Mock for now
+      })
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error)
+      // Use mock data as fallback
+      setStats({
+        totalClinics: 12,
+        pendingDentists: 5,
+        radiologyCenters: 8,
+        totalPatients: 245
+      })
+    }
+  }
+
+  // Initial load
   useEffect(() => {
-    // Simulate loading stats
-    setStats({
-      totalClinics: 12,
-      pendingDentists: 5,
-      radiologyCenters: 8,
-      totalPatients: 245
-    })
+    fetchStats()
   }, [])
 
   const renderOverview = () => (
@@ -195,14 +241,7 @@ const AdminDashboard = () => {
       case 'clinics':
         return <ClinicsManagement />
       case 'dentists':
-        return (
-          <div className="text-center py-12">
-            <FaUserMd className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Dentist Approvals</h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>This section will be implemented next</p>
-            <Button variant="primary">Coming Soon</Button>
-          </div>
-        )
+        return <DentistsManagement />
       case 'radiology':
         return <RadiologyManagement />
       case 'analytics':

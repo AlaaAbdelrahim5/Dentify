@@ -5,20 +5,132 @@ const { authenticate, authorize, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// @route   GET /api/dentists/stats
+// @desc    Get dentist statistics (Admin only)
+// @access  Private (Admin only)
+router.get('/stats', authenticate, authorize(['Admin']), async (req, res) => {
+  try {
+    const stats = await User.aggregate([
+      { $match: { role: 'Dentist' } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const result = {
+      total: 0,
+      pending: 0,
+      active: 0,
+      suspended: 0
+    };
+
+    stats.forEach(stat => {
+      result.total += stat.count;
+      if (stat._id === 'pending') result.pending = stat.count;
+      if (stat._id === 'active') result.active = stat.count;
+      if (stat._id === 'suspended') result.suspended = stat.count;
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Get dentist stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching dentist statistics'
+    });
+  }
+});
+
+// @route   PATCH /api/dentists/:id/approve
+// @desc    Approve a dentist (Admin only)
+// @access  Private (Admin only)
+router.patch('/:id/approve', authenticate, authorize(['Admin']), async (req, res) => {
+  try {
+    const dentist = await Dentist.findById(req.params.id);
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dentist not found'
+      });
+    }
+
+    // Update user status to active
+    await User.findByIdAndUpdate(dentist.userId, { status: 'active' });
+
+    res.json({
+      success: true,
+      message: 'Dentist approved successfully'
+    });
+
+  } catch (error) {
+    console.error('Approve dentist error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error approving dentist'
+    });
+  }
+});
+
+// @route   PATCH /api/dentists/:id/suspend
+// @desc    Suspend a dentist (Admin only)
+// @access  Private (Admin only)
+router.patch('/:id/suspend', authenticate, authorize(['Admin']), async (req, res) => {
+  try {
+    const dentist = await Dentist.findById(req.params.id);
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dentist not found'
+      });
+    }
+
+    // Update user status to suspended
+    await User.findByIdAndUpdate(dentist.userId, { status: 'suspended' });
+
+    res.json({
+      success: true,
+      message: 'Dentist suspended successfully'
+    });
+
+  } catch (error) {
+    console.error('Suspend dentist error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error suspending dentist'
+    });
+  }
+});
+
 // @route   GET /api/dentists
 // @desc    Get all dentists
 // @access  Public/Private (optionally authenticated)
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, city, specialization, clinicId } = req.query;
+    const { page = 1, limit = 10, search, city, specialization, clinicId, includeAll, status } = req.query;
     
-    // Build query for active dentists only
-    const activeUserIds = await User.find({ 
-      role: 'Dentist', 
-      status: 'active' 
-    }).distinct('_id');
+    let userQuery = { role: 'Dentist' };
     
-    let query = { userId: { $in: activeUserIds } };
+    // For admin users, include all statuses if includeAll is true
+    if (req.user && req.user.role === 'Admin' && includeAll === 'true') {
+      // Include all user statuses for admin
+      if (status) {
+        userQuery.status = status;
+      }
+    } else {
+      // For public/non-admin users, only show active dentists
+      userQuery.status = 'active';
+    }
+    
+    const userIds = await User.find(userQuery).distinct('_id');
+    
+    let query = { userId: { $in: userIds } };
 
     // Search functionality
     if (search) {
@@ -54,7 +166,7 @@ router.get('/', optionalAuth, async (req, res) => {
     }
 
     const dentists = await Dentist.find(query)
-      .populate('userId', 'email phone profileImage -_id')
+      .populate('userId', 'email phone profileImage status createdAt')
       .populate('clinicId', 'clinicName city location website')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
@@ -62,28 +174,45 @@ router.get('/', optionalAuth, async (req, res) => {
 
     const total = await Dentist.countDocuments(query);
 
-    // Public users get limited information
-    let responseData = dentists.map(dentist => ({
-      _id: dentist._id,
-      firstName: dentist.firstName,
-      lastName: dentist.lastName,
-      fullName: dentist.fullName,
-      licenseNumber: dentist.licenseNumber,
-      specialization: dentist.specialization,
-      gender: dentist.gender,
-      birthDate: dentist.birthDate,
-      address: dentist.address,
-      workingHours: dentist.workingHours,
-      appointmentDuration: dentist.appointmentDuration,
-      socialLinks: dentist.socialLinks,
-      clinic: dentist.clinicId ? {
-        _id: dentist.clinicId._id,
-        clinicName: dentist.clinicId.clinicName,
-        city: dentist.clinicId.city,
-        location: dentist.clinicId.location
-      } : null,
-      profileImage: dentist.userId?.profileImage
-    }));
+    // Format response data based on user role
+    let responseData = dentists.map(dentist => {
+      const baseData = {
+        _id: dentist._id,
+        firstName: dentist.firstName,
+        lastName: dentist.lastName,
+        fullName: dentist.fullName,
+        licenseNumber: dentist.licenseNumber,
+        specialization: dentist.specialization,
+        gender: dentist.gender,
+        birthDate: dentist.birthDate,
+        address: dentist.address,
+        workingHours: dentist.workingHours,
+        appointmentDuration: dentist.appointmentDuration,
+        socialLinks: dentist.socialLinks,
+        clinic: dentist.clinicId ? {
+          _id: dentist.clinicId._id,
+          clinicName: dentist.clinicId.clinicName,
+          city: dentist.clinicId.city,
+          location: dentist.clinicId.location
+        } : null,
+        profileImage: dentist.userId?.profileImage,
+        createdAt: dentist.createdAt
+      };
+
+      // Include additional data for admin users
+      if (req.user && req.user.role === 'Admin') {
+        baseData.status = dentist.userId?.status;
+        baseData.user = {
+          email: dentist.userId?.email,
+          phone: dentist.userId?.phone,
+          profileImage: dentist.userId?.profileImage,
+          status: dentist.userId?.status,
+          createdAt: dentist.userId?.createdAt
+        };
+      }
+
+      return baseData;
+    });
 
     res.json({
       success: true,

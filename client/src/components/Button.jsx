@@ -24,7 +24,10 @@ const Button = ({
         : 'border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white focus:ring-teal-500',
       ghost: isDarkMode
         ? 'text-teal-400 hover:bg-gray-800 focus:ring-teal-500'
-        : 'text-teal-600 hover:bg-teal-50 focus:ring-teal-500'
+        : 'text-teal-600 hover:bg-teal-50 focus:ring-teal-500',
+      success: 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg focus:ring-green-500',
+      danger: 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:shadow-lg focus:ring-red-500',
+      warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:shadow-lg focus:ring-yellow-500'
     }
     return variants[variant]
   }
