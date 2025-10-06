@@ -19,6 +19,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import ClinicSidebar from '../../components/clinic/ClinicSidebar'
 import SecretariesManagement from './clinic/SecretariesManagement'
 import DentistsManagement from './clinic/DentistsManagement'
+import ClinicSettings from './clinic/ClinicSettings'
 
 const ClinicDashboard = () => {
   const navigate = useNavigate()
@@ -238,14 +239,7 @@ const ClinicDashboard = () => {
           </div>
         )
       case 'settings':
-        return (
-          <div className="text-center py-12">
-            <FaCog className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Clinic Settings</h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>This section will be implemented next</p>
-            <Button variant="primary">Coming Soon</Button>
-          </div>
-        )
+        return <ClinicSettings />
       default:
         return renderOverview()
     }

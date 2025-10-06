@@ -737,4 +737,72 @@ router.put('/:id', authenticate, authorize(['Admin']), async (req, res) => {
   }
 });
 
+// @route   PUT /api/clinics/:id/working-hours
+// @desc    Update clinic working hours
+// @access  Private (Own clinic or Admin)
+router.put('/:id/working-hours', authenticate, async (req, res) => {
+  try {
+    const { workingHours } = req.body;
+
+    const clinic = await Clinic.findById(req.params.id);
+    if (!clinic) {
+      return res.status(404).json({
+        success: false,
+        message: 'Clinic not found'
+      });
+    }
+
+    // Check permissions
+    const isOwnClinic = clinic.userId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!isOwnClinic && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Convert frontend format to backend format
+    const workingHoursArray = [];
+    const daysMap = {
+      'sunday': 'Sunday',
+      'monday': 'Monday',
+      'tuesday': 'Tuesday',
+      'wednesday': 'Wednesday',
+      'thursday': 'Thursday',
+      'friday': 'Friday',
+      'saturday': 'Saturday'
+    };
+
+    Object.entries(workingHours).forEach(([day, hours]) => {
+      if (hours.isOpen) {
+        workingHoursArray.push({
+          day: daysMap[day],
+          startTime: hours.start,
+          endTime: hours.end
+        });
+      }
+    });
+
+    clinic.workingHours = workingHoursArray;
+    await clinic.save();
+
+    res.json({
+      success: true,
+      message: 'Working hours updated successfully',
+      data: {
+        workingHours: convertWorkingHoursToObject(clinic.workingHours)
+      }
+    });
+
+  } catch (error) {
+    console.error('Update working hours error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating working hours'
+    });
+  }
+});
+
 module.exports = router;

@@ -651,4 +651,74 @@ router.post('/change-password', async (req, res) => {
   }
 });
 
+// @route   PUT /api/auth/change-password
+// @desc    Change user password (PUT version for settings)
+// @access  Private
+router.put('/change-password', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    // Get user
+    const user = await User.findById(decoded.userId);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token or inactive user'
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Check current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Password change error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error changing password'
+    });
+  }
+});
+
 module.exports = router;
