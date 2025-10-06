@@ -748,4 +748,90 @@ router.get('/specializations/list', async (req, res) => {
   }
 });
 
+// @route   GET /api/dentists/profile
+// @desc    Get own dentist profile (alias for /me)
+// @access  Private (Dentist only)
+router.get('/profile', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'Dentist') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Dentist role required.'
+      });
+    }
+
+    const dentist = await Dentist.findOne({ userId: req.user._id })
+      .populate('userId', '-password')
+      .populate('clinicId');
+
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dentist profile not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: dentist
+    });
+
+  } catch (error) {
+    console.error('Get dentist profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching dentist profile'
+    });
+  }
+});
+
+// @route   GET /api/dentists/dashboard-stats
+// @desc    Get dentist dashboard statistics
+// @access  Private (Dentist only)
+router.get('/dashboard-stats', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'Dentist') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Dentist role required.'
+      });
+    }
+
+    const dentist = await Dentist.findOne({ userId: req.user._id });
+    
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: 'Dentist profile not found'
+      });
+    }
+
+    // Mock statistics for now - to be replaced with actual data later
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const stats = {
+      todayAppointments: 0, // TODO: Count actual appointments for today
+      totalPatients: 0, // TODO: Count unique patients for this dentist
+      pendingTreatments: 0, // TODO: Count pending treatment plans
+      completedToday: 0, // TODO: Count completed appointments/treatments today
+      weeklyRevenue: 0 // TODO: Calculate weekly revenue
+    };
+
+    res.json({
+      success: true,
+      stats
+    });
+
+  } catch (error) {
+    console.error('Get dentist dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching dashboard statistics'
+    });
+  }
+});
+
 module.exports = router;

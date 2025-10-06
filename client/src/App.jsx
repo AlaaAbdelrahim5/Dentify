@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp'
 import PatientDashboard from './pages/dashboard/PatientDashboard'
 import AdminDashboard from './pages/dashboard/AdminDashboard'
 import ClinicDashboard from './pages/dashboard/ClinicDashboard'
+import DentistDashboard from './pages/dashboard/DentistDashboard'
 import NotFound from './pages/NotFound'
 import LoadingSpinner from './components/LoadingSpinner'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
@@ -88,6 +89,7 @@ const AuthRouter = () => {
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+        <Route path="/dentist/dashboard" element={<DentistDashboard />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />
       </Routes>
