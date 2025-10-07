@@ -18,3 +18,5 @@ export { default as DeleteConfirmationModal } from './dentist/DeleteConfirmation
 export { default as NewPatientModal } from './dentist/NewPatientModal'
 export { default as EditPatientModal } from './dentist/EditPatientModal'
 export { default as PatientDetailsModal } from './dentist/PatientDetailsModal'
+export { default as NewTreatmentModal } from './dentist/NewTreatmentModal'
+export { default as TreatmentDetailsModal } from './dentist/TreatmentDetailsModal'

@@ -21,8 +21,8 @@ import DentistAppointments from './dentist/DentistAppointments'
 import DentistPatients from './dentist/DentistPatients'
 import DentistSchedule from './dentist/DentistSchedule'
 import DentistSettings from './dentist/DentistSettings'
+import DentistTreatments from './dentist/DentistTreatments'
 // Import dentist-specific page components (to be created)
-// import DentistTreatments from './dentist/DentistTreatments'
 // import DentistReports from './dentist/DentistReports'
 
 const DentistDashboard = () => {
@@ -282,14 +282,7 @@ const DentistDashboard = () => {
       case 'schedule':
         return <DentistSchedule />
       case 'treatments':
-        return (
-          <div className="text-center py-12">
-            <FaStethoscope className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Treatment Management</h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Manage treatment plans and procedures</p>
-            <Button variant="primary">Coming Soon</Button>
-          </div>
-        )
+        return <DentistTreatments />
       case 'reports':
         return (
           <div className="text-center py-12">
