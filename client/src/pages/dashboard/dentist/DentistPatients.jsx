@@ -12,16 +12,26 @@ import {
   FaEye,
   FaFileAlt,
   FaBirthdayCake,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaTrash
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import NewPatientModal from '../../../components/dentist/NewPatientModal'
+import EditPatientModal from '../../../components/dentist/EditPatientModal'
+import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or list
+  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
+  const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState(null)
 
   // Mock patients data
   const mockPatients = [
@@ -124,6 +134,73 @@ const DentistPatients = () => {
     return matchesSearch && matchesFilter
   })
 
+  // Modal handlers
+  const handleNewPatient = () => {
+    setIsNewPatientModalOpen(true)
+  }
+
+  const handleCloseNewPatientModal = () => {
+    setIsNewPatientModalOpen(false)
+  }
+
+  const handleSaveNewPatient = (patientData) => {
+    // Here you would typically save to your backend
+    console.log('New patient:', patientData)
+    // For now, just log the data
+    // You can implement the actual save logic here
+  }
+
+  const handleEditPatient = (patient) => {
+    setSelectedPatient(patient)
+    setIsEditPatientModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditPatientModalOpen(false)
+    setSelectedPatient(null)
+  }
+
+  const handleUpdatePatient = (updatedPatient) => {
+    // Here you would typically update in your backend
+    console.log('Updated patient:', updatedPatient)
+    // For now, just log the data
+    // You can implement the actual update logic here
+  }
+
+  const handleDeletePatient = (patient) => {
+    setSelectedPatient(patient)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    // Here you would typically delete from your backend
+    console.log('Delete patient:', selectedPatient.id)
+    // You can implement the actual delete logic here
+    setIsDeleteModalOpen(false)
+    setSelectedPatient(null)
+  }
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedPatient(null)
+  }
+
+  const handleViewPatient = (patient) => {
+    setSelectedPatient(patient)
+    setIsDetailsModalOpen(true)
+  }
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false)
+    setSelectedPatient(null)
+  }
+
+  const handleEditFromDetails = (patient) => {
+    setIsDetailsModalOpen(false)
+    setSelectedPatient(patient)
+    setIsEditPatientModalOpen(true)
+  }
+
   const PatientCard = ({ patient }) => (
     <Card className={`p-6 ${
       isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -149,11 +226,30 @@ const DentistPatients = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleViewPatient(patient)}
+            title="View Patient Details"
+          >
             <FaEye className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleEditPatient(patient)}
+            title="Edit Patient"
+          >
             <FaEdit className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-600"
+            onClick={() => handleDeletePatient(patient)}
+            title="Delete Patient"
+          >
+            <FaTrash className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -270,11 +366,30 @@ const DentistPatients = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleViewPatient(patient)}
+            title="View Patient Details"
+          >
             <FaEye className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleEditPatient(patient)}
+            title="Edit Patient"
+          >
             <FaEdit className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-600"
+            onClick={() => handleDeletePatient(patient)}
+            title="Delete Patient"
+          >
+            <FaTrash className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -297,7 +412,7 @@ const DentistPatients = () => {
             Manage patient records and information
           </p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" onClick={handleNewPatient}>
           <FaPlus className="w-4 h-4 mr-2" />
           Add Patient
         </Button>
@@ -462,6 +577,41 @@ const DentistPatients = () => {
           ))}
         </div>
       )}
+
+      {/* New Patient Modal */}
+      <NewPatientModal
+        isOpen={isNewPatientModalOpen}
+        onClose={handleCloseNewPatientModal}
+        onSave={handleSaveNewPatient}
+      />
+
+      {/* Edit Patient Modal */}
+      <EditPatientModal
+        isOpen={isEditPatientModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleUpdatePatient}
+        patientData={selectedPatient}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        appointmentData={selectedPatient ? {
+          patient: { name: selectedPatient.name },
+          treatment: 'Patient Record',
+          time: ''
+        } : null}
+      />
+
+      {/* Patient Details Modal */}
+      <PatientDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        patientData={selectedPatient}
+        onEdit={handleEditFromDetails}
+      />
     </div>
   )
 }

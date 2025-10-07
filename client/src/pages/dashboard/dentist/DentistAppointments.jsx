@@ -14,12 +14,19 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
+import EditAppointmentModal from '../../../components/dentist/EditAppointmentModal'
+import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
 
 const DentistAppointments = () => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('today') // today, week, month
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false)
+  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
 
   // Mock appointments data
   const mockAppointments = [
@@ -92,6 +99,66 @@ const DentistAppointments = () => {
     }
   }
 
+  const handleNewAppointment = () => {
+    setIsNewAppointmentModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsNewAppointmentModalOpen(false)
+  }
+
+  const handleSaveAppointment = (appointmentData) => {
+    // Here you would typically save to your backend
+    console.log('New appointment:', appointmentData)
+    // For now, just log the data
+    // You can implement the actual save logic here
+  }
+
+  const handleEditAppointment = (appointment) => {
+    setSelectedAppointment(appointment)
+    setIsEditAppointmentModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditAppointmentModalOpen(false)
+    setSelectedAppointment(null)
+  }
+
+  const handleUpdateAppointment = (updatedAppointment) => {
+    // Here you would typically update in your backend
+    console.log('Updated appointment:', updatedAppointment)
+    // For now, just log the data
+    // You can implement the actual update logic here
+  }
+
+  const handleDeleteAppointment = (appointment) => {
+    setSelectedAppointment(appointment)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    // Here you would typically delete from your backend
+    console.log('Delete appointment:', selectedAppointment.id)
+    // You can implement the actual delete logic here
+    setIsDeleteModalOpen(false)
+    setSelectedAppointment(null)
+  }
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedAppointment(null)
+  }
+
+  const handleConfirmAppointment = (appointmentId) => {
+    console.log('Confirm appointment:', appointmentId)
+    // Update appointment status to confirmed
+  }
+
+  const handleCancelAppointment = (appointmentId) => {
+    console.log('Cancel appointment:', appointmentId)
+    // Update appointment status to cancelled
+  }
+
   const filteredAppointments = mockAppointments.filter(appointment => {
     const matchesSearch = appointment.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          appointment.treatment.toLowerCase().includes(searchTerm.toLowerCase())
@@ -115,7 +182,7 @@ const DentistAppointments = () => {
             Manage your appointment schedule
           </p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" onClick={handleNewAppointment}>
           <FaPlus className="w-4 h-4 mr-2" />
           New Appointment
         </Button>
@@ -260,18 +327,40 @@ const DentistAppointments = () => {
                 <div className="flex gap-2">
                   {appointment.status === 'pending' && (
                     <>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleConfirmAppointment(appointment.id)}
+                        title="Confirm Appointment"
+                      >
                         <FaCheck className="w-4 h-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-600">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600"
+                        onClick={() => handleCancelAppointment(appointment.id)}
+                        title="Cancel Appointment"
+                      >
                         <FaTimes className="w-4 h-4" />
                       </Button>
                     </>
                   )}
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditAppointment(appointment)}
+                    title="Edit Appointment"
+                  >
                     <FaEdit className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" className="text-red-600">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-600"
+                    onClick={() => handleDeleteAppointment(appointment)}
+                    title="Delete Appointment"
+                  >
                     <FaTrash className="w-4 h-4" />
                   </Button>
                 </div>
@@ -280,6 +369,29 @@ const DentistAppointments = () => {
           ))
         )}
       </div>
+
+      {/* New Appointment Modal */}
+      <NewAppointmentModal
+        isOpen={isNewAppointmentModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveAppointment}
+      />
+
+      {/* Edit Appointment Modal */}
+      <EditAppointmentModal
+        isOpen={isEditAppointmentModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleUpdateAppointment}
+        appointmentData={selectedAppointment}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        appointmentData={selectedAppointment}
+      />
     </div>
   )
 }
