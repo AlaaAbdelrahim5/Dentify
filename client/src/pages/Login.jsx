@@ -118,40 +118,63 @@ const Login = () => {
     setApiError("");
 
     try {
+      console.log('Attempting login with email:', formData.email);
+      
       const response = await authAPI.login({
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
       });
 
-      if (response.success) {
+      console.log('Login response received:', { 
+        hasUser: !!response.user, 
+        hasToken: !!response.token,
+        userRole: response.user?.role 
+      });
+
+      // Backend returns { message, user, token, refreshToken } directly
+      if (response && response.token && response.user) {
         // Store user data and tokens using auth utils
-        authUtils.login(response.user, response.tokens, rememberMe);
+        authUtils.login(
+          response.user, 
+          {
+            token: response.token,
+            refreshToken: response.refreshToken
+          }, 
+          rememberMe
+        );
 
         // Clear any existing error states
         setApiError("");
         setErrors({});
+
+        console.log('Login successful, navigating to dashboard...');
 
         // Navigate to appropriate dashboard based on user role
         const dashboardRoute = authUtils.getDashboardRoute();
         navigate(dashboardRoute, {
           replace: true,
           state: {
-            message: `Welcome back, ${response.user.fullName || response.user.email}!`,
+            message: `Welcome back!`,
             user: response.user,
           },
         });
+      } else {
+        throw new Error('Invalid response from server');
       }
     } catch (error) {
       console.error("Login error:", error);
 
-      if (error.message.includes("Invalid email or password")) {
+      // Handle specific error messages from backend
+      if (error.message.includes("Invalid credentials")) {
         setApiError(
           "Invalid email or password. Please check your credentials and try again."
         );
-      } else if (error.message.includes("deactivated")) {
+      } else if (error.message.includes("not active") || error.message.includes("deactivated")) {
         setApiError(
           "Your account has been deactivated. Please contact support for assistance."
         );
+      } else if (error.message.includes("Email and password are required")) {
+        setApiError("Please enter both email and password.");
       } else {
         setApiError(
           error.message || "An error occurred during login. Please try again."

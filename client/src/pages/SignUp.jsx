@@ -210,38 +210,41 @@ const SignUp = () => {
     try {
       // Prepare data for API in the format expected by backend
       const signupData = {
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password,
         role: 'Patient',
-        userData: {
-          email: formData.email.toLowerCase().trim(),
-          password: formData.password,
-          phone: `${formData.countryCode}${formData.phoneNumber}`,
-        },
-        profileData: {
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          gender: formData.gender,
-          birthDate: formData.dateOfBirth,
-          address: {
-            city: formData.city,
-          },
-        },
+        phone: `${formData.countryCode}${formData.phoneNumber}`,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        gender: formData.gender, // Already capitalized: Male/Female
+        birthDate: new Date(formData.dateOfBirth).toISOString(),
+        city: formData.city,
       };
 
-      console.log('Sending signup data:', { ...signupData, userData: { ...signupData.userData, password: '***' } });
+      console.log('Sending signup data:', { ...signupData, password: '***' });
 
-      const response = await authAPI.signup(signupData);
+      const response = await authAPI.register(signupData);
 
-      if (response.success) {
+      console.log('Signup response:', response);
+
+      // Backend returns { message, user, token, refreshToken }
+      if (response && response.token) {
         setIsSuccess(true);
 
-        // Store token and user data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        localStorage.setItem('role', response.data.role);
+        // Use authUtils to properly store authentication data
+        authUtils.login(
+          response.user,
+          {
+            token: response.token,
+            refreshToken: response.refreshToken
+          },
+          false // Don't remember me by default on signup
+        );
 
         // Show success message for 2 seconds then redirect to dashboard
         setTimeout(() => {
-          navigate("/patient/dashboard", {
+          const dashboardRoute = authUtils.getDashboardRoute();
+          navigate(dashboardRoute, {
             replace: true,
           });
         }, 2000);
@@ -249,9 +252,9 @@ const SignUp = () => {
     } catch (error) {
       console.error("Signup error:", error);
 
-      if (error.message.includes("email already exists") || error.message.includes("email")) {
+      if (error.message.includes("User already exists") || error.message.includes("email")) {
         setErrors({ email: "An account with this email already exists" });
-      } else if (error.message.includes("phone") || error.message.includes("phoneNumber")) {
+      } else if (error.message.includes("phone")) {
         setErrors({
           phone: "An account with this phone number already exists",
         });
@@ -415,8 +418,8 @@ const SignUp = () => {
                       name="gender"
                       placeholder="Select your gender"
                       options={[
-                        { value: "male", label: "Male" },
-                        { value: "female", label: "Female" },
+                        { value: "Male", label: "Male" },
+                        { value: "Female", label: "Female" },
                       ]}
                       value={formData.gender}
                       onChange={handleInputChange}

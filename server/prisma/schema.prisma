@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  phone        String?
+  role         Role
+  profileImage String?
+  status       Status   @default(ACTIVE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  admin     Admin?
+  clinic    Clinic?
+  dentist   Dentist?
+  secretary Secretary?
+  patient   Patient?
+  radiology RadiologyCenter?
+}
+
+// Admin model
+model Admin {
+  userId    Int     @id
+  firstName String
+  lastName  String
+  gender    Gender?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Clinic model
+model Clinic {
+  userId             Int      @id
+  clinicName         String
+  registrationNumber String
+  city               String
+  location           String?
+  coordinates        String?
+  website            String?
+  description        String?
+  servicesAvailable  String[]
+  workingHours       Json?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dentists    Dentist[]
+  secretaries Secretary[]
+}
+
+// Dentist model
+model Dentist {
+  userId              Int      @id
+  firstName           String
+  lastName            String
+  licenseNumber       String
+  specialization      String[]
+  birthDate           DateTime
+  gender              Gender?
+  city                String
+  clinicId            Int
+  workingHours        Json?
+  appointmentDuration Int
+  socialLinks         Json?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [userId])
+}
+
+// Secretary model
+model Secretary {
+  userId    Int      @id
+  firstName String
+  lastName  String
+  birthDate DateTime
+  gender    Gender?
+  city      String
+  clinicId  Int
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [userId])
+}
+
+// Patient model
+model Patient {
+  userId    Int      @id
+  firstName String
+  lastName  String
+  gender    Gender?
+  birthDate DateTime
+  city      String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Radiology Center model
+model RadiologyCenter {
+  userId             Int      @id
+  registrationNumber String
+  website            String?
+  city               String
+  location           String?
+  coordinates        String?
+  description        String?
+  workingHours       Json?
+  supportedTypes     String[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum Role {
+  Admin
+  Clinic
+  Dentist
+  Secretary
+  Patient
+  RadiologyCenter
+}
+
+enum Status {
+  ACTIVE
+  PENDING
+  DEACTIVATED
+  DELETED
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}

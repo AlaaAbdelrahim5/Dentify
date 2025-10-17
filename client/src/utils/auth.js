@@ -26,16 +26,16 @@ export const authUtils = {
     if (!token) return false;
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify', {
-        method: 'POST',
+      // Use the /auth/me endpoint to validate token since /auth/verify doesn't exist
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token })
+          'Authorization': `Bearer ${token}`
+        }
       });
       
-      const data = await response.json();
-      return data.success && data.valid;
+      return response.ok;
     } catch (error) {
       console.error('Token validation error:', error);
       return false;
@@ -182,7 +182,14 @@ export const authUtils = {
     console.log('Auth utils login called:', { user: user?.email, tokens: !!tokens, remember });
     authUtils.setRememberMe(remember);
     authUtils.setUser(user, remember);
-    authUtils.setTokens(tokens, remember);
+    
+    // Handle both response formats: direct { token, refreshToken } or nested { tokens: {...} }
+    const tokenData = tokens.token ? {
+      accessToken: tokens.token,
+      refreshToken: tokens.refreshToken
+    } : tokens;
+    
+    authUtils.setTokens(tokenData, remember);
     console.log('Login complete, tokens stored in:', remember ? 'localStorage' : 'sessionStorage');
   },
 
@@ -266,13 +273,16 @@ export const authUtils = {
           
           const data = await response.json();
           
-          if (data.success) {
+          if (response.ok && data.token) {
             console.log('Token refresh successful');
             const remember = authUtils.shouldRemember();
-            authUtils.setTokens(data.tokens, remember);
+            authUtils.setTokens({
+              accessToken: data.token,
+              refreshToken: data.refreshToken
+            }, remember);
             return true;
           } else {
-            console.log('Token refresh failed:', data.message);
+            console.log('Token refresh failed:', data.error);
             authUtils.logout();
             return false;
           }

@@ -14,8 +14,9 @@ import {
   FaSignOutAlt
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
-import { Navbar, Card, Button, Input } from '../../components'
+import { Navbar, Card, Button, Input, LoadingSpinner } from '../../components'
 import { authUtils } from '../../utils/auth'
+import { authAPI } from '../../services/api'
 import { useTheme } from '../../contexts/ThemeContext'
 
 const PatientDashboard = () => {
@@ -24,45 +25,160 @@ const PatientDashboard = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('appointments')
   const [currentUser, setCurrentUser] = useState(null)
+  const [patientProfile, setPatientProfile] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Check authentication and get user data
+  // Check authentication and fetch user data from backend
   useEffect(() => {
-    const checkAuth = async () => {
-      const isAuthenticated = await authUtils.isAuthenticated()
-      
-      if (!isAuthenticated) {
-        // If not authenticated, redirect to login
-        navigate('/login', { replace: true })
-        return
-      }
-      
-      const user = authUtils.getCurrentUser()
-      
-      // Check if user should be redirected to a different dashboard
-      if (user && user.role !== 'Patient') {
-        const dashboardRoute = authUtils.getDashboardRoute()
-        if (dashboardRoute !== '/patient/dashboard') {
-          navigate(dashboardRoute, { replace: true })
+    const initializeDashboard = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // Check if user is authenticated
+        const isAuthenticated = await authUtils.isAuthenticated()
+        
+        if (!isAuthenticated) {
+          console.log('PatientDashboard: User not authenticated, redirecting to login')
+          navigate('/login', { replace: true })
           return
         }
+        
+        // Get user from storage first (for immediate display)
+        const user = authUtils.getCurrentUser()
+        console.log('PatientDashboard: User from storage:', user)
+        
+        // Check if user should be redirected to a different dashboard
+        if (user && user.role !== 'Patient') {
+          console.log('PatientDashboard: User is not a patient, redirecting to correct dashboard')
+          const dashboardRoute = authUtils.getDashboardRoute()
+          if (dashboardRoute !== '/patient/dashboard') {
+            navigate(dashboardRoute, { replace: true })
+            return
+          }
+        }
+        
+        setCurrentUser(user)
+
+        // Fetch fresh user data from backend
+        try {
+          console.log('PatientDashboard: Fetching fresh user data from backend...')
+          const response = await authAPI.getCurrentUser()
+          console.log('PatientDashboard: Backend response:', response)
+          
+          if (response && response.user) {
+            const freshUser = response.user
+            setCurrentUser(freshUser)
+            
+            // Extract patient profile
+            if (freshUser.patient) {
+              setPatientProfile(freshUser.patient)
+              console.log('PatientDashboard: Patient profile loaded:', freshUser.patient)
+            }
+            
+            // Update stored user data
+            const remember = authUtils.shouldRemember()
+            authUtils.setUser(freshUser, remember)
+          }
+        } catch (apiError) {
+          console.error('PatientDashboard: Failed to fetch fresh user data:', apiError)
+          // Continue with cached user data if API fails
+          if (user && user.patient) {
+            setPatientProfile(user.patient)
+          }
+        }
+
+      } catch (error) {
+        console.error('PatientDashboard: Error during initialization:', error)
+        setError('Failed to load dashboard data')
+      } finally {
+        setIsLoading(false)
       }
-      
-      setCurrentUser(user)
     }
 
-    checkAuth()
-  }, [navigate, location.state])
+    initializeDashboard()
+  }, [navigate])
 
   const handleLogout = async () => {
     try {
       console.log('PatientDashboard: Starting logout process')
-      await authUtils.logout()
-      console.log('PatientDashboard: Logout completed, navigating to home page')
-      navigate('/', { replace: true })
+      authUtils.logout()
+      console.log('PatientDashboard: Logout completed, navigating to login page')
+      navigate('/login', { replace: true })
     } catch (error) {
       console.error('PatientDashboard: Error during logout:', error)
-      navigate('/', { replace: true })
+      navigate('/login', { replace: true })
     }
+  }
+
+  // Get user's full name
+  const getUserFullName = () => {
+    if (patientProfile) {
+      return `${patientProfile.firstName} ${patientProfile.lastName}`
+    }
+    if (currentUser?.patient) {
+      return `${currentUser.patient.firstName} ${currentUser.patient.lastName}`
+    }
+    return authUtils.getUserName()
+  }
+
+  // Get user's first name
+  const getUserFirstName = () => {
+    if (patientProfile?.firstName) {
+      return patientProfile.firstName
+    }
+    if (currentUser?.patient?.firstName) {
+      return currentUser.patient.firstName
+    }
+    const fullName = authUtils.getUserName()
+    return fullName.split(' ')[0]
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className={`mt-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Loading your dashboard...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
+        <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
+          <Card.Content className="p-8 text-center">
+            <FaExclamationTriangle className={`mx-auto text-4xl mb-4 ${
+              isDarkMode ? 'text-red-400' : 'text-red-600'
+            }`} />
+            <h2 className={`text-xl font-bold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>Error Loading Dashboard</h2>
+            <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              {error}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Reload Page
+            </Button>
+          </Card.Content>
+        </Card>
+      </div>
+    )
   }
 
   // Sample data
@@ -152,11 +268,20 @@ const PatientDashboard = () => {
           <h1 className={`text-3xl font-bold mb-2 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            Welcome back, {currentUser ? currentUser.fullName.split(' ')[0] : 'User'}!
+            Welcome back, {getUserFirstName()}!
           </h1>
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
             Here's an overview of your dental care journey.
           </p>
+          {/* Show user info */}
+          {patientProfile && (
+            <div className={`mt-3 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <span className="font-medium">{getUserFullName()}</span>
+              {currentUser?.email && <span> • {currentUser.email}</span>}
+              {currentUser?.phone && <span> • {currentUser.phone}</span>}
+              {patientProfile.city && <span> • {patientProfile.city}</span>}
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}

@@ -1,164 +1,68 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
 
-/**
- * Extract token from Authorization header
- */
-const extractTokenFromHeader = (authHeader) => {
-  if (!authHeader) return null;
-  
-  if (authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  
-  return authHeader;
-};
+const prisma = new PrismaClient();
 
-/**
- * Verify JWT token
- */
-const verifyToken = (token) => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-  } catch (error) {
-    throw new Error('Invalid or expired token');
-  }
-};
-
-/**
- * Authentication middleware - verifies JWT token
- */
+// Verify JWT token
 const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
-
+    const token = req.headers.authorization?.split(' ')[1];
+    
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Access token is required'
-      });
+      return res.status(401).json({ error: 'No token provided' });
     }
 
-    // Verify the token
-    const decoded = verifyToken(token);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get user from database to ensure they still exist and are active
-    const user = await User.findById(decoded.userId).select('-password');
-    
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        phone: true,
+        profileImage: true
+      }
+    });
+
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(401).json({ error: 'User not found' });
     }
 
-    if (user.status !== 'active') {
-      return res.status(401).json({
-        success: false,
-        message: 'User account is suspended or deactivated'
-      });
+    if (user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Account is not active' });
     }
 
-    // Add user info to request object
     req.user = user;
-    req.token = token;
-    
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    
-    if (error.message === 'Invalid or expired token') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token'
-      });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
     }
-    
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication failed'
-    });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    return res.status(500).json({ error: 'Authentication failed' });
   }
 };
 
-/**
- * Authorization middleware - checks user roles
- * @param {Array} allowedRoles - Array of allowed roles
- */
-const authorize = (allowedRoles = []) => {
+// Authorize based on roles
+const authorize = (...roles) => {
   return (req, res, next) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication required'
-        });
-      }
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
 
-      // If no specific roles required, allow any authenticated user
-      if (allowedRoles.length === 0) {
-        return next();
-      }
-
-      // Check if user's role is in allowed roles
-      if (!allowedRoles.includes(req.user.role)) {
-        return res.status(403).json({
-          success: false,
-          message: 'Insufficient permissions'
-        });
-      }
-
-      next();
-    } catch (error) {
-      console.error('Authorization error:', error);
-      return res.status(403).json({
-        success: false,
-        message: 'Authorization failed'
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        error: 'Access denied. Insufficient permissions.' 
       });
     }
+
+    next();
   };
 };
 
-/**
- * Optional authentication middleware - doesn't fail if no token
- */
-const optionalAuth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
-
-    if (token) {
-      const decoded = verifyToken(token);
-      const user = await User.findById(decoded.userId).select('-password');
-      
-      if (user && user.status === 'active') {
-        req.user = user;
-        req.token = token;
-      }
-    }
-    
-    next();
-  } catch (error) {
-    // For optional auth, we don't fail on errors
-    next();
-  }
-};
-
-/**
- * Role-specific authorization middlewares
- */
-const adminOnly = authorize(['Admin']);
-const clinicStaffOnly = authorize(['Dentist', 'Secretary', 'Clinic', 'Admin']);
-const patientOrHigher = authorize(['Patient', 'Dentist', 'Secretary', 'Clinic', 'Admin']);
-const healthcareProviderOnly = authorize(['Dentist', 'Clinic', 'RadiologyCenter', 'Admin']);
-
-module.exports = {
-  authenticate,
-  authorize,
-  optionalAuth,
-  adminOnly,
-  clinicStaffOnly,
-  patientOrHigher,
-  healthcareProviderOnly
-};
+module.exports = { authenticate, authorize };

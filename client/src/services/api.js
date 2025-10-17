@@ -90,14 +90,17 @@ class ApiService {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'Token refresh failed');
+      throw new Error(data.error || 'Token refresh failed');
     }
 
-    // Store new tokens
+    // Backend returns { token, refreshToken } directly, not nested in tokens object
     const remember = authUtils.shouldRemember();
-    authUtils.setTokens(data.tokens, remember);
+    authUtils.setTokens({
+      accessToken: data.token,
+      refreshToken: data.refreshToken
+    }, remember);
 
-    return data;
+    return { success: true, tokens: { accessToken: data.token, refreshToken: data.refreshToken } };
   }
 
   static async get(endpoint) {
@@ -127,13 +130,12 @@ class ApiService {
 
 // Auth API functions
 export const authAPI = {
-  signup: (userData) => ApiService.post('/auth/register', userData),
+  register: (userData) => ApiService.post('/auth/register', userData),
+  signup: (userData) => ApiService.post('/auth/register', userData), // Alias for consistency
   login: (credentials) => ApiService.post('/auth/login', credentials),
   logout: () => ApiService.post('/auth/logout'),
   refresh: (refreshToken) => ApiService.post('/auth/refresh', { refreshToken }),
   getCurrentUser: () => ApiService.get('/auth/me'),
-  verifyToken: (token) => ApiService.post('/auth/verify', { token }),
-  checkEmail: (email) => ApiService.post('/auth/check-email', { email }),
 };
 
 // User API functions
@@ -210,10 +212,110 @@ export const secretariesAPI = {
   updateMyProfile: (data) => ApiService.put('/secretaries/me', data),
 };
 
+// Patients API functions
+export const patientsAPI = {
+  // Get all patients
+  getAll: () => ApiService.get('/patients'),
+  
+  // Get patient by ID
+  getById: (id) => ApiService.get(`/patients/${id}`),
+  
+  // Create new patient
+  create: (patientData) => ApiService.post('/patients', patientData),
+  
+  // Update patient
+  update: (id, patientData) => ApiService.put(`/patients/${id}`, patientData),
+  
+  // Delete patient
+  delete: (id) => ApiService.delete(`/patients/${id}`),
+  
+  // Get current patient profile (for patient users)
+  getMyProfile: () => ApiService.get('/patients/me'),
+  
+  // Update current patient profile
+  updateMyProfile: (data) => ApiService.put('/patients/me', data),
+  
+  // Search patients
+  search: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/patients/search?${queryString}`);
+  },
+};
+
+// Clinics API functions
+export const clinicsAPI = {
+  // Get all clinics
+  getAll: () => ApiService.get('/clinics'),
+  
+  // Get clinic by ID
+  getById: (id) => ApiService.get(`/clinics/${id}`),
+  
+  // Create new clinic
+  create: (clinicData) => ApiService.post('/clinics', clinicData),
+  
+  // Update clinic
+  update: (id, clinicData) => ApiService.put(`/clinics/${id}`, clinicData),
+  
+  // Delete clinic
+  delete: (id) => ApiService.delete(`/clinics/${id}`),
+  
+  // Get current clinic profile (for clinic users)
+  getMyProfile: () => ApiService.get('/clinics/me'),
+  
+  // Update current clinic profile
+  updateMyProfile: (data) => ApiService.put('/clinics/me', data),
+  
+  // Search clinics
+  search: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/clinics/search?${queryString}`);
+  },
+};
+
+// Admin API functions
+export const adminAPI = {
+  // Dashboard stats
+  getDashboardStats: () => ApiService.get('/admin/dashboard'),
+  
+  // User management
+  getAllUsers: () => ApiService.get('/admin/users'),
+  getUserById: (id) => ApiService.get(`/admin/users/${id}`),
+  updateUser: (id, userData) => ApiService.put(`/admin/users/${id}`, userData),
+  deleteUser: (id) => ApiService.delete(`/admin/users/${id}`),
+  
+  // Approval management
+  getPendingApprovals: () => ApiService.get('/admin/approvals/pending'),
+  approveRequest: (id) => ApiService.post(`/admin/approvals/${id}/approve`),
+  rejectRequest: (id) => ApiService.post(`/admin/approvals/${id}/reject`),
+};
+
+// Radiology API functions
+export const radiologyAPI = {
+  // Get all radiology centers
+  getAll: () => ApiService.get('/radiology'),
+  
+  // Get radiology center by ID
+  getById: (id) => ApiService.get(`/radiology/${id}`),
+  
+  // Create new radiology center
+  create: (radiologyData) => ApiService.post('/radiology', radiologyData),
+  
+  // Update radiology center
+  update: (id, radiologyData) => ApiService.put(`/radiology/${id}`, radiologyData),
+  
+  // Delete radiology center
+  delete: (id) => ApiService.delete(`/radiology/${id}`),
+  
+  // Get current radiology profile (for radiology users)
+  getMyProfile: () => ApiService.get('/radiology/me'),
+  
+  // Update current radiology profile
+  updateMyProfile: (data) => ApiService.put('/radiology/me', data),
+};
+
 // Health check API
 export const healthAPI = {
   check: () => ApiService.get('/health'),
-  databaseStatus: () => ApiService.get('/database/status'),
 };
 
 export default ApiService;
