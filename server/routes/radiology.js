@@ -6,36 +6,56 @@ const { paginatedResponse, successResponse, errorResponse, notFoundResponse, cal
 
 // Get radiology centers statistics
 router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
+  console.log('=== GET /api/radiology-centers/stats called ===');
+  console.log('User:', req.user);
+  
   try {
-    const total = await prisma.radiologyCenter.count();
+    // Count all users with RadiologyCenter role
+    const total = await prisma.user.count({
+      where: {
+        role: 'RadiologyCenter'
+      }
+    });
+    
     const active = await prisma.user.count({
       where: {
         role: 'RadiologyCenter',
         status: 'ACTIVE'
       }
     });
-    const pending = await prisma.user.count({
+    
+    // Count inactive centers (PENDING, DEACTIVATED, or DELETED)
+    const inactive = await prisma.user.count({
       where: {
         role: 'RadiologyCenter',
-        status: 'PENDING'
+        status: {
+          in: ['PENDING', 'DEACTIVATED', 'DELETED']
+        }
       }
     });
 
+    console.log('Stats result:', { total, active, inactive });
+
     res.json({ 
+      success: true,
       data: {
         total,
         active,
-        pending
+        pending: inactive  // Frontend expects 'pending' key for inactive centers
       }
     });
   } catch (error) {
     console.error('Error fetching radiology center stats:', error);
-    res.status(500).json({ error: 'Failed to fetch radiology center statistics' });
+    res.status(500).json({ success: false, error: 'Failed to fetch radiology center statistics' });
   }
 });
 
 // Get all radiology centers with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
+  console.log('=== GET /api/radiology-centers called ===');
+  console.log('Query params:', req.query);
+  console.log('User:', req.user);
+  
   try {
     const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
     
@@ -48,22 +68,36 @@ router.get('/', authenticate, async (req, res) => {
     if (search) {
       whereClause.AND.push({
         OR: [
-          { registrationNumber: { contains: search, mode: 'insensitive' } },
-          { city: { contains: search, mode: 'insensitive' } },
-          { user: { email: { contains: search, mode: 'insensitive' } } }
+          { registrationNumber: { contains: search } },
+          { city: { contains: search } },
+          { user: { email: { contains: search } } }
         ]
       });
     }
 
     // City filter
     if (city) {
-      whereClause.AND.push({ city: { contains: city, mode: 'insensitive' } });
+      whereClause.AND.push({ 
+        city: {
+          contains: city
+        }
+      });
     }
 
     // Status filter
     if (isActive) {
-      const status = isActive === 'true' ? 'ACTIVE' : 'PENDING';
-      whereClause.AND.push({ user: { status } });
+      if (isActive === 'true') {
+        whereClause.AND.push({ user: { status: 'ACTIVE' } });
+      } else if (isActive === 'false') {
+        // Include all inactive statuses
+        whereClause.AND.push({ 
+          user: { 
+            status: {
+              in: ['PENDING', 'DEACTIVATED', 'DELETED']
+            }
+          } 
+        });
+      }
     }
 
     // If no filters, remove AND array
@@ -94,14 +128,17 @@ router.get('/', authenticate, async (req, res) => {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        userId: 'desc'
       }
     });
 
+    console.log('Successfully fetched', radiologyCenters.length, 'radiology centers');
     return paginatedResponse(res, radiologyCenters, pagination, 'Radiology centers fetched successfully');
   } catch (error) {
     console.error('Error fetching radiology centers:', error);
-    return errorResponse(res, 'Failed to fetch radiology centers');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return errorResponse(res, `Failed to fetch radiology centers: ${error.message}`, 500);
   }
 });
 
@@ -110,7 +147,7 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const radiologyCenter = await prisma.radiologyCenter.findUnique({
-      where: { userId: id },
+      where: { userId: parseInt(id) },
       include: {
         user: {
           select: {
@@ -118,19 +155,208 @@ router.get('/:id', authenticate, async (req, res) => {
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
       }
     });
 
     if (!radiologyCenter) {
-      return res.status(404).json({ error: 'Radiology center not found' });
+      return notFoundResponse(res, 'Radiology center');
     }
 
-    res.json({ radiologyCenter });
+    return successResponse(res, radiologyCenter, 'Radiology center fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch radiology center' });
+    console.error('Error fetching radiology center:', error);
+    return errorResponse(res, 'Failed to fetch radiology center');
+  }
+});
+
+// Create new radiology center
+router.post('/', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { 
+      email, 
+      password, 
+      phone, 
+      registrationNumber, 
+      city, 
+      location, 
+      coordinates, 
+      website, 
+      description, 
+      supportedTypes, 
+      workingHours 
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !registrationNumber || !city) {
+      return errorResponse(res, 'Email, password, registration number, and city are required', 400);
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return errorResponse(res, 'User with this email already exists', 400);
+    }
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user and radiology center in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          phone: phone || null,
+          role: 'RadiologyCenter',
+          status: 'ACTIVE'
+        }
+      });
+
+      const radiologyCenter = await tx.radiologyCenter.create({
+        data: {
+          userId: user.id,
+          registrationNumber,
+          city,
+          location: location || null,
+          coordinates: coordinates || null,
+          website: website || null,
+          description: description || null,
+          supportedTypes: supportedTypes || [],
+          workingHours: workingHours || null
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return radiologyCenter;
+    });
+
+    return successResponse(res, result, 'Radiology center created successfully', 201);
+  } catch (error) {
+    console.error('Error creating radiology center:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
+    return errorResponse(res, `Failed to create radiology center: ${error.message}`, 500);
+  }
+});
+
+// Update radiology center
+router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      email,
+      phone,
+      registrationNumber,
+      city,
+      location,
+      coordinates,
+      website,
+      description,
+      supportedTypes,
+      workingHours
+    } = req.body;
+
+    // Check if radiology center exists
+    const existingCenter = await prisma.radiologyCenter.findUnique({
+      where: { userId: parseInt(id) }
+    });
+
+    if (!existingCenter) {
+      return notFoundResponse(res, 'Radiology center');
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user if email or phone changed
+      if (email || phone) {
+        await tx.user.update({
+          where: { id: parseInt(id) },
+          data: {
+            ...(email && { email }),
+            ...(phone && { phone })
+          }
+        });
+      }
+
+      // Update radiology center
+      const updatedCenter = await tx.radiologyCenter.update({
+        where: { userId: parseInt(id) },
+        data: {
+          ...(registrationNumber && { registrationNumber }),
+          ...(city && { city }),
+          ...(location !== undefined && { location }),
+          ...(coordinates !== undefined && { coordinates }),
+          ...(website !== undefined && { website }),
+          ...(description !== undefined && { description }),
+          ...(supportedTypes && { supportedTypes }),
+          ...(workingHours !== undefined && { workingHours })
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return updatedCenter;
+    });
+
+    return successResponse(res, result, 'Radiology center updated successfully');
+  } catch (error) {
+    console.error('Error updating radiology center:', error);
+    return errorResponse(res, 'Failed to update radiology center');
+  }
+});
+
+// Delete radiology center (soft delete by updating status)
+router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if radiology center exists
+    const existingCenter = await prisma.radiologyCenter.findUnique({
+      where: { userId: parseInt(id) }
+    });
+
+    if (!existingCenter) {
+      return notFoundResponse(res, 'Radiology center');
+    }
+
+    // Soft delete by updating status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: 'DELETED' }
+    });
+
+    return successResponse(res, null, 'Radiology center deleted successfully');
+  } catch (error) {
+    console.error('Error deleting radiology center:', error);
+    return errorResponse(res, 'Failed to delete radiology center');
   }
 });
 

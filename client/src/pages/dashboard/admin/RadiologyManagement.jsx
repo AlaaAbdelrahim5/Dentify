@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner, RadiologyModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { radiologyAPI } from '../../../services/api'
 
 const RadiologyManagement = () => {
   const { isDarkMode } = useTheme()
@@ -106,7 +107,31 @@ const RadiologyManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        setCenters(data.data || [])
+        // Transform backend data to match frontend expectations
+        const transformedCenters = data.data.map(center => ({
+          _id: center.userId,
+          name: center.registrationNumber, // Using registration number as name since there's no centerName field
+          registrationNumber: center.registrationNumber,
+          description: center.description || '',
+          address: {
+            street: center.location || '',
+            city: center.city
+          },
+          phone: {
+            full: center.user?.phone || '',
+            countryCode: '',
+            number: center.user?.phone || ''
+          },
+          email: center.user?.email || '',
+          workingHours: center.workingHours || {},
+          services: center.supportedTypes || [],
+          equipment: [], // Not in schema, set empty array
+          isActive: center.user?.status === 'ACTIVE',
+          website: center.website,
+          coordinates: center.coordinates
+        }))
+        
+        setCenters(transformedCenters)
         setTotalPages(data.pagination?.pages || 1)
       } else {
         console.error('Failed to fetch centers:', data.message)
@@ -127,29 +152,17 @@ const RadiologyManagement = () => {
   // Fetch center statistics
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
+      const data = await radiologyAPI.getStats()
       
-      const response = await fetch('http://localhost:5000/api/radiology-centers/stats/overview', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (data.success) {
-        setStats(data.data || { total: 0, active: 0, inactive: 0 })
-      } else {
-        console.error('Failed to fetch stats:', data.message)
+      if (data && data.success && data.data) {
+        setStats({
+          total: data.data.total || 0,
+          active: data.data.active || 0,
+          inactive: data.data.pending || 0
+        })
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
-      // Keep default stats in case of error
     }
   }
 
@@ -236,7 +249,8 @@ const RadiologyManagement = () => {
   }
 
   const handleToggleCenterStatus = async (center) => {
-    if (!confirm(`Are you sure you want to ${center.isActive ? 'deactivate' : 'activate'} this radiology center?`)) {
+    const action = center.isActive ? 'deactivate' : 'activate'
+    if (!confirm(`Are you sure you want to ${action} "${center.name}"?`)) {
       return
     }
 
@@ -244,29 +258,25 @@ const RadiologyManagement = () => {
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
       const response = await fetch(`http://localhost:5000/api/radiology-centers/${center._id}`, {
-        method: 'PUT',
+        method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          isActive: !center.isActive
-        })
+        }
       })
 
       const data = await response.json()
 
       if (data.success) {
-        // Update the center in the current list
-        setCenters(prev => prev.map(c => 
-          c._id === center._id ? { ...c, isActive: !c.isActive } : c
-        ))
+        // Refresh the list to show updated status
+        fetchCenters(true)
         fetchStats()
+        alert('Radiology center deleted successfully')
       } else {
-        alert('Failed to update center status: ' + data.message)
+        alert('Failed to delete center: ' + (data.error || data.message || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Error updating center status:', error)
+      console.error('Error deleting center:', error)
       alert('Network error. Please try again.')
     }
   }
