@@ -121,6 +121,13 @@ class ApiService {
     });
   }
 
+  static async patch(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
   static async delete(endpoint) {
     return this.request(endpoint, {
       method: 'DELETE',
@@ -267,6 +274,9 @@ export const clinicsAPI = {
   
   // Delete clinic
   delete: (id) => ApiService.delete(`/clinics/${id}`),
+  
+  // Toggle clinic status (activate/deactivate)
+  toggleStatus: (id) => ApiService.patch(`/clinics/${id}/toggle-status`),
   
   // Get current clinic profile (for clinic users)
   getMyProfile: () => ApiService.get('/clinics/me'),

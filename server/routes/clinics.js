@@ -340,6 +340,45 @@ router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) 
   }
 });
 
+// Toggle clinic status (activate/deactivate)
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if clinic exists
+    const existingClinic = await prisma.clinic.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingClinic) {
+      return notFoundResponse(res, 'Clinic');
+    }
+
+    // Toggle status: ACTIVE <-> DEACTIVATED
+    const currentStatus = existingClinic.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update status
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    const message = newStatus === 'ACTIVE' ? 'Clinic activated successfully' : 'Clinic deactivated successfully';
+    return successResponse(res, { status: newStatus }, message);
+  } catch (error) {
+    console.error('Error toggling clinic status:', error);
+    return errorResponse(res, 'Failed to toggle clinic status');
+  }
+});
+
 // Delete clinic (soft delete)
 router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
   try {
