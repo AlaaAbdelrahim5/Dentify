@@ -17,6 +17,7 @@ import {
 import { MdVerified, MdBlock } from 'react-icons/md'
 import { Button, Input, Card, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { adminAPI } from '../../../services/api'
 
 const AdminsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -48,39 +49,26 @@ const AdminsManagement = () => {
         setLoading(true)
       }
       
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const queryParams = new URLSearchParams({
+      const params = {
         page: currentPage.toString(),
         limit: '10'
-      })
-
-      if (debouncedSearchTerm) {
-        queryParams.append('search', debouncedSearchTerm)
       }
 
-      const response = await fetch(`http://localhost:5000/api/admins?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      if (debouncedSearchTerm) {
+        params.search = debouncedSearchTerm
+      }
 
-      const data = await response.json()
+      const response = await adminAPI.getAllAdmins(params)
       
-      if (data.success) {
-        setAdmins(data.data || [])
-        setTotalPages(data.totalPages || 1)
-        
-        // Calculate stats
-        const totalAdmins = data.data?.length || 0
-        const activeAdmins = data.data?.filter(admin => admin.userId?.status === 'active').length || 0
-        const deletedAdmins = data.data?.filter(admin => admin.userId?.status === 'deleted').length || 0
-        
-        setStats({
-          total: totalAdmins,
-          active: activeAdmins,
-          deleted: deletedAdmins
-        })
+      if (response.success) {
+        setAdmins(response.data || [])
+        setTotalPages(response.totalPages || 1)
+      }
+
+      // Fetch stats separately
+      const statsResponse = await adminAPI.getAdminStats()
+      if (statsResponse.success) {
+        setStats(statsResponse.data)
       }
     } catch (error) {
       console.error('Error fetching admins:', error)
@@ -101,22 +89,13 @@ const AdminsManagement = () => {
     }
 
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
+      const response = await adminAPI.deleteAdmin(adminId)
       
-      const response = await fetch(`http://localhost:5000/api/admins/${adminId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      const data = await response.json()
-      
-      if (data.success) {
+      if (response.success) {
         // Refresh the admins list
         fetchAdmins()
       } else {
-        alert(data.message || 'Failed to delete admin')
+        alert(response.message || 'Failed to delete admin')
       }
     } catch (error) {
       console.error('Error deleting admin:', error)
@@ -407,28 +386,17 @@ const AdminsManagement = () => {
       setLoading(true)
 
       try {
-        const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
+        const response = await adminAPI.createAdmin(formData)
 
-        const response = await fetch('http://localhost:5000/api/admins', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        })
-
-        const data = await response.json()
-
-        if (data.success) {
-          onSave(data.data, 'created')
+        if (response.success) {
+          onSave(response.data, 'created')
           onClose()
         } else {
-          if (response.status === 400 && data.errors) {
-            setErrors(data.errors)
+          if (response.errors) {
+            setErrors(response.errors)
           } else {
             setErrors({
-              general: data.message || 'An error occurred while creating the admin'
+              general: response.message || 'An error occurred while creating the admin'
             })
           }
         }

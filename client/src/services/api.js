@@ -296,6 +296,17 @@ export const adminAPI = {
   getPendingApprovals: () => ApiService.get('/admin/approvals/pending'),
   approveRequest: (id) => ApiService.post(`/admin/approvals/${id}/approve`),
   rejectRequest: (id) => ApiService.post(`/admin/approvals/${id}/reject`),
+  
+  // Admin Management
+  getAdminStats: () => ApiService.get('/admins/stats'),
+  getAllAdmins: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/admins?${queryString}`);
+  },
+  getAdminById: (id) => ApiService.get(`/admins/${id}`),
+  createAdmin: (adminData) => ApiService.post('/admins', adminData),
+  updateAdmin: (id, adminData) => ApiService.put(`/admins/${id}`, adminData),
+  deleteAdmin: (id) => ApiService.delete(`/admins/${id}`),
 };
 
 // Radiology API functions

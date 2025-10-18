@@ -5,6 +5,43 @@ const prisma = require('../utils/prisma');
 const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
 const bcrypt = require('bcryptjs');
 
+// Get admin statistics
+router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    // Get total admins
+    const total = await prisma.admin.count();
+    
+    // Get active admins
+    const active = await prisma.admin.count({
+      where: {
+        user: {
+          status: 'ACTIVE'
+        }
+      }
+    });
+    
+    // Get deleted admins
+    const deleted = await prisma.admin.count({
+      where: {
+        user: {
+          status: 'DELETED'
+        }
+      }
+    });
+
+    const stats = {
+      total,
+      active,
+      deleted
+    };
+
+    return successResponse(res, stats, 'Admin statistics fetched successfully');
+  } catch (error) {
+    console.error('Error fetching admin statistics:', error);
+    return errorResponse(res, 'Failed to fetch admin statistics');
+  }
+});
+
 // Get all admins with pagination and search
 router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
@@ -45,18 +82,26 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        user: {
+          createdAt: 'desc'
+        }
       }
     });
 
-    // Transform data to include userId as main id
+    // Transform data to include userId as main id and fullName
     const transformedAdmins = admins.map(admin => ({
-      ...admin,
-      userId: admin.user.id,
-      email: admin.user.email,
-      phone: admin.user.phone,
-      status: admin.user.status,
-      profileImage: admin.user.profileImage,
+      _id: admin.userId,
+      fullName: `${admin.firstName} ${admin.lastName}`,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      gender: admin.gender ? admin.gender.toLowerCase() : 'other',
+      userId: {
+        id: admin.user.id,
+        email: admin.user.email,
+        phone: admin.user.phone || '',
+        status: admin.user.status ? admin.user.status.toLowerCase() : 'active',
+        profileImage: admin.user.profileImage || null
+      },
       createdAt: admin.user.createdAt,
       updatedAt: admin.user.updatedAt
     }));
@@ -64,6 +109,8 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
     return paginatedResponse(res, transformedAdmins, pagination, 'Admins fetched successfully');
   } catch (error) {
     console.error('Error fetching admins:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     return errorResponse(res, 'Failed to fetch admins');
   }
 });
@@ -122,6 +169,11 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Normalize gender value to match enum (capitalize first letter)
+    const normalizedGender = gender 
+      ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()
+      : null;
+
     // Create user and admin in a transaction
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -139,7 +191,7 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
           userId: user.id,
           firstName,
           lastName,
-          gender: gender || null
+          gender: normalizedGender
         },
         include: {
           user: {
@@ -160,6 +212,8 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
     return successResponse(res, result, 'Admin created successfully', 201);
   } catch (error) {
     console.error('Error creating admin:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     return errorResponse(res, 'Failed to create admin');
   }
 });
@@ -178,6 +232,11 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
     if (!existingAdmin) {
       return notFoundResponse(res, 'Admin');
     }
+
+    // Normalize gender value to match enum (capitalize first letter)
+    const normalizedGender = gender 
+      ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()
+      : undefined;
 
     // Update in transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -198,7 +257,7 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
         data: {
           ...(firstName && { firstName }),
           ...(lastName && { lastName }),
-          ...(gender && { gender })
+          ...(normalizedGender && { gender: normalizedGender })
         },
         include: {
           user: {
