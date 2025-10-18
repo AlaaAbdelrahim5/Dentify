@@ -13,7 +13,8 @@ import {
   FaTimesCircle,
   FaEye,
   FaTimes,
-  FaUserMd
+  FaUserMd,
+  FaCheck
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner, ClinicModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -369,188 +370,260 @@ const ClinicsManagement = () => {
       <div className="fixed inset-0 z-50 overflow-y-auto">
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-transparent transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
 
         {/* Modal */}
         <div className="flex min-h-full items-center justify-center p-4">
           <div
-            className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
+            className={`relative rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
               isDarkMode
                 ? "bg-gray-800 border border-gray-700"
                 : "bg-white border border-gray-200"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div
-              className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-                isDarkMode
-                  ? "border-gray-700 bg-gray-800"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-                    <FaHospital className="w-6 h-6 text-white" />
+            {/* Header with gradient background */}
+            <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+              
+              {/* Avatar and basic info */}
+              <div className="flex items-center gap-4 mt-8">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
+                    <FaHospital className="w-12 h-12 text-teal-600" />
                   </div>
-                  <div>
-                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {clinic.name}
-                    </h2>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Dental Clinic
-                    </p>
+                  {/* Status indicator on avatar */}
+                  <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
+                    clinic.isActive ? 'bg-green-500' : 'bg-red-500'
+                  }`}>
+                    {clinic.isActive ? (
+                      <FaCheck className="w-3 h-3 text-white" />
+                    ) : (
+                      <FaTimes className="w-3 h-3 text-white" />
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={onClose}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  <FaTimes className="w-5 h-5" />
-                </button>
+                
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    {clinic.name}
+                  </h2>
+                  <p className="text-teal-100 text-sm mb-2">
+                    Dental Clinic
+                  </p>
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                    clinic.isActive
+                      ? 'bg-green-900/20 text-green-300 border-green-700'
+                      : 'bg-red-900/20 text-red-300 border-red-700'
+                  }`}>
+                    {clinic.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+                    {clinic.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-6">
-                {/* Status */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-                      clinic.isActive
-                        ? isDarkMode 
-                          ? 'bg-green-900/20 text-green-400 border-green-800'
-                          : 'bg-green-100 text-green-800 border-green-200'
-                        : isDarkMode
-                          ? 'bg-red-900/20 text-red-400 border-red-800'
-                          : 'bg-red-100 text-red-800 border-red-200'
-                    }`}>
-                      {clinic.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
-                      {clinic.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                </div>
-
                 {/* Basic Information */}
-                <Card className="p-4">
-                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    <FaHospital className="w-4 h-4 text-teal-600" />
+                    <FaHospital className="w-5 h-5 text-teal-600" />
                     Basic Information
                   </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Clinic Name:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.name}</span>
+                  <div className={`grid grid-cols-2 gap-4 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Clinic Name
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {clinic.name}
+                      </p>
                     </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Registration Number:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.registrationNumber || 'N/A'}</span>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Registration Number
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {clinic.registrationNumber || 'N/A'}
+                      </p>
                     </div>
-                    {clinic.description && (
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Description:</span>
-                        <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-right max-w-xs`}>{clinic.description}</span>
-                      </div>
-                    )}
                     {clinic.website && (
-                      <div className="flex justify-between">
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Website:</span>
-                        <a href={clinic.website} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
+                      <div className="col-span-2">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Website
+                        </p>
+                        <a href={clinic.website} target="_blank" rel="noopener noreferrer" 
+                           className="text-sm font-medium text-teal-600 hover:underline">
                           {clinic.website}
                         </a>
                       </div>
                     )}
+                    {clinic.description && (
+                      <div className="col-span-2">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Description
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.description}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                </Card>
+                </div>
 
-                {/* Location Information */}
-                <Card className="p-4">
-                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                {/* Location */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
+                    <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
                     Location
                   </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{getCityLabel(clinic.address.city)}</span>
+                  <div className={`space-y-3 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          City
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {getCityLabel(clinic.address.city)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Address:</span>
-                      <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-right max-w-xs`}>{clinic.address.fullAddress}</span>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Full Address
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.address.fullAddress}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </Card>
+                </div>
 
                 {/* Contact Information */}
-                <Card className="p-4">
-                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    <FaEnvelope className="w-4 h-4 text-teal-600" />
+                    <FaEnvelope className="w-5 h-5 text-teal-600" />
                     Contact Information
                   </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.phone.full}</span>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Working Hours */}
-                <Card className="p-4">
-                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  <div className={`space-y-3 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
                   }`}>
-                    <FaClock className="w-4 h-4 text-teal-600" />
-                    Working Hours
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Schedule:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{formatWorkingHours(clinic.workingHours)}</span>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaEnvelope className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Email Address
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaPhone className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Phone Number
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.phone.full}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </Card>
+                </div>
 
-                {/* Staff Information */}
-                <Card className="p-4">
-                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    <FaUserMd className="w-4 h-4 text-teal-600" />
-                    Staff
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Doctors:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.doctors?.length || 0}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Secretaries:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{clinic.secretaries?.length || 0}</span>
+                {/* Working Hours & Staff */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaClock className="w-5 h-5 text-teal-600" />
+                      Working Hours
+                    </h3>
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {formatWorkingHours(clinic.workingHours)}
+                      </p>
                     </div>
                   </div>
-                </Card>
 
-                {/* Services */}
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaUserMd className="w-5 h-5 text-teal-600" />
+                      Staff
+                    </h3>
+                    <div className={`p-4 rounded-lg space-y-2 ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <div className="flex justify-between">
+                        <span className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Doctors:
+                        </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.doctors?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Secretaries:
+                        </span>
+                        <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {clinic.secretaries?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Services Available */}
                 {clinic.servicesAvailable && clinic.servicesAvailable.length > 0 && (
-                  <Card className="p-4">
-                    <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
                       Services Available
@@ -559,15 +632,15 @@ const ClinicsManagement = () => {
                       {clinic.servicesAvailable.map((service, index) => (
                         <span
                           key={index}
-                          className={`px-3 py-1 rounded-full text-sm ${
-                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            isDarkMode ? 'bg-teal-900/20 text-teal-400 border border-teal-800' : 'bg-teal-100 text-teal-700 border border-teal-200'
                           }`}
                         >
                           {service}
                         </span>
                       ))}
                     </div>
-                  </Card>
+                  </div>
                 )}
               </div>
             </div>
