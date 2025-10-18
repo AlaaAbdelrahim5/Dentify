@@ -588,10 +588,14 @@ const ClinicsManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>Clinics Management</h2>
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Manage and add registered clinics in the system</p>
+          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Clinics Management
+          </h1>
+          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Manage and add registered clinics in the system
+          </p>
         </div>
         <Button
           onClick={handleAddClinic}
@@ -604,44 +608,56 @@ const ClinicsManagement = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700/30' 
-          : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
+        <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Total Clinics</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.total}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Total Clinics
+              </p>
+              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {stats.total}
+              </p>
             </div>
-            <FaHospital className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+              <FaHospital className="w-6 h-6 text-white" />
+            </div>
           </div>
         </Card>
 
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700/30' 
-          : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'}`}>
+        <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Active Clinics</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.active}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Active Clinics
+              </p>
+              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {stats.active}
+              </p>
             </div>
-            <FaCheckCircle className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center">
+              <FaCheckCircle className="w-6 h-6 text-white" />
+            </div>
           </div>
         </Card>
 
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-red-900/20 to-red-800/20 border-red-700/30' 
-          : 'bg-gradient-to-br from-red-50 to-red-100 border-red-200'}`}>
+        <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Inactive Clinics</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-red-300' : 'text-red-800'}`}>{stats.inactive}</p>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Inactive Clinics
+              </p>
+              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {stats.inactive}
+              </p>
             </div>
-            <FaTimesCircle className={`w-8 h-8 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center">
+              <FaTimesCircle className="w-6 h-6 text-white" />
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filters */}
       <Card className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
