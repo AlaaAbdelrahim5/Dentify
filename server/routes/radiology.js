@@ -2,11 +2,84 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
 
-// Get all radiology centers
+// Get radiology centers statistics
+router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const total = await prisma.radiologyCenter.count();
+    const active = await prisma.user.count({
+      where: {
+        role: 'RadiologyCenter',
+        status: 'ACTIVE'
+      }
+    });
+    const pending = await prisma.user.count({
+      where: {
+        role: 'RadiologyCenter',
+        status: 'PENDING'
+      }
+    });
+
+    res.json({ 
+      data: {
+        total,
+        active,
+        pending
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching radiology center stats:', error);
+    res.status(500).json({ error: 'Failed to fetch radiology center statistics' });
+  }
+});
+
+// Get all radiology centers with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
   try {
+    const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
+    
+    // Build where clause
+    const whereClause = {
+      AND: []
+    };
+
+    // Search filter
+    if (search) {
+      whereClause.AND.push({
+        OR: [
+          { registrationNumber: { contains: search, mode: 'insensitive' } },
+          { city: { contains: search, mode: 'insensitive' } },
+          { user: { email: { contains: search, mode: 'insensitive' } } }
+        ]
+      });
+    }
+
+    // City filter
+    if (city) {
+      whereClause.AND.push({ city: { contains: city, mode: 'insensitive' } });
+    }
+
+    // Status filter
+    if (isActive) {
+      const status = isActive === 'true' ? 'ACTIVE' : 'PENDING';
+      whereClause.AND.push({ user: { status } });
+    }
+
+    // If no filters, remove AND array
+    const finalWhere = whereClause.AND.length > 0 ? whereClause : {};
+
+    // Get total count
+    const total = await prisma.radiologyCenter.count({ where: finalWhere });
+    
+    // Calculate pagination
+    const pagination = calculatePagination(page, limit, total);
+
+    // Fetch radiology centers
     const radiologyCenters = await prisma.radiologyCenter.findMany({
+      where: finalWhere,
+      skip: pagination.skip,
+      take: pagination.limit,
       include: {
         user: {
           select: {
@@ -14,14 +87,21 @@ router.get('/', authenticate, async (req, res) => {
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
-    res.json({ radiologyCenters });
+
+    return paginatedResponse(res, radiologyCenters, pagination, 'Radiology centers fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch radiology centers' });
+    console.error('Error fetching radiology centers:', error);
+    return errorResponse(res, 'Failed to fetch radiology centers');
   }
 });
 

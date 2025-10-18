@@ -50,6 +50,7 @@ app.use('/api/users', userRoutes);
 // Admin routes
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
+app.use('/api/admins', adminRoutes); // Alias for frontend compatibility
 
 // Clinic routes
 const clinicRoutes = require('./routes/clinics');
@@ -70,6 +71,7 @@ app.use('/api/secretaries', secretaryRoutes);
 // Radiology routes
 const radiologyRoutes = require('./routes/radiology');
 app.use('/api/radiology', radiologyRoutes);
+app.use('/api/radiology-centers', radiologyRoutes); // Alias for frontend compatibility
 
 // Error handling middleware
 app.use((err, req, res, next) => {

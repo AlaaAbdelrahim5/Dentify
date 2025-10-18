@@ -2,11 +2,35 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
+const bcrypt = require('bcryptjs');
 
-// Get all admins
+// Get all admins with pagination and search
 router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+    
+    // Build where clause for search
+    const whereClause = search ? {
+      OR: [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        { user: { phone: { contains: search, mode: 'insensitive' } } }
+      ]
+    } : {};
+
+    // Get total count
+    const total = await prisma.admin.count({ where: whereClause });
+    
+    // Calculate pagination
+    const pagination = calculatePagination(page, limit, total);
+
+    // Fetch admins with pagination
     const admins = await prisma.admin.findMany({
+      where: whereClause,
+      skip: pagination.skip,
+      take: pagination.limit,
       include: {
         user: {
           select: {
@@ -14,14 +38,33 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
-    res.json({ admins });
+
+    // Transform data to include userId as main id
+    const transformedAdmins = admins.map(admin => ({
+      ...admin,
+      userId: admin.user.id,
+      email: admin.user.email,
+      phone: admin.user.phone,
+      status: admin.user.status,
+      profileImage: admin.user.profileImage,
+      createdAt: admin.user.createdAt,
+      updatedAt: admin.user.updatedAt
+    }));
+
+    return paginatedResponse(res, transformedAdmins, pagination, 'Admins fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch admins' });
+    console.error('Error fetching admins:', error);
+    return errorResponse(res, 'Failed to fetch admins');
   }
 });
 
@@ -30,7 +73,7 @@ router.get('/:id', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const admin = await prisma.admin.findUnique({
-      where: { userId: id },
+      where: { userId: parseInt(id) },
       include: {
         user: {
           select: {
@@ -38,19 +81,172 @@ router.get('/:id', authenticate, authorize('Admin'), async (req, res) => {
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
       }
     });
 
     if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
+      return notFoundResponse(res, 'Admin');
     }
 
-    res.json({ admin });
+    return successResponse(res, admin, 'Admin fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch admin' });
+    console.error('Error fetching admin:', error);
+    return errorResponse(res, 'Failed to fetch admin');
+  }
+});
+
+// Create new admin
+router.post('/', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { email, password, phone, firstName, lastName, gender } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName) {
+      return errorResponse(res, 'Email, password, first name, and last name are required', 400);
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return errorResponse(res, 'User with this email already exists', 400);
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user and admin in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          phone,
+          role: 'Admin',
+          status: 'ACTIVE'
+        }
+      });
+
+      const admin = await tx.admin.create({
+        data: {
+          userId: user.id,
+          firstName,
+          lastName,
+          gender: gender || null
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return admin;
+    });
+
+    return successResponse(res, result, 'Admin created successfully', 201);
+  } catch (error) {
+    console.error('Error creating admin:', error);
+    return errorResponse(res, 'Failed to create admin');
+  }
+});
+
+// Update admin
+router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, gender, phone, email } = req.body;
+
+    // Check if admin exists
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { userId: parseInt(id) }
+    });
+
+    if (!existingAdmin) {
+      return notFoundResponse(res, 'Admin');
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user info if provided
+      if (email || phone) {
+        await tx.user.update({
+          where: { id: parseInt(id) },
+          data: {
+            ...(email && { email }),
+            ...(phone && { phone })
+          }
+        });
+      }
+
+      // Update admin info
+      const admin = await tx.admin.update({
+        where: { userId: parseInt(id) },
+        data: {
+          ...(firstName && { firstName }),
+          ...(lastName && { lastName }),
+          ...(gender && { gender })
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return admin;
+    });
+
+    return successResponse(res, result, 'Admin updated successfully');
+  } catch (error) {
+    console.error('Error updating admin:', error);
+    return errorResponse(res, 'Failed to update admin');
+  }
+});
+
+// Delete admin (soft delete by changing status)
+router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if admin exists
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { userId: parseInt(id) }
+    });
+
+    if (!existingAdmin) {
+      return notFoundResponse(res, 'Admin');
+    }
+
+    // Soft delete by updating status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: 'DELETED' }
+    });
+
+    return successResponse(res, null, 'Admin deleted successfully');
+  } catch (error) {
+    console.error('Error deleting admin:', error);
+    return errorResponse(res, 'Failed to delete admin');
   }
 });
 

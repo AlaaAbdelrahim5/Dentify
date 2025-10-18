@@ -18,6 +18,7 @@ import { MdPendingActions } from 'react-icons/md'
 import { Navbar, Card, Button, Input, ThemeToggle } from '../../components'
 import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
+import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../services/api'
 import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
 import DentistsManagement from './admin/DentistsManagement'
@@ -30,6 +31,8 @@ const AdminDashboard = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('overview')
   const [currentUser, setCurrentUser] = useState(null)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [statsError, setStatsError] = useState(null)
   const [stats, setStats] = useState({
     totalClinics: 0,
     pendingDentists: 0,
@@ -78,51 +81,43 @@ const AdminDashboard = () => {
 
   // Fetch dashboard statistics
   const fetchStats = async () => {
+    setIsLoadingStats(true)
+    setStatsError(null)
+    
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      // Fetch dentist stats
-      const dentistStatsResponse = await fetch('http://localhost:5000/api/dentists/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      // Fetch clinic stats (you can create this endpoint later)
-      const clinicStatsResponse = await fetch('http://localhost:5000/api/clinics/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).catch(() => ({ ok: false })) // Handle if endpoint doesn't exist yet
-      
-      // Fetch radiology stats (you can create this endpoint later)
-      const radiologyStatsResponse = await fetch('http://localhost:5000/api/radiology-centers/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).catch(() => ({ ok: false })) // Handle if endpoint doesn't exist yet
+      // Fetch all stats in parallel
+      const [dentistStatsRes, clinicStatsRes, radiologyStatsRes, patientStatsRes] = await Promise.allSettled([
+        dentistsAPI.getStats(),
+        clinicsAPI.getStats(),
+        radiologyAPI.getStats(),
+        patientsAPI.getStats()
+      ])
 
-      const dentistStats = dentistStatsResponse.ok ? (await dentistStatsResponse.json()).data : { pending: 0 }
-      const clinicStats = clinicStatsResponse.ok ? (await clinicStatsResponse.json()).data : { total: 12 }
-      const radiologyStats = radiologyStatsResponse.ok ? (await radiologyStatsResponse.json()).data : { total: 8 }
+      // Extract data or use defaults
+      const dentistStats = dentistStatsRes.status === 'fulfilled' ? dentistStatsRes.value.data : { pending: 0, total: 0 }
+      const clinicStats = clinicStatsRes.status === 'fulfilled' ? clinicStatsRes.value.data : { total: 0 }
+      const radiologyStats = radiologyStatsRes.status === 'fulfilled' ? radiologyStatsRes.value.data : { total: 0 }
+      const patientStats = patientStatsRes.status === 'fulfilled' ? patientStatsRes.value.data : { total: 0 }
 
       setStats({
-        totalClinics: clinicStats.total || 12,
+        totalClinics: clinicStats.total || 0,
         pendingDentists: dentistStats.pending || 0,
-        radiologyCenters: radiologyStats.total || 8,
-        totalPatients: 245 // Mock for now
+        radiologyCenters: radiologyStats.total || 0,
+        totalPatients: patientStats.total || 0
       })
+      
+      setIsLoadingStats(false)
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
-      // Use mock data as fallback
+      setStatsError('Failed to load dashboard statistics')
+      setIsLoadingStats(false)
+      
+      // Use fallback data
       setStats({
-        totalClinics: 12,
-        pendingDentists: 5,
-        radiologyCenters: 8,
-        totalPatients: 245
+        totalClinics: 0,
+        pendingDentists: 0,
+        radiologyCenters: 0,
+        totalPatients: 0
       })
     }
   }
@@ -140,19 +135,24 @@ const AdminDashboard = () => {
           <Button
             variant="outline"
             className="flex items-center gap-2"
+            onClick={fetchStats}
+            disabled={isLoadingStats}
           >
-            <FaFilter className="w-4 h-4" />
-            Filter
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FaSearch className="w-4 h-4" />
-            Search
+            {isLoadingStats ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            ) : (
+              <FaSearch className="w-4 h-4" />
+            )}
+            {isLoadingStats ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>
+      
+      {statsError && (
+        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-red-900/20 border border-red-700/30 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+          <p className="text-sm">{statsError}</p>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -162,7 +162,11 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Total Clinics</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.totalClinics}</p>
+              {isLoadingStats ? (
+                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.totalClinics}</p>
+              )}
             </div>
             <FaHospital className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
           </div>
@@ -174,7 +178,11 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-medium ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Pending Dentists</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{stats.pendingDentists}</p>
+              {isLoadingStats ? (
+                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{stats.pendingDentists}</p>
+              )}
             </div>
             <MdPendingActions className={`w-8 h-8 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
           </div>
@@ -186,7 +194,11 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Radiology Centers</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.radiologyCenters}</p>
+              {isLoadingStats ? (
+                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.radiologyCenters}</p>
+              )}
             </div>
             <FaXRay className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
           </div>
@@ -198,7 +210,11 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Total Patients</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{stats.totalPatients}</p>
+              {isLoadingStats ? (
+                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{stats.totalPatients}</p>
+              )}
             </div>
             <FaUsers className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
           </div>

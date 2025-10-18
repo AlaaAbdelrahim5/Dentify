@@ -148,6 +148,9 @@ export const userAPI = {
 
 // Dentists API functions
 export const dentistsAPI = {
+  // Get dentists statistics
+  getStats: () => ApiService.get('/dentists/stats'),
+  
   // Get all dentists for the clinic
   getAll: (clinicId = null) => {
     const params = clinicId ? `?clinicId=${clinicId}` : '';
@@ -214,6 +217,9 @@ export const secretariesAPI = {
 
 // Patients API functions
 export const patientsAPI = {
+  // Get patients statistics
+  getStats: () => ApiService.get('/patients/stats'),
+  
   // Get all patients
   getAll: () => ApiService.get('/patients'),
   
@@ -244,6 +250,9 @@ export const patientsAPI = {
 
 // Clinics API functions
 export const clinicsAPI = {
+  // Get clinics statistics
+  getStats: () => ApiService.get('/clinics/stats'),
+  
   // Get all clinics
   getAll: () => ApiService.get('/clinics'),
   
@@ -291,6 +300,9 @@ export const adminAPI = {
 
 // Radiology API functions
 export const radiologyAPI = {
+  // Get radiology centers statistics
+  getStats: () => ApiService.get('/radiology/stats'),
+  
   // Get all radiology centers
   getAll: () => ApiService.get('/radiology'),
   

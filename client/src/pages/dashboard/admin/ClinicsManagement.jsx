@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner, ClinicModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { clinicsAPI } from '../../../services/api'
 
 const ClinicsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -60,19 +61,18 @@ const ClinicsManagement = () => {
         setLoading(true)
       }
       
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const params = new URLSearchParams({
+      const params = {
         page: currentPage,
         limit: 10,
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
         ...(filterCity && { city: filterCity }),
         ...(filterStatus && { isActive: filterStatus })
-      })
+      }
 
-      const response = await fetch(`http://localhost:5000/api/clinics?${params}`, {
+      const queryString = new URLSearchParams(params).toString()
+      const response = await fetch(`http://localhost:5000/api/clinics?${queryString}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')}`,
           'Content-Type': 'application/json'
         }
       })
@@ -80,7 +80,29 @@ const ClinicsManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        setClinics(data.data)
+        // Transform backend data to match frontend expectations
+        const transformedClinics = data.data.map(clinic => ({
+          _id: clinic.userId,
+          name: clinic.clinicName,
+          description: clinic.description || '',
+          address: {
+            fullAddress: clinic.location || '',
+            city: clinic.city
+          },
+          phone: {
+            full: clinic.user?.phone || ''
+          },
+          email: clinic.user?.email || '',
+          workingHours: clinic.workingHours || {},
+          doctors: clinic.dentists || [],
+          secretaries: clinic.secretaries || [],
+          isActive: clinic.user?.status === 'ACTIVE',
+          registrationNumber: clinic.registrationNumber,
+          website: clinic.website,
+          servicesAvailable: clinic.servicesAvailable || []
+        }))
+        
+        setClinics(transformedClinics)
         setTotalPages(data.pagination.pages)
       }
     } catch (error) {
@@ -97,19 +119,14 @@ const ClinicsManagement = () => {
   // Fetch clinic statistics
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
+      const data = await clinicsAPI.getStats()
       
-      const response = await fetch('http://localhost:5000/api/clinics/stats/overview', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setStats(data.data)
+      if (data && data.success && data.data) {
+        setStats({
+          total: data.data.total || 0,
+          active: data.data.active || 0,
+          inactive: data.data.pending || 0
+        })
       }
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -221,8 +238,8 @@ const ClinicsManagement = () => {
     setShowAddModal(true)
   }
 
-  const handleToggleClinicStatus = async (clinic) => {
-    if (!confirm(`Are you sure you want to ${clinic.isActive ? 'deactivate' : 'activate'} this clinic?`)) {
+  const handleDeleteClinic = async (clinic) => {
+    if (!confirm(`Are you sure you want to delete "${clinic.name}"? This action will deactivate the clinic.`)) {
       return
     }
 
@@ -230,29 +247,25 @@ const ClinicsManagement = () => {
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
       const response = await fetch(`http://localhost:5000/api/clinics/${clinic._id}`, {
-        method: 'PUT',
+        method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          isActive: !clinic.isActive
-        })
+        }
       })
 
       const data = await response.json()
 
       if (data.success) {
-        // Update the clinic in the current list
-        setClinics(prev => prev.map(c => 
-          c._id === clinic._id ? { ...c, isActive: !c.isActive } : c
-        ))
+        // Remove from the current list or refetch
+        fetchClinics(true)
         fetchStats()
+        alert('Clinic deleted successfully')
       } else {
-        alert('Failed to update clinic status: ' + data.message)
+        alert('Failed to delete clinic: ' + (data.error || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Error updating clinic status:', error)
+      console.error('Error deleting clinic:', error)
       alert('Network error. Please try again.')
     }
   }
@@ -473,17 +486,13 @@ const ClinicsManagement = () => {
                   Edit
                 </Button>
                 <Button
-                  onClick={() => handleToggleClinicStatus(clinic)}
+                  onClick={() => handleDeleteClinic(clinic)}
                   variant="outline"
                   size="sm"
-                  className={`flex items-center gap-1 ${
-                    clinic.isActive 
-                      ? 'text-red-600 hover:bg-red-50' 
-                      : 'text-green-600 hover:bg-green-50'
-                  }`}
+                  className="flex items-center gap-1 text-red-600 hover:bg-red-50"
                 >
                   <FaTrash className="w-3 h-3" />
-                  {clinic.isActive ? 'Deactivate' : 'Activate'}
+                  Delete
                 </Button>
               </div>
             </Card>

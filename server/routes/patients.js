@@ -3,6 +3,29 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
 
+// Get patients statistics
+router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const total = await prisma.patient.count();
+    const active = await prisma.user.count({
+      where: {
+        role: 'Patient',
+        status: 'ACTIVE'
+      }
+    });
+
+    res.json({ 
+      data: {
+        total,
+        active
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching patient stats:', error);
+    res.status(500).json({ error: 'Failed to fetch patient statistics' });
+  }
+});
+
 // Get current patient's profile (for logged-in patient)
 router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
   try {
