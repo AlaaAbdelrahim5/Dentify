@@ -317,6 +317,7 @@ export const adminAPI = {
   createAdmin: (adminData) => ApiService.post('/admins', adminData),
   updateAdmin: (id, adminData) => ApiService.put(`/admins/${id}`, adminData),
   deleteAdmin: (id) => ApiService.delete(`/admins/${id}`),
+  toggleStatus: (id) => ApiService.patch(`/admins/${id}/toggle-status`),
 };
 
 // Radiology API functions
@@ -338,6 +339,9 @@ export const radiologyAPI = {
   
   // Delete radiology center
   delete: (id) => ApiService.delete(`/radiology/${id}`),
+  
+  // Toggle radiology center status (activate/deactivate)
+  toggleStatus: (id) => ApiService.patch(`/radiology-centers/${id}/toggle-status`),
   
   // Get current radiology profile (for radiology users)
   getMyProfile: () => ApiService.get('/radiology/me'),

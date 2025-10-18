@@ -20,11 +20,13 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
     
-    // Get deleted admins
-    const deleted = await prisma.admin.count({
+    // Get inactive admins (DEACTIVATED, PENDING, DELETED)
+    const inactive = await prisma.admin.count({
       where: {
         user: {
-          status: 'DELETED'
+          status: {
+            in: ['DEACTIVATED', 'PENDING', 'DELETED']
+          }
         }
       }
     });
@@ -32,7 +34,7 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
     const stats = {
       total,
       active,
-      deleted
+      inactive
     };
 
     return successResponse(res, stats, 'Admin statistics fetched successfully');
@@ -279,6 +281,45 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
   } catch (error) {
     console.error('Error updating admin:', error);
     return errorResponse(res, 'Failed to update admin');
+  }
+});
+
+// Toggle admin status (activate/deactivate) - MUST BE BEFORE /:id route
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if admin exists
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingAdmin) {
+      return notFoundResponse(res, 'Admin');
+    }
+
+    // Toggle status: ACTIVE <-> DEACTIVATED
+    const currentStatus = existingAdmin.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    const message = newStatus === 'ACTIVE' ? 'Admin activated successfully' : 'Admin deactivated successfully';
+    return successResponse(res, { status: newStatus }, message);
+  } catch (error) {
+    console.error('Error toggling admin status:', error);
+    return errorResponse(res, 'Failed to toggle admin status');
   }
 });
 

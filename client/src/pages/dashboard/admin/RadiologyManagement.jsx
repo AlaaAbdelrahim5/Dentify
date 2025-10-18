@@ -3,7 +3,6 @@ import {
   FaXRay, 
   FaPlus, 
   FaEdit, 
-  FaTrash, 
   FaSearch, 
   FaFilter,
   FaMapMarkerAlt,
@@ -13,6 +12,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaEye,
+  FaTimes,
   FaCog
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner, RadiologyModal } from '../../../components'
@@ -32,6 +32,9 @@ const RadiologyManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedCenter, setSelectedCenter] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const searchTimeoutRef = useRef(null)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
@@ -250,35 +253,324 @@ const RadiologyManagement = () => {
 
   const handleToggleCenterStatus = async (center) => {
     const action = center.isActive ? 'deactivate' : 'activate'
-    if (!confirm(`Are you sure you want to ${action} "${center.name}"?`)) {
-      return
-    }
+    
+    setSelectedCenter(center)
+    setConfirmAction(action)
+    setShowConfirmModal(true)
+  }
+
+  const executeToggleStatus = async () => {
+    const center = selectedCenter
+    const action = confirmAction
 
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const response = await fetch(`http://localhost:5000/api/radiology-centers/${center._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      console.log('Toggling center status for center ID:', center._id)
+      const response = await radiologyAPI.toggleStatus(center._id)
+      console.log('Toggle status response:', response)
 
-      const data = await response.json()
-
-      if (data.success) {
-        // Refresh the list to show updated status
+      if (response.success) {
+        setShowConfirmModal(false)
         fetchCenters(true)
         fetchStats()
-        alert('Radiology center deleted successfully')
       } else {
-        alert('Failed to delete center: ' + (data.error || data.message || 'Unknown error'))
+        alert(`Failed to ${action} center: ` + (response.error || response.message || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Error deleting center:', error)
-      alert('Network error. Please try again.')
+      console.error(`Error ${action}ing center:`, error)
+      alert(`Network error. Please try again. Details: ${error.message}`)
     }
+  }
+
+  // Modern Confirmation Modal Component
+  const ConfirmationModal = ({ isOpen, onClose, onConfirm, center, action }) => {
+    if (!isOpen || !center) return null
+
+    const isDeactivate = action === 'deactivate'
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop with blur */}
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div
+            className={`relative rounded-2xl shadow-2xl w-full max-w-md transform transition-all ${
+              isDarkMode
+                ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700"
+                : "bg-gradient-to-br from-white to-gray-50 border border-gray-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icon Section */}
+            <div className="flex flex-col items-center pt-8 pb-4">
+              <div
+                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
+                  isDeactivate
+                    ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/50'
+                    : 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/50'
+                }`}
+              >
+                {isDeactivate ? (
+                  <FaTimesCircle className="w-10 h-10 text-white" />
+                ) : (
+                  <FaCheckCircle className="w-10 h-10 text-white" />
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {isDeactivate ? 'Deactivate Center?' : 'Activate Center?'}
+              </h3>
+
+              {/* Message */}
+              <p className={`text-center px-6 mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Are you sure you want to {action}{' '}
+                <span className="font-semibold">{center.name}</span>?
+              </p>
+
+              {/* Additional Info */}
+              <p className={`text-sm text-center px-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {isDeactivate
+                  ? 'The radiology center will no longer be accessible to users.'
+                  : 'The radiology center will be accessible and fully functional.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 p-6 pt-2">
+              <button
+                onClick={onClose}
+                className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
+                  isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg ${
+                  isDeactivate
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/50'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/50'
+                }`}
+              >
+                {isDeactivate ? 'Deactivate' : 'Activate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Center Details Modal Component
+  const CenterDetailsModal = ({ center, onClose }) => {
+    if (!center) return null
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-transparent transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div
+            className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
+              isDarkMode
+                ? "bg-gray-800 border border-gray-700"
+                : "bg-white border border-gray-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+                isDarkMode
+                  ? "border-gray-700 bg-gray-800"
+                  : "border-gray-200 bg-white"
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+                    <FaXRay className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {center.name}
+                    </h2>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Radiology Center
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
+                {/* Status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                      center.isActive
+                        ? isDarkMode 
+                          ? 'bg-green-900/20 text-green-400 border-green-800'
+                          : 'bg-green-100 text-green-800 border-green-200'
+                        : isDarkMode
+                          ? 'bg-red-900/20 text-red-400 border-red-800'
+                          : 'bg-red-100 text-red-800 border-red-200'
+                    }`}>
+                      {center.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+                      {center.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Basic Information */}
+                <Card className="p-4">
+                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaXRay className="w-4 h-4 text-teal-600" />
+                    Basic Information
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Center Name:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{center.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Registration Number:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{center.registrationNumber || 'N/A'}</span>
+                    </div>
+                    {center.description && (
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Description:</span>
+                        <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-right max-w-xs`}>{center.description}</span>
+                      </div>
+                    )}
+                    {center.website && (
+                      <div className="flex justify-between">
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Website:</span>
+                        <a href={center.website} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">
+                          {center.website}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Location Information */}
+                <Card className="p-4">
+                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
+                    Location
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{getCityLabel(center.address?.city)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Address:</span>
+                      <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-right max-w-xs`}>{center.address?.street}</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Contact Information */}
+                <Card className="p-4">
+                  <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaEnvelope className="w-4 h-4 text-teal-600" />
+                    Contact Information
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{center.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{center.phone?.full}</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Services */}
+                {center.services && center.services.length > 0 && (
+                  <Card className="p-4">
+                    <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaCog className="w-4 h-4 text-teal-600" />
+                      Services Available
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {center.services.map((service, index) => (
+                        <span
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Equipment */}
+                {center.equipment && center.equipment.length > 0 && (
+                  <Card className="p-4">
+                    <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Equipment
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {center.equipment.map((item, index) => (
+                        <span
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (loading && centers.length === 0) {
@@ -415,164 +707,187 @@ const RadiologyManagement = () => {
       </Card>
 
       {/* Centers List */}
-      <div className="relative">
+      <Card>
         {filtering && (
-          <div className={`absolute inset-0 bg-opacity-75 flex items-center justify-center z-10 rounded-lg ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          }`}>
+          <div className="flex items-center justify-center py-8">
             <LoadingSpinner />
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {centers.map((center) => (
-          <Card key={center._id} className="p-6 hover:shadow-lg transition-shadow duration-200">
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-100 rounded-lg">
-                    <FaXRay className="w-5 h-5 text-teal-600" />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{center.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        center.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {center.isActive ? (
-                          <>
-                            <FaCheckCircle className="w-3 h-3 mr-1" />
-                            Active
-                          </>
-                        ) : (
-                          <>
-                            <FaTimesCircle className="w-3 h-3 mr-1" />
-                            Inactive
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-2">
-                {/* Address */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaMapMarkerAlt className="w-4 h-4" />
-                  <span>{center.address?.street}, {getCityLabel(center.address?.city)}</span>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaPhone className="w-4 h-4" />
-                  <span>{center.phone?.full || `${center.phone?.countryCode}${center.phone?.number}`}</span>
-                </div>
-
-                {/* Email */}
-                {center.email && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <FaEnvelope className="w-4 h-4" />
-                    <span>{center.email}</span>
-                  </div>
-                )}
-
-                {/* Working Hours */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaClock className="w-4 h-4" />
-                  <span>Working Hours: 09:00 - 17:00</span>
-                </div>
-
-                {/* Services Count */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="font-medium">Services: {center.services?.length || 0}</span>
-                  <span className="font-medium">Equipment: {center.equipment?.length || 0}</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className={`flex gap-2 mt-4 pt-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-                <Button
-                  onClick={() => setSelectedCenter(center)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <FaEye className="w-3 h-3" />
-                  View
-                </Button>
-                <Button
-                  onClick={() => handleEditCenter(center)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <FaEdit className="w-3 h-3" />
-                  Edit
-                </Button>
-                <Button
-                  onClick={() => handleToggleCenterStatus(center)}
-                  variant="outline"
-                  size="sm"
-                  className={`flex items-center gap-1 ${
-                    center.isActive 
-                      ? 'text-red-600 hover:bg-red-50' 
-                      : 'text-green-600 hover:bg-green-50'
-                  }`}
-                >
-                  <FaTrash className="w-3 h-3" />
-                  {center.isActive ? 'Deactivate' : 'Activate'}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-        </div>
-
-        {centers.length === 0 && !loading && (
-          <Card className="p-12 text-center">
+        
+        {!filtering && centers.length === 0 && (
+          <div className="text-center py-12">
             <FaXRay className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>No Radiology Centers Found</h3>
-            <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>No radiology centers match your search criteria</p>
-            <Button
-              onClick={handleAddCenter}
-              className="bg-gradient-to-r from-teal-600 to-cyan-600"
-            >
-              Add New Center
-            </Button>
-          </Card>
+            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              No radiology centers found
+            </h3>
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {searchTerm || filterCity || filterStatus ? 'Try adjusting your search criteria' : 'No radiology centers yet'}
+            </p>
+          </div>
         )}
-      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            variant="outline"
-            size="sm"
-          >
-            Previous
-          </Button>
-          
-          <span className={`flex items-center px-4 py-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Page {currentPage} of {totalPages}
-          </span>
-          
-          <Button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            variant="outline"
-            size="sm"
-          >
-            Next
-          </Button>
-        </div>
-      )}
+        {!filtering && centers.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <tr>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Center
+                  </th>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Location
+                  </th>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Contact
+                  </th>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Services
+                  </th>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Status
+                  </th>
+                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                {centers.map((center) => (
+                  <tr key={center._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+                          <FaXRay className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="ml-3">
+                          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {center.name}
+                          </div>
+                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {center.registrationNumber || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {getCityLabel(center.address?.city)}
+                      </div>
+                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {center.address?.street}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {center.email}
+                      </div>
+                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {center.phone?.full}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {center.services?.length || 0} services
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                        center.isActive
+                          ? isDarkMode 
+                            ? 'bg-green-900/20 text-green-400 border-green-800'
+                            : 'bg-green-100 text-green-800 border-green-200'
+                          : isDarkMode
+                            ? 'bg-red-900/20 text-red-400 border-red-800'
+                            : 'bg-red-100 text-red-800 border-red-200'
+                      }`}>
+                        {center.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+                        {center.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedCenter(center)
+                            setShowDetailsModal(true)
+                          }}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                          }`}
+                          title="View Details"
+                        >
+                          <FaEye className="w-4 h-4" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleEditCenter(center)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                          }`}
+                          title="Edit"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </button>
+                        
+                        <button
+                          onClick={() => handleToggleCenterStatus(center)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            center.isActive
+                              ? 'text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20'
+                              : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20'
+                          }`}
+                          title={center.isActive ? 'Deactivate' : 'Activate'}
+                        >
+                          {center.isActive ? <FaTimesCircle className="w-4 h-4" /> : <FaCheckCircle className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* Modals */}
       <RadiologyModal
@@ -586,6 +901,30 @@ const RadiologyManagement = () => {
         onClose={() => setShowEditModal(false)}
         center={selectedCenter}
         onSave={handleCenterSave}
+      />
+
+      {/* Center Details Modal */}
+      {showDetailsModal && (
+        <CenterDetailsModal
+          center={selectedCenter}
+          onClose={() => {
+            setShowDetailsModal(false)
+            setSelectedCenter(null)
+          }}
+        />
+      )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false)
+          setSelectedCenter(null)
+          setConfirmAction(null)
+        }}
+        onConfirm={executeToggleStatus}
+        center={selectedCenter}
+        action={confirmAction}
       />
     </div>
   )

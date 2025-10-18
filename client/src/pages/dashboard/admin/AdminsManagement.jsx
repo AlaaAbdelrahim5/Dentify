@@ -12,7 +12,9 @@ import {
   FaPhone,
   FaUserMd,
   FaCheck,
-  FaSave
+  FaSave,
+  FaCheckCircle,
+  FaTimesCircle
 } from 'react-icons/fa'
 import { MdVerified, MdBlock } from 'react-icons/md'
 import { Button, Input, Card, LoadingSpinner } from '../../../components'
@@ -31,13 +33,15 @@ const AdminsManagement = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const searchTimeoutRef = useRef(null)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
-    deleted: 0
+    inactive: 0
   })
 
   // Fetch admins
@@ -82,24 +86,34 @@ const AdminsManagement = () => {
     }
   }
 
-  // Delete admin
-  const deleteAdmin = async (adminId) => {
-    if (!window.confirm('Are you sure you want to delete this admin? This action cannot be undone.')) {
-      return
-    }
+  // Toggle admin status
+  const handleToggleAdminStatus = async (admin) => {
+    const action = admin.userId?.status === 'active' ? 'deactivate' : 'activate'
+    
+    setSelectedAdmin(admin)
+    setConfirmAction(action)
+    setShowConfirmModal(true)
+  }
+
+  const executeToggleStatus = async () => {
+    const admin = selectedAdmin
+    const action = confirmAction
 
     try {
-      const response = await adminAPI.deleteAdmin(adminId)
+      const response = await adminAPI.toggleStatus(admin._id)
       
       if (response.success) {
         // Refresh the admins list
         fetchAdmins()
+        setShowConfirmModal(false)
+        setSelectedAdmin(null)
+        setConfirmAction(null)
       } else {
-        alert(response.message || 'Failed to delete admin')
+        alert(response.message || `Failed to ${action} admin`)
       }
     } catch (error) {
-      console.error('Error deleting admin:', error)
-      alert('An error occurred while deleting the admin')
+      console.error(`Error ${action}ing admin:`, error)
+      alert(`An error occurred while ${action}ing the admin`)
     }
   }
 
@@ -140,29 +154,19 @@ const AdminsManagement = () => {
     fetchAdmins()
   }, [])
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      active: { 
-        color: 'bg-green-100 text-green-800 border-green-200', 
-        darkColor: 'bg-green-900/20 text-green-400 border-green-800',
-        icon: MdVerified 
-      },
-      deleted: { 
-        color: 'bg-red-100 text-red-800 border-red-200', 
-        darkColor: 'bg-red-900/20 text-red-400 border-red-800',
-        icon: MdBlock 
-      }
-    }
-
-    const config = statusConfig[status] || statusConfig.active
-    const Icon = config.icon
-
+  const getStatusBadge = (isActive) => {
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-        isDarkMode ? config.darkColor : config.color
+        isActive
+          ? isDarkMode 
+            ? 'bg-green-900/20 text-green-400 border-green-800'
+            : 'bg-green-100 text-green-800 border-green-200'
+          : isDarkMode
+            ? 'bg-red-900/20 text-red-400 border-red-800'
+            : 'bg-red-100 text-red-800 border-red-200'
       }`}>
-        <Icon className="w-3 h-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+        {isActive ? 'Active' : 'Inactive'}
       </span>
     )
   }
@@ -173,6 +177,94 @@ const AdminsManagement = () => {
       month: 'short',
       day: 'numeric'
     })
+  }
+
+  // Modern Confirmation Modal Component
+  const ConfirmationModal = ({ isOpen, onClose, onConfirm, admin, action }) => {
+    if (!isOpen || !admin) return null
+
+    const isDeactivate = action === 'deactivate'
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div
+            className={`relative rounded-2xl shadow-2xl w-full max-w-md transform transition-all ${
+              isDarkMode
+                ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700"
+                : "bg-gradient-to-br from-white to-gray-50 border border-gray-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icon and Title */}
+            <div className="flex flex-col items-center pt-8 pb-4">
+              <div
+                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
+                  isDeactivate
+                    ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/50'
+                    : 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/50'
+                }`}
+              >
+                {isDeactivate ? (
+                  <FaTimesCircle className="w-10 h-10 text-white" />
+                ) : (
+                  <FaCheckCircle className="w-10 h-10 text-white" />
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {isDeactivate ? 'Deactivate Admin?' : 'Activate Admin?'}
+              </h3>
+
+              {/* Description */}
+              <p className={`text-center px-6 mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Are you sure you want to {action}{' '}
+                <span className="font-semibold">{admin.fullName}</span>?
+              </p>
+
+              {/* Warning */}
+              <p className={`text-sm text-center px-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {isDeactivate
+                  ? 'The admin will no longer have access to the system.'
+                  : 'The admin will regain full access to the system.'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 p-6 pt-2">
+              <button
+                onClick={onClose}
+                className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
+                  isDarkMode
+                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg ${
+                  isDeactivate
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/50'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/50'
+                }`}
+              >
+                {isDeactivate ? 'Deactivate' : 'Activate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Admin Details Modal Component
@@ -236,7 +328,7 @@ const AdminsManagement = () => {
                 {/* Status */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {getStatusBadge(admin.userId?.status)}
+                    {getStatusBadge(admin.userId?.status === 'active')}
                     <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Created on {formatDate(admin.createdAt)}
                     </span>
@@ -691,14 +783,14 @@ const AdminsManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Deleted Admins
+                Inactive Admins
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.deleted}
+                {stats.inactive}
               </p>
             </div>
             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center">
-              <MdBlock className="w-6 h-6 text-white" />
+              <FaTimesCircle className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>
@@ -797,7 +889,7 @@ const AdminsManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(admin.userId?.status)}
+                      {getStatusBadge(admin.userId?.status === 'active')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -819,15 +911,17 @@ const AdminsManagement = () => {
                           <FaEye className="w-4 h-4" />
                         </button>
                         
-                        {admin.userId?.status === 'active' && (
-                          <button
-                            onClick={() => deleteAdmin(admin._id)}
-                            className="p-2 rounded-lg text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
-                            title="Delete"
-                          >
-                            <FaTrash className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleToggleAdminStatus(admin)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            admin.userId?.status === 'active'
+                              ? 'text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20'
+                              : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20'
+                          }`}
+                          title={admin.userId?.status === 'active' ? 'Deactivate' : 'Activate'}
+                        >
+                          {admin.userId?.status === 'active' ? <FaTimesCircle className="w-4 h-4" /> : <FaCheckCircle className="w-4 h-4" />}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -886,6 +980,19 @@ const AdminsManagement = () => {
           // Show success message
           console.log(`Admin ${action} successfully:`, newAdmin)
         }}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false)
+          setSelectedAdmin(null)
+          setConfirmAction(null)
+        }}
+        onConfirm={executeToggleStatus}
+        admin={selectedAdmin}
+        action={confirmAction}
       />
     </div>
   )

@@ -142,6 +142,45 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Toggle radiology center status (activate/deactivate) - MUST BE BEFORE /:id route
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if radiology center exists
+    const existingCenter = await prisma.radiologyCenter.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingCenter) {
+      return notFoundResponse(res, 'Radiology center');
+    }
+
+    // Toggle status: ACTIVE <-> DEACTIVATED
+    const currentStatus = existingCenter.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    const message = newStatus === 'ACTIVE' ? 'Radiology center activated successfully' : 'Radiology center deactivated successfully';
+    return successResponse(res, { status: newStatus }, message);
+  } catch (error) {
+    console.error('Error toggling radiology center status:', error);
+    return errorResponse(res, 'Failed to toggle radiology center status');
+  }
+});
+
 // Get radiology center by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
