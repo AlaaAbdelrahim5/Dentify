@@ -104,6 +104,7 @@ const ClinicsManagement = () => {
           isActive: clinic.user?.status === 'ACTIVE',
           registrationNumber: clinic.registrationNumber,
           website: clinic.website,
+          coordinates: clinic.coordinates,
           servicesAvailable: clinic.servicesAvailable || []
         }))
         

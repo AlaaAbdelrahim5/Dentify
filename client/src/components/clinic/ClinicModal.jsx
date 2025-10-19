@@ -122,9 +122,12 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           workingHoursObj[day] = { isOpen: false, start: "09:00", end: "17:00" };
         });
         
-        // Fill in actual working hours from array format
-        if (clinic.workingHours && Array.isArray(clinic.workingHours)) {
-          clinic.workingHours.forEach(({ day, startTime, endTime }) => {
+        // Handle workingHours - it could be array, object, or null
+        const workingHours = clinic.workingHours;
+        
+        if (workingHours && Array.isArray(workingHours)) {
+          // Fill in actual working hours from array format
+          workingHours.forEach(({ day, startTime, endTime }) => {
             const dayKey = dayMap[day];
             if (dayKey) {
               workingHoursObj[dayKey] = {
@@ -134,18 +137,25 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               };
             }
           });
+        } else if (workingHours && typeof workingHours === 'object' && !Array.isArray(workingHours)) {
+          // If it's already in object format, use it directly
+          Object.keys(workingHours).forEach(day => {
+            if (workingHours[day]) {
+              workingHoursObj[day] = workingHours[day];
+            }
+          });
         }
 
         setFormData({
-          // User fields from populated user object
-          email: clinic.user?.email || "",
-          phone: clinic.user?.phone || "",
+          // User fields - get from transformed data structure
+          email: clinic.email || clinic.user?.email || "",
+          phone: clinic.phone?.full || clinic.user?.phone || clinic.phone || "",
           password: "", // Password field should be empty when editing
-          // Clinic fields
-          clinicName: clinic.clinicName || "",
+          // Clinic fields - get from transformed data structure
+          clinicName: clinic.name || clinic.clinicName || "",
           registrationNumber: clinic.registrationNumber || "",
-          city: clinic.city || "",
-          location: clinic.location || "",
+          city: clinic.address?.city || clinic.city || "",
+          location: clinic.address?.fullAddress || clinic.location || "",
           coordinates: clinic.coordinates || "",
           website: clinic.website || "",
           description: clinic.description || "",
@@ -742,11 +752,17 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       }
                       placeholder={
                         clinic
-                          ? "Enter new password (optional)"
+                          ? "Password cannot be edited"
                           : "Enter password"
                       }
                       error={errors.password}
+                      disabled={clinic ? true : false}
                     />
+                    {clinic && (
+                      <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Password cannot be changed from this form
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -123,9 +123,12 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           workingHoursObj[day] = { isOpen: false, start: "09:00", end: "17:00" };
         });
         
-        // Fill in actual working hours from array format
-        if (center.workingHours && Array.isArray(center.workingHours)) {
-          center.workingHours.forEach(({ day, startTime, endTime }) => {
+        // Handle workingHours - it could be array, object, or null
+        const workingHours = center.workingHours;
+        
+        if (workingHours && Array.isArray(workingHours)) {
+          // Fill in actual working hours from array format
+          workingHours.forEach(({ day, startTime, endTime }) => {
             const dayKey = dayMap[day];
             if (dayKey) {
               workingHoursObj[dayKey] = {
@@ -135,21 +138,28 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
               };
             }
           });
+        } else if (workingHours && typeof workingHours === 'object' && !Array.isArray(workingHours)) {
+          // If it's already in object format, use it directly
+          Object.keys(workingHours).forEach(day => {
+            if (workingHours[day]) {
+              workingHoursObj[day] = workingHours[day];
+            }
+          });
         }
 
         setFormData({
-          // User fields from populated user object
-          email: center.user?.email || "",
-          phone: center.user?.phone || "",
+          // User fields - get from transformed data structure
+          email: center.email || "",
+          phone: center.phone?.full || center.phone || "",
           password: "", // Password field should be empty when editing
-          // RadiologyCenter fields
-          centerName: center.centerName || "",
+          // RadiologyCenter fields - get from transformed data structure
+          centerName: center.name || center.registrationNumber || "",
           registrationNumber: center.registrationNumber || "",
-          city: center.city || "",
-          location: center.location || "",
+          city: center.address?.city || center.city || "",
+          location: center.address?.street || center.location || "",
           website: center.website || "",
           description: center.description || "",
-          supportedTypes: center.supportedTypes || [],
+          supportedTypes: center.services || center.supportedTypes || [],
           coordinates: center.coordinates || "",
           workingHours: workingHoursObj,
         });
@@ -729,11 +739,17 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                       }
                       placeholder={
                         center
-                          ? "Enter new password (optional)"
+                          ? "Password cannot be edited"
                           : "Enter password"
                       }
                       error={errors.password}
+                      disabled={center ? true : false}
                     />
+                    {center && (
+                      <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Password cannot be changed from this form
+                      </p>
+                    )}
                   </div>
                 </div>
 
