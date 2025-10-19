@@ -533,6 +533,23 @@ const RadiologyManagement = () => {
                         </p>
                       </div>
                     </div>
+                    {center.coordinates && (
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          isDarkMode ? 'bg-gray-600' : 'bg-white'
+                        }`}>
+                          <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Coordinates
+                          </p>
+                          <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {center.coordinates}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

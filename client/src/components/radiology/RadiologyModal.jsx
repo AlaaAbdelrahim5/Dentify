@@ -9,6 +9,7 @@ import {
   FaClock,
   FaSave,
   FaLock,
+  FaLocationArrow,
 } from "react-icons/fa";
 import { Button, Input, LoadingSpinner } from "../index";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -28,6 +29,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
     website: "",
     description: "",
     supportedTypes: [],
+    coordinates: "",
     workingHours: {
       sunday: { isOpen: true, start: "09:00", end: "17:00" },
       monday: { isOpen: true, start: "09:00", end: "17:00" },
@@ -41,6 +43,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   const cities = [
     { value: "acre", label: "Acre" },
@@ -147,6 +150,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           website: center.website || "",
           description: center.description || "",
           supportedTypes: center.supportedTypes || [],
+          coordinates: center.coordinates || "",
           workingHours: workingHoursObj,
         });
       } else {
@@ -164,6 +168,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           website: "",
           description: "",
           supportedTypes: [],
+          coordinates: "",
           workingHours: {
             sunday: { isOpen: true, start: "09:00", end: "17:00" },
             monday: { isOpen: true, start: "09:00", end: "17:00" },
@@ -227,6 +232,51 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
     }));
   };
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setErrors(prev => ({ ...prev, coordinates: "Geolocation is not supported by your browser" }));
+      return;
+    }
+
+    setGettingLocation(true);
+    setErrors(prev => {
+      const { coordinates, ...rest } = prev;
+      return rest;
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude.toFixed(6);
+        const longitude = position.coords.longitude.toFixed(6);
+        const coordinates = `${latitude},${longitude}`;
+        
+        handleInputChange("coordinates", coordinates);
+        setGettingLocation(false);
+      },
+      (error) => {
+        let errorMessage = "Unable to retrieve your location";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location permissions.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        setErrors(prev => ({ ...prev, coordinates: errorMessage }));
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -265,6 +315,21 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
 
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = "Registration number is required";
+    }
+
+    // Validate coordinates if provided
+    if (formData.coordinates && formData.coordinates.trim()) {
+      const coordinatePattern = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/;
+      if (!coordinatePattern.test(formData.coordinates.trim())) {
+        newErrors.coordinates = "Coordinates must be in the format: latitude,longitude (e.g., 31.9522,35.2332)";
+      } else {
+        const [lat, lng] = formData.coordinates.split(',').map(coord => parseFloat(coord.trim()));
+        if (lat < -90 || lat > 90) {
+          newErrors.coordinates = "Latitude must be between -90 and 90";
+        } else if (lng < -180 || lng > 180) {
+          newErrors.coordinates = "Longitude must be between -180 and 180";
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -328,7 +393,8 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         website: formData.website,
         description: formData.description,
         supportedTypes: formData.supportedTypes,
-        workingHours: workingHoursArray
+        workingHours: workingHoursArray,
+        ...(formData.coordinates && formData.coordinates.trim() && { coordinates: formData.coordinates.trim() })
       };
 
       const response = await fetch(url, {
@@ -545,6 +611,56 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                       error={errors.location}
                     />
                   </div>
+                </div>
+
+                {/* Coordinates Field */}
+                <div>
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Coordinates (Optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={formData.coordinates}
+                      onChange={(e) =>
+                        handleInputChange("coordinates", e.target.value)
+                      }
+                      placeholder="31.9522,35.2332"
+                      error={errors.coordinates}
+                      disabled={gettingLocation || loading}
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      disabled={gettingLocation || loading}
+                      className={`px-4 py-2 rounded-lg font-medium text-white transition-all flex items-center gap-2 ${
+                        gettingLocation || loading
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-teal-600 hover:bg-teal-700'
+                      }`}
+                      title="Get current location from your device"
+                    >
+                      {gettingLocation ? (
+                        <>
+                          <LoadingSpinner size="sm" />
+                          <span className="hidden sm:inline">Getting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaLocationArrow className="w-4 h-4" />
+                          <span className="hidden sm:inline">Get Location</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Enter latitude,longitude format or use 'Get Location' button to auto-detect
+                  </p>
                 </div>
               </div>
 

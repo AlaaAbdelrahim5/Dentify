@@ -9,6 +9,7 @@ import {
   FaClock,
   FaSave,
   FaLock,
+  FaLocationArrow,
 } from "react-icons/fa";
 import { Button, Input, LoadingSpinner } from "../index";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -25,6 +26,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     registrationNumber: "",
     city: "",
     location: "",
+    coordinates: "",
     website: "",
     description: "",
     servicesAvailable: [],
@@ -41,6 +43,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   const cities = [
     { value: "acre", label: "Acre" },
@@ -143,6 +146,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           registrationNumber: clinic.registrationNumber || "",
           city: clinic.city || "",
           location: clinic.location || "",
+          coordinates: clinic.coordinates || "",
           website: clinic.website || "",
           description: clinic.description || "",
           servicesAvailable: clinic.servicesAvailable || [],
@@ -160,6 +164,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           registrationNumber: "",
           city: "",
           location: "",
+          coordinates: "",
           website: "",
           description: "",
           servicesAvailable: [],
@@ -226,6 +231,62 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     }));
   };
 
+  const getCurrentLocation = () => {
+    // Check if geolocation is supported
+    if (!navigator.geolocation) {
+      setErrors(prev => ({
+        ...prev,
+        coordinates: "Geolocation is not supported by your browser"
+      }));
+      return;
+    }
+
+    setGettingLocation(true);
+    setErrors(prev => {
+      const { coordinates, ...rest } = prev;
+      return rest;
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude.toFixed(6);
+        const longitude = position.coords.longitude.toFixed(6);
+        const coordinates = `${latitude},${longitude}`;
+        
+        handleInputChange("coordinates", coordinates);
+        setGettingLocation(false);
+      },
+      (error) => {
+        let errorMessage = "Unable to retrieve your location";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location permissions.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+          default:
+            errorMessage = "An unknown error occurred while getting location.";
+        }
+        
+        setErrors(prev => ({
+          ...prev,
+          coordinates: errorMessage
+        }));
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -239,6 +300,22 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
 
     if (!formData.location.trim()) {
       newErrors.location = "Location is required";
+    }
+
+    // Validate coordinates format (latitude,longitude)
+    if (formData.coordinates && formData.coordinates.trim()) {
+      const coordPattern = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/;
+      if (!coordPattern.test(formData.coordinates.trim())) {
+        newErrors.coordinates = "Please enter coordinates in format: latitude,longitude (e.g., 31.9522,35.2332)";
+      } else {
+        const [lat, lng] = formData.coordinates.split(',').map(c => parseFloat(c.trim()));
+        if (lat < -90 || lat > 90) {
+          newErrors.coordinates = "Latitude must be between -90 and 90";
+        }
+        if (lng < -180 || lng > 180) {
+          newErrors.coordinates = "Longitude must be between -180 and 180";
+        }
+      }
     }
 
     if (!formData.phone.trim()) {
@@ -324,6 +401,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         registrationNumber: formData.registrationNumber,
         city: formData.city,
         location: formData.location,
+        ...(formData.coordinates && formData.coordinates.trim() && { coordinates: formData.coordinates.trim() }),
         website: formData.website,
         description: formData.description,
         servicesAvailable: formData.servicesAvailable,
@@ -540,6 +618,60 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                       placeholder="Enter location details"
                       error={errors.location}
                     />
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Coordinates (Optional)
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Input
+                          type="text"
+                          value={formData.coordinates}
+                          onChange={(e) =>
+                            handleInputChange("coordinates", e.target.value)
+                          }
+                          placeholder="e.g., 31.9522,35.2332"
+                          error={errors.coordinates}
+                          disabled={gettingLocation}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={getCurrentLocation}
+                        disabled={gettingLocation || loading}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                          gettingLocation || loading
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:scale-105'
+                        } ${
+                          isDarkMode
+                            ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                            : 'bg-teal-600 hover:bg-teal-700 text-white'
+                        }`}
+                        title="Get current location from your device"
+                      >
+                        {gettingLocation ? (
+                          <>
+                            <LoadingSpinner className="w-4 h-4" />
+                            <span className="hidden sm:inline">Getting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaLocationArrow className="w-4 h-4" />
+                            <span className="hidden sm:inline">Get Location</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className={`mt-1 text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                      Enter latitude,longitude format or use "Get Location" button
+                    </p>
                   </div>
                 </div>
               </div>
