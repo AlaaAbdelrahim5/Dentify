@@ -1,3 +1,4 @@
+// Basic Components
 export { default as Logo } from './Logo'
 export { default as Navbar } from './Navbar'
 export { default as Button } from './Button'
@@ -7,6 +8,18 @@ export { default as PhoneInput } from './PhoneInput'
 export { default as Card } from './Card'
 export { default as LoadingSpinner } from './LoadingSpinner'
 export { default as ThemeToggle } from './ThemeToggle'
+
+// Reusable Dashboard Components
+export { default as StatsOverview } from './StatsOverview'
+export { default as FilterBar } from './FilterBar'
+export { default as DataTable } from './DataTable'
+export { default as Pagination } from './Pagination'
+export { default as ConfirmationModal } from './ConfirmationModal'
+export { default as StatusBadge } from './StatusBadge'
+export { default as ActionButtons } from './ActionButtons'
+export { default as PageHeader } from './PageHeader'
+
+// Specific Modals & Sidebars
 export { default as ClinicModal } from './clinic/ClinicModal'
 export { default as RadiologyModal } from './radiology/RadiologyModal'
 export { default as AdminSidebar } from './admin/AdminSidebar'

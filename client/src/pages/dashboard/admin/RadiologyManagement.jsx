@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   FaXRay, 
   FaPlus, 
@@ -16,7 +16,20 @@ import {
   FaCog,
   FaCheck
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, RadiologyModal } from '../../../components'
+import { 
+  Card, 
+  Button, 
+  LoadingSpinner, 
+  RadiologyModal,
+  PageHeader,
+  StatsOverview,
+  FilterBar,
+  DataTable,
+  Pagination,
+  StatusBadge,
+  ActionButtons,
+  ConfirmationModal
+} from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
 
@@ -271,6 +284,8 @@ const RadiologyManagement = () => {
 
       if (response.success) {
         setShowConfirmModal(false)
+        setSelectedCenter(null)
+        setConfirmAction(null)
         fetchCenters(true)
         fetchStats()
       } else {
@@ -282,95 +297,132 @@ const RadiologyManagement = () => {
     }
   }
 
-  // Modern Confirmation Modal Component
-  const ConfirmationModal = ({ isOpen, onClose, onConfirm, center, action }) => {
-    if (!isOpen || !center) return null
+  // Stats configuration for StatsOverview component
+  const statsConfig = [
+    {
+      label: 'Total Centers',
+      value: stats.total,
+      icon: FaXRay,
+      gradient: 'from-teal-600 to-cyan-600'
+    },
+    {
+      label: 'Active Centers',
+      value: stats.active,
+      icon: FaCheckCircle,
+      gradient: 'from-green-600 to-green-700'
+    },
+    {
+      label: 'Inactive Centers',
+      value: stats.inactive,
+      icon: FaTimesCircle,
+      gradient: 'from-red-600 to-red-700'
+    }
+  ]
 
-    const isDeactivate = action === 'deactivate'
+  // Filter configuration for FilterBar component
+  const filters = [
+    {
+      value: filterCity,
+      onChange: handleCityFilter,
+      options: cities,
+      placeholder: 'All Cities'
+    },
+    {
+      value: filterStatus,
+      onChange: handleStatusFilter,
+      options: [
+        { value: 'true', label: 'Active' },
+        { value: 'false', label: 'Inactive' }
+      ],
+      placeholder: 'All Status'
+    }
+  ]
+
+  // Table columns configuration
+  const columns = [
+    { key: 'center', label: 'Center' },
+    { key: 'location', label: 'Location' },
+    { key: 'contact', label: 'Contact' },
+    { key: 'services', label: 'Services' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions' }
+  ]
+
+  // Render table row
+  const renderRow = (center, index) => {
+    const actions = [
+      {
+        icon: FaEye,
+        onClick: () => {
+          setSelectedCenter(center)
+          setShowDetailsModal(true)
+        },
+        title: 'View Details',
+        variant: 'default'
+      },
+      {
+        icon: FaEdit,
+        onClick: () => handleEditCenter(center),
+        title: 'Edit',
+        variant: 'default'
+      },
+      {
+        icon: center.isActive ? FaTimesCircle : FaCheckCircle,
+        onClick: () => handleToggleCenterStatus(center),
+        title: center.isActive ? 'Deactivate' : 'Activate',
+        variant: center.isActive ? 'warning' : 'success'
+      }
+    ]
 
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop with blur */}
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        />
-
-        {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div
-            className={`relative rounded-2xl shadow-2xl w-full max-w-md transform transition-all ${
-              isDarkMode
-                ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700"
-                : "bg-gradient-to-br from-white to-gray-50 border border-gray-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon Section */}
-            <div className="flex flex-col items-center pt-8 pb-4">
-              <div
-                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                  isDeactivate
-                    ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/50'
-                    : 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/50'
-                }`}
-              >
-                {isDeactivate ? (
-                  <FaTimesCircle className="w-10 h-10 text-white" />
-                ) : (
-                  <FaCheckCircle className="w-10 h-10 text-white" />
-                )}
-              </div>
-
-              {/* Title */}
-              <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {isDeactivate ? 'Deactivate Center?' : 'Activate Center?'}
-              </h3>
-
-              {/* Message */}
-              <p className={`text-center px-6 mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Are you sure you want to {action}{' '}
-                <span className="font-semibold">{center.name}</span>?
-              </p>
-
-              {/* Additional Info */}
-              <p className={`text-sm text-center px-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {isDeactivate
-                  ? 'The radiology center will no longer be accessible to users.'
-                  : 'The radiology center will be accessible and fully functional.'}
-              </p>
+      <tr key={center._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+              <FaXRay className="w-5 h-5 text-white" />
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 p-6 pt-2">
-              <button
-                onClick={onClose}
-                className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
-                  isDarkMode
-                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onConfirm}
-                className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg ${
-                  isDeactivate
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/50'
-                    : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/50'
-                }`}
-              >
-                {isDeactivate ? 'Deactivate' : 'Activate'}
-              </button>
+            <div className="ml-3">
+              <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {center.name}
+              </div>
+              <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {center.registrationNumber || 'N/A'}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {getCityLabel(center.address?.city)}
+          </div>
+          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {center.address?.street}
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {center.email}
+          </div>
+          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {center.phone?.full}
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {center.services?.length || 0} services
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <StatusBadge isActive={center.isActive} />
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm">
+          <ActionButtons actions={actions} />
+        </td>
+      </tr>
     )
   }
 
-  // Center Details Modal Component
+  // Center Details Modal Component (keeping this inline as it's specific to radiology centers)
   const CenterDetailsModal = ({ center, onClose }) => {
     if (!center) return null
 
@@ -664,335 +716,63 @@ const RadiologyManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Radiology Centers Management
-          </h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage and add registered radiology centers in the system
-          </p>
-        </div>
-        <Button
-          onClick={handleAddCenter}
-          className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
-        >
-          <FaPlus className="w-4 h-4" />
-          Add New Center
-        </Button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Radiology Centers Management"
+        description="Manage and add registered radiology centers in the system"
+        action={{
+          label: 'Add New Center',
+          onClick: handleAddCenter,
+          icon: FaPlus,
+          gradient: 'from-teal-600 to-cyan-600'
+        }}
+      />
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Centers
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.total}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-              <FaXRay className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Active Centers
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.active}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center">
-              <FaCheckCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Inactive Centers
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.inactive}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center">
-              <FaTimesCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Statistics Overview */}
+      <StatsOverview stats={statsConfig} />
 
       {/* Search and Filters */}
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search for center..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="pl-10 pr-8"
-              disabled={filtering}
-            />
-            {searchTerm !== debouncedSearchTerm && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              </div>
-            )}
-          </div>
-
-          <select
-            value={filterCity}
-            onChange={handleCityFilter}
-            disabled={filtering}
-            className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 ${
-              isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                : 'bg-white border-gray-300 text-gray-900'
-            }`}
-          >
-            <option value="">All Cities</option>
-            {cities.map((city) => (
-              <option key={city.value} value={city.value}>
-                {city.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filterStatus}
-            onChange={handleStatusFilter}
-            disabled={filtering}
-            className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 ${
-              isDarkMode 
-                ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                : 'bg-white border-gray-300 text-gray-900'
-            }`}
-          >
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-
-          <Button
-            onClick={clearFilters}
-            variant="outline"
-            className="flex items-center gap-2"
-            disabled={filtering}
-          >
-            {filtering ? (
-              <LoadingSpinner className="w-4 h-4" />
-            ) : (
-              <FaFilter className="w-4 h-4" />
-            )}
-            {filtering ? 'Filtering...' : 'Clear Filters'}
-          </Button>
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          debouncedSearchTerm={debouncedSearchTerm}
+          filters={filters}
+          onClearFilters={clearFilters}
+          filtering={filtering}
+          searchPlaceholder="Search for center..."
+        />
       </Card>
 
-      {/* Centers List */}
+      {/* Centers Table */}
+      <DataTable
+        columns={columns}
+        data={centers}
+        renderRow={renderRow}
+        loading={filtering}
+        emptyMessage="No radiology centers yet"
+        emptyIcon={FaXRay}
+        emptyTitle="No radiology centers found"
+        hasFilters={!!(searchTerm || filterCity || filterStatus)}
+      />
+
+      {/* Pagination */}
       <Card>
-        {filtering && (
-          <div className="flex items-center justify-center py-8">
-            <LoadingSpinner />
-          </div>
-        )}
-        
-        {!filtering && centers.length === 0 && (
-          <div className="text-center py-12">
-            <FaXRay className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              No radiology centers found
-            </h3>
-            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {searchTerm || filterCity || filterStatus ? 'Try adjusting your search criteria' : 'No radiology centers yet'}
-            </p>
-          </div>
-        )}
-
-        {!filtering && centers.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <tr>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Center
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Location
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Contact
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Services
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Status
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                {centers.map((center) => (
-                  <tr key={center._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-                          <FaXRay className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="ml-3">
-                          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {center.name}
-                          </div>
-                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {center.registrationNumber || 'N/A'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {getCityLabel(center.address?.city)}
-                      </div>
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {center.address?.street}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {center.email}
-                      </div>
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {center.phone?.full}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {center.services?.length || 0} services
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-                        center.isActive
-                          ? isDarkMode 
-                            ? 'bg-green-900/20 text-green-400 border-green-800'
-                            : 'bg-green-100 text-green-800 border-green-200'
-                          : isDarkMode
-                            ? 'bg-red-900/20 text-red-400 border-red-800'
-                            : 'bg-red-100 text-red-800 border-red-200'
-                      }`}>
-                        {center.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
-                        {center.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedCenter(center)
-                            setShowDetailsModal(true)
-                          }}
-                          className={`p-2 rounded-lg transition-colors ${
-                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                          }`}
-                          title="View Details"
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleEditCenter(center)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                          }`}
-                          title="Edit"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleToggleCenterStatus(center)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            center.isActive
-                              ? 'text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20'
-                              : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20'
-                          }`}
-                          title={center.isActive ? 'Deactivate' : 'Activate'}
-                        >
-                          {center.isActive ? <FaTimesCircle className="w-4 h-4" /> : <FaCheckCircle className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Page {currentPage} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </Card>
 
-      {/* Modals */}
+      {/* Add Center Modal */}
       <RadiologyModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSave={handleCenterSave}
       />
 
+      {/* Edit Center Modal */}
       <RadiologyModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
@@ -1020,8 +800,10 @@ const RadiologyManagement = () => {
           setConfirmAction(null)
         }}
         onConfirm={executeToggleStatus}
-        center={selectedCenter}
+        item={selectedCenter}
         action={confirmAction}
+        itemName={selectedCenter?.name}
+        itemType="Radiology Center"
       />
     </div>
   )

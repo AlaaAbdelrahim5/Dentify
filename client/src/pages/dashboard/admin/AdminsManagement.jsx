@@ -17,7 +17,20 @@ import {
   FaTimesCircle
 } from 'react-icons/fa'
 import { MdVerified, MdBlock } from 'react-icons/md'
-import { Button, Input, Card, LoadingSpinner } from '../../../components'
+import { 
+  Button, 
+  Input, 
+  Card, 
+  LoadingSpinner,
+  PageHeader,
+  StatsOverview,
+  FilterBar,
+  DataTable,
+  Pagination,
+  StatusBadge,
+  ActionButtons,
+  ConfirmationModal
+} from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { adminAPI } from '../../../services/api'
 
@@ -154,23 +167,6 @@ const AdminsManagement = () => {
     fetchAdmins()
   }, [])
 
-  const getStatusBadge = (isActive) => {
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-        isActive
-          ? isDarkMode 
-            ? 'bg-green-900/20 text-green-400 border-green-800'
-            : 'bg-green-100 text-green-800 border-green-200'
-          : isDarkMode
-            ? 'bg-red-900/20 text-red-400 border-red-800'
-            : 'bg-red-100 text-red-800 border-red-200'
-      }`}>
-        {isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
-        {isActive ? 'Active' : 'Inactive'}
-      </span>
-    )
-  }
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -179,92 +175,132 @@ const AdminsManagement = () => {
     })
   }
 
-  // Modern Confirmation Modal Component
-  const ConfirmationModal = ({ isOpen, onClose, onConfirm, admin, action }) => {
-    if (!isOpen || !admin) return null
+  // Component configurations
+  const statsConfig = [
+    {
+      label: 'Total Admins',
+      value: stats.total,
+      icon: FaUsers,
+      gradient: 'from-teal-600 to-cyan-600'
+    },
+    {
+      label: 'Active Admins',
+      value: stats.active,
+      icon: FaCheckCircle,
+      gradient: 'from-green-600 to-green-700'
+    },
+    {
+      label: 'Inactive Admins',
+      value: stats.inactive,
+      icon: FaTimesCircle,
+      gradient: 'from-red-600 to-red-700'
+    }
+  ]
 
-    const isDeactivate = action === 'deactivate'
+  const filterProps = {
+    searchTerm,
+    onSearchChange: (e) => setSearchTerm(e.target.value),
+    debouncedSearchTerm,
+    filters: [],
+    onClearFilters: () => {
+      setSearchTerm('')
+      setCurrentPage(1)
+    },
+    filtering,
+    searchPlaceholder: 'Search admins by name or email...'
+  }
 
-    return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        />
+  const columns = [
+    { key: 'admin', label: 'Admin' },
+    { key: 'contact', label: 'Contact' },
+    { key: 'status', label: 'Status' },
+    { key: 'created', label: 'Created Date' },
+    { key: 'actions', label: 'Actions' }
+  ]
 
-        {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div
-            className={`relative rounded-2xl shadow-2xl w-full max-w-md transform transition-all ${
-              isDarkMode
-                ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700"
-                : "bg-gradient-to-br from-white to-gray-50 border border-gray-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Icon and Title */}
-            <div className="flex flex-col items-center pt-8 pb-4">
-              <div
-                className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                  isDeactivate
-                    ? 'bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/50'
-                    : 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/50'
-                }`}
-              >
-                {isDeactivate ? (
-                  <FaTimesCircle className="w-10 h-10 text-white" />
-                ) : (
-                  <FaCheckCircle className="w-10 h-10 text-white" />
-                )}
-              </div>
-
-              {/* Title */}
-              <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {isDeactivate ? 'Deactivate Admin?' : 'Activate Admin?'}
-              </h3>
-
-              {/* Description */}
-              <p className={`text-center px-6 mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Are you sure you want to {action}{' '}
-                <span className="font-semibold">{admin.fullName}</span>?
-              </p>
-
-              {/* Warning */}
-              <p className={`text-sm text-center px-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {isDeactivate
-                  ? 'The admin will no longer have access to the system.'
-                  : 'The admin will regain full access to the system.'}
-              </p>
+  const renderRow = (admin) => (
+    <tr key={admin._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
+            <FaUserShield className="w-5 h-5 text-white" />
+          </div>
+          <div className="ml-3">
+            <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              {admin.fullName}
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 p-6 pt-2">
-              <button
-                onClick={onClose}
-                className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
-                  isDarkMode
-                    ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onConfirm}
-                className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg ${
-                  isDeactivate
-                    ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/50'
-                    : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/50'
-                }`}
-              >
-                {isDeactivate ? 'Deactivate' : 'Activate'}
-              </button>
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {admin.gender.charAt(0).toUpperCase() + admin.gender.slice(1)}
             </div>
           </div>
         </div>
-      </div>
-    )
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          {admin.userId?.email}
+        </div>
+        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {admin.userId?.phone}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <StatusBadge 
+          isActive={admin.userId?.status === 'active'}
+          activeIcon={FaCheckCircle}
+          inactiveIcon={FaTimesCircle}
+        />
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {formatDate(admin.createdAt)}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <ActionButtons
+          actions={[
+            {
+              icon: FaEye,
+              onClick: () => {
+                setSelectedAdmin(admin)
+                setShowDetailsModal(true)
+              },
+              title: 'View Details',
+              variant: 'default'
+            },
+            {
+              icon: admin.userId?.status === 'active' ? FaTimesCircle : FaCheckCircle,
+              onClick: () => handleToggleAdminStatus(admin),
+              title: admin.userId?.status === 'active' ? 'Deactivate' : 'Activate',
+              variant: admin.userId?.status === 'active' ? 'warning' : 'success'
+            }
+          ]}
+        />
+      </td>
+    </tr>
+  )
+
+  const tableProps = {
+    columns,
+    data: admins,
+    renderRow,
+    loading: filtering,
+    emptyMessage: searchTerm ? 'Try adjusting your search criteria' : 'No administrators yet',
+    emptyIcon: FaUserShield,
+    hasFilters: !!searchTerm
+  }
+
+  const confirmProps = {
+    isOpen: showConfirmModal,
+    onClose: () => {
+      setShowConfirmModal(false)
+      setSelectedAdmin(null)
+      setConfirmAction(null)
+    },
+    onConfirm: executeToggleStatus,
+    item: selectedAdmin,
+    action: confirmAction,
+    itemName: selectedAdmin?.fullName,
+    itemType: 'Admin'
   }
 
   // Admin Details Modal Component
@@ -331,7 +367,11 @@ const AdminsManagement = () => {
                   <p className="text-teal-100 text-sm mb-2">
                     Administrator
                   </p>
-                  {getStatusBadge(admin.userId?.status === 'active')}
+                  <StatusBadge 
+                    isActive={admin.userId?.status === 'active'}
+                    activeIcon={FaCheckCircle}
+                    inactiveIcon={FaTimesCircle}
+                  />
                 </div>
               </div>
             </div>
@@ -775,237 +815,32 @@ const AdminsManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Admin Management
-          </h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage system administrators
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
-        >
-          <FaPlus className="w-4 h-4" />
-          Add Admin
-        </Button>
-      </div>
+      <PageHeader
+        title="Admin Management"
+        description="Manage system administrators"
+        action={{
+          label: 'Add Admin',
+          onClick: () => setShowAddModal(true),
+          icon: FaPlus,
+          gradient: 'from-teal-600 to-cyan-600'
+        }}
+      />
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Admins
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.total}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-              <FaUsers className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Active Admins
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.active}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center">
-              <FaCheckCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Inactive Admins
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.inactive}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center">
-              <FaTimesCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Statistics */}
+      <StatsOverview stats={statsConfig} />
 
       {/* Search and Filters */}
-      <Card className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              icon={FaSearch}
-              placeholder="Search admins by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </Card>
+      <FilterBar {...filterProps} />
 
-      {/* Admins List */}
-      <Card>
-        {filtering && (
-          <div className="flex items-center justify-center py-8">
-            <LoadingSpinner />
-          </div>
-        )}
-        
-        {!filtering && admins.length === 0 && (
-          <div className="text-center py-12">
-            <FaUserShield className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              No admins found
-            </h3>
-            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {searchTerm ? 'Try adjusting your search criteria' : 'No administrators yet'}
-            </p>
-          </div>
-        )}
+      {/* Admins Table */}
+      <DataTable {...tableProps} />
 
-        {!filtering && admins.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <tr>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Admin
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Contact
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Status
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Created Date
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                {admins.map((admin) => (
-                  <tr key={admin._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-                          <FaUserShield className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="ml-3">
-                          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {admin.fullName}
-                          </div>
-                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {admin.gender.charAt(0).toUpperCase() + admin.gender.slice(1)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {admin.userId?.email}
-                      </div>
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {admin.userId?.phone}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(admin.userId?.status === 'active')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {formatDate(admin.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedAdmin(admin)
-                            setShowDetailsModal(true)
-                          }}
-                          className={`p-2 rounded-lg transition-colors ${
-                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                          }`}
-                          title="View Details"
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => handleToggleAdminStatus(admin)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            admin.userId?.status === 'active'
-                              ? 'text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/20'
-                              : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20'
-                          }`}
-                          title={admin.userId?.status === 'active' ? 'Deactivate' : 'Activate'}
-                        >
-                          {admin.userId?.status === 'active' ? <FaTimesCircle className="w-4 h-4" /> : <FaCheckCircle className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Page {currentPage} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Admin Details Modal */}
       {showDetailsModal && (
@@ -1032,15 +867,8 @@ const AdminsManagement = () => {
 
       {/* Confirmation Modal */}
       <ConfirmationModal
-        isOpen={showConfirmModal}
-        onClose={() => {
-          setShowConfirmModal(false)
-          setSelectedAdmin(null)
-          setConfirmAction(null)
-        }}
-        onConfirm={executeToggleStatus}
-        admin={selectedAdmin}
-        action={confirmAction}
+        itemType="Admin"
+        {...confirmProps}
       />
     </div>
   )
