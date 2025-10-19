@@ -35,7 +35,7 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
         email: secretary.userId?.email || '',
         phone: secretary.userId?.phone || '',
         birthDate: secretary.birthDate ? secretary.birthDate.split('T')[0] : '',
-        gender: secretary.gender || '',
+        gender: secretary.gender?.toLowerCase() || '', // Convert to lowercase for consistency
         city: secretary.address?.city || '',
         password: '' // Don't populate password for existing users
       })

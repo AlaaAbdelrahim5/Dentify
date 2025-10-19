@@ -2,9 +2,64 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const bcrypt = require('bcrypt');
+const { successResponse, errorResponse, notFoundResponse } = require('../utils/responseHelper');
 
-// Get all secretaries
-router.get('/', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
+// Get secretaries for the authenticated clinic
+router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const clinicId = req.user.id; // The authenticated clinic's user ID
+    
+    const secretaries = await prisma.secretary.findMany({
+      where: { clinicId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
+      },
+      orderBy: {
+        userId: 'desc'
+      }
+    });
+
+    // Transform data to match frontend expectations
+    const transformedSecretaries = secretaries.map(secretary => ({
+      _id: secretary.userId,
+      firstName: secretary.firstName,
+      lastName: secretary.lastName,
+      birthDate: secretary.birthDate,
+      gender: secretary.gender,
+      address: {
+        city: secretary.city
+      },
+      userId: {
+        id: secretary.user.id,
+        email: secretary.user.email,
+        phone: secretary.user.phone,
+        status: secretary.user.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: secretary.user.profileImage
+      },
+      createdAt: secretary.user.createdAt,
+      updatedAt: secretary.user.updatedAt
+    }));
+
+    return successResponse(res, transformedSecretaries, 'Secretaries fetched successfully');
+  } catch (error) {
+    console.error('Error fetching secretaries:', error);
+    return errorResponse(res, 'Failed to fetch secretaries', 500);
+  }
+});
+
+// Get all secretaries (Admin only)
+router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const secretaries = await prisma.secretary.findMany({
       include: {
@@ -14,7 +69,9 @@ router.get('/', authenticate, authorize('Admin', 'Clinic'), async (req, res) => 
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
           }
         },
         clinic: {
@@ -29,9 +86,11 @@ router.get('/', authenticate, authorize('Admin', 'Clinic'), async (req, res) => 
         }
       }
     });
-    res.json({ secretaries });
+
+    return successResponse(res, secretaries, 'Secretaries fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch secretaries' });
+    console.error('Error fetching secretaries:', error);
+    return errorResponse(res, 'Failed to fetch secretaries', 500);
   }
 });
 
@@ -79,7 +138,7 @@ router.get('/clinic/:clinicId', authenticate, authorize('Admin', 'Clinic'), asyn
   try {
     const { clinicId } = req.params;
     const secretaries = await prisma.secretary.findMany({
-      where: { clinicId },
+      where: { clinicId: parseInt(clinicId) },
       include: {
         user: {
           select: {
@@ -92,85 +151,322 @@ router.get('/clinic/:clinicId', authenticate, authorize('Admin', 'Clinic'), asyn
         }
       }
     });
-    res.json({ secretaries });
+    return successResponse(res, secretaries, 'Secretaries fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch secretaries for clinic' });
+    console.error('Error fetching secretaries for clinic:', error);
+    return errorResponse(res, 'Failed to fetch secretaries for clinic', 500);
+  }
+});
+
+// Create secretary (Clinic only)
+router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const clinicId = req.user.id; // The authenticated clinic's user ID
+    const { firstName, lastName, birthDate, gender, address, userId } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !birthDate || !gender || !address?.city || !userId?.email || !userId?.phone || !userId?.password) {
+      return errorResponse(res, 'All required fields must be provided', 400);
+    }
+
+    // Check if user with this email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userId.email }
+    });
+
+    if (existingUser) {
+      return errorResponse(res, 'A user with this email already exists', 400);
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userId.password, 12);
+
+    // Create user and secretary in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email: userId.email,
+          password: hashedPassword,
+          phone: userId.phone,
+          role: 'Secretary',
+          status: 'ACTIVE'
+        }
+      });
+
+      // Create secretary
+      const secretary = await tx.secretary.create({
+        data: {
+          userId: user.id,
+          firstName,
+          lastName,
+          birthDate: new Date(birthDate),
+          gender: gender.charAt(0).toUpperCase() + gender.slice(1), // Capitalize first letter
+          city: address.city,
+          clinicId: clinicId
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          }
+        }
+      });
+
+      return secretary;
+    });
+
+    // Transform response to match frontend expectations
+    const transformedSecretary = {
+      _id: result.userId,
+      firstName: result.firstName,
+      lastName: result.lastName,
+      birthDate: result.birthDate,
+      gender: result.gender,
+      address: {
+        city: result.city
+      },
+      userId: {
+        id: result.user.id,
+        email: result.user.email,
+        phone: result.user.phone,
+        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: result.user.profileImage
+      },
+      createdAt: result.user.createdAt,
+      updatedAt: result.user.updatedAt
+    };
+
+    return successResponse(res, transformedSecretary, 'Secretary created successfully', 201);
+  } catch (error) {
+    console.error('Error creating secretary:', error);
+    return errorResponse(res, error.message || 'Failed to create secretary', 500);
   }
 });
 
 // Update secretary
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, birthDate, gender, city, clinicId } = req.body;
+    const clinicId = req.user.id;
+    const { userData, secretaryData } = req.body;
 
-    // Check if secretary exists
+    // Validate required fields
+    if (!secretaryData?.firstName || !secretaryData?.lastName || !secretaryData?.birthDate || !secretaryData?.gender || !secretaryData?.address?.city) {
+      return errorResponse(res, 'All required secretary fields must be provided', 400);
+    }
+
+    if (!userData?.email || !userData?.phone) {
+      return errorResponse(res, 'Email and phone are required', 400);
+    }
+
+    // Check if secretary exists and belongs to this clinic
     const existingSecretary = await prisma.secretary.findUnique({
-      where: { userId: id }
+      where: { userId: parseInt(id) },
+      include: {
+        user: true
+      }
     });
 
     if (!existingSecretary) {
-      return res.status(404).json({ error: 'Secretary not found' });
+      return notFoundResponse(res, 'Secretary');
     }
 
-    // Check authorization
-    if (req.user.role !== 'Admin' && req.user.role !== 'Clinic') {
-      if (req.user.id !== id) {
-        return res.status(403).json({ error: 'Unauthorized to update this secretary' });
+    // Check if secretary belongs to this clinic
+    if (existingSecretary.clinicId !== clinicId) {
+      return errorResponse(res, 'Unauthorized to update this secretary', 403);
+    }
+
+    // Check if email is being changed and if new email already exists
+    if (userData.email !== existingSecretary.user.email) {
+      const emailExists = await prisma.user.findUnique({
+        where: { email: userData.email }
+      });
+
+      if (emailExists) {
+        return errorResponse(res, 'A user with this email already exists', 400);
       }
     }
 
-    const secretary = await prisma.secretary.update({
-      where: { userId: id },
-      data: {
-        firstName,
-        lastName,
-        birthDate: birthDate ? new Date(birthDate) : undefined,
-        gender,
-        city,
-        clinicId
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true
-          }
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user data
+      const userUpdateData = {
+        email: userData.email,
+        phone: userData.phone
+      };
+
+      // Only update password if provided
+      if (userData.password) {
+        userUpdateData.password = await bcrypt.hash(userData.password, 12);
+      }
+
+      await tx.user.update({
+        where: { id: parseInt(id) },
+        data: userUpdateData
+      });
+
+      // Update secretary data
+      const secretary = await tx.secretary.update({
+        where: { userId: parseInt(id) },
+        data: {
+          firstName: secretaryData.firstName,
+          lastName: secretaryData.lastName,
+          birthDate: new Date(secretaryData.birthDate),
+          gender: secretaryData.gender.charAt(0).toUpperCase() + secretaryData.gender.slice(1),
+          city: secretaryData.address.city
         },
-        clinic: true
-      }
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          }
+        }
+      });
+
+      return secretary;
     });
 
-    res.json({ secretary });
+    // Transform response
+    const transformedSecretary = {
+      _id: result.userId,
+      firstName: result.firstName,
+      lastName: result.lastName,
+      birthDate: result.birthDate,
+      gender: result.gender,
+      address: {
+        city: result.city
+      },
+      userId: {
+        id: result.user.id,
+        email: result.user.email,
+        phone: result.user.phone,
+        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: result.user.profileImage
+      },
+      createdAt: result.user.createdAt,
+      updatedAt: result.user.updatedAt
+    };
+
+    return successResponse(res, transformedSecretary, 'Secretary updated successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update secretary' });
+    console.error('Error updating secretary:', error);
+    return errorResponse(res, error.message || 'Failed to update secretary', 500);
   }
 });
 
 // Delete secretary
-router.delete('/:id', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('Clinic'), async (req, res) => {
   try {
     const { id } = req.params;
+    const clinicId = req.user.id;
 
     const existingSecretary = await prisma.secretary.findUnique({
-      where: { userId: id }
+      where: { userId: parseInt(id) }
     });
 
     if (!existingSecretary) {
-      return res.status(404).json({ error: 'Secretary not found' });
+      return notFoundResponse(res, 'Secretary');
     }
 
-    // Delete secretary (will cascade delete user)
+    // Check if secretary belongs to this clinic
+    if (existingSecretary.clinicId !== clinicId) {
+      return errorResponse(res, 'Unauthorized to delete this secretary', 403);
+    }
+
+    // Delete user (will cascade delete secretary)
     await prisma.user.delete({
-      where: { id }
+      where: { id: parseInt(id) }
     });
 
-    res.json({ message: 'Secretary deleted successfully' });
+    return successResponse(res, null, 'Secretary deleted successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete secretary' });
+    console.error('Error deleting secretary:', error);
+    return errorResponse(res, error.message || 'Failed to delete secretary', 500);
+  }
+});
+
+// Toggle secretary status (activate/deactivate)
+router.patch('/:id/toggle-status', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clinicId = req.user.id;
+
+    // Find secretary and verify ownership
+    const existingSecretary = await prisma.secretary.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: true
+      }
+    });
+
+    if (!existingSecretary) {
+      return notFoundResponse(res, 'Secretary');
+    }
+
+    // Check if secretary belongs to this clinic
+    if (existingSecretary.clinicId !== clinicId) {
+      return errorResponse(res, 'Unauthorized to modify this secretary', 403);
+    }
+
+    // Toggle status
+    const currentStatus = existingSecretary.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update user status
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: {
+        status: newStatus
+      },
+      include: {
+        secretary: true
+      }
+    });
+
+    // Transform response
+    const transformedSecretary = {
+      _id: updatedUser.id,
+      firstName: updatedUser.secretary.firstName,
+      lastName: updatedUser.secretary.lastName,
+      birthDate: updatedUser.secretary.birthDate,
+      gender: updatedUser.secretary.gender,
+      address: {
+        city: updatedUser.secretary.city
+      },
+      userId: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        status: updatedUser.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: updatedUser.profileImage
+      },
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt
+    };
+
+    return successResponse(
+      res, 
+      transformedSecretary, 
+      `Secretary ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`
+    );
+  } catch (error) {
+    console.error('Error toggling secretary status:', error);
+    return errorResponse(res, error.message || 'Failed to toggle secretary status', 500);
   }
 });
 

@@ -215,6 +215,9 @@ export const secretariesAPI = {
   // Delete secretary
   delete: (id) => ApiService.delete(`/secretaries/${id}`),
   
+  // Toggle secretary status (activate/deactivate)
+  toggleStatus: (id) => ApiService.patch(`/secretaries/${id}/toggle-status`),
+  
   // Get current secretary profile (for secretary users)
   getMyProfile: () => ApiService.get('/secretaries/me'),
   
