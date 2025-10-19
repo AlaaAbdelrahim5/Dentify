@@ -179,6 +179,12 @@ export const dentistsAPI = {
   // Delete dentist
   delete: (id) => ApiService.delete(`/dentists/${id}`),
   
+  // Approve dentist (Admin only)
+  approve: (id) => ApiService.post(`/dentists/${id}/approve`),
+  
+  // Toggle dentist status (Admin and Clinic)
+  toggleStatus: (id) => ApiService.patch(`/dentists/${id}/toggle-status`),
+  
   // Get current dentist profile (for dentist users)
   getMyProfile: () => ApiService.get('/dentists/me'),
   

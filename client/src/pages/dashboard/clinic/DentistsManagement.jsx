@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   FaPlus, 
   FaSearch, 
@@ -12,11 +12,26 @@ import {
   FaEye,
   FaCheckCircle,
   FaTimesCircle,
-  FaCertificate
+  FaCertificate,
+  FaPhone,
+  FaEnvelope,
+  FaBan
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Button } from '../../../components'
+import { 
+  Button, 
+  Card,
+  LoadingSpinner,
+  PageHeader,
+  StatsOverview,
+  FilterBar,
+  DataTable,
+  StatusBadge,
+  ActionButtons,
+  ConfirmationModal
+} from '../../../components'
 import DentistModal from '../../../components/clinic/DentistModal'
+import DentistDetailsModal from '../../../components/clinic/DentistDetailsModal'
 import { dentistsAPI } from '../../../services/api'
 
 const DentistsManagement = () => {
@@ -24,12 +39,26 @@ const DentistsManagement = () => {
   const [dentists, setDentists] = useState([])
   const [filteredDentists, setFilteredDentists] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [filterSpecialization, setFilterSpecialization] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [dentistToDelete, setDentistToDelete] = useState(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [dentistToView, setDentistToView] = useState(null)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const searchTimeoutRef = useRef(null)
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    pending: 0,
+    inactive: 0
+  })
 
   // Specializations list
   const specializations = [
@@ -45,43 +74,87 @@ const DentistsManagement = () => {
     'Implantology'
   ]
 
-  useEffect(() => {
-    const loadDentists = async () => {
-      try {
+  // Load dentists from backend
+  const loadDentists = async (isFiltering = false) => {
+    try {
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
         setLoading(true)
-        setError(null)
-        // Use clinic-specific API to get only dentists belonging to this clinic
-        const response = await dentistsAPI.getForClinic()
-        if (response && response.success) {
-          const dentistsData = response.data || []
-          setDentists(dentistsData)
-          setFilteredDentists(dentistsData)
-        } else {
-          setError(response?.message || 'Failed to load dentists')
-        }
-      } catch (error) {
-        console.error('Error loading dentists:', error)
-        const errorMessage = error.response?.data?.message || error.message || 'Failed to load dentists. Please try again.'
-        setError(errorMessage)
-      } finally {
+      }
+      setError(null)
+      
+      const response = await dentistsAPI.getForClinic()
+      if (response && response.success) {
+        // Map the data to normalize the structure - backend returns 'user', not 'userId'
+        const dentistsData = (response.data || []).map(dentist => ({
+          ...dentist,
+          _id: dentist.userId, // Use userId as _id for consistency
+          userId: dentist.user // Map user object to userId for component compatibility
+        }))
+        setDentists(dentistsData)
+        
+        // Calculate stats
+        const total = dentistsData.length
+        const active = dentistsData.filter(d => d.user?.status === 'ACTIVE').length
+        const pending = dentistsData.filter(d => d.user?.status === 'PENDING').length
+        const inactive = dentistsData.filter(d => d.user?.status === 'DEACTIVATED').length
+        
+        setStats({ total, active, pending, inactive })
+      } else {
+        setError(response?.message || 'Failed to load dentists')
+      }
+    } catch (error) {
+      console.error('Error loading dentists:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load dentists. Please try again.'
+      setError(errorMessage)
+    } finally {
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
         setLoading(false)
+        setIsFirstLoad(false)
       }
     }
+  }
 
+  // Initial load
+  useEffect(() => {
     loadDentists()
   }, [])
 
+  // Debounce search term
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
+
   // Filter dentists based on search and filters
   useEffect(() => {
+    if (!isFirstLoad) {
+      setFiltering(true)
+    }
+    
     let filtered = dentists
 
     // Search filter
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(dentist => {
         const fullName = `${dentist.firstName} ${dentist.lastName}`.toLowerCase()
         const licenseNumber = dentist.licenseNumber?.toLowerCase() || ''
         const email = dentist.userId?.email?.toLowerCase() || ''
-        const searchLower = searchTerm.toLowerCase()
+        const searchLower = debouncedSearchTerm.toLowerCase()
         
         // Check specializations safely
         const specializationMatch = dentist.specialization && Array.isArray(dentist.specialization) 
@@ -111,7 +184,10 @@ const DentistsManagement = () => {
     }
 
     setFilteredDentists(filtered)
-  }, [dentists, searchTerm, filterSpecialization, filterStatus])
+    if (!isFirstLoad) {
+      setFiltering(false)
+    }
+  }, [dentists, debouncedSearchTerm, filterSpecialization, filterStatus, isFirstLoad])
 
   const handleAddDentist = () => {
     setSelectedDentist(null)
@@ -124,27 +200,60 @@ const DentistsManagement = () => {
   }
 
   const handleViewDentist = (dentist) => {
-    // Could open a detailed view modal
-    console.log('Viewing dentist:', dentist)
+    setDentistToView(dentist)
+    setShowDetailsModal(true)
   }
 
-  const handleDeleteDentist = async (dentistId) => {
-    if (window.confirm('Are you sure you want to delete this dentist? This action cannot be undone.')) {
-      try {
-        setError(null) // Clear any existing errors
-        const response = await dentistsAPI.delete(dentistId)
-        if (response && response.success) {
-          setDentists(prev => prev.filter(d => d._id !== dentistId))
-          console.log('Dentist deleted successfully')
-          // Show success message (you can add a toast notification here)
-        } else {
-          setError(response?.message || 'Failed to delete dentist')
-        }
-      } catch (error) {
-        console.error('Error deleting dentist:', error)
-        const errorMessage = error.response?.data?.message || error.message || 'Failed to delete dentist. Please try again.'
-        setError(errorMessage)
+  const handleDeleteDentist = async (dentist) => {
+    setDentistToDelete(dentist)
+    setShowDeleteModal(true)
+  }
+
+  // Note: Only admin can approve dentists. Clinic can only toggle active/deactivated status.
+
+  const handleToggleStatus = async (dentist) => {
+    const currentStatus = dentist.userId?.status
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE'
+    const action = newStatus === 'ACTIVE' ? 'activate' : 'deactivate'
+    
+    if (!confirm(`Are you sure you want to ${action} ${dentist.firstName} ${dentist.lastName}?`)) {
+      return
+    }
+
+    try {
+      setError(null)
+      const response = await dentistsAPI.toggleStatus(dentist._id)
+      if (response && response.success) {
+        // Refresh the list to update status
+        await loadDentists(true)
+        alert(`Dentist ${action}d successfully!`)
+      } else {
+        setError(response?.message || `Failed to ${action} dentist`)
       }
+    } catch (error) {
+      console.error(`Error ${action}ing dentist:`, error)
+      const errorMessage = error.response?.data?.message || error.message || `Failed to ${action} dentist. Please try again.`
+      setError(errorMessage)
+    }
+  }
+
+  const executeDelete = async () => {
+    try {
+      setError(null)
+      const response = await dentistsAPI.delete(dentistToDelete._id)
+      if (response && response.success) {
+        setDentists(prev => prev.filter(d => d._id !== dentistToDelete._id))
+        setShowDeleteModal(false)
+        setDentistToDelete(null)
+      } else {
+        setError(response?.message || 'Failed to delete dentist')
+        setShowDeleteModal(false)
+      }
+    } catch (error) {
+      console.error('Error deleting dentist:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete dentist. Please try again.'
+      setError(errorMessage)
+      setShowDeleteModal(false)
     }
   }
 
@@ -153,7 +262,7 @@ const DentistsManagement = () => {
       setError(null)
       
       if (selectedDentist) {
-        // Edit existing dentist - structure data according to API expectations
+        // Edit existing dentist
         const updateData = {
           userData: {
             email: dentistData.email,
@@ -176,27 +285,31 @@ const DentistsManagement = () => {
         
         const response = await dentistsAPI.update(selectedDentist._id, updateData)
         if (response.success) {
-          // Update the dentist in the list
           setDentists(prev => prev.map(d => 
-            d._id === selectedDentist._id 
-              ? response.data
-              : d
+            d._id === selectedDentist._id ? response.data : d
           ))
           setIsModalOpen(false)
-          console.log('Dentist updated successfully')
+          setSelectedDentist(null)
+          // Refresh to update stats
+          loadDentists(true)
         } else {
           setError(response.message || 'Failed to update dentist')
         }
       } else {
-        // Add new dentist (send request to admin for approval)
+        // Add new dentist
         const response = await dentistsAPI.create(dentistData)
         if (response.success) {
-          // Add the new dentist to the list
-          setDentists(prev => [response.data, ...prev])
+          // Map the new dentist data to match the structure
+          const newDentist = {
+            ...response.data,
+            _id: response.data.userId,
+            userId: response.data.user
+          }
+          setDentists(prev => [newDentist, ...prev])
           setIsModalOpen(false)
-          // Show success message
-          alert('Dentist request sent to admin for approval. You will be notified once approved.')
-          console.log('Dentist request created successfully')
+          alert('Dentist request sent successfully. Status: PENDING - Awaiting admin approval.')
+          // Refresh to update stats
+          loadDentists(true)
         } else {
           setError(response.message || 'Failed to create dentist request')
         }
@@ -208,51 +321,218 @@ const DentistsManagement = () => {
     }
   }
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            <FaCheckCircle className="w-3 h-3" />
-            Active
-          </span>
-        )
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-            <FaClock className="w-3 h-3" />
-            Pending Approval
-          </span>
-        )
-      case 'inactive':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-            <FaTimesCircle className="w-3 h-3" />
-            Inactive
-          </span>
-        )
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-            Unknown
-          </span>
-        )
+  // Component configurations
+  const statsConfig = [
+    {
+      label: 'Total Dentists',
+      value: stats.total,
+      icon: FaUserMd,
+      gradient: 'from-teal-600 to-cyan-600'
+    },
+    {
+      label: 'Active',
+      value: stats.active,
+      icon: FaCheckCircle,
+      gradient: 'from-green-600 to-green-700'
+    },
+    {
+      label: 'Pending Approval',
+      value: stats.pending,
+      icon: FaClock,
+      gradient: 'from-yellow-600 to-orange-600'
+    },
+    {
+      label: 'Inactive',
+      value: stats.inactive,
+      icon: FaTimesCircle,
+      gradient: 'from-red-600 to-red-700'
     }
+  ]
+
+  const filterProps = {
+    searchTerm,
+    onSearchChange: (e) => setSearchTerm(e.target.value),
+    debouncedSearchTerm,
+    filters: [
+      {
+        placeholder: 'All Specializations',
+        value: filterSpecialization,
+        onChange: (e) => setFilterSpecialization(e.target.value),
+        options: specializations.map(spec => ({ value: spec, label: spec }))
+      },
+      {
+        placeholder: 'All Status',
+        value: filterStatus,
+        onChange: (e) => setFilterStatus(e.target.value),
+        options: [
+          { value: 'ACTIVE', label: 'Active' },
+          { value: 'PENDING', label: 'Pending Approval' },
+          { value: 'DEACTIVATED', label: 'Inactive' }
+        ]
+      }
+    ],
+    onClearFilters: () => {
+      setSearchTerm('')
+      setDebouncedSearchTerm('')
+      setFilterSpecialization('')
+      setFilterStatus('')
+    },
+    filtering,
+    searchPlaceholder: 'Search dentists...'
   }
 
-  if (loading) {
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  // Table columns configuration
+  const columns = [
+    { key: 'dentist', label: 'Dentist' },
+    { key: 'license', label: 'License & Specialization' },
+    { key: 'contact', label: 'Contact' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions' }
+  ]
+
+  // Render table row
+  const renderRow = (dentist) => (
+    <tr key={dentist._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+            <FaUserMd className="w-5 h-5 text-white" />
+          </div>
+          <div className="ml-3">
+            <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Dr. {dentist.firstName} {dentist.lastName}
+            </div>
+            <div className={`text-xs flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <FaMapMarkerAlt className="w-3 h-3" />
+              {dentist.city}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className={`text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <FaCertificate className="w-3 h-3 text-teal-500" />
+          {dentist.licenseNumber}
+        </div>
+        <div className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <div className="flex items-center gap-1">
+            <FaGraduationCap className="w-3 h-3" />
+            {dentist.specialization && dentist.specialization.length > 0 ? (
+              <>
+                {dentist.specialization.slice(0, 2).join(', ')}
+                {dentist.specialization.length > 2 && (
+                  <span className="text-xs">+{dentist.specialization.length - 2}</span>
+                )}
+              </>
+            ) : (
+              'No specialization'
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className={`text-sm flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          <FaEnvelope className="w-3 h-3 text-gray-400" />
+          {dentist.userId?.email || 'N/A'}
+        </div>
+        <div className={`text-xs mt-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <FaPhone className="w-3 h-3 text-gray-400" />
+          {dentist.userId?.phone || 'N/A'}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <StatusBadge 
+          isActive={dentist.userId?.status === 'ACTIVE'}
+          activeIcon={FaCheckCircle}
+          inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
+          activeLabel="Active"
+          inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+        />
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <ActionButtons
+          actions={[
+            {
+              icon: FaEye,
+              onClick: () => handleViewDentist(dentist),
+              title: 'View Details',
+              variant: 'default',
+              key: 'view'
+            },
+            // Only show toggle for ACTIVE or DEACTIVATED (not PENDING - needs admin approval first)
+            ...(dentist.userId?.status === 'ACTIVE' || dentist.userId?.status === 'DEACTIVATED' ? [{
+              icon: dentist.userId?.status === 'ACTIVE' ? FaBan : FaCheckCircle,
+              onClick: () => handleToggleStatus(dentist),
+              title: dentist.userId?.status === 'ACTIVE' ? 'Deactivate' : 'Activate',
+              variant: dentist.userId?.status === 'ACTIVE' ? 'warning' : 'success',
+              key: 'toggle'
+            }] : []),
+            {
+              icon: FaEdit,
+              onClick: () => handleEditDentist(dentist),
+              title: 'Edit',
+              variant: 'default',
+              key: 'edit'
+            },
+            {
+              icon: FaTrash,
+              onClick: () => handleDeleteDentist(dentist),
+              title: 'Delete',
+              variant: 'danger',
+              key: 'delete'
+            }
+          ]}
+        />
+      </td>
+    </tr>
+  )
+
+  const tableProps = {
+    columns,
+    data: filteredDentists,
+    renderRow,
+    loading: filtering,
+    emptyMessage: searchTerm || filterSpecialization || filterStatus
+      ? 'No dentists found matching your filters. Try adjusting your search criteria.'
+      : 'No dentists added yet. Click "Request New Dentist" to get started.',
+    emptyIcon: FaUserMd
+  }
+
+  if (loading && isFirstLoad) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Dentists Management"
+        description="Manage dentist requests and profiles for your clinic"
+        action={{
+          label: 'Request New Dentist',
+          onClick: handleAddDentist,
+          icon: FaPlus,
+          gradient: 'from-teal-600 to-cyan-600'
+        }}
+      />
+
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <div className="flex items-center">
             <div className="text-red-400">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -260,7 +540,7 @@ const DentistsManagement = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
             </div>
             <div className="ml-auto">
               <button
@@ -276,243 +556,49 @@ const DentistsManagement = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Dentists Management
-          </h1>
-          <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage dentist requests and profiles for your clinic
-          </p>
-        </div>
-        <Button
-          onClick={handleAddDentist}
-          className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
-        >
-          <FaPlus className="w-4 h-4" />
-          Request New Dentist
-        </Button>
-      </div>
+      {/* Statistics */}
+      <StatsOverview stats={statsConfig} />
 
       {/* Search and Filters */}
-      <div className={`p-6 rounded-lg ${
-        isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-      }`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <input
-              type="text"
-              placeholder="Search dentists..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              }`}
-            />
-          </div>
+      <FilterBar {...filterProps} />
 
-          {/* Specialization Filter */}
-          <div className="relative">
-            <FaGraduationCap className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <select
-              value={filterSpecialization}
-              onChange={(e) => setFilterSpecialization(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-gray-100'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="">All Specializations</option>
-              {specializations.map(spec => (
-                <option key={spec} value={spec}>{spec}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <FaFilter className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-gray-100'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending Approval</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-
-          {/* Results Count */}
-          <div className="flex items-center justify-center">
-            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {filteredDentists.length} of {dentists.length} dentists
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Dentists Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredDentists.map((dentist) => (
-          <div
-            key={dentist._id}
-            className={`p-6 rounded-lg border transition-all duration-200 hover:shadow-lg ${
-              isDarkMode
-                ? 'bg-gray-800 border-gray-700 hover:border-gray-600'
-                : 'bg-white border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 flex items-center justify-center">
-                  <FaUserMd className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Dr. {dentist.firstName} {dentist.lastName}
-                  </h3>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {dentist.userId?.email}
-                  </p>
-                </div>
-              </div>
-              {getStatusBadge(dentist.userId?.status || 'pending')}
-            </div>
-
-            {/* License & Specialization */}
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2">
-                <FaCertificate className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  License: {dentist.licenseNumber}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaGraduationCap className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {dentist.specialization.slice(0, 2).join(', ')}
-                  {dentist.specialization.length > 2 && ` +${dentist.specialization.length - 2} more`}
-                </span>
-              </div>
-              {dentist.address?.city && (
-                <div className="flex items-center gap-2">
-                  <FaMapMarkerAlt className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {dentist.address.city}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Working Hours */}
-            {dentist.workingHours && dentist.workingHours.length > 0 && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <FaClock className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Working Hours
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 gap-1">
-                  {dentist.workingHours.slice(0, 3).map((schedule, index) => (
-                    <div key={index} className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {schedule.day}: {schedule.startTime} - {schedule.endTime}
-                    </div>
-                  ))}
-                  {dentist.workingHours.length > 3 && (
-                    <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      +{dentist.workingHours.length - 3} more days
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => handleViewDentist(dentist)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode
-                    ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-                }`}
-                title="View Details"
-              >
-                <FaEye className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleEditDentist(dentist)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode
-                    ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-                }`}
-                title="Edit"
-              >
-                <FaEdit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDeleteDentist(dentist._id)}
-                className="p-2 rounded-lg transition-colors hover:bg-red-100 text-red-500 hover:text-red-700 dark:hover:bg-red-900 dark:hover:text-red-300"
-                title="Delete"
-              >
-                <FaTrash className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {filteredDentists.length === 0 && (
-        <div className="text-center py-12">
-          <FaUserMd className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-            No dentists found
-          </h3>
-          <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {searchTerm || filterSpecialization || filterStatus
-              ? 'Try adjusting your search or filters'
-              : 'Get started by requesting your first dentist'}
-          </p>
-          {!searchTerm && !filterSpecialization && !filterStatus && (
-            <Button
-              onClick={handleAddDentist}
-              className="bg-gradient-to-r from-teal-600 to-cyan-600"
-            >
-              <FaPlus className="w-4 h-4 mr-2" />
-              Request New Dentist
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Dentists Table */}
+      <DataTable {...tableProps} />
 
       {/* Dentist Modal */}
       <DentistModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedDentist(null)
+        }}
         onSave={handleModalSave}
         dentist={selectedDentist}
+      />
+
+      {/* Dentist Details Modal */}
+      <DentistDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setDentistToView(null)
+        }}
+        dentistData={dentistToView}
+        onEdit={handleEditDentist}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setDentistToDelete(null)
+        }}
+        onConfirm={executeDelete}
+        item={dentistToDelete}
+        action="delete"
+        itemName={dentistToDelete ? `Dr. ${dentistToDelete.firstName} ${dentistToDelete.lastName}` : ''}
+        itemType="Dentist"
       />
     </div>
   )

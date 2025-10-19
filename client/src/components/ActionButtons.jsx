@@ -35,10 +35,11 @@ const ActionButtons = ({ actions }) => {
       {actions.map((action, index) => {
         const Icon = action.icon
         const variantClasses = getVariantClasses(action.variant)
+        const key = action.key || `${action.title}-${index}` // Use title + index for unique key
         
         return (
           <button
-            key={index}
+            key={key}
             onClick={action.onClick}
             className={`p-2 rounded-lg transition-colors ${variantClasses} ${action.className || ''}`}
             title={action.title}

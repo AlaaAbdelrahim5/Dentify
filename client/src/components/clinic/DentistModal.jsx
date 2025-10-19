@@ -204,9 +204,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         specialization: formData.specialization,
         birthDate: formData.birthDate,
         gender: formData.gender,
-        address: {
-          city: formData.city || (dentist?.address?.city) || 'Ramallah'
-        },
+        city: formData.city || (dentist?.address?.city) || 'Ramallah',
         appointmentDuration: parseInt(formData.appointmentDuration),
         workingHours: formData.workingHours,
         socialLinks: formData.socialLinks,
@@ -219,8 +217,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
 
       console.log('🔍 Sending dentist data:', dentistData)
       console.log('🔍 Working hours:', dentistData.workingHours)
-      console.log('🔍 Form city value:', formData.city)
-      console.log('🔍 Address object:', dentistData.address)
+      console.log('🔍 City value:', dentistData.city)
 
       await onSave(dentistData)
       // Don't close modal here - let the parent component handle it after successful save
@@ -458,8 +455,8 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                       } ${errors.gender ? 'border-red-500' : ''}`}
                     >
                       <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
                     </select>
                     {errors.gender && (
                       <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
