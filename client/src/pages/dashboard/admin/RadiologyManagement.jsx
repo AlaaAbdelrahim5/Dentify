@@ -127,7 +127,7 @@ const RadiologyManagement = () => {
         // Transform backend data to match frontend expectations
         const transformedCenters = data.data.map(center => ({
           _id: center.userId,
-          name: center.registrationNumber, // Using registration number as name since there's no centerName field
+          name: center.centerName || center.registrationNumber, // Use centerName from database
           registrationNumber: center.registrationNumber,
           description: center.description || '',
           address: {

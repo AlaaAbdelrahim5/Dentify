@@ -308,11 +308,45 @@ export const authUtils = {
     return token ? { Authorization: `Bearer ${token}` } : {};
   },
 
-  // Get user's full name
+  // Get user's full name based on role
   getUserName: () => {
     const user = authUtils.getCurrentUser();
-    if (user?.fullName) {
-      return user.fullName;
+    if (!user) return 'User';
+    
+    // Get name based on role
+    switch (user.role) {
+      case 'Patient':
+        if (user.patient) {
+          return `${user.patient.firstName} ${user.patient.lastName}`;
+        }
+        break;
+      case 'Admin':
+        if (user.admin) {
+          return `${user.admin.firstName} ${user.admin.lastName}`;
+        }
+        break;
+      case 'Clinic':
+        if (user.clinic?.clinicName) {
+          return user.clinic.clinicName;
+        }
+        break;
+      case 'Dentist':
+        if (user.dentist) {
+          return `Dr. ${user.dentist.firstName} ${user.dentist.lastName}`;
+        }
+        break;
+      case 'Secretary':
+        if (user.secretary) {
+          return `${user.secretary.firstName} ${user.secretary.lastName}`;
+        }
+        break;
+      case 'RadiologyCenter':
+        if (user.radiology?.centerName) {
+          return user.radiology.centerName;
+        }
+        break;
+      default:
+        break;
     }
     
     // Fallback to email prefix for user-friendly display
@@ -340,23 +374,61 @@ export const authUtils = {
   // Get user's initials for avatar
   getUserInitials: () => {
     const user = authUtils.getCurrentUser();
-    let name = user?.fullName;
+    if (!user) return 'U';
     
-    // If no fullName, try to use email prefix
-    if (!name && user?.email) {
-      name = user.email.split('@')[0];
+    let firstName = '';
+    let lastName = '';
+    
+    // Get name based on role
+    switch (user.role) {
+      case 'Patient':
+        firstName = user.patient?.firstName || '';
+        lastName = user.patient?.lastName || '';
+        break;
+      case 'Admin':
+        firstName = user.admin?.firstName || '';
+        lastName = user.admin?.lastName || '';
+        break;
+      case 'Clinic':
+        // For clinic, use clinic name
+        const clinicName = user.clinic?.clinicName || '';
+        const words = clinicName.split(' ').filter(word => word.length > 0);
+        if (words.length >= 2) {
+          return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+        }
+        return clinicName[0]?.toUpperCase() || 'C';
+      case 'Dentist':
+        firstName = user.dentist?.firstName || '';
+        lastName = user.dentist?.lastName || '';
+        break;
+      case 'Secretary':
+        firstName = user.secretary?.firstName || '';
+        lastName = user.secretary?.lastName || '';
+        break;
+      case 'RadiologyCenter':
+        // For radiology center, use center name
+        const centerName = user.radiology?.centerName || '';
+        const centerWords = centerName.split(' ').filter(word => word.length > 0);
+        if (centerWords.length >= 2) {
+          return `${centerWords[0][0]}${centerWords[centerWords.length - 1][0]}`.toUpperCase();
+        }
+        return centerName[0]?.toUpperCase() || 'R';
+      default:
+        break;
     }
     
-    if (!name) return 'U';
-    
-    // Handle multi-word names (e.g., "Smile Dental Center" -> "SD")
-    const words = name.split(' ').filter(word => word.length > 0);
-    if (words.length >= 2) {
-      return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+    // For users with firstName and lastName
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
     
-    // Single word or fallback
-    return name[0].toUpperCase();
+    // Fallback to email if available
+    if (user?.email) {
+      const name = user.email.split('@')[0];
+      return name[0].toUpperCase();
+    }
+    
+    return 'U';
   },
 
   // Get dashboard route based on user role

@@ -219,7 +219,8 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
     const { 
       email, 
       password, 
-      phone, 
+      phone,
+      centerName,
       registrationNumber, 
       city, 
       location, 
@@ -231,8 +232,8 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!email || !password || !registrationNumber || !city) {
-      return errorResponse(res, 'Email, password, registration number, and city are required', 400);
+    if (!email || !password || !centerName || !registrationNumber || !city) {
+      return errorResponse(res, 'Email, password, center name, registration number, and city are required', 400);
     }
 
     // Check if user already exists
@@ -263,6 +264,7 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
       const radiologyCenter = await tx.radiologyCenter.create({
         data: {
           userId: user.id,
+          centerName,
           registrationNumber,
           city,
           location: location || null,
@@ -304,6 +306,7 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
     const { 
       email,
       phone,
+      centerName,
       registrationNumber,
       city,
       location,
@@ -340,6 +343,7 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
       const updatedCenter = await tx.radiologyCenter.update({
         where: { userId: parseInt(id) },
         data: {
+          ...(centerName && { centerName }),
           ...(registrationNumber && { registrationNumber }),
           ...(city && { city }),
           ...(location !== undefined && { location }),
