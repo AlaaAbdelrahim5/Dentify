@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { 
   FaPlus, 
   FaSearch, 
-  FaEdit, 
-  FaTrash, 
+  FaEdit,
   FaUserMd,
   FaClock,
   FaMapMarkerAlt,
@@ -15,7 +14,12 @@ import {
   FaCertificate,
   FaPhone,
   FaEnvelope,
-  FaBan
+  FaTimes,
+  FaGlobe,
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaTwitter
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { 
@@ -31,7 +35,6 @@ import {
   ConfirmationModal
 } from '../../../components'
 import DentistModal from '../../../components/clinic/DentistModal'
-import DentistDetailsModal from '../../../components/clinic/DentistDetailsModal'
 import { dentistsAPI } from '../../../services/api'
 
 const DentistsManagement = () => {
@@ -47,11 +50,12 @@ const DentistsManagement = () => {
   const [filterStatus, setFilterStatus] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [dentistToDelete, setDentistToDelete] = useState(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [dentistToView, setDentistToView] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const [dentistToToggle, setDentistToToggle] = useState(null)
   const searchTimeoutRef = useRef(null)
   const [stats, setStats] = useState({
     total: 0,
@@ -204,21 +208,20 @@ const DentistsManagement = () => {
     setShowDetailsModal(true)
   }
 
-  const handleDeleteDentist = async (dentist) => {
-    setDentistToDelete(dentist)
-    setShowDeleteModal(true)
-  }
-
   // Note: Only admin can approve dentists. Clinic can only toggle active/deactivated status.
 
-  const handleToggleStatus = async (dentist) => {
+  const handleToggleStatus = (dentist) => {
     const currentStatus = dentist.userId?.status
-    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE'
-    const action = newStatus === 'ACTIVE' ? 'activate' : 'deactivate'
+    const action = currentStatus === 'ACTIVE' ? 'deactivate' : 'activate'
     
-    if (!confirm(`Are you sure you want to ${action} ${dentist.firstName} ${dentist.lastName}?`)) {
-      return
-    }
+    setDentistToToggle(dentist)
+    setConfirmAction(action)
+    setShowConfirmModal(true)
+  }
+
+  const executeToggleStatus = async () => {
+    const dentist = dentistToToggle
+    const action = confirmAction
 
     try {
       setError(null)
@@ -226,34 +229,18 @@ const DentistsManagement = () => {
       if (response && response.success) {
         // Refresh the list to update status
         await loadDentists(true)
-        alert(`Dentist ${action}d successfully!`)
+        setShowConfirmModal(false)
+        setDentistToToggle(null)
+        setConfirmAction(null)
       } else {
         setError(response?.message || `Failed to ${action} dentist`)
+        setShowConfirmModal(false)
       }
     } catch (error) {
       console.error(`Error ${action}ing dentist:`, error)
       const errorMessage = error.response?.data?.message || error.message || `Failed to ${action} dentist. Please try again.`
       setError(errorMessage)
-    }
-  }
-
-  const executeDelete = async () => {
-    try {
-      setError(null)
-      const response = await dentistsAPI.delete(dentistToDelete._id)
-      if (response && response.success) {
-        setDentists(prev => prev.filter(d => d._id !== dentistToDelete._id))
-        setShowDeleteModal(false)
-        setDentistToDelete(null)
-      } else {
-        setError(response?.message || 'Failed to delete dentist')
-        setShowDeleteModal(false)
-      }
-    } catch (error) {
-      console.error('Error deleting dentist:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete dentist. Please try again.'
-      setError(errorMessage)
-      setShowDeleteModal(false)
+      setShowConfirmModal(false)
     }
   }
 
@@ -276,7 +263,7 @@ const DentistsManagement = () => {
             specialization: dentistData.specialization,
             birthDate: dentistData.birthDate,
             gender: dentistData.gender,
-            address: dentistData.address,
+            city: dentistData.city,
             appointmentDuration: dentistData.appointmentDuration,
             workingHours: dentistData.workingHours,
             socialLinks: dentistData.socialLinks
@@ -297,7 +284,9 @@ const DentistsManagement = () => {
         }
       } else {
         // Add new dentist
+        console.log('📤 Sending dentist creation request:', dentistData)
         const response = await dentistsAPI.create(dentistData)
+        console.log('📥 Response from server:', response)
         if (response.success) {
           // Map the new dentist data to match the structure
           const newDentist = {
@@ -311,12 +300,18 @@ const DentistsManagement = () => {
           // Refresh to update stats
           loadDentists(true)
         } else {
+          console.error('❌ Server returned error:', response.message)
           setError(response.message || 'Failed to create dentist request')
         }
       }
     } catch (error) {
-      console.error('Error saving dentist:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to save dentist. Please try again.'
+      console.error('❌ Error saving dentist:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save dentist. Please try again.'
       setError(errorMessage)
     }
   }
@@ -327,25 +322,29 @@ const DentistsManagement = () => {
       label: 'Total Dentists',
       value: stats.total,
       icon: FaUserMd,
-      gradient: 'from-teal-600 to-cyan-600'
+      gradient: 'from-teal-600 to-cyan-600',
+      cols: 1
     },
     {
       label: 'Active',
       value: stats.active,
       icon: FaCheckCircle,
-      gradient: 'from-green-600 to-green-700'
+      gradient: 'from-green-600 to-green-700',
+      cols: 1
     },
     {
       label: 'Pending Approval',
       value: stats.pending,
       icon: FaClock,
-      gradient: 'from-yellow-600 to-orange-600'
+      gradient: 'from-orange-500 to-orange-600',
+      cols: 1
     },
     {
       label: 'Inactive',
       value: stats.inactive,
       icon: FaTimesCircle,
-      gradient: 'from-red-600 to-red-700'
+      gradient: 'from-red-600 to-red-700',
+      cols: 1
     }
   ]
 
@@ -452,7 +451,11 @@ const DentistsManagement = () => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <StatusBadge 
-          isActive={dentist.userId?.status === 'ACTIVE'}
+          status={
+            dentist.userId?.status === 'ACTIVE' ? 'active' : 
+            dentist.userId?.status === 'PENDING' ? 'pending' : 
+            'inactive'
+          }
           activeIcon={FaCheckCircle}
           inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
           activeLabel="Active"
@@ -469,28 +472,23 @@ const DentistsManagement = () => {
               variant: 'default',
               key: 'view'
             },
-            // Only show toggle for ACTIVE or DEACTIVATED (not PENDING - needs admin approval first)
-            ...(dentist.userId?.status === 'ACTIVE' || dentist.userId?.status === 'DEACTIVATED' ? [{
-              icon: dentist.userId?.status === 'ACTIVE' ? FaBan : FaCheckCircle,
-              onClick: () => handleToggleStatus(dentist),
-              title: dentist.userId?.status === 'ACTIVE' ? 'Deactivate' : 'Activate',
-              variant: dentist.userId?.status === 'ACTIVE' ? 'warning' : 'success',
-              key: 'toggle'
-            }] : []),
-            {
-              icon: FaEdit,
-              onClick: () => handleEditDentist(dentist),
-              title: 'Edit',
-              variant: 'default',
-              key: 'edit'
-            },
-            {
-              icon: FaTrash,
-              onClick: () => handleDeleteDentist(dentist),
-              title: 'Delete',
-              variant: 'danger',
-              key: 'delete'
-            }
+            // Only show edit and toggle for non-PENDING dentists
+            ...(dentist.userId?.status !== 'PENDING' ? [
+              {
+                icon: FaEdit,
+                onClick: () => handleEditDentist(dentist),
+                title: 'Edit',
+                variant: 'default',
+                key: 'edit'
+              },
+              {
+                icon: dentist.userId?.status === 'ACTIVE' ? FaTimesCircle : FaCheckCircle,
+                onClick: () => handleToggleStatus(dentist),
+                title: dentist.userId?.status === 'ACTIVE' ? 'Deactivate' : 'Activate',
+                variant: dentist.userId?.status === 'ACTIVE' ? 'warning' : 'success',
+                key: 'toggle'
+              }
+            ] : [])
           ]}
         />
       </td>
@@ -506,6 +504,466 @@ const DentistsManagement = () => {
       ? 'No dentists found matching your filters. Try adjusting your search criteria.'
       : 'No dentists added yet. Click "Request New Dentist" to get started.',
     emptyIcon: FaUserMd
+  }
+
+  // Dentist Details Modal Component
+  const DentistDetailsModal = ({ dentist, onClose }) => {
+    if (!dentist) return null
+
+    const calculateAge = (dateOfBirth) => {
+      if (!dateOfBirth) return 'N/A'
+      const today = new Date()
+      const birthDate = new Date(dateOfBirth)
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      return age
+    }
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div
+            className={`relative rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
+              isDarkMode
+                ? "bg-gray-800 border border-gray-700"
+                : "bg-white border border-gray-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with gradient background */}
+            <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+              
+              {/* Avatar and basic info */}
+              <div className="flex items-center gap-4 mt-8">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
+                    <FaUserMd className="w-12 h-12 text-teal-600" />
+                  </div>
+                  {/* Status indicator on avatar */}
+                  <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
+                    dentist.userId?.status === 'ACTIVE' ? 'bg-green-500' : 
+                    dentist.userId?.status === 'PENDING' ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}>
+                    {dentist.userId?.status === 'ACTIVE' ? (
+                      <FaCheckCircle className="w-3 h-3 text-white" />
+                    ) : dentist.userId?.status === 'PENDING' ? (
+                      <FaClock className="w-3 h-3 text-white" />
+                    ) : (
+                      <FaTimesCircle className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Dr. {dentist.firstName} {dentist.lastName}
+                  </h2>
+                  <p className="text-teal-100 text-sm mb-2">
+                    {dentist.specialization && dentist.specialization.length > 0 
+                      ? dentist.specialization[0] 
+                      : 'General Dentistry'}
+                  </p>
+                  <StatusBadge 
+                    status={
+                      dentist.userId?.status === 'ACTIVE' ? 'active' : 
+                      dentist.userId?.status === 'PENDING' ? 'pending' : 
+                      'inactive'
+                    }
+                    activeIcon={FaCheckCircle}
+                    inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
+                    activeLabel="Active"
+                    inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
+                {/* Personal Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaUserMd className="w-5 h-5 text-teal-600" />
+                    Personal Information
+                  </h3>
+                  <div className={`grid grid-cols-2 gap-4 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        First Name
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.firstName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Last Name
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.lastName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Gender
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.gender ? dentist.gender.charAt(0).toUpperCase() + dentist.gender.slice(1) : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Birth Date & Age
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.birthDate ? `${formatDate(dentist.birthDate)} (${calculateAge(dentist.birthDate)} years)` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        City
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.city || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaEnvelope className="w-5 h-5 text-teal-600" />
+                    Contact Information
+                  </h3>
+                  <div className={`space-y-3 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaEnvelope className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Email Address
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {dentist.userId?.email || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isDarkMode ? 'bg-gray-600' : 'bg-white'
+                      }`}>
+                        <FaPhone className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Phone Number
+                        </p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {dentist.userId?.phone || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Professional Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaCertificate className="w-5 h-5 text-teal-600" />
+                    Professional Information
+                  </h3>
+                  <div className={`grid grid-cols-1 gap-4 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        License Number
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.licenseNumber || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Specializations
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {dentist.specialization && dentist.specialization.length > 0 ? (
+                          dentist.specialization.map((spec, index) => (
+                            <span
+                              key={index}
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                isDarkMode ? 'bg-teal-900/20 text-teal-400 border border-teal-800' : 'bg-teal-100 text-teal-700 border border-teal-200'
+                              }`}
+                            >
+                              {spec}
+                            </span>
+                          ))
+                        ) : (
+                          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            General Dentistry
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Appointment Duration
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.appointmentDuration || 30} minutes
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                {dentist.address && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
+                      Address
+                    </h3>
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.address}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Working Hours */}
+                {dentist.workingHours && dentist.workingHours.length > 0 && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaClock className="w-5 h-5 text-teal-600" />
+                      Working Hours
+                    </h3>
+                    <div className={`space-y-2 p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      {dentist.workingHours.map((schedule, index) => (
+                        <div key={index} className={`flex justify-between items-center p-3 rounded-lg ${
+                          isDarkMode ? 'bg-gray-600' : 'bg-white'
+                        }`}>
+                          <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {schedule.day}
+                          </span>
+                          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {schedule.startTime} - {schedule.endTime}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links */}
+                {dentist.socialLinks && Object.keys(dentist.socialLinks).some(key => dentist.socialLinks[key]) && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaGlobe className="w-5 h-5 text-teal-600" />
+                      Social Media & Links
+                    </h3>
+                    <div className={`space-y-3 p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      {dentist.socialLinks.facebook && (
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isDarkMode ? 'bg-gray-600' : 'bg-white'
+                          }`}>
+                            <FaFacebook className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Facebook
+                            </p>
+                            <a
+                              href={dentist.socialLinks.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm hover:underline ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                            >
+                              {dentist.socialLinks.facebook}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {dentist.socialLinks.instagram && (
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isDarkMode ? 'bg-gray-600' : 'bg-white'
+                          }`}>
+                            <FaInstagram className="w-4 h-4 text-pink-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Instagram
+                            </p>
+                            <a
+                              href={dentist.socialLinks.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm hover:underline ${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`}
+                            >
+                              {dentist.socialLinks.instagram}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {dentist.socialLinks.linkedin && (
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isDarkMode ? 'bg-gray-600' : 'bg-white'
+                          }`}>
+                            <FaLinkedin className="w-4 h-4 text-blue-700" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              LinkedIn
+                            </p>
+                            <a
+                              href={dentist.socialLinks.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm hover:underline ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}
+                            >
+                              {dentist.socialLinks.linkedin}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {dentist.socialLinks.twitter && (
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isDarkMode ? 'bg-gray-600' : 'bg-white'
+                          }`}>
+                            <FaTwitter className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Twitter
+                            </p>
+                            <a
+                              href={dentist.socialLinks.twitter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm hover:underline ${isDarkMode ? 'text-blue-300' : 'text-blue-400'}`}
+                            >
+                              {dentist.socialLinks.twitter}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      {dentist.socialLinks.website && (
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isDarkMode ? 'bg-gray-600' : 'bg-white'
+                          }`}>
+                            <FaGlobe className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              Website
+                            </p>
+                            <a
+                              href={dentist.socialLinks.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-sm hover:underline ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}
+                            >
+                              {dentist.socialLinks.website}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Account Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <FaCheckCircle className="w-5 h-5 text-teal-600" />
+                    Account Information
+                  </h3>
+                  <div className={`grid grid-cols-2 gap-4 p-4 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Account Status
+                      </p>
+                      <StatusBadge 
+                        status={
+                          dentist.userId?.status === 'ACTIVE' ? 'active' : 
+                          dentist.userId?.status === 'PENDING' ? 'pending' : 
+                          'inactive'
+                        }
+                        activeIcon={FaCheckCircle}
+                        inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
+                        activeLabel="Active"
+                        inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+                      />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Joined Date
+                      </p>
+                      <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {dentist.userId?.createdAt ? formatDate(dentist.userId.createdAt) : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (loading && isFirstLoad) {
@@ -577,27 +1035,28 @@ const DentistsManagement = () => {
       />
 
       {/* Dentist Details Modal */}
-      <DentistDetailsModal
-        isOpen={showDetailsModal}
-        onClose={() => {
-          setShowDetailsModal(false)
-          setDentistToView(null)
-        }}
-        dentistData={dentistToView}
-        onEdit={handleEditDentist}
-      />
+      {showDetailsModal && (
+        <DentistDetailsModal
+          dentist={dentistToView}
+          onClose={() => {
+            setShowDetailsModal(false)
+            setDentistToView(null)
+          }}
+        />
+      )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Confirmation Modal for Toggle Status */}
       <ConfirmationModal
-        isOpen={showDeleteModal}
+        isOpen={showConfirmModal}
         onClose={() => {
-          setShowDeleteModal(false)
-          setDentistToDelete(null)
+          setShowConfirmModal(false)
+          setDentistToToggle(null)
+          setConfirmAction(null)
         }}
-        onConfirm={executeDelete}
-        item={dentistToDelete}
-        action="delete"
-        itemName={dentistToDelete ? `Dr. ${dentistToDelete.firstName} ${dentistToDelete.lastName}` : ''}
+        onConfirm={executeToggleStatus}
+        item={dentistToToggle}
+        action={confirmAction}
+        itemName={dentistToToggle ? `Dr. ${dentistToToggle.firstName} ${dentistToToggle.lastName}` : ''}
         itemType="Dentist"
       />
     </div>

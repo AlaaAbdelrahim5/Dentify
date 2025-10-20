@@ -16,9 +16,14 @@ import { Card } from './'
  */
 const StatsOverview = ({ stats }) => {
   const { isDarkMode } = useTheme()
+  
+  // Determine grid columns based on number of stats
+  const gridCols = stats.length === 4 
+    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' 
+    : 'grid-cols-1 md:grid-cols-3'
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className={`grid ${gridCols} gap-6`}>
       {stats.map((stat, index) => {
         const Icon = stat.icon
         

@@ -107,6 +107,7 @@ model Patient {
 // Radiology Center model
 model RadiologyCenter {
   userId             Int      @id
+  centerName         String
   registrationNumber String
   website            String?
   city               String
@@ -132,6 +133,7 @@ enum Role {
 enum Status {
   ACTIVE
   PENDING
+  REJECTED
   DEACTIVATED
   DELETED
 }

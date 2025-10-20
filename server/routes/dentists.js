@@ -175,7 +175,9 @@ router.get('/', authenticate, async (req, res) => {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        user: {
+          createdAt: 'desc'
+        }
       }
     });
 

@@ -85,7 +85,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         specialization: dentist.specialization || [],
         birthDate: dentist.birthDate ? dentist.birthDate.split('T')[0] : '',
         gender: dentist.gender || '',
-        city: dentist.address?.city || '',
+        city: dentist.city || dentist.address?.city || '',
         appointmentDuration: dentist.appointmentDuration || 30,
         workingHours: dentist.workingHours || [],
         socialLinks: {

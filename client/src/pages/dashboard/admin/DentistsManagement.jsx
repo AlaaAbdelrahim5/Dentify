@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   FaUserMd, 
   FaPlus, 
   FaEdit, 
-  FaTrash, 
   FaSearch, 
-  FaFilter,
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
@@ -17,12 +15,24 @@ import {
   FaTimes,
   FaCertificate,
   FaHospital,
-  FaCalendarAlt,
-  FaUsers
+  FaGraduationCap,
+  FaBan
 } from 'react-icons/fa'
-import { MdPending, MdVerified, MdBlock } from 'react-icons/md'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { 
+  Card, 
+  Button, 
+  LoadingSpinner,
+  PageHeader,
+  StatsOverview,
+  FilterBar,
+  DataTable,
+  Pagination,
+  StatusBadge,
+  ActionButtons,
+  ConfirmationModal
+} from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { dentistsAPI } from '../../../services/api'
 
 const DentistsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -37,14 +47,15 @@ const DentistsManagement = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [selectedDentist, setSelectedDentist] = useState(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const [dentistToAction, setDentistToAction] = useState(null)
   const searchTimeoutRef = useRef(null)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
-    active: 0,
-    suspended: 0
+    active: 0
   })
 
   const cities = [
@@ -73,9 +84,9 @@ const DentistsManagement = () => {
   ]
 
   const statusOptions = [
-    { value: 'pending', label: 'Pending Approval' },
-    { value: 'active', label: 'Active' },
-    { value: 'suspended', label: 'Suspended' }
+    { value: 'PENDING', label: 'Pending Approval' },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'DEACTIVATED', label: 'Deactivated' }
   ]
 
   // Fetch dentists with all statuses for admin
@@ -87,33 +98,26 @@ const DentistsManagement = () => {
         setLoading(true)
       }
       
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: 10,
+      const params = {
+        page: currentPage.toString(),
+        limit: '10',
         includeAll: 'true', // Include all statuses for admin
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
         ...(filterCity && { city: filterCity }),
         ...(filterStatus && { status: filterStatus }),
         ...(filterSpecialization && { specialization: filterSpecialization })
-      })
+      }
 
-      const response = await fetch(`http://localhost:5000/api/dentists?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const queryString = new URLSearchParams(params).toString()
+      const response = await dentistsAPI.getAll(queryString)
 
-      const data = await response.json()
-
-      if (data.success) {
-        setDentists(data.data)
-        setTotalPages(data.pagination.pages)
+      if (response.success && response.data) {
+        setDentists(response.data)
+        setTotalPages(response.pagination?.pages || 1)
+        setCurrentPage(response.pagination?.page || 1)
       }
     } catch (error) {
-      console.error('Error fetching dentists:', error)
+      console.error('❌ Error fetching dentists:', error)
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -126,78 +130,63 @@ const DentistsManagement = () => {
   // Fetch dentist statistics
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const response = await fetch('http://localhost:5000/api/dentists/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const response = await dentistsAPI.getStats()
 
-      const data = await response.json()
-
-      if (data.success) {
-        setStats(data.data)
+      if (response.success || response.data) {
+        setStats({
+          total: response.data.total || 0,
+          pending: response.data.pending || 0,
+          active: response.data.active || 0
+        })
       }
     } catch (error) {
       console.error('Error fetching dentist stats:', error)
     }
   }
 
-  // Approve dentist
-  const approveDentist = async (dentistId) => {
-    try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const response = await fetch(`http://localhost:5000/api/dentists/${dentistId}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        // Refresh the list
-        fetchDentists(true)
-        fetchStats()
-      } else {
-        alert(data.message || 'Failed to approve dentist')
-      }
-    } catch (error) {
-      console.error('Error approving dentist:', error)
-      alert('Failed to approve dentist')
-    }
+  // Approve dentist - opens confirmation modal
+  const handleApproveDentist = (dentist) => {
+    setDentistToAction(dentist)
+    setConfirmAction('approve')
+    setShowConfirmModal(true)
   }
 
-  // Suspend dentist
-  const suspendDentist = async (dentistId) => {
+  // Toggle dentist status (activate/deactivate) - opens confirmation modal
+  const handleToggleStatus = (dentist) => {
+    const action = dentist.user?.status === 'ACTIVE' ? 'deactivate' : 'activate'
+    setDentistToAction(dentist)
+    setConfirmAction(action)
+    setShowConfirmModal(true)
+  }
+
+  // Execute the confirmation action
+  const executeAction = async () => {
+    const dentist = dentistToAction
+    const action = confirmAction
+
     try {
-      const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
-      
-      const response = await fetch(`http://localhost:5000/api/dentists/${dentistId}/suspend`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      let response
 
-      const data = await response.json()
+      if (action === 'approve') {
+        response = await dentistsAPI.approve(dentist._id)
+      } else if (action === 'activate' || action === 'deactivate') {
+        response = await dentistsAPI.toggleStatus(dentist._id)
+      }
 
-      if (data.success) {
-        // Refresh the list
-        fetchDentists(true)
-        fetchStats()
+      if (response && response.success) {
+        // Refresh the list and stats
+        await Promise.all([fetchDentists(true), fetchStats()])
+        setShowConfirmModal(false)
+        setDentistToAction(null)
+        setConfirmAction(null)
       } else {
-        alert(data.message || 'Failed to suspend dentist')
+        alert(response?.message || `Failed to ${action} dentist`)
+        setShowConfirmModal(false)
       }
     } catch (error) {
-      console.error('Error suspending dentist:', error)
-      alert('Failed to suspend dentist')
+      console.error(`Error ${action}ing dentist:`, error)
+      alert(`Failed to ${action} dentist`)
+      setShowConfirmModal(false)
     }
   }
 
@@ -220,60 +209,24 @@ const DentistsManagement = () => {
 
   // Fetch data when filters change
   useEffect(() => {
-    if (!isFirstLoad) {
-      setCurrentPage(1)
-      fetchDentists(true)
-    }
+    setCurrentPage(1)
+    fetchDentists(true)
   }, [debouncedSearchTerm, filterCity, filterStatus, filterSpecialization])
 
   // Fetch data when page changes
   useEffect(() => {
-    if (!isFirstLoad) {
-      fetchDentists(false)
-    }
+    fetchDentists(false)
   }, [currentPage])
 
   // Initial load
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([fetchDentists(), fetchStats()])
-      setIsFirstLoad(false)
     }
     loadData()
   }, [])
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { 
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-        darkColor: 'bg-yellow-900/20 text-yellow-400 border-yellow-800',
-        icon: MdPending 
-      },
-      active: { 
-        color: 'bg-green-100 text-green-800 border-green-200', 
-        darkColor: 'bg-green-900/20 text-green-400 border-green-800',
-        icon: MdVerified 
-      },
-      suspended: { 
-        color: 'bg-red-100 text-red-800 border-red-200', 
-        darkColor: 'bg-red-900/20 text-red-400 border-red-800',
-        icon: MdBlock 
-      }
-    }
-
-    const config = statusConfig[status] || statusConfig.pending
-    const Icon = config.icon
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-        isDarkMode ? config.darkColor : config.color
-      }`}>
-        <Icon className="w-3 h-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    )
-  }
-
+  // Format helpers
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -282,13 +235,199 @@ const DentistsManagement = () => {
     })
   }
 
-  const formatTime = (timeString) => {
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
+  // Stats configuration
+  const statsConfig = [
+    {
+      label: 'Total Dentists',
+      value: stats.total,
+      icon: FaUserMd,
+      gradient: 'from-teal-600 to-cyan-600',
+      cols: 1
+    },
+    {
+      label: 'Pending Approval',
+      value: stats.pending,
+      icon: FaClock,
+      gradient: 'from-orange-500 to-orange-600',
+      cols: 1
+    },
+    {
+      label: 'Active Dentists',
+      value: stats.active,
+      icon: FaCheckCircle,
+      gradient: 'from-green-600 to-green-700',
+      cols: 1
+    }
+  ]
+
+  // Filter configuration
+  const filterProps = {
+    searchTerm,
+    onSearchChange: (e) => setSearchTerm(e.target.value),
+    debouncedSearchTerm,
+    filters: [
+      {
+        placeholder: 'All Statuses',
+        value: filterStatus,
+        onChange: (e) => setFilterStatus(e.target.value),
+        options: statusOptions
+      },
+      {
+        placeholder: 'All Cities',
+        value: filterCity,
+        onChange: (e) => setFilterCity(e.target.value),
+        options: cities
+      },
+      {
+        placeholder: 'All Specializations',
+        value: filterSpecialization,
+        onChange: (e) => setFilterSpecialization(e.target.value),
+        options: specializations
+      }
+    ],
+    onClearFilters: () => {
+      setSearchTerm('')
+      setDebouncedSearchTerm('')
+      setFilterCity('')
+      setFilterStatus('')
+      setFilterSpecialization('')
+      setCurrentPage(1)
+    },
+    filtering,
+    searchPlaceholder: 'Search dentists by name, license, or email...'
   }
+
+  // Table columns
+  const columns = [
+    { key: 'dentist', label: 'Dentist' },
+    { key: 'license', label: 'License & Specialization' },
+    { key: 'clinic', label: 'Clinic & Location' },
+    { key: 'status', label: 'Status' },
+    { key: 'registration', label: 'Registration Date' },
+    { key: 'actions', label: 'Actions' }
+  ]
+
+  // Render table row
+  const renderRow = (dentist) => (
+    <tr key={dentist.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+      {/* Dentist Info */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-10 w-10">
+            {dentist.user?.profileImage ? (
+              <img
+                className="h-10 w-10 rounded-full object-cover"
+                src={dentist.user.profileImage}
+                alt={`${dentist.firstName} ${dentist.lastName}`}
+              />
+            ) : (
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                isDarkMode 
+                  ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
+                  : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+              }`}>
+                <FaUserMd className="text-white text-lg" />
+              </div>
+            )}
+          </div>
+          <div className="ml-4">
+            <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+              Dr. {dentist.firstName} {dentist.lastName}
+            </div>
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {dentist.user?.email || 'N/A'}
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* License & Specialization */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+          {dentist.licenseNumber}
+        </div>
+        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {Array.isArray(dentist.specialization) ? dentist.specialization.join(', ') : dentist.specialization}
+        </div>
+      </td>
+
+      {/* Clinic & Location */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+          {dentist.clinic?.clinicName || 'N/A'}
+        </div>
+        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {dentist.city || 'N/A'}
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <StatusBadge 
+          status={dentist.user?.status === 'PENDING' ? 'pending' : dentist.user?.status === 'ACTIVE' ? 'active' : 'inactive'} 
+        />
+      </td>
+
+      {/* Registration Date */}
+      <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        {formatDate(dentist.user?.createdAt)}
+      </td>
+
+      {/* Actions */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <ActionButtons
+          actions={[
+            {
+              icon: FaEye,
+              onClick: () => {
+                setSelectedDentist(dentist)
+                setShowDetailsModal(true)
+              },
+              title: 'View Details',
+              variant: 'default',
+              key: 'view'
+            },
+            // Show approve/reject for PENDING dentists
+            ...(dentist.user?.status === 'PENDING' ? [
+              {
+                icon: FaCheck,
+                onClick: () => handleApproveDentist(dentist, 'approve'),
+                title: 'Approve',
+                variant: 'success',
+                key: 'approve'
+              },
+              {
+                icon: FaTimes,
+                onClick: () => handleApproveDentist(dentist, 'reject'),
+                title: 'Reject',
+                variant: 'danger',
+                key: 'reject'
+              }
+            ] : []),
+            // Show activate/deactivate for non-PENDING dentists
+            ...(dentist.user?.status === 'ACTIVE' ? [
+              {
+                icon: FaBan,
+                onClick: () => handleToggleStatus(dentist),
+                title: 'Deactivate',
+                variant: 'warning',
+                key: 'deactivate'
+              }
+            ] : []),
+            ...(dentist.user?.status === 'DEACTIVATED' ? [
+              {
+                icon: FaCheckCircle,
+                onClick: () => handleToggleStatus(dentist),
+                title: 'Activate',
+                variant: 'success',
+                key: 'activate'
+              }
+            ] : [])
+          ]}
+        />
+      </td>
+    </tr>
+  )
 
   const DentistDetailsModal = ({ dentist, onClose }) => {
     if (!dentist) return null
@@ -326,7 +465,7 @@ const DentistsManagement = () => {
                 </div>
                 <div>
                   <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Dr. {dentist.fullName}
+                    Dr. {dentist.firstName} {dentist.lastName}
                   </h2>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     License: {dentist.licenseNumber}
@@ -350,55 +489,61 @@ const DentistsManagement = () => {
             {/* Status and Actions */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {getStatusBadge(dentist.status)}
+                <StatusBadge 
+                  status={dentist.status === 'PENDING' ? 'pending' : dentist.status === 'ACTIVE' ? 'active' : 'inactive'} 
+                />
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   Registered on {formatDate(dentist.createdAt)}
                 </span>
               </div>
               <div className="flex gap-2">
-                {dentist.status === 'pending' && (
+                {dentist.status === 'PENDING' && (
                   <>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => approveDentist(dentist._id)}
-                      className="flex items-center gap-1"
+                    <button
+                      onClick={() => {
+                        onClose()
+                        handleApproveDentist(dentist, 'approve')
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
                     >
-                      <FaCheck className="w-3 h-3" />
+                      <FaCheck className="w-4 h-4" />
                       Approve
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => suspendDentist(dentist._id)}
-                      className="flex items-center gap-1"
+                    </button>
+                    <button
+                      onClick={() => {
+                        onClose()
+                        handleApproveDentist(dentist, 'reject')
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                     >
-                      <FaTimes className="w-3 h-3" />
+                      <FaTimes className="w-4 h-4" />
                       Reject
-                    </Button>
+                    </button>
                   </>
                 )}
-                {dentist.status === 'active' && (
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    onClick={() => suspendDentist(dentist._id)}
-                    className="flex items-center gap-1"
+                {dentist.status === 'ACTIVE' && (
+                  <button
+                    onClick={() => {
+                      onClose()
+                      handleToggleStatus(dentist)
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                   >
-                    <MdBlock className="w-3 h-3" />
-                    Suspend
-                  </Button>
+                    <FaTimes className="w-4 h-4" />
+                    Deactivate
+                  </button>
                 )}
-                {dentist.status === 'suspended' && (
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => approveDentist(dentist._id)}
-                    className="flex items-center gap-1"
+                {dentist.status === 'DEACTIVATED' && (
+                  <button
+                    onClick={() => {
+                      onClose()
+                      handleToggleStatus(dentist)
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
                   >
-                    <FaCheck className="w-3 h-3" />
-                    Reactivate
-                  </Button>
+                    <FaCheck className="w-4 h-4" />
+                    Activate
+                  </button>
                 )}
               </div>
             </div>
@@ -415,23 +560,33 @@ const DentistsManagement = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Name:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.fullName}</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
+                      Dr. {dentist.firstName} {dentist.lastName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.phoneNumber}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Gender:</span>
                     <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                      {dentist.gender.charAt(0).toUpperCase() + dentist.gender.slice(1)}
+                      {dentist.gender?.charAt(0).toUpperCase() + dentist.gender?.slice(1) || 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Birth Date:</span>
                     <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                      {formatDate(dentist.birthDate)}
+                      {dentist.birthDate ? formatDate(dentist.birthDate) : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.address.city}</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city || 'N/A'}</span>
                   </div>
                 </div>
               </Card>
@@ -440,58 +595,37 @@ const DentistsManagement = () => {
                 <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <FaEnvelope className="w-4 h-4 text-teal-600" />
-                  Contact Information
+                  <FaCertificate className="w-4 h-4 text-teal-600" />
+                  Professional Information
                 </h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.email}</span>
+                  <div>
+                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      License Number
+                    </span>
+                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {dentist.licenseNumber}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.phone}</span>
+                  <div>
+                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Specialization
+                    </span>
+                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {dentist.specialization || 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Years of Experience
+                    </span>
+                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {dentist.yearsOfExperience || 'N/A'} years
+                    </span>
                   </div>
                 </div>
               </Card>
             </div>
-
-            {/* Professional Information */}
-            <Card className="p-4">
-              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                <FaCertificate className="w-4 h-4 text-teal-600" />
-                Professional Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    License Number
-                  </span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {dentist.licenseNumber}
-                  </span>
-                </div>
-                <div>
-                  <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Specializations
-                  </span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {dentist.specialization.map((spec, index) => (
-                      <span
-                        key={index}
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          isDarkMode ? 'bg-teal-900/20 text-teal-400' : 'bg-teal-100 text-teal-800'
-                        }`}
-                      >
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
 
             {/* Clinic Information */}
             {dentist.clinic && (
@@ -507,38 +641,12 @@ const DentistsManagement = () => {
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Clinic Name:</span>
                     <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.clinicName}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Location:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.city}</span>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Working Hours */}
-            {dentist.workingHours && dentist.workingHours.length > 0 && (
-              <Card className="p-4">
-                <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  <FaClock className="w-4 h-4 text-teal-600" />
-                  Working Hours
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {dentist.workingHours.map((schedule, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>{schedule.day}:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                        {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                      </span>
+                  {dentist.clinic.city && (
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Location:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.city}</span>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Appointment Duration:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.appointmentDuration} minutes</span>
-                  </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -550,369 +658,39 @@ const DentistsManagement = () => {
     )
   }
 
-  if (loading && isFirstLoad) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Dentist Management
-          </h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Review and approve dentist registrations
-          </p>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Dentist Management"
+        subtitle="Review and approve dentist registrations"
+        icon={FaUserMd}
+      />
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Dentists
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.total}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
-              <FaUsers className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Pending Approval
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.pending}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-600 to-yellow-700 flex items-center justify-center">
-              <MdPending className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Active Dentists
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.active}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center">
-              <MdVerified className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Suspended
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {stats.suspended}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center">
-              <MdBlock className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Statistics */}
+      <StatsOverview stats={statsConfig} />
 
       {/* Filters */}
-      <Card className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              icon={FaSearch}
-              placeholder="Search dentists by name, license number, or specialization..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className={`px-4 py-2 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="">All Statuses</option>
-              {statusOptions.map(status => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-            
-            <select
-              value={filterCity}
-              onChange={(e) => setFilterCity(e.target.value)}
-              className={`px-4 py-2 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="">All Cities</option>
-              {cities.map(city => (
-                <option key={city.value} value={city.value}>
-                  {city.label}
-                </option>
-              ))}
-            </select>
+      <FilterBar {...filterProps} />
 
-            <select
-              value={filterSpecialization}
-              onChange={(e) => setFilterSpecialization(e.target.value)}
-              className={`px-4 py-2 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                isDarkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="">All Specializations</option>
-              {specializations.map(spec => (
-                <option key={spec.value} value={spec.value}>
-                  {spec.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        data={dentists}
+        columns={columns}
+        renderRow={renderRow}
+        loading={filtering}
+        emptyMessage="No dentists found"
+        emptyIcon={FaUserMd}
+      />
 
-      {/* Dentists List */}
-      <Card>
-        {filtering && (
-          <div className="flex items-center justify-center py-8">
-            <LoadingSpinner />
-          </div>
-        )}
-        
-        {!filtering && dentists.length === 0 && (
-          <div className="text-center py-12">
-            <FaUserMd className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              No dentists found
-            </h3>
-            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {searchTerm || filterCity || filterStatus || filterSpecialization
-                ? 'Try adjusting your search criteria'
-                : 'No dentist registrations yet'
-              }
-            </p>
-          </div>
-        )}
-
-        {!filtering && dentists.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                <tr>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Dentist
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    License & Specialization
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Clinic & Location
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Status
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Registration Date
-                  </th>
-                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                  }`}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                {dentists.map((dentist) => (
-                  <tr key={dentist._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-                          <FaUserMd className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="ml-3">
-                          <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            Dr. {dentist.fullName}
-                          </div>
-                          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {dentist.user?.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {dentist.licenseNumber}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {dentist.specialization.slice(0, 2).map((spec, index) => (
-                          <span
-                            key={index}
-                            className={`px-2 py-1 rounded text-xs ${
-                              isDarkMode ? 'bg-teal-900/20 text-teal-400' : 'bg-teal-100 text-teal-800'
-                            }`}
-                          >
-                            {spec}
-                          </span>
-                        ))}
-                        {dentist.specialization.length > 2 && (
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            +{dentist.specialization.length - 2} more
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {dentist.clinic?.clinicName || 'N/A'}
-                      </div>
-                      <div className={`text-sm flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        <FaMapMarkerAlt className="w-3 h-3" />
-                        {dentist.address.city}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(dentist.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {formatDate(dentist.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedDentist(dentist)
-                            setShowDetailsModal(true)
-                          }}
-                          className={`p-2 rounded-lg transition-colors ${
-                            isDarkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                          }`}
-                          title="View Details"
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </button>
-                        
-                        {dentist.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => approveDentist(dentist._id)}
-                              className="p-2 rounded-lg text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
-                              title="Approve"
-                            >
-                              <FaCheck className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => suspendDentist(dentist._id)}
-                              className="p-2 rounded-lg text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
-                              title="Reject"
-                            >
-                              <FaTimes className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                        
-                        {dentist.status === 'active' && (
-                          <button
-                            onClick={() => suspendDentist(dentist._id)}
-                            className="p-2 rounded-lg text-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 transition-colors"
-                            title="Suspend"
-                          >
-                            <MdBlock className="w-4 h-4" />
-                          </button>
-                        )}
-                        
-                        {dentist.status === 'suspended' && (
-                          <button
-                            onClick={() => approveDentist(dentist._id)}
-                            className="p-2 rounded-lg text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
-                            title="Reactivate"
-                          >
-                            <FaCheck className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Page {currentPage} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
 
       {/* Dentist Details Modal */}
       {showDetailsModal && (
@@ -924,6 +702,21 @@ const DentistsManagement = () => {
           }}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false)
+          setConfirmAction(null)
+          setDentistToAction(null)
+        }}
+        onConfirm={executeAction}
+        item={dentistToAction}
+        action={confirmAction}
+        itemName={dentistToAction ? `Dr. ${dentistToAction.firstName} ${dentistToAction.lastName}` : ''}
+        itemType="dentist"
+      />
     </div>
   )
 }

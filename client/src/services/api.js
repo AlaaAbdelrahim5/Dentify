@@ -63,12 +63,19 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
+        const error = new Error(errorMessage);
+        error.response = { data, status: response.status };
+        throw error;
       }
 
       return data;
     } catch (error) {
       console.error('API request failed:', error);
+      // If error doesn't have response property, add it
+      if (!error.response && error.message.includes('HTTP error')) {
+        error.response = { data: { message: error.message }, status: 400 };
+      }
       throw error;
     }
   }
@@ -158,10 +165,21 @@ export const dentistsAPI = {
   // Get dentists statistics
   getStats: () => ApiService.get('/dentists/stats'),
   
-  // Get all dentists for the clinic
-  getAll: (clinicId = null) => {
-    const params = clinicId ? `?clinicId=${clinicId}` : '';
-    return ApiService.get(`/dentists${params}`);
+  // Get all dentists with optional query parameters
+  getAll: (paramsOrClinicId = null) => {
+    // Support both old API (clinicId number) and new API (query string)
+    let queryString = '';
+    if (typeof paramsOrClinicId === 'string') {
+      // New API: query string passed directly
+      queryString = paramsOrClinicId ? `?${paramsOrClinicId}` : '';
+    } else if (typeof paramsOrClinicId === 'number') {
+      // Old API: clinicId number
+      queryString = `?clinicId=${paramsOrClinicId}`;
+    } else if (typeof paramsOrClinicId === 'object' && paramsOrClinicId !== null) {
+      // Object with params
+      queryString = `?${new URLSearchParams(paramsOrClinicId).toString()}`;
+    }
+    return ApiService.get(`/dentists${queryString}`);
   },
   
   // Get all dentists for the authenticated clinic
