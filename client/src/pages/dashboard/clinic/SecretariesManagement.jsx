@@ -37,6 +37,7 @@ import SecretaryModal from '../../../components/clinic/SecretaryModal'
 const SecretariesManagement = () => {
   const { isDarkMode } = useTheme()
   const [secretaries, setSecretaries] = useState([])
+  const [filteredSecretaries, setFilteredSecretaries] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtering, setFiltering] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -85,37 +86,8 @@ const SecretariesManagement = () => {
       if (response && response.success) {
         const secretariesData = response.data || []
         
-        // Apply filters
-        let filtered = secretariesData
-        
-        if (debouncedSearchTerm) {
-          filtered = filtered.filter(secretary => {
-            const fullName = `${secretary.firstName} ${secretary.lastName}`.toLowerCase()
-            const email = secretary.userId?.email?.toLowerCase() || ''
-            const city = secretary.address?.city?.toLowerCase() || ''
-            const searchLower = debouncedSearchTerm.toLowerCase()
-            
-            return fullName.includes(searchLower) ||
-                   email.includes(searchLower) ||
-                   city.includes(searchLower)
-          })
-        }
-        
-        if (filterGender) {
-          filtered = filtered.filter(secretary => 
-            secretary.gender.toLowerCase() === filterGender.toLowerCase()
-          )
-        }
-        
-        if (filterStatus) {
-          const isActive = filterStatus === 'true'
-          filtered = filtered.filter(secretary => {
-            const status = secretary.userId?.status?.toLowerCase() === 'active'
-            return status === isActive
-          })
-        }
-        
-        setSecretaries(filtered)
+        // Store ALL secretaries (no filtering here)
+        setSecretaries(secretariesData)
         
         // Calculate stats from all data
         const total = secretariesData.length
@@ -163,12 +135,49 @@ const SecretariesManagement = () => {
     }
   }, [searchTerm])
 
-  // Re-fetch when filters change
+  // Client-side filtering (like Dentists component)
   useEffect(() => {
     if (!isFirstLoad) {
-      fetchSecretaries(true)
+      setFiltering(true)
     }
-  }, [debouncedSearchTerm, filterGender, filterStatus, isFirstLoad])
+    
+    let filtered = secretaries
+
+    // Search filter
+    if (debouncedSearchTerm) {
+      filtered = filtered.filter(secretary => {
+        const fullName = `${secretary.firstName} ${secretary.lastName}`.toLowerCase()
+        const email = secretary.userId?.email?.toLowerCase() || ''
+        const city = secretary.address?.city?.toLowerCase() || ''
+        const searchLower = debouncedSearchTerm.toLowerCase()
+        
+        return fullName.includes(searchLower) ||
+               email.includes(searchLower) ||
+               city.includes(searchLower)
+      })
+    }
+
+    // Gender filter
+    if (filterGender) {
+      filtered = filtered.filter(secretary => 
+        secretary.gender.toLowerCase() === filterGender.toLowerCase()
+      )
+    }
+
+    // Status filter
+    if (filterStatus) {
+      const isActive = filterStatus === 'true'
+      filtered = filtered.filter(secretary => {
+        const status = secretary.userId?.status?.toLowerCase() === 'active'
+        return status === isActive
+      })
+    }
+
+    setFilteredSecretaries(filtered)
+    if (!isFirstLoad) {
+      setFiltering(false)
+    }
+  }, [secretaries, debouncedSearchTerm, filterGender, filterStatus, isFirstLoad])
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
@@ -238,6 +247,7 @@ const SecretariesManagement = () => {
 
       if (response.success) {
         setShowConfirmModal(false)
+        // Refresh to get updated data
         fetchSecretaries(true)
       } else {
         setError(`Failed to ${action} secretary: ` + (response.error || response.message || 'Unknown error'))
@@ -280,8 +290,7 @@ const SecretariesManagement = () => {
           ))
           setShowEditModal(false)
           setSelectedSecretary(null)
-          // Refresh to update stats
-          fetchSecretaries(true)
+          // No need to refresh - client-side filtering will update automatically
         } else {
           setError(response.message || 'Failed to update secretary')
         }
@@ -310,8 +319,7 @@ const SecretariesManagement = () => {
           // Add the new secretary to the list
           setSecretaries(prev => [response.data, ...prev])
           setShowAddModal(false)
-          // Refresh to update stats
-          fetchSecretaries(true)
+          // No need to refresh - client-side filtering will update automatically
         } else {
           setError(response.message || 'Failed to create secretary')
         }
@@ -474,7 +482,7 @@ const SecretariesManagement = () => {
 
   const tableProps = {
     columns,
-    data: secretaries,
+    data: filteredSecretaries,
     renderRow,
     loading: filtering,
     emptyMessage: searchTerm || filterGender || filterStatus ? 'Try adjusting your search criteria' : 'No secretaries yet',
@@ -704,7 +712,7 @@ const SecretariesManagement = () => {
     )
   }
 
-  if (loading && secretaries.length === 0) {
+  if (loading && filteredSecretaries.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <LoadingSpinner />
