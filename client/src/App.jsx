@@ -21,37 +21,63 @@ const AuthRouter = () => {
   const [user, setUser] = useState(null)
   const location = useLocation()
 
+  // Function to check auth state
+  const checkAuthState = async () => {
+    try {
+      const authResult = await authUtils.initializeAuth()
+      setIsAuthenticated(authResult)
+      if (authResult) {
+        setUser(authUtils.getCurrentUser())
+      } else {
+        setUser(null)
+      }
+    } catch (error) {
+      console.error('Failed to check authentication:', error)
+      setIsAuthenticated(false)
+      setUser(null)
+    }
+  }
+
+  // Initial authentication check
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Check if user just logged out - this should be the first check
-        if (authUtils.wasLoggedOut()) {
-          console.log('App: User just logged out, clearing auth state and clearing logout flag')
-          setIsAuthenticated(false)
-          setUser(null)
-          // Clear the logout flag after handling
-          authUtils.clearLogoutFlag()
-          setIsInitializing(false)
-          return
-        }
-
-        const authResult = await authUtils.initializeAuth()
-        setIsAuthenticated(authResult)
-        if (authResult) {
-          setUser(authUtils.getCurrentUser())
-        } else {
-          setUser(null)
-        }
-      } catch (error) {
-        console.error('Failed to initialize authentication:', error)
-        setIsAuthenticated(false)
-        setUser(null)
+        await checkAuthState()
       } finally {
         setIsInitializing(false)
       }
     }
 
     initializeApp()
+  }, [])
+
+  // Listen for logout events (storage changes)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // Check if logout flag was set
+      if (e.key === 'dentify_logout_performed' && e.newValue === 'true') {
+        console.log('App: Logout detected via storage event')
+        setIsAuthenticated(false)
+        setUser(null)
+      }
+    }
+
+    // Listen for storage changes (works across tabs and after logout)
+    window.addEventListener('storage', handleStorageChange)
+
+    // Also create a custom event listener for same-tab logout
+    const handleLogout = () => {
+      console.log('App: Logout detected via custom event')
+      setIsAuthenticated(false)
+      setUser(null)
+    }
+
+    window.addEventListener('logout', handleLogout)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('logout', handleLogout)
+    }
   }, [])
 
   if (isInitializing) {
@@ -67,8 +93,7 @@ const AuthRouter = () => {
   }
 
   // Only redirect if user is authenticated AND we have valid user data
-  // Don't redirect if user just logged out
-  if (isAuthenticated && user && !authUtils.wasLoggedOut() && 
+  if (isAuthenticated && user && 
       (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup')) {
     const dashboardRoute = authUtils.getDashboardRoute()
     console.log('AuthRouter: Redirecting authenticated user to dashboard:', dashboardRoute)

@@ -20,8 +20,8 @@ export { default as ActionButtons } from './ActionButtons'
 export { default as PageHeader } from './PageHeader'
 
 // Specific Modals & Sidebars
-export { default as ClinicModal } from './clinic/ClinicModal'
-export { default as RadiologyModal } from './radiology/RadiologyModal'
+export { default as ClinicModal } from './admin/ClinicModal'
+export { default as RadiologyModal } from './admin/RadiologyModal'
 export { default as AdminSidebar } from './admin/AdminSidebar'
 export { default as ClinicSidebar } from './clinic/ClinicSidebar'
 export { default as SecretaryModal } from './clinic/SecretaryModal'

@@ -205,6 +205,10 @@ export const authUtils = {
       sessionStorage.removeItem('dentify_logout_performed');
       // Set a flag to indicate logout was performed
       localStorage.setItem('dentify_logout_performed', 'true');
+      
+      // Dispatch custom logout event for same-tab logout detection
+      window.dispatchEvent(new Event('logout'));
+      
       console.log('Logout completed successfully');
     } catch (error) {
       console.error('Error during logout:', error);
@@ -237,6 +241,8 @@ export const authUtils = {
       authUtils.clearUser();
       authUtils.clearTokens();
       localStorage.removeItem(authUtils.REMEMBER_KEY);
+      // Clear the flag immediately to prevent multiple checks
+      authUtils.clearLogoutFlag();
       return false;
     }
     
@@ -253,8 +259,10 @@ export const authUtils = {
     });
 
     if (!user) {
-      console.log('No user found, logging out');
-      authUtils.logout();
+      console.log('No user found, cleaning up');
+      // Don't call logout() here as it sets the logout flag
+      authUtils.clearUser();
+      authUtils.clearTokens();
       return false;
     }
 
@@ -283,17 +291,20 @@ export const authUtils = {
             return true;
           } else {
             console.log('Token refresh failed:', data.error);
-            authUtils.logout();
+            authUtils.clearUser();
+            authUtils.clearTokens();
             return false;
           }
         } catch (error) {
           console.error('Token refresh failed:', error);
-          authUtils.logout();
+          authUtils.clearUser();
+          authUtils.clearTokens();
           return false;
         }
       } else {
-        console.log('No refresh token available, logging out');
-        authUtils.logout();
+        console.log('No refresh token available, cleaning up');
+        authUtils.clearUser();
+        authUtils.clearTokens();
         return false;
       }
     }

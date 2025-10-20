@@ -14,16 +14,6 @@ const Home = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // If user just logged out, don't redirect
-        if (authUtils.wasLoggedOut()) {
-          console.log('Home: User just logged out, staying on home page and clearing logout flag')
-          setIsAuthenticated(false)
-          setIsChecking(false)
-          // Clear the logout flag since we handled it
-          authUtils.clearLogoutFlag()
-          return
-        }
-
         const authResult = await authUtils.isAuthenticated()
         setIsAuthenticated(authResult)
       } catch (error) {
@@ -35,6 +25,18 @@ const Home = () => {
     }
 
     checkAuth()
+
+    // Listen for logout events
+    const handleLogout = () => {
+      console.log('Home: Logout detected')
+      setIsAuthenticated(false)
+    }
+
+    window.addEventListener('logout', handleLogout)
+
+    return () => {
+      window.removeEventListener('logout', handleLogout)
+    }
   }, [])
 
   // If user is authenticated and didn't just logout, redirect to their dashboard

@@ -31,16 +31,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
       console.log('Navbar: Starting logout process')
-      await authUtils.logout()
-      console.log('Navbar: Logout completed, navigating to home page')
-      navigate('/', { replace: true })
+      authUtils.logout()
+      console.log('Navbar: Logout completed, navigating to login page')
+      // Navigate to login page after logout
+      navigate('/login', { replace: true })
     } catch (error) {
       console.error('Navbar: Error during logout:', error)
-      // Even if there's an error, try to navigate to home
-      navigate('/', { replace: true })
+      // Even if there's an error, try to navigate to login
+      navigate('/login', { replace: true })
     }
   }
 

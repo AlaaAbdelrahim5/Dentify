@@ -91,6 +91,9 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+// Import sequence sync utilities
+const { syncUserSequence } = require('./utils/sequenceSync');
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, closing server...');
@@ -109,6 +112,10 @@ app.listen(PORT, async () => {
     // Test database connection on startup
     await prisma.$connect();
     console.log(`✅ Database connected successfully`);
+    
+    // Sync database sequences to prevent ID conflicts
+    await syncUserSequence(prisma);
+    
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   } catch (error) {
