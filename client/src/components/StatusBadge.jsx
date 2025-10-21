@@ -40,7 +40,10 @@ const StatusBadge = ({
     label = activeLabel
   } else if (statusType === 'pending') {
     Icon = InactiveIcon
-    label = inactiveLabel
+    label = 'Pending'
+  } else if (statusType === 'rejected') {
+    Icon = InactiveIcon
+    label = 'Rejected'
   }
 
   // Color classes based on status
@@ -53,9 +56,13 @@ const StatusBadge = ({
       ? isDarkMode
         ? 'bg-orange-900/20 text-orange-400 border-orange-800'
         : 'bg-orange-100 text-orange-700 border-orange-200'
-      : isDarkMode
+      : statusType === 'rejected'
+      ? isDarkMode
         ? 'bg-red-900/20 text-red-400 border-red-800'
         : 'bg-red-100 text-red-800 border-red-200'
+      : isDarkMode
+        ? 'bg-gray-900/20 text-gray-400 border-gray-800'
+        : 'bg-gray-100 text-gray-800 border-gray-200'
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${colorClasses}`}>

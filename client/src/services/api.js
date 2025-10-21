@@ -200,6 +200,9 @@ export const dentistsAPI = {
   // Approve dentist (Admin only)
   approve: (id) => ApiService.post(`/dentists/${id}/approve`),
   
+  // Reject dentist (Admin only)
+  reject: (id, reason) => ApiService.post(`/dentists/${id}/reject`, { reason }),
+  
   // Toggle dentist status (Admin and Clinic)
   toggleStatus: (id) => ApiService.patch(`/dentists/${id}/toggle-status`),
   

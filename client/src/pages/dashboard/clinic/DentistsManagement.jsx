@@ -61,6 +61,7 @@ const DentistsManagement = () => {
     total: 0,
     active: 0,
     pending: 0,
+    rejected: 0,
     inactive: 0
   })
 
@@ -102,9 +103,10 @@ const DentistsManagement = () => {
         const total = dentistsData.length
         const active = dentistsData.filter(d => d.user?.status === 'ACTIVE').length
         const pending = dentistsData.filter(d => d.user?.status === 'PENDING').length
+        const rejected = dentistsData.filter(d => d.user?.status === 'REJECTED').length
         const inactive = dentistsData.filter(d => d.user?.status === 'DEACTIVATED').length
         
-        setStats({ total, active, pending, inactive })
+        setStats({ total, active, pending, rejected, inactive })
       } else {
         setError(response?.message || 'Failed to load dentists')
       }
@@ -333,15 +335,15 @@ const DentistsManagement = () => {
       cols: 1
     },
     {
-      label: 'Pending Approval',
+      label: 'Pending',
       value: stats.pending,
       icon: FaClock,
       gradient: 'from-orange-500 to-orange-600',
       cols: 1
     },
     {
-      label: 'Inactive',
-      value: stats.inactive,
+      label: 'Rejected',
+      value: stats.rejected,
       icon: FaTimesCircle,
       gradient: 'from-red-600 to-red-700',
       cols: 1
@@ -366,6 +368,7 @@ const DentistsManagement = () => {
         options: [
           { value: 'ACTIVE', label: 'Active' },
           { value: 'PENDING', label: 'Pending Approval' },
+          { value: 'REJECTED', label: 'Rejected' },
           { value: 'DEACTIVATED', label: 'Inactive' }
         ]
       }
@@ -454,12 +457,18 @@ const DentistsManagement = () => {
           status={
             dentist.userId?.status === 'ACTIVE' ? 'active' : 
             dentist.userId?.status === 'PENDING' ? 'pending' : 
+            dentist.userId?.status === 'REJECTED' ? 'rejected' :
+            dentist.userId?.status === 'DEACTIVATED' ? 'inactive' : 
             'inactive'
           }
           activeIcon={FaCheckCircle}
           inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
           activeLabel="Active"
-          inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+          inactiveLabel={
+            dentist.userId?.status === 'PENDING' ? 'Pending' : 
+            dentist.userId?.status === 'REJECTED' ? 'Rejected' :
+            'Inactive'
+          }
         />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -472,8 +481,8 @@ const DentistsManagement = () => {
               variant: 'default',
               key: 'view'
             },
-            // Only show edit and toggle for non-PENDING dentists
-            ...(dentist.userId?.status !== 'PENDING' ? [
+            // Only show edit and toggle for ACTIVE and DEACTIVATED dentists (not PENDING or REJECTED)
+            ...(dentist.userId?.status === 'ACTIVE' || dentist.userId?.status === 'DEACTIVATED' ? [
               {
                 icon: FaEdit,
                 onClick: () => handleEditDentist(dentist),
@@ -558,7 +567,9 @@ const DentistsManagement = () => {
                   {/* Status indicator on avatar */}
                   <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
                     dentist.userId?.status === 'ACTIVE' ? 'bg-green-500' : 
-                    dentist.userId?.status === 'PENDING' ? 'bg-yellow-500' : 'bg-red-500'
+                    dentist.userId?.status === 'PENDING' ? 'bg-yellow-500' : 
+                    dentist.userId?.status === 'REJECTED' ? 'bg-red-500' :
+                    'bg-gray-500'
                   }`}>
                     {dentist.userId?.status === 'ACTIVE' ? (
                       <FaCheckCircle className="w-3 h-3 text-white" />
@@ -583,12 +594,17 @@ const DentistsManagement = () => {
                     status={
                       dentist.userId?.status === 'ACTIVE' ? 'active' : 
                       dentist.userId?.status === 'PENDING' ? 'pending' : 
+                      dentist.userId?.status === 'REJECTED' ? 'rejected' :
                       'inactive'
                     }
                     activeIcon={FaCheckCircle}
                     inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
                     activeLabel="Active"
-                    inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+                    inactiveLabel={
+                      dentist.userId?.status === 'PENDING' ? 'Pending' : 
+                      dentist.userId?.status === 'REJECTED' ? 'Rejected' :
+                      'Inactive'
+                    }
                   />
                 </div>
               </div>
@@ -940,12 +956,17 @@ const DentistsManagement = () => {
                         status={
                           dentist.userId?.status === 'ACTIVE' ? 'active' : 
                           dentist.userId?.status === 'PENDING' ? 'pending' : 
+                          dentist.userId?.status === 'REJECTED' ? 'rejected' :
                           'inactive'
                         }
                         activeIcon={FaCheckCircle}
                         inactiveIcon={dentist.userId?.status === 'PENDING' ? FaClock : FaTimesCircle}
                         activeLabel="Active"
-                        inactiveLabel={dentist.userId?.status === 'PENDING' ? 'Pending' : 'Inactive'}
+                        inactiveLabel={
+                          dentist.userId?.status === 'PENDING' ? 'Pending' : 
+                          dentist.userId?.status === 'REJECTED' ? 'Rejected' :
+                          'Inactive'
+                        }
                       />
                     </div>
                     <div>

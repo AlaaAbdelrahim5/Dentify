@@ -30,6 +30,8 @@ const ConfirmationModal = ({
   const isDeactivate = action === 'deactivate'
   const isDelete = action === 'delete'
   const isActivate = action === 'activate'
+  const isApprove = action === 'approve'
+  const isReject = action === 'reject'
 
   const getActionConfig = () => {
     if (isDelete) {
@@ -49,6 +51,24 @@ const ConfirmationModal = ({
         gradient: 'from-orange-500 to-red-500',
         shadowColor: 'shadow-orange-500/50',
         icon: FaTimesCircle
+      }
+    } else if (isReject) {
+      return {
+        title: `Reject ${itemType}?`,
+        message: `Are you sure you want to reject`,
+        description: `The ${itemType.toLowerCase()} registration will be rejected and removed from the system.`,
+        gradient: 'from-red-500 to-red-600',
+        shadowColor: 'shadow-red-500/50',
+        icon: FaTimesCircle
+      }
+    } else if (isApprove) {
+      return {
+        title: `Approve ${itemType}?`,
+        message: `Are you sure you want to approve`,
+        description: `The ${itemType.toLowerCase()} will be activated and gain access to the system.`,
+        gradient: 'from-green-500 to-emerald-500',
+        shadowColor: 'shadow-green-500/50',
+        icon: FaCheckCircle
       }
     } else {
       return {
@@ -124,7 +144,7 @@ const ConfirmationModal = ({
               onClick={onConfirm}
               className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg bg-gradient-to-r ${config.gradient} ${config.shadowColor}`}
             >
-              {isDelete ? 'Delete' : isDeactivate ? 'Deactivate' : 'Activate'}
+              {isDelete ? 'Delete' : isDeactivate ? 'Deactivate' : isReject ? 'Reject' : isApprove ? 'Approve' : 'Activate'}
             </button>
           </div>
         </div>

@@ -86,6 +86,7 @@ const DentistsManagement = () => {
   const statusOptions = [
     { value: 'PENDING', label: 'Pending Approval' },
     { value: 'ACTIVE', label: 'Active' },
+    { value: 'REJECTED', label: 'Rejected' },
     { value: 'DEACTIVATED', label: 'Deactivated' }
   ]
 
@@ -151,6 +152,13 @@ const DentistsManagement = () => {
     setShowConfirmModal(true)
   }
 
+  // Reject dentist - opens confirmation modal
+  const handleRejectDentist = (dentist) => {
+    setDentistToAction(dentist)
+    setConfirmAction('reject')
+    setShowConfirmModal(true)
+  }
+
   // Toggle dentist status (activate/deactivate) - opens confirmation modal
   const handleToggleStatus = (dentist) => {
     const action = dentist.user?.status === 'ACTIVE' ? 'deactivate' : 'activate'
@@ -168,9 +176,11 @@ const DentistsManagement = () => {
       let response
 
       if (action === 'approve') {
-        response = await dentistsAPI.approve(dentist._id)
+        response = await dentistsAPI.approve(dentist.userId)
+      } else if (action === 'reject') {
+        response = await dentistsAPI.reject(dentist.userId, 'Rejected by admin')
       } else if (action === 'activate' || action === 'deactivate') {
-        response = await dentistsAPI.toggleStatus(dentist._id)
+        response = await dentistsAPI.toggleStatus(dentist.userId)
       }
 
       if (response && response.success) {
@@ -364,7 +374,13 @@ const DentistsManagement = () => {
       {/* Status */}
       <td className="px-6 py-4 whitespace-nowrap">
         <StatusBadge 
-          status={dentist.user?.status === 'PENDING' ? 'pending' : dentist.user?.status === 'ACTIVE' ? 'active' : 'inactive'} 
+          status={
+            dentist.user?.status === 'PENDING' ? 'pending' : 
+            dentist.user?.status === 'ACTIVE' ? 'active' : 
+            dentist.user?.status === 'REJECTED' ? 'rejected' :
+            dentist.user?.status === 'DEACTIVATED' ? 'inactive' : 
+            'inactive'
+          } 
         />
       </td>
 
@@ -391,20 +407,30 @@ const DentistsManagement = () => {
             ...(dentist.user?.status === 'PENDING' ? [
               {
                 icon: FaCheck,
-                onClick: () => handleApproveDentist(dentist, 'approve'),
+                onClick: () => handleApproveDentist(dentist),
                 title: 'Approve',
                 variant: 'success',
                 key: 'approve'
               },
               {
                 icon: FaTimes,
-                onClick: () => handleApproveDentist(dentist, 'reject'),
+                onClick: () => handleRejectDentist(dentist),
                 title: 'Reject',
                 variant: 'danger',
                 key: 'reject'
               }
             ] : []),
-            // Show activate/deactivate for non-PENDING dentists
+            // Show approve for REJECTED dentists
+            ...(dentist.user?.status === 'REJECTED' ? [
+              {
+                icon: FaCheck,
+                onClick: () => handleApproveDentist(dentist),
+                title: 'Approve',
+                variant: 'success',
+                key: 'approve'
+              }
+            ] : []),
+            // Show activate/deactivate for ACTIVE/DEACTIVATED dentists
             ...(dentist.user?.status === 'ACTIVE' ? [
               {
                 icon: FaBan,
@@ -487,22 +513,28 @@ const DentistsManagement = () => {
           <div className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-6">
             {/* Status and Actions */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <StatusBadge 
-                  status={dentist.status === 'PENDING' ? 'pending' : dentist.status === 'ACTIVE' ? 'active' : 'inactive'} 
+                  status={
+                    dentist.user?.status === 'PENDING' ? 'pending' : 
+                    dentist.user?.status === 'ACTIVE' ? 'active' : 
+                    dentist.user?.status === 'REJECTED' ? 'rejected' :
+                    dentist.user?.status === 'DEACTIVATED' ? 'inactive' : 
+                    'inactive'
+                  } 
                 />
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Registered on {formatDate(dentist.createdAt)}
+                  Registered on {formatDate(dentist.user?.createdAt)}
                 </span>
               </div>
-              <div className="flex gap-2">
-                {dentist.status === 'PENDING' && (
+              <div className="flex flex-wrap gap-2">
+                {dentist.user?.status === 'PENDING' && (
                   <>
                     <button
                       onClick={() => {
                         onClose()
-                        handleApproveDentist(dentist, 'approve')
+                        handleApproveDentist(dentist)
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
                     >
@@ -512,7 +544,7 @@ const DentistsManagement = () => {
                     <button
                       onClick={() => {
                         onClose()
-                        handleApproveDentist(dentist, 'reject')
+                        handleRejectDentist(dentist)
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                     >
@@ -521,19 +553,31 @@ const DentistsManagement = () => {
                     </button>
                   </>
                 )}
-                {dentist.status === 'ACTIVE' && (
+                {dentist.user?.status === 'REJECTED' && (
+                  <button
+                    onClick={() => {
+                      onClose()
+                      handleApproveDentist(dentist)
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
+                  >
+                    <FaCheck className="w-4 h-4" />
+                    Approve
+                  </button>
+                )}
+                {dentist.user?.status === 'ACTIVE' && (
                   <button
                     onClick={() => {
                       onClose()
                       handleToggleStatus(dentist)
                     }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-colors"
                   >
-                    <FaTimes className="w-4 h-4" />
+                    <FaBan className="w-4 h-4" />
                     Deactivate
                   </button>
                 )}
-                {dentist.status === 'DEACTIVATED' && (
+                {dentist.user?.status === 'DEACTIVATED' && (
                   <button
                     onClick={() => {
                       onClose()
@@ -566,11 +610,11 @@ const DentistsManagement = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.email}</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.email || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.phoneNumber}</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.phone || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Gender:</span>

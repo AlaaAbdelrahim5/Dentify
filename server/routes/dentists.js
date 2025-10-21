@@ -546,10 +546,10 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
       return notFoundResponse(res, 'Dentist');
     }
 
-    // Update user status to DELETED or DEACTIVATED
+    // Update user status to REJECTED
     await prisma.user.update({
       where: { id: parseInt(id) },
-      data: { status: 'DELETED' }
+      data: { status: 'REJECTED' }
     });
 
     // TODO: Send rejection email with reason
