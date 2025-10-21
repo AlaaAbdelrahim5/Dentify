@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { 
   FaCalendarAlt,
   FaClock,
@@ -30,13 +30,15 @@ import {
   StatusBadge,
   StatsOverview,
   FilterBar,
-  DataTable
+  DataTable,
+  LoadingSpinner
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
 import EditAppointmentModal from '../../../components/dentist/EditAppointmentModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
 import ToothChartModal from '../../../components/dentist/ToothChartModal'
+import { appointmentsAPI } from '../../../services/api'
 
 const DentistAppointments = () => {
   const { isDarkMode } = useTheme()
@@ -49,70 +51,61 @@ const DentistAppointments = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isToothChartModalOpen, setIsToothChartModalOpen] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [appointments, setAppointments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Mock appointments data
-  const mockAppointments = [
-    {
-      id: 1,
-      time: '09:00 AM',
-      duration: 30,
-      patient: {
-        name: 'John Smith',
-        phone: '+1234567890',
-        email: 'john@email.com'
-      },
-      treatment: 'Dental Cleaning',
-      status: 'confirmed',
-      notes: 'Regular checkup and cleaning',
-      toothNumber: '',
-      hasToothChart: false
-    },
-    {
-      id: 2,
-      time: '10:30 AM',
-      duration: 60,
-      patient: {
-        name: 'Sarah Johnson',
-        phone: '+1234567891',
-        email: 'sarah@email.com'
-      },
-      treatment: 'Root Canal',
-      status: 'confirmed',
-      notes: 'Follow-up appointment',
-      toothNumber: '14',
-      hasToothChart: true
-    },
-    {
-      id: 3,
-      time: '02:00 PM',
-      duration: 45,
-      patient: {
-        name: 'Mike Wilson',
-        phone: '+1234567892',
-        email: 'mike@email.com'
-      },
-      treatment: 'Tooth Extraction',
-      status: 'pending',
-      notes: 'Wisdom tooth removal',
-      toothNumber: '32',
-      hasToothChart: false
-    },
-    {
-      id: 4,
-      time: '03:30 PM',
-      duration: 30,
-      patient: {
-        name: 'Emily Davis',
-        phone: '+1234567893',
-        email: 'emily@email.com'
-      },
-      treatment: 'Consultation',
-      status: 'completed',
-      notes: 'Initial consultation for braces',
-      toothNumber: '',
-      hasToothChart: false
+  // Fetch appointments on mount
+  useEffect(() => {
+    fetchAppointments()
+  }, [])
+
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await appointmentsAPI.getDentistAppointments()
+      setAppointments(response.appointments || [])
+    } catch (err) {
+      console.error('Error fetching appointments:', err)
+      setError('Failed to load appointments. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  // Transform API data to match UI expectations
+  const transformAppointment = (apt) => {
+    const startTime = new Date(apt.startTime)
+    const endTime = new Date(apt.endTime)
+    const duration = Math.round((endTime - startTime) / 60000) // Convert ms to minutes
+
+    return {
+      id: apt.id,
+      time: startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      duration: duration,
+      appointmentDate: apt.appointmentDate,
+      startTime: apt.startTime,
+      endTime: apt.endTime,
+      patient: {
+        name: `${apt.patient.firstName} ${apt.patient.lastName}`,
+        phone: apt.patient.user?.phone || apt.patient.phone || 'N/A',
+        email: apt.patient.user?.email || 'N/A'
+      },
+      treatment: apt.patientNotes || 'General Consultation',
+      status: apt.status.toLowerCase(),
+      notes: apt.sessionNotes || apt.patientNotes || '',
+      toothNumber: '',
+      hasToothChart: false,
+      clinic: apt.clinic,
+      rawData: apt // Keep original data for updates
+    }
+  }
+
+  // Transform appointments for display
+  const displayAppointments = useMemo(() => {
+    return appointments.map(transformAppointment)
+  }, [appointments])
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -152,11 +145,15 @@ const DentistAppointments = () => {
     setIsNewAppointmentModalOpen(false)
   }
 
-  const handleSaveAppointment = (appointmentData) => {
-    // Here you would typically save to your backend
-    console.log('New appointment:', appointmentData)
-    // For now, just log the data
-    // You can implement the actual save logic here
+  const handleSaveAppointment = async (appointmentData) => {
+    try {
+      await appointmentsAPI.create(appointmentData)
+      await fetchAppointments()
+      setIsNewAppointmentModalOpen(false)
+    } catch (err) {
+      console.error('Error creating appointment:', err)
+      throw err // Re-throw so modal can handle the error
+    }
   }
 
   const handleEditAppointment = (appointment) => {
@@ -169,11 +166,16 @@ const DentistAppointments = () => {
     setSelectedAppointment(null)
   }
 
-  const handleUpdateAppointment = (updatedAppointment) => {
-    // Here you would typically update in your backend
-    console.log('Updated appointment:', updatedAppointment)
-    // For now, just log the data
-    // You can implement the actual update logic here
+  const handleUpdateAppointment = async (updatedAppointment) => {
+    try {
+      await appointmentsAPI.update(selectedAppointment.id, updatedAppointment)
+      await fetchAppointments()
+      setIsEditAppointmentModalOpen(false)
+      setSelectedAppointment(null)
+    } catch (err) {
+      console.error('Error updating appointment:', err)
+      throw err // Re-throw so modal can handle the error
+    }
   }
 
   const handleDeleteAppointment = (appointment) => {
@@ -181,12 +183,16 @@ const DentistAppointments = () => {
     setIsDeleteModalOpen(true)
   }
 
-  const handleConfirmDelete = () => {
-    // Here you would typically delete from your backend
-    console.log('Delete appointment:', selectedAppointment.id)
-    // You can implement the actual delete logic here
-    setIsDeleteModalOpen(false)
-    setSelectedAppointment(null)
+  const handleConfirmDelete = async () => {
+    try {
+      await appointmentsAPI.delete(selectedAppointment.id)
+      await fetchAppointments()
+      setIsDeleteModalOpen(false)
+      setSelectedAppointment(null)
+    } catch (err) {
+      console.error('Error deleting appointment:', err)
+      alert('Failed to delete appointment. Please try again.')
+    }
   }
 
   const handleCloseDeleteModal = () => {
@@ -194,14 +200,25 @@ const DentistAppointments = () => {
     setSelectedAppointment(null)
   }
 
-  const handleConfirmAppointment = (appointmentId) => {
-    console.log('Confirm appointment:', appointmentId)
-    // Update appointment status to confirmed
+  const handleConfirmAppointment = async (appointmentId) => {
+    try {
+      // Update appointment status to confirmed
+      await appointmentsAPI.update(appointmentId, { status: 'CONFIRMED' })
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error confirming appointment:', err)
+      alert('Failed to confirm appointment. Please try again.')
+    }
   }
 
-  const handleCancelAppointment = (appointmentId) => {
-    console.log('Cancel appointment:', appointmentId)
-    // Update appointment status to cancelled
+  const handleCancelAppointment = async (appointmentId) => {
+    try {
+      await appointmentsAPI.cancel(appointmentId)
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error cancelling appointment:', err)
+      alert('Failed to cancel appointment. Please try again.')
+    }
   }
 
   const handleOpenToothChart = (appointment = null) => {
@@ -254,42 +271,92 @@ const DentistAppointments = () => {
   }
 
   // Computed stats using useMemo
-  const stats = useMemo(() => [
-    {
-      label: 'Total Today',
-      value: mockAppointments.length,
-      icon: FaCalendarAlt,
-      gradient: 'from-teal-600 to-cyan-600'
-    },
-    {
-      label: 'Confirmed',
-      value: mockAppointments.filter(a => a.status === 'confirmed').length,
-      icon: FaCheckCircle,
-      gradient: 'from-green-600 to-emerald-600'
-    },
-    {
-      label: 'Pending',
-      value: mockAppointments.filter(a => a.status === 'pending').length,
-      icon: FaHourglassHalf,
-      gradient: 'from-yellow-600 to-orange-600'
-    },
-    {
-      label: 'Completed',
-      value: mockAppointments.filter(a => a.status === 'completed').length,
-      icon: FaCheck,
-      gradient: 'from-blue-600 to-indigo-600'
-    }
-  ], [mockAppointments])
+  const stats = useMemo(() => {
+    // Filter appointments for today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const todayAppointments = displayAppointments.filter(apt => {
+      const aptDate = new Date(apt.appointmentDate)
+      return aptDate >= today && aptDate < tomorrow
+    })
+
+    return [
+      {
+        label: 'Total Today',
+        value: todayAppointments.length,
+        icon: FaCalendarAlt,
+        gradient: 'from-teal-600 to-cyan-600'
+      },
+      {
+        label: 'Confirmed',
+        value: displayAppointments.filter(a => a.status === 'confirmed').length,
+        icon: FaCheckCircle,
+        gradient: 'from-green-600 to-emerald-600'
+      },
+      {
+        label: 'Pending',
+        value: displayAppointments.filter(a => a.status === 'pending').length,
+        icon: FaHourglassHalf,
+        gradient: 'from-yellow-600 to-orange-600'
+      },
+      {
+        label: 'Completed',
+        value: displayAppointments.filter(a => a.status === 'completed').length,
+        icon: FaCheck,
+        gradient: 'from-blue-600 to-indigo-600'
+      }
+    ]
+  }, [displayAppointments])
 
   // Filtered appointments using useMemo
   const filteredAppointments = useMemo(() => {
-    return mockAppointments.filter(appointment => {
-      const matchesSearch = appointment.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           appointment.treatment.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = selectedStatus === 'all' || appointment.status === selectedStatus
-      return matchesSearch && matchesStatus
-    })
-  }, [mockAppointments, searchTerm, selectedStatus])
+    let filtered = displayAppointments
+
+    // Filter by time period (today, week, month)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    if (activeView === 'today') {
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      filtered = filtered.filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= today && aptDate < tomorrow
+      })
+    } else if (activeView === 'week') {
+      const nextWeek = new Date(today)
+      nextWeek.setDate(nextWeek.getDate() + 7)
+      filtered = filtered.filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= today && aptDate < nextWeek
+      })
+    } else if (activeView === 'month') {
+      const nextMonth = new Date(today)
+      nextMonth.setMonth(nextMonth.getMonth() + 1)
+      filtered = filtered.filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= today && aptDate < nextMonth
+      })
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(appointment => 
+        appointment.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.treatment.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filter by status
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(appointment => appointment.status === selectedStatus)
+    }
+
+    return filtered
+  }, [displayAppointments, searchTerm, selectedStatus, activeView])
 
   // Filter configuration for FilterBar
   const filters = [
@@ -413,6 +480,48 @@ const DentistAppointments = () => {
       </td>
     </tr>
   )
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Appointments"
+          description="Manage and track your daily appointment schedule"
+        />
+        <div className="flex justify-center items-center h-96">
+          <LoadingSpinner />
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Appointments"
+          description="Manage and track your daily appointment schedule"
+        />
+        <Card className={`p-12 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
+            isDarkMode ? 'bg-red-900/20' : 'bg-red-100'
+          }`}>
+            <FaTimes className={`w-10 h-10 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
+          </div>
+          <h3 className={`text-xl font-semibold mb-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {error}
+          </h3>
+          <Button onClick={fetchAppointments} className="mt-4">
+            Try Again
+          </Button>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

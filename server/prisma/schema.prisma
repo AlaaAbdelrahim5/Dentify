@@ -11,6 +11,10 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// =======================
+//        MODELS
+// =======================
+
 // User model
 model User {
   id           Int      @id @default(autoincrement())
@@ -57,6 +61,7 @@ model Clinic {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   dentists    Dentist[]
   secretaries Secretary[]
+  appointments Appointment[]
 }
 
 // Dentist model
@@ -74,8 +79,9 @@ model Dentist {
   appointmentDuration Int
   socialLinks         Json?
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic Clinic @relation(fields: [clinicId], references: [userId])
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic      Clinic      @relation(fields: [clinicId], references: [userId])
+  appointments Appointment[]
 }
 
 // Secretary model
@@ -101,7 +107,8 @@ model Patient {
   birthDate DateTime
   city      String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 }
 
 // Radiology Center model
@@ -120,7 +127,29 @@ model RadiologyCenter {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Enums
+// Appointment model
+model Appointment {
+  id               Int             @id @default(autoincrement())
+  patientId        Int
+  dentistId        Int
+  clinicId         Int
+  appointmentDate  DateTime
+  startTime        DateTime
+  endTime          DateTime
+  status           AppointmentStatus @default(PENDING)
+  patientNotes     String?
+  treatmentId      Int?
+  sessionNotes     String?
+  sessionCost      Float?
+
+  patient Patient @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dentist Dentist @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
+  clinic  Clinic  @relation(fields: [clinicId], references: [userId], onDelete: Cascade)
+}
+
+// =======================
+//         ENUMS
+// =======================
 enum Role {
   Admin
   Clinic
@@ -142,4 +171,11 @@ enum Gender {
   Male
   Female
   Other
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  PENDING
+  CANCELLED
+  COMPLETED
 }

@@ -385,4 +385,42 @@ export const healthAPI = {
   check: () => ApiService.get('/health'),
 };
 
+// Appointments API functions
+export const appointmentsAPI = {
+  // Get patient's appointments
+  getMyAppointments: () => ApiService.get('/appointments/patient/my-appointments'),
+  
+  // Get dentist's appointments
+  getDentistAppointments: () => ApiService.get('/appointments/dentist/my-appointments'),
+  
+  // Get clinic's appointments
+  getClinicAppointments: () => ApiService.get('/appointments/clinic/my-appointments'),
+  
+  // Get all appointments (Admin only)
+  getAll: () => ApiService.get('/appointments'),
+  
+  // Get appointment by ID
+  getById: (id) => ApiService.get(`/appointments/${id}`),
+  
+  // Create new appointment
+  create: (appointmentData) => ApiService.post('/appointments', appointmentData),
+  
+  // Update appointment
+  update: (id, appointmentData) => ApiService.put(`/appointments/${id}`, appointmentData),
+  
+  // Cancel appointment
+  cancel: (id) => ApiService.patch(`/appointments/${id}/cancel`),
+  
+  // Delete appointment (Admin/Clinic only)
+  delete: (id) => ApiService.delete(`/appointments/${id}`),
+  
+  // Get available time slots for a dentist on a specific date
+  getAvailableSlots: (dentistId, date) => 
+    ApiService.get(`/appointments/dentist/${dentistId}/available-slots?date=${date}`),
+  
+  // Get dentists by clinic
+  getDentistsByClinic: (clinicId) => 
+    ApiService.get(`/appointments/clinics/${clinicId}/dentists`),
+};
+
 export default ApiService;

@@ -73,6 +73,10 @@ const radiologyRoutes = require('./routes/radiology');
 app.use('/api/radiology', radiologyRoutes);
 app.use('/api/radiology-centers', radiologyRoutes); // Alias for frontend compatibility
 
+// Appointment routes
+const appointmentRoutes = require('./routes/appointments');
+app.use('/api/appointments', appointmentRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

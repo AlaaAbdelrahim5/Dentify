@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { 
   FaCalendarAlt, 
   FaTooth, 
@@ -8,26 +8,36 @@ import {
   FaClock, 
   FaCheckCircle,
   FaExclamationTriangle,
-  FaBell,
   FaSearch,
   FaFilter,
-  FaSignOutAlt
+  FaPlus
 } from 'react-icons/fa'
-import { MdDashboard } from 'react-icons/md'
-import { Navbar, Card, Button, Input, LoadingSpinner } from '../../components'
+import { 
+  Navbar, 
+  Card, 
+  Button, 
+  Input, 
+  LoadingSpinner,
+  StatsOverview,
+  PageHeader,
+  DataTable,
+  StatusBadge
+} from '../../components'
 import { authUtils } from '../../utils/auth'
 import { authAPI } from '../../services/api'
 import { useTheme } from '../../contexts/ThemeContext'
+import PatientSidebar from '../../components/patient/PatientSidebar'
+import PatientAppointments from './patient/PatientAppointments'
 
 const PatientDashboard = () => {
   const navigate = useNavigate()
-  const location = useLocation()
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('appointments')
+  const [activeTab, setActiveTab] = useState('overview')
   const [currentUser, setCurrentUser] = useState(null)
   const [patientProfile, setPatientProfile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Check authentication and fetch user data from backend
   useEffect(() => {
@@ -227,377 +237,319 @@ const PatientDashboard = () => {
   ]
 
   const stats = [
-    { label: "Upcoming Appointments", value: upcomingAppointments.length, icon: FaCalendarAlt, color: "text-blue-600" },
-    { label: "Total Visits", value: "12", icon: FaTooth, color: "text-teal-600" },
-    { label: "X-ray Results", value: xrayResults.length, icon: FaXRay, color: "text-purple-600" },
-    { label: "Active Treatments", value: "2", icon: FaUserMd, color: "text-green-600" }
+    { 
+      label: "Upcoming Appointments", 
+      value: upcomingAppointments.length, 
+      icon: FaCalendarAlt, 
+      gradient: "from-blue-600 to-blue-400"
+    },
+    { 
+      label: "Total Visits", 
+      value: "12", 
+      icon: FaTooth, 
+      gradient: "from-teal-600 to-cyan-600"
+    },
+    { 
+      label: "X-ray Results", 
+      value: xrayResults.length, 
+      icon: FaXRay, 
+      gradient: "from-purple-600 to-pink-600"
+    },
+    { 
+      label: "Active Treatments", 
+      value: "2", 
+      icon: FaUserMd, 
+      gradient: "from-green-600 to-emerald-600"
+    }
   ]
 
   const getStatusBadge = (status) => {
-    const badges = {
-      confirmed: "bg-green-100 text-green-800",
-      pending: "bg-yellow-100 text-yellow-800",
-      completed: "bg-blue-100 text-blue-800",
-      cancelled: "bg-red-100 text-red-800"
+    const statusMap = {
+      confirmed: { label: 'Confirmed', color: 'green' },
+      pending: { label: 'Pending', color: 'yellow' },
+      completed: { label: 'Completed', color: 'blue' },
+      cancelled: { label: 'Cancelled', color: 'red' }
     }
-    return badges[status] || "bg-gray-100 text-gray-800"
+    return statusMap[status] || { label: status, color: 'gray' }
   }
 
-  const getStatusIcon = (status) => {
-    const icons = {
-      confirmed: FaCheckCircle,
-      pending: FaClock,
-      completed: FaCheckCircle,
-      cancelled: FaExclamationTriangle
+  // Render Overview Tab
+  const renderOverview = () => (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className={`text-2xl font-bold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Welcome back, {getUserFirstName()}!
+            </h1>
+            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+              {getUserFullName()}
+              {currentUser?.email && <span> • {currentUser.email}</span>}
+            </p>
+            {patientProfile?.city && (
+              <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                📍 {patientProfile.city}
+              </p>
+            )}
+          </div>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+            isDarkMode 
+              ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
+              : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+          }`}>
+            <FaTooth className="w-8 h-8 text-white" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Stats Grid */}
+      <StatsOverview stats={stats} />
+
+      {/* Upcoming Appointments Preview */}
+      {upcomingAppointments.length > 0 && (
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={`text-lg font-semibold ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>Next Appointments</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setActiveTab('appointments')}
+            >
+              View All
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {upcomingAppointments.slice(0, 2).map((appointment) => (
+              <div 
+                key={appointment.id}
+                className={`p-4 rounded-lg border ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className={`font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{appointment.service}</h4>
+                  <StatusBadge 
+                    status={appointment.status}
+                    label={getStatusBadge(appointment.status).label}
+                  />
+                </div>
+                <div className={`text-sm space-y-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  <p className="flex items-center">
+                    <FaUserMd className="mr-2" />
+                    {appointment.dentist}
+                  </p>
+                  <p className="flex items-center">
+                    <FaCalendarAlt className="mr-2" />
+                    {appointment.date} at {appointment.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+
+  // Render X-rays Tab
+  const renderXrays = () => {
+    const xrayColumns = [
+      { key: 'type', label: 'X-ray Type' },
+      { key: 'date', label: 'Date' },
+      { key: 'dentist', label: 'Dentist' },
+      { key: 'result', label: 'Result' },
+      { key: 'status', label: 'Status' },
+      { key: 'actions', label: 'Actions', className: 'text-right' }
+    ]
+
+    const renderXrayRow = (xray, index) => (
+      <tr 
+        key={xray.id}
+        className={`transition-colors duration-150 ${
+          isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+        }`}
+      >
+        <td className="px-6 py-4">
+          <span className={`font-medium ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>{xray.type}</span>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center">
+            <FaCalendarAlt className={`mr-2 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`} />
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {xray.date}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center">
+            <FaUserMd className={`mr-2 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`} />
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+              {xray.dentist}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+            {xray.result}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <StatusBadge 
+            status="active"
+            label="Available"
+          />
+        </td>
+        <td className="px-6 py-4 text-right">
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" size="sm">View Image</Button>
+            <Button variant="ghost" size="sm">Download</Button>
+          </div>
+        </td>
+      </tr>
+    )
+
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="X-ray Results"
+          description="View and download your X-ray images"
+          actions={
+            <Input
+              placeholder="Search X-rays..."
+              icon={FaSearch}
+              className="w-64"
+            />
+          }
+        />
+
+        <DataTable
+          columns={xrayColumns}
+          data={xrayResults}
+          renderRow={renderXrayRow}
+          emptyMessage="No X-ray results available yet"
+          emptyIcon={FaXRay}
+          emptyTitle="No X-rays"
+        />
+      </div>
+    )
+  }
+
+  // Render Medical History Tab
+  const renderHistory = () => (
+    <div className="space-y-6">
+      <PageHeader
+        title="Medical History"
+        description="Your complete dental treatment timeline"
+      />
+      
+      <Card className="p-8">
+        <div className="text-center py-12">
+          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
+            isDarkMode 
+              ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
+              : 'bg-gradient-to-br from-gray-100 to-gray-200'
+          }`}>
+            <FaTooth className={`w-10 h-10 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`} />
+          </div>
+          <h3 className={`text-xl font-bold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>Treatment History</h3>
+          <p className={`text-sm max-w-md mx-auto ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Your complete treatment history and medical records will appear here
+          </p>
+        </div>
+      </Card>
+    </div>
+  )
+
+  // Render Settings Tab
+  const renderSettings = () => (
+    <div className="space-y-6">
+      <PageHeader
+        title="Settings"
+        description="Manage your account settings and preferences"
+      />
+      
+      <Card className="p-8">
+        <div className="text-center py-12">
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+            Settings page coming soon
+          </p>
+        </div>
+      </Card>
+    </div>
+  )
+
+  // Tab content renderer
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return renderOverview()
+      case 'appointments':
+        return <PatientAppointments />
+      case 'xrays':
+        return renderXrays()
+      case 'history':
+        return renderHistory()
+      case 'settings':
+        return renderSettings()
+      default:
+        return renderOverview()
     }
-    return icons[status] || FaClock
+  }
+
+  if (!currentUser) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+      }`}>
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
+    <div className={`min-h-screen ${
       isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800'
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
         : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
       {/* Unified Header */}
       <Navbar showDashboardInfo={true} dashboardTitle="Patient Dashboard" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            Welcome back, {getUserFirstName()}!
-          </h1>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Here's an overview of your dental care journey.
-          </p>
-          {/* Show user info */}
-          {patientProfile && (
-            <div className={`mt-3 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              <span className="font-medium">{getUserFullName()}</span>
-              {currentUser?.email && <span> • {currentUser.email}</span>}
-              {currentUser?.phone && <span> • {currentUser.phone}</span>}
-              {patientProfile.city && <span> • {patientProfile.city}</span>}
-            </div>
-          )}
-        </div>
+      {/* Fixed Sidebar */}
+      <PatientSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+      />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className={`hover:shadow-lg transition-shadow duration-200 ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'
-            }`}>
-              <Card.Content className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>{stat.label}</p>
-                    <p className={`text-2xl font-bold ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>{stat.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-lg ${
-                    isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-                  }`}>
-                    <stat.icon className={`text-xl ${stat.color}`} />
-                  </div>
-                </div>
-              </Card.Content>
-            </Card>
-          ))}
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="mb-6">
-          <div className={`border-b ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          }`}>
-            <nav className="-mb-px flex space-x-8">
-              {[
-                { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
-                { id: 'xrays', label: 'X-ray Results', icon: FaXRay },
-                { id: 'history', label: 'Medical History', icon: FaTooth }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
-                    ${activeTab === tab.id
-                      ? 'border-teal-500 text-teal-600'
-                      : `border-transparent ${
-                          isDarkMode 
-                            ? 'text-gray-400 hover:text-gray-300 hover:border-gray-600' 
-                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`
-                    }
-                  `}
-                >
-                  <tab.icon className="text-sm" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="space-y-6">
-          {activeTab === 'appointments' && (
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <h2 className={`text-xl font-semibold ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>Your Appointments</h2>
-                <div className="flex gap-3">
-                  <Input
-                    placeholder="Search appointments..."
-                    icon={FaSearch}
-                    className="w-64"
-                  />
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <FaFilter />
-                    Filter
-                  </Button>
-                  <Button className="flex items-center gap-2">
-                    <FaCalendarAlt />
-                    Book New
-                  </Button>
-                </div>
-              </div>
-
-              {/* Upcoming Appointments */}
-              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
-                <Card.Header>
-                  <h3 className={`text-lg font-medium ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>Upcoming Appointments</h3>
-                </Card.Header>
-                <Card.Content className="p-0">
-                  {upcomingAppointments.length > 0 ? (
-                    <div className={`divide-y ${
-                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
-                    }`}>
-                      {upcomingAppointments.map((appointment) => {
-                        const StatusIcon = getStatusIcon(appointment.status)
-                        return (
-                          <div key={appointment.id} className={`p-6 transition-colors duration-200 ${
-                            isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-                          }`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h4 className={`font-medium ${
-                                    isDarkMode ? 'text-white' : 'text-gray-900'
-                                  }`}>{appointment.service}</h4>
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(appointment.status)}`}>
-                                    <StatusIcon className="mr-1" />
-                                    {appointment.status}
-                                  </span>
-                                </div>
-                                <div className={`grid grid-cols-1 md:grid-cols-3 gap-2 text-sm ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  <div className="flex items-center">
-                                    <FaUserMd className="mr-2" />
-                                    {appointment.dentist}
-                                  </div>
-                                  <div className="flex items-center">
-                                    <FaCalendarAlt className="mr-2" />
-                                    {appointment.date} at {appointment.time}
-                                  </div>
-                                  <div className="flex items-center">
-                                    <FaTooth className="mr-2" />
-                                    {appointment.clinic}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex space-x-2 ml-4">
-                                <Button variant="outline" size="sm">Reschedule</Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">Cancel</Button>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center">
-                      <FaCalendarAlt className={`mx-auto text-4xl mb-4 ${
-                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
-                      }`} />
-                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                        No upcoming appointments
-                      </p>
-                    </div>
-                  )}
-                </Card.Content>
-              </Card>
-
-              {/* Past Appointments */}
-              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
-                <Card.Header>
-                  <h3 className={`text-lg font-medium ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>Recent Appointments</h3>
-                </Card.Header>
-                <Card.Content className="p-0">
-                  {pastAppointments.length > 0 ? (
-                    <div className={`divide-y ${
-                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
-                    }`}>
-                      {pastAppointments.map((appointment) => (
-                        <div key={appointment.id} className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h4 className={`font-medium ${
-                                  isDarkMode ? 'text-white' : 'text-gray-900'
-                                }`}>{appointment.service}</h4>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  <FaCheckCircle className="mr-1" />
-                                  Completed
-                                </span>
-                              </div>
-                              <div className={`grid grid-cols-1 md:grid-cols-3 gap-2 text-sm ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                              }`}>
-                                <div className="flex items-center">
-                                  <FaUserMd className="mr-2" />
-                                  {appointment.dentist}
-                                </div>
-                                <div className="flex items-center">
-                                  <FaCalendarAlt className="mr-2" />
-                                  {appointment.date} at {appointment.time}
-                                </div>
-                                <div className="flex items-center">
-                                  <FaTooth className="mr-2" />
-                                  {appointment.clinic}
-                                </div>
-                              </div>
-                            </div>
-                            <Button variant="outline" size="sm">View Details</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center">
-                      <FaCalendarAlt className={`mx-auto text-4xl mb-4 ${
-                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
-                      }`} />
-                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                        No past appointments
-                      </p>
-                    </div>
-                  )}
-                </Card.Content>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'xrays' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className={`text-xl font-semibold ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>X-ray Results</h2>
-                <Input
-                  placeholder="Search X-rays..."
-                  icon={FaSearch}
-                  className="w-64"
-                />
-              </div>
-
-              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
-                <Card.Content className="p-0">
-                  {xrayResults.length > 0 ? (
-                    <div className={`divide-y ${
-                      isDarkMode ? 'divide-gray-700' : 'divide-gray-200'
-                    }`}>
-                      {xrayResults.map((xray) => (
-                        <div key={xray.id} className={`p-6 transition-colors duration-200 ${
-                          isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h4 className={`font-medium ${
-                                  isDarkMode ? 'text-white' : 'text-gray-900'
-                                }`}>{xray.type}</h4>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Available
-                                </span>
-                              </div>
-                              <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mb-2 ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                              }`}>
-                                <div className="flex items-center">
-                                  <FaCalendarAlt className="mr-2" />
-                                  {xray.date}
-                                </div>
-                                <div className="flex items-center">
-                                  <FaUserMd className="mr-2" />
-                                  {xray.dentist}
-                                </div>
-                              </div>
-                              <p className={`text-sm ${
-                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                              }`}>{xray.result}</p>
-                            </div>
-                            <div className="flex space-x-2 ml-4">
-                              <Button variant="outline" size="sm">View Image</Button>
-                              <Button variant="outline" size="sm">Download</Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center">
-                      <FaXRay className={`mx-auto text-4xl mb-4 ${
-                        isDarkMode ? 'text-gray-600' : 'text-gray-300'
-                      }`} />
-                      <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                        No X-ray results available
-                      </p>
-                    </div>
-                  )}
-                </Card.Content>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="space-y-6">
-              <h2 className={`text-xl font-semibold ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>Medical History</h2>
-              
-              <Card className={isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
-                <Card.Header>
-                  <h3 className={`text-lg font-medium ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>Treatment Timeline</h3>
-                </Card.Header>
-                <Card.Content>
-                  <div className="text-center py-8">
-                    <FaTooth className={`mx-auto text-4xl mb-4 ${
-                      isDarkMode ? 'text-gray-600' : 'text-gray-300'
-                    }`} />
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                      Your treatment history will appear here
-                    </p>
-                  </div>
-                </Card.Content>
-              </Card>
-            </div>
-          )}
+      {/* Main Content with left margin to account for fixed sidebar */}
+      <div className="ml-72 pt-20">
+        <div className="p-8">
+          {renderTabContent()}
         </div>
       </div>
     </div>
