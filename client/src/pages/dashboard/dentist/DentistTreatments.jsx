@@ -17,13 +17,15 @@ import {
   FaTooth,
   FaExclamationTriangle,
   FaListAlt,
-  FaTh
+  FaTh,
+  FaChartLine
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import NewTreatmentModal from '../../../components/dentist/NewTreatmentModal'
 import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import ToothChartModal from '../../../components/dentist/ToothChartModal'
 
 const DentistTreatments = () => {
   const { isDarkMode } = useTheme()
@@ -35,6 +37,7 @@ const DentistTreatments = () => {
   const [isNewTreatmentModalOpen, setIsNewTreatmentModalOpen] = useState(false)
   const [isTreatmentDetailsModalOpen, setIsTreatmentDetailsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isToothChartModalOpen, setIsToothChartModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
 
   // Mock treatments data
@@ -53,7 +56,8 @@ const DentistTreatments = () => {
       completionDate: '2024-02-15',
       notes: 'Patient experiencing mild discomfort',
       preConditions: 'Pre-medication required',
-      postCareInstructions: 'Avoid hard foods for 24 hours'
+      postCareInstructions: 'Avoid hard foods for 24 hours',
+      hasToothChart: true
     },
     {
       id: 2,
@@ -222,6 +226,66 @@ const DentistTreatments = () => {
     // Here you would update the treatment status in your backend
   }
 
+  const handleAddToothChartToTreatment = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsToothChartModalOpen(true)
+  }
+
+  const handleOpenToothChart = () => {
+    setIsToothChartModalOpen(true)
+  }
+
+  const handleCloseToothChart = () => {
+    setIsToothChartModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleSaveToothChart = (chartData) => {
+    console.log('Tooth chart data:', chartData)
+    
+    if (selectedTreatment) {
+      // Associate the tooth chart with the selected treatment
+      console.log('Attaching tooth chart to treatment:', selectedTreatment.id)
+      console.log('Treatment:', selectedTreatment.treatmentType)
+      console.log('Patient:', selectedTreatment.patientName)
+      
+      // Here you would save the chart data to your backend
+      // API call example:
+      // await treatmentsAPI.addToothChart(selectedTreatment.id, chartData)
+      
+      alert(`Tooth chart successfully added to treatment: ${selectedTreatment.treatmentType} for ${selectedTreatment.patientName}`)
+    } else {
+      // Save as standalone tooth chart examination
+      console.log('Saving standalone tooth chart')
+      // API call example:
+      // await toothChartsAPI.create(chartData)
+    }
+    
+    // The chartData includes:
+    // - selectedTeeth: array of tooth numbers
+    // - toothConditions: object mapping tooth numbers to their conditions
+    // - toothNotes: object mapping tooth numbers to their specific notes
+    // - formData: general examination data (date, notes, treatment plan, severity)
+    
+    setIsToothChartModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleCreateTreatmentFromTooth = (toothNumber) => {
+    // Pre-fill the treatment modal with tooth information
+    console.log('Creating treatment for tooth:', toothNumber)
+    setIsToothChartModalOpen(false)
+    setIsNewTreatmentModalOpen(true)
+    // You can pass the tooth number to the NewTreatmentModal to pre-fill it
+  }
+
+  const handleScheduleAppointmentFromTooth = (toothNumber) => {
+    // Navigate to appointment scheduling with tooth information
+    console.log('Scheduling appointment for tooth:', toothNumber)
+    setIsToothChartModalOpen(false)
+    // You could navigate to the appointments page or open an appointment modal
+  }
+
   const TreatmentCard = ({ treatment }) => (
     <Card className={`p-6 ${
       isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -234,11 +298,19 @@ const DentistTreatments = () => {
             <FaTooth className="text-teal-600" />
           </div>
           <div>
-            <h3 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {treatment.treatmentType}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>
+                {treatment.treatmentType}
+              </h3>
+              {treatment.hasToothChart && (
+                <span className="px-2 py-0.5 bg-teal-600 text-white text-xs rounded-full flex items-center gap-1" title="Has Tooth Chart">
+                  <FaTooth className="w-2.5 h-2.5" />
+                  Chart
+                </span>
+              )}
+            </div>
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
@@ -311,6 +383,15 @@ const DentistTreatments = () => {
         >
           <FaEdit className="w-4 h-4" />
         </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => handleAddToothChartToTreatment(treatment)}
+          title="Add Tooth Chart"
+          className="text-teal-600"
+        >
+          <FaTooth className="w-4 h-4" />
+        </Button>
         {treatment.status === 'planned' && (
           <Button 
             variant="outline" 
@@ -362,10 +443,20 @@ const DentistTreatments = () => {
             Manage treatment plans and procedures
           </p>
         </div>
-        <Button variant="primary" onClick={handleNewTreatment}>
-          <FaPlus className="w-4 h-4 mr-2" />
-          New Treatment Plan
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleOpenToothChart}
+            className="flex items-center gap-2"
+          >
+            <FaTooth className="w-4 h-4" />
+            Tooth Chart
+          </Button>
+          <Button variant="primary" onClick={handleNewTreatment}>
+            <FaPlus className="w-4 h-4 mr-2" />
+            New Treatment Plan
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -573,6 +664,21 @@ const DentistTreatments = () => {
           patient: { name: selectedTreatment.patientName },
           treatment: selectedTreatment.treatmentType,
           time: ''
+        } : null}
+      />
+
+      {/* Tooth Chart Modal */}
+      <ToothChartModal
+        isOpen={isToothChartModalOpen}
+        onClose={handleCloseToothChart}
+        onSave={handleSaveToothChart}
+        onCreateTreatment={handleCreateTreatmentFromTooth}
+        onScheduleAppointment={handleScheduleAppointmentFromTooth}
+        patientInfo={selectedTreatment ? { name: selectedTreatment.patientName } : null}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentType: selectedTreatment.treatmentType,
+          toothNumber: selectedTreatment.toothNumber
         } : null}
       />
     </div>

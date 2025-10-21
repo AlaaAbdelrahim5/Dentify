@@ -3,7 +3,7 @@ import { Button } from './'
 
 /**
  * PageHeader Component
- * Displays page title, description, and action button
+ * Displays page title, description, and action button(s)
  * Reusable across all dashboards (Admin, Clinic, Dentist, Patient)
  * 
  * @param {string} title - Page title
@@ -15,8 +15,9 @@ import { Button } from './'
  *     icon: ReactComponent (optional),
  *     gradient: string (optional, e.g., 'from-teal-600 to-cyan-600')
  *   }
+ * @param {ReactNode} actions - Custom action buttons JSX (alternative to action prop)
  */
-const PageHeader = ({ title, description, action }) => {
+const PageHeader = ({ title, description, action, actions }) => {
   const { isDarkMode } = useTheme()
 
   return (
@@ -31,7 +32,10 @@ const PageHeader = ({ title, description, action }) => {
           </p>
         )}
       </div>
-      {action && (
+      {/* Support both single action object and custom actions JSX */}
+      {actions ? (
+        actions
+      ) : action ? (
         <Button
           onClick={action.onClick}
           className={`flex items-center gap-2 ${action.gradient ? `bg-gradient-to-r ${action.gradient}` : ''}`}
@@ -39,7 +43,7 @@ const PageHeader = ({ title, description, action }) => {
           {action.icon && <action.icon className="w-4 h-4" />}
           {action.label}
         </Button>
-      )}
+      ) : null}
     </div>
   )
 }

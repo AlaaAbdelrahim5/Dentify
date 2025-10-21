@@ -11,7 +11,9 @@ import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
  * @param {string} inactiveLabel - Label for inactive status (default: 'Inactive')
  * @param {ReactComponent} activeIcon - Custom icon for active status
  * @param {ReactComponent} inactiveIcon - Custom icon for inactive status
- * @param {string} status - Status type: 'active', 'inactive', 'pending' (overrides isActive)
+ * @param {string} status - Status type: 'active', 'inactive', 'pending', 'rejected' (overrides isActive)
+ * @param {ReactComponent} icon - Custom icon (overrides default icons)
+ * @param {string} label - Custom label (overrides default labels)
  */
 const StatusBadge = ({ 
   isActive, 
@@ -19,7 +21,9 @@ const StatusBadge = ({
   inactiveLabel = 'Inactive',
   activeIcon: ActiveIcon = FaCheckCircle,
   inactiveIcon: InactiveIcon = FaTimesCircle,
-  status
+  status,
+  icon: CustomIcon,
+  label: customLabel
 }) => {
   const { isDarkMode } = useTheme()
   
@@ -45,6 +49,10 @@ const StatusBadge = ({
     Icon = InactiveIcon
     label = 'Rejected'
   }
+
+  // Allow custom icon and label to override
+  if (CustomIcon) Icon = CustomIcon
+  if (customLabel) label = customLabel
 
   // Color classes based on status
   const colorClasses = 
