@@ -39,13 +39,13 @@ const StatusBadge = ({
   let Icon = InactiveIcon
   let label = inactiveLabel
   
-  if (statusType === 'active') {
+  if (statusType === 'active' || statusType === 'confirmed' || statusType === 'completed') {
     Icon = ActiveIcon
     label = activeLabel
   } else if (statusType === 'pending') {
     Icon = InactiveIcon
     label = 'Pending'
-  } else if (statusType === 'rejected') {
+  } else if (statusType === 'rejected' || statusType === 'cancelled') {
     Icon = InactiveIcon
     label = 'Rejected'
   }
@@ -56,15 +56,19 @@ const StatusBadge = ({
 
   // Color classes based on status
   const colorClasses = 
-    statusType === 'active'
+    statusType === 'active' || statusType === 'confirmed'
       ? isDarkMode 
         ? 'bg-green-900/20 text-green-400 border-green-800'
         : 'bg-green-100 text-green-800 border-green-200'
+      : statusType === 'completed'
+      ? isDarkMode
+        ? 'bg-blue-900/20 text-blue-400 border-blue-800'
+        : 'bg-blue-100 text-blue-800 border-blue-200'
       : statusType === 'pending'
       ? isDarkMode
-        ? 'bg-orange-900/20 text-orange-400 border-orange-800'
-        : 'bg-orange-100 text-orange-700 border-orange-200'
-      : statusType === 'rejected'
+        ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800'
+        : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+      : statusType === 'rejected' || statusType === 'cancelled'
       ? isDarkMode
         ? 'bg-red-900/20 text-red-400 border-red-800'
         : 'bg-red-100 text-red-800 border-red-200'

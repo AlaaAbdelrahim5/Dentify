@@ -598,6 +598,81 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
   }
 });
 
+// Complete appointment (Dentist only)
+router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get existing appointment
+    const existingAppointment = await prisma.appointment.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingAppointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    // Check if dentist owns this appointment
+    if (existingAppointment.dentistId !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to complete this appointment' });
+    }
+
+    // Check if appointment can be completed (not already completed or cancelled)
+    if (existingAppointment.status === 'COMPLETED') {
+      return res.status(400).json({ error: 'Appointment is already completed' });
+    }
+
+    if (existingAppointment.status === 'CANCELLED') {
+      return res.status(400).json({ error: 'Cannot complete a cancelled appointment' });
+    }
+
+    const appointment = await prisma.appointment.update({
+      where: { id: parseInt(id) },
+      data: { status: 'COMPLETED' },
+      include: {
+        patient: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
+          }
+        },
+        dentist: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
+          }
+        },
+        clinic: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      message: 'Appointment completed successfully',
+      appointment 
+    });
+  } catch (error) {
+    console.error('Error completing appointment:', error);
+    res.status(500).json({ error: 'Failed to complete appointment' });
+  }
+});
+
 // Delete appointment (soft delete by cancelling)
 router.delete('/:id', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
   try {

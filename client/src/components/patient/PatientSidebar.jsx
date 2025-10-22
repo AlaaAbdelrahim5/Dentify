@@ -15,7 +15,7 @@ const PatientSidebar = ({ activeTab, setActiveTab }) => {
 
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: FaHome },
-    { id: 'find-doctor', label: 'Find a Doctor', icon: FaUserMd },
+    { id: 'find-dentist', label: 'Find a Dentist', icon: FaUserMd },
     { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
     { id: 'xrays', label: 'X-ray Results', icon: FaXRay },
     { id: 'history', label: 'Medical History', icon: FaTooth },

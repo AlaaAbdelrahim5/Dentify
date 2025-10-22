@@ -32,9 +32,19 @@ const ConfirmationModal = ({
   const isActivate = action === 'activate'
   const isApprove = action === 'approve'
   const isReject = action === 'reject'
+  const isCancel = action === 'cancel'
 
   const getActionConfig = () => {
-    if (isDelete) {
+    if (isCancel) {
+      return {
+        title: `Cancel ${itemType}?`,
+        message: `Are you sure you want to cancel`,
+        description: `This action cannot be undone. The ${itemType.toLowerCase()} will be cancelled.`,
+        gradient: 'from-orange-500 to-red-500',
+        shadowColor: 'shadow-orange-500/50',
+        icon: FaTimesCircle
+      }
+    } else if (isDelete) {
       return {
         title: `Delete ${itemType}?`,
         message: `Are you sure you want to delete`,
@@ -144,7 +154,7 @@ const ConfirmationModal = ({
               onClick={onConfirm}
               className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg bg-gradient-to-r ${config.gradient} ${config.shadowColor}`}
             >
-              {isDelete ? 'Delete' : isDeactivate ? 'Deactivate' : isReject ? 'Reject' : isApprove ? 'Approve' : 'Activate'}
+              {isCancel ? 'Yes, Cancel' : isDelete ? 'Delete' : isDeactivate ? 'Deactivate' : isReject ? 'Reject' : isApprove ? 'Approve' : 'Activate'}
             </button>
           </div>
         </div>

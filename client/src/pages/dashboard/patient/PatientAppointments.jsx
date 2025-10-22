@@ -138,19 +138,23 @@ const PatientAppointments = () => {
   }
 
   // Separate appointments into upcoming and past
-  const upcomingAppointments = appointments.filter(apt => {
-    const aptDate = new Date(apt.appointmentDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return aptDate >= today && apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
-  })
+  const upcomingAppointments = appointments
+    .filter(apt => {
+      const aptDate = new Date(apt.appointmentDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return aptDate >= today && apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
+    })
+    .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
 
-  const pastAppointments = appointments.filter(apt => {
-    const aptDate = new Date(apt.appointmentDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return aptDate < today || apt.status === 'COMPLETED' || apt.status === 'CANCELLED'
-  })
+  const pastAppointments = appointments
+    .filter(apt => {
+      const aptDate = new Date(apt.appointmentDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return aptDate < today || apt.status === 'COMPLETED' || apt.status === 'CANCELLED'
+    })
+    .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
 
   const displayAppointments = activeView === 'upcoming' ? upcomingAppointments : pastAppointments
 
@@ -209,8 +213,7 @@ const PatientAppointments = () => {
         { value: 'CONFIRMED', label: 'Confirmed' },
         { value: 'PENDING', label: 'Pending' },
         { value: 'COMPLETED', label: 'Completed' },
-        { value: 'CANCELLED', label: 'Cancelled' },
-        { value: 'cancelled', label: 'Cancelled' }
+        { value: 'CANCELLED', label: 'Cancelled' }
       ],
       placeholder: 'Filter by Status'
     }
@@ -299,7 +302,7 @@ const PatientAppointments = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <StatusBadge 
-            status={getStatusColor(appointment.status)}
+            status={appointment.status.toLowerCase()}
             icon={getStatusIcon(appointment.status)}
             label={appointment.status.charAt(0) + appointment.status.slice(1).toLowerCase()}
           />
@@ -307,25 +310,15 @@ const PatientAppointments = () => {
         <td className="px-6 py-4 whitespace-nowrap text-right">
           <div className="flex justify-end gap-2">
             {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEditAppointment(appointment)}
-                  title="Reschedule"
-                >
-                  <FaEdit className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleCancelAppointment(appointment)}
-                  title="Cancel"
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <FaTimesCircle className="w-4 h-4" />
-                </Button>
-              </>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleCancelAppointment(appointment)}
+                title="Cancel"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <FaTimesCircle className="w-4 h-4" />
+              </Button>
             )}
             {appointment.status === 'COMPLETED' && (
             <Button 
@@ -369,7 +362,7 @@ const PatientAppointments = () => {
                   </div>
                 </div>
                 <StatusBadge 
-                  status={getStatusColor(appointment.status)}
+                  status={appointment.status.toLowerCase()}
                   icon={StatusIcon}
                   label={appointment.status.charAt(0) + appointment.status.slice(1).toLowerCase()}
                 />
@@ -424,20 +417,11 @@ const PatientAppointments = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleEditAppointment(appointment)}
-                    className="flex-1"
-                  >
-                    <FaEdit className="mr-2" />
-                    Reschedule
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
                     onClick={() => handleCancelAppointment(appointment)}
-                    className="flex-1 text-red-600 hover:text-red-700"
+                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <FaTimesCircle className="mr-2" />
-                    Cancel
+                    Cancel Appointment
                   </Button>
                 </div>
               )}
@@ -510,7 +494,7 @@ const PatientAppointments = () => {
       {/* Filters */}
       <FilterBar
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
         searchPlaceholder="Search by treatment, dentist, or clinic..."
         filters={filters}
         onClearFilters={handleClearFilters}
@@ -546,11 +530,10 @@ const PatientAppointments = () => {
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleConfirmCancel}
-        title="Cancel Appointment"
-        message={`Are you sure you want to cancel your appointment with ${selectedAppointment?.dentist.name} on ${selectedAppointment?.date}? This action cannot be undone.`}
-        confirmText="Yes, Cancel"
-        cancelText="No, Keep It"
-        type="danger"
+        item={selectedAppointment}
+        action="cancel"
+        itemName={selectedAppointment ? `appointment with Dr. ${selectedAppointment.dentist?.firstName} ${selectedAppointment.dentist?.lastName} on ${new Date(selectedAppointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+        itemType="Appointment"
       />
     </div>
   )

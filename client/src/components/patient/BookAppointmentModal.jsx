@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { 
   FaTimes,
   FaUser,
@@ -142,6 +143,49 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         [name]: ''
       }))
     }
+
+    // Validate date/time combination when date or time changes
+    if (name === 'date' || name === 'time') {
+      const currentDate = name === 'date' ? value : formData.date
+      const currentTime = name === 'time' ? value : formData.time
+      
+      if (currentDate && currentTime) {
+        const appointmentDateTime = new Date(`${currentDate}T${currentTime}`)
+        const now = new Date()
+        
+        if (appointmentDateTime <= now) {
+          setErrors(prev => ({
+            ...prev,
+            time: 'Appointment must be scheduled for a future time'
+          }))
+        }
+      }
+    }
+  }
+
+  const handleTimeSelect = (time) => {
+    // Check if the selected time is in the future
+    if (formData.date) {
+      const appointmentDateTime = new Date(`${formData.date}T${time}`)
+      const now = new Date()
+      
+      if (appointmentDateTime <= now) {
+        setErrors(prev => ({
+          ...prev,
+          time: 'Appointment must be scheduled for a future time'
+        }))
+        return
+      }
+    }
+    
+    // Clear time error and set the time
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors.time
+      return newErrors
+    })
+    
+    setFormData(prev => ({ ...prev, time }))
   }
 
   const handleClinicSelect = (clinicId) => {
@@ -175,10 +219,20 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     if (step === 3) {
       if (!formData.date) {
         newErrors.date = 'Date is required'
+      } else if (formData.date && formData.time) {
+        // Validate that the appointment is in the future
+        const appointmentDateTime = new Date(`${formData.date}T${formData.time}`)
+        const now = new Date()
+        
+        if (appointmentDateTime <= now) {
+          newErrors.time = 'Appointment must be scheduled for a future time'
+        }
       }
+      
       if (!formData.time) {
         newErrors.time = 'Time is required'
       }
+      
       if (!formData.treatment) {
         newErrors.treatment = 'Treatment type is required'
       }
@@ -267,11 +321,11 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
   const selectedClinic = clinics.find(c => c.userId === parseInt(formData.clinicId))
   const selectedDentist = dentists.find(d => d.userId === parseInt(formData.dentistId))
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-transparent bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={handleClose}
       />
 
@@ -281,6 +335,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           className={`relative w-full max-w-4xl transform transition-all ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           } rounded-xl shadow-2xl`}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className={`flex items-center justify-between p-6 border-b ${
@@ -527,22 +582,36 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                       Appointment Time
                     </label>
                     <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2">
-                      {timeSlots.map((time) => (
-                        <button
-                          key={time}
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, time }))}
-                          className={`p-2 rounded text-sm font-medium transition-all ${
-                            formData.time === time
-                              ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white'
-                              : isDarkMode
-                                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
+                      {timeSlots.map((time) => {
+                        // Check if this time slot is in the past
+                        const isPastTime = formData.date ? (() => {
+                          const appointmentDateTime = new Date(`${formData.date}T${time}`)
+                          const now = new Date()
+                          return appointmentDateTime <= now
+                        })() : false
+
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            onClick={() => handleTimeSelect(time)}
+                            disabled={isPastTime}
+                            className={`p-2 rounded text-sm font-medium transition-all ${
+                              isPastTime
+                                ? isDarkMode
+                                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed line-through'
+                                : formData.time === time
+                                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white'
+                                  : isDarkMode
+                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        )
+                      })}
                     </div>
                     {errors.time && (
                       <p className="text-red-500 text-sm mt-2">{errors.time}</p>
@@ -755,7 +824,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -28,7 +28,7 @@ import { authAPI } from '../../services/api'
 import { useTheme } from '../../contexts/ThemeContext'
 import PatientSidebar from '../../components/patient/PatientSidebar'
 import PatientAppointments from './patient/PatientAppointments'
-import FindDoctor from './patient/FindDoctor'
+import FindDoctor from './patient/FindDentist'
 
 const PatientDashboard = () => {
   const navigate = useNavigate()
@@ -507,7 +507,7 @@ const PatientDashboard = () => {
     switch (activeTab) {
       case 'overview':
         return renderOverview()
-      case 'find-doctor':
+      case 'find-dentist':
         return <FindDoctor />
       case 'appointments':
         return <PatientAppointments />
