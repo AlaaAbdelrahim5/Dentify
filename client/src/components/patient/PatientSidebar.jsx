@@ -5,7 +5,9 @@ import {
   FaXRay,
   FaHistory,
   FaCog,
-  FaHome
+  FaHome,
+  FaUserMd,
+  FaSearch
 } from 'react-icons/fa'
 
 const PatientSidebar = ({ activeTab, setActiveTab }) => {
@@ -13,6 +15,7 @@ const PatientSidebar = ({ activeTab, setActiveTab }) => {
 
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: FaHome },
+    { id: 'find-doctor', label: 'Find a Doctor', icon: FaUserMd },
     { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
     { id: 'xrays', label: 'X-ray Results', icon: FaXRay },
     { id: 'history', label: 'Medical History', icon: FaTooth },

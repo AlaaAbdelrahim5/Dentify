@@ -14,7 +14,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../services/api'
 import { authUtils } from '../../utils/auth'
 
-const BookAppointmentModal = ({ isOpen, onClose, onSave }) => {
+const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = null }) => {
   const { isDarkMode } = useTheme()
   const [step, setStep] = useState(1) // 1: Select Clinic, 2: Select Dentist, 3: Select Date/Time, 4: Confirm
   const [formData, setFormData] = useState({
@@ -32,12 +32,37 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // Initialize with preselected doctor if provided
+  useEffect(() => {
+    if (isOpen && preselectedDoctor) {
+      const clinicId = preselectedDoctor.clinic?.userId?.toString() || preselectedDoctor.clinicId?.toString() || ''
+      const dentistId = preselectedDoctor.userId?.toString() || preselectedDoctor.id?.toString() || ''
+      
+      setFormData(prev => ({
+        ...prev,
+        clinicId: clinicId,
+        dentistId: dentistId
+      }))
+      
+      // If we have both clinic and dentist, go to step 3
+      if (clinicId && dentistId) {
+        setStep(3)
+        
+        // Set the clinic and dentist in state
+        if (preselectedDoctor.clinic) {
+          setClinics([preselectedDoctor.clinic])
+        }
+        setDentists([preselectedDoctor])
+      }
+    }
+  }, [isOpen, preselectedDoctor])
+
   // Fetch clinics when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !preselectedDoctor) {
       fetchClinics()
     }
-  }, [isOpen])
+  }, [isOpen, preselectedDoctor])
 
   // Fetch dentists when clinic is selected
   useEffect(() => {
@@ -232,6 +257,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave }) => {
     setErrors({})
     setError(null)
     setStep(1)
+    setClinics([])
+    setDentists([])
     onClose()
   }
 

@@ -18,6 +18,8 @@ export { default as ConfirmationModal } from './ConfirmationModal'
 export { default as StatusBadge } from './StatusBadge'
 export { default as ActionButtons } from './ActionButtons'
 export { default as PageHeader } from './PageHeader'
+export { default as DoctorCard } from './DoctorCard'
+export { default as DoctorProfileModal } from './DoctorProfileModal'
 
 // Specific Modals & Sidebars
 export { default as ClinicModal } from './admin/ClinicModal'
