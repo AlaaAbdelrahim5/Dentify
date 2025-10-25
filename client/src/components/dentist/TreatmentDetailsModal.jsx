@@ -45,25 +45,25 @@ const TreatmentDetailsModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className={`w-full max-w-6xl rounded-xl shadow-2xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
+        isDarkMode ? 'bg-gray-700' : 'bg-white'
       } max-h-[90vh] overflow-hidden flex flex-col`}>
         {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+        <div className={`flex items-center justify-between p-4 border-b ${
+          isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'
         }`}>
-          <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
               isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
             }`}>
-              <FaStethoscope className="w-7 h-7 text-teal-600" />
+              <FaStethoscope className="w-6 h-6 text-teal-600" />
             </div>
             <div>
-              <h2 className={`text-2xl font-bold ${
+              <h2 className={`text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>
                 {treatmentData.treatmentType}
               </h2>
-              <p className={`text-sm ${
+              <p className={`text-xs ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
                 Patient: {treatmentData.patientName}
@@ -107,8 +107,8 @@ const TreatmentDetailsModal = ({
         </div>
 
         {/* Tabs Navigation */}
-        <div className={`flex gap-1 p-4 border-b ${
-          isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
+        <div className={`flex gap-1 p-3 border-b ${
+          isDarkMode ? 'border-gray-600 bg-gray-600/30' : 'border-gray-200 bg-gray-50'
         }`}>
           <button
             onClick={() => setActiveTab('overview')}
@@ -165,7 +165,9 @@ const TreatmentDetailsModal = ({
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6">{activeTab === 'overview' && (
+        <div className={`flex-1 overflow-y-auto p-5 ${
+          isDarkMode ? 'bg-gray-600/20' : 'bg-gray-50'
+        }`}>{activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
