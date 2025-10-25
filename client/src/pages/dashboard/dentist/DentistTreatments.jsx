@@ -1,177 +1,274 @@
 import { useState } from 'react'
-import { 
+import { useTheme } from '../../../contexts/ThemeContext'
+import {
   FaStethoscope,
-  FaUser,
-  FaCalendarAlt,
-  FaClock,
-  FaDollarSign,
-  FaSearch,
-  FaFilter,
   FaPlus,
-  FaEdit,
-  FaEye,
-  FaTrash,
-  FaCheck,
-  FaPlay,
-  FaPause,
-  FaTooth,
-  FaExclamationTriangle,
-  FaListAlt,
+  FaSearch,
   FaTh,
-  FaChartLine
+  FaListAlt,
+  FaCheck,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaDollarSign,
+  FaCalendarAlt,
+  FaTooth,
+  FaMoneyBillWave,
+  FaXRay,
+  FaExclamationTriangle
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
-import { useTheme } from '../../../contexts/ThemeContext'
 import NewTreatmentModal from '../../../components/dentist/NewTreatmentModal'
 import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsModal'
+import PaymentModal from '../../../components/dentist/PaymentModal'
+import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
-import ToothChartModal from '../../../components/dentist/ToothChartModal'
+import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
+import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
 
 const DentistTreatments = () => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('active') // active, completed, all
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
-  const [selectedPriority, setSelectedPriority] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or list
+  
+  // Modals state
   const [isNewTreatmentModalOpen, setIsNewTreatmentModalOpen] = useState(false)
   const [isTreatmentDetailsModalOpen, setIsTreatmentDetailsModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isToothChartModalOpen, setIsToothChartModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
 
-  // Mock treatments data
+  // Mock treatments data with new database structure
   const mockTreatments = [
     {
       id: 1,
+      patientId: 101,
       patientName: 'John Smith',
+      dentistId: 1,
       treatmentType: 'Root Canal',
-      toothNumber: '14',
       description: 'Root canal treatment for infected tooth',
-      estimatedDuration: '120',
-      estimatedCost: '800.00',
-      priority: 'high',
-      status: 'in-progress',
-      startDate: '2024-01-15',
-      completionDate: '2024-02-15',
+      treatmentStatus: 'In Progress',
+      creationDate: '2024-01-15',
+      totalAmount: 800.00,
+      paidAmount: 400.00,
       notes: 'Patient experiencing mild discomfort',
-      preConditions: 'Pre-medication required',
-      postCareInstructions: 'Avoid hard foods for 24 hours',
-      hasToothChart: true
+      priority: 'High',
+      steps: [
+        { title: 'Diagnosis', status: 'completed', date: '2024-01-15', notes: 'Infected pulp confirmed' },
+        { title: 'X-Ray & Analysis', status: 'completed', date: '2024-01-16', notes: 'Root canal imaging done' },
+        { title: 'Root Canal Procedure', status: 'current', date: '2024-01-20', notes: 'Treatment in progress' },
+        { title: 'Crown Installation', status: 'upcoming', date: '', notes: 'Scheduled after healing' },
+        { title: 'Follow-up', status: 'upcoming', date: '', notes: 'Check after 2 weeks' }
+      ],
+      teethStatus: [
+        {
+          toothNumber: 14,
+          conditionStatus: 'Root Canal',
+          treatmentPriority: 'High',
+          diagnosedDate: '2024-01-15',
+          notes: 'Infected pulp'
+        }
+      ]
     },
     {
       id: 2,
+      patientId: 102,
       patientName: 'Sarah Johnson',
-      treatmentType: 'Dental Cleaning',
-      toothNumber: '',
+      dentistId: 1,
+      treatmentType: 'Cleaning',
       description: 'Routine dental cleaning and checkup',
-      estimatedDuration: '60',
-      estimatedCost: '120.00',
-      priority: 'medium',
-      status: 'planned',
-      startDate: '2024-02-20',
-      completionDate: '2024-02-20',
+      treatmentStatus: 'Completed',
+      creationDate: '2024-02-01',
+      totalAmount: 120.00,
+      paidAmount: 120.00,
       notes: 'Regular maintenance cleaning',
-      preConditions: '',
-      postCareInstructions: 'Continue regular brushing and flossing'
+      priority: 'Low',
+      steps: [
+        { title: 'Initial Checkup', status: 'completed', date: '2024-02-01', notes: 'No issues found' },
+        { title: 'Cleaning', status: 'completed', date: '2024-02-01', notes: 'Deep cleaning done' },
+        { title: 'Polishing', status: 'completed', date: '2024-02-01', notes: 'Teeth polished' },
+        { title: 'Final Check', status: 'completed', date: '2024-02-01', notes: 'All clear' }
+      ],
+      teethStatus: []
     },
     {
       id: 3,
+      patientId: 103,
       patientName: 'Mike Wilson',
+      dentistId: 1,
       treatmentType: 'Crown Installation',
-      toothNumber: '25',
       description: 'Ceramic crown installation on molar',
-      estimatedDuration: '90',
-      estimatedCost: '1200.00',
-      priority: 'medium',
-      status: 'completed',
-      startDate: '2024-01-10',
-      completionDate: '2024-01-25',
+      treatmentStatus: 'Completed',
+      creationDate: '2024-01-10',
+      totalAmount: 1200.00,
+      paidAmount: 1200.00,
       notes: 'Crown fitted successfully',
-      preConditions: 'Root canal completed',
-      postCareInstructions: 'Avoid sticky foods for 48 hours'
+      priority: 'Medium',
+      steps: [
+        { title: 'Diagnosis', status: 'completed', date: '2024-01-10', notes: 'Tooth prepared' },
+        { title: 'Tooth Preparation', status: 'completed', date: '2024-01-11', notes: 'Shaped for crown' },
+        { title: 'Impression', status: 'completed', date: '2024-01-11', notes: 'Mold taken' },
+        { title: 'Temporary Crown', status: 'completed', date: '2024-01-12', notes: 'Temporary installed' },
+        { title: 'Crown Installation', status: 'completed', date: '2024-01-20', notes: 'Permanent crown fitted' }
+      ],
+      teethStatus: [
+        {
+          toothNumber: 25,
+          conditionStatus: 'Crown',
+          treatmentPriority: 'Medium',
+          diagnosedDate: '2024-01-10',
+          notes: 'Crown installation complete'
+        }
+      ]
     },
     {
       id: 4,
+      patientId: 104,
       patientName: 'Emily Davis',
-      treatmentType: 'Tooth Extraction',
-      toothNumber: '18',
+      dentistId: 1,
+      treatmentType: 'Extraction',
       description: 'Wisdom tooth extraction due to impaction',
-      estimatedDuration: '45',
-      estimatedCost: '300.00',
-      priority: 'urgent',
-      status: 'planned',
-      startDate: '2024-02-10',
-      completionDate: '2024-02-10',
+      treatmentStatus: 'In Progress',
+      creationDate: '2024-02-10',
+      totalAmount: 300.00,
+      paidAmount: 0.00,
       notes: 'Impacted wisdom tooth causing pain',
-      preConditions: 'Antibiotics prescribed',
-      postCareInstructions: 'Ice pack for 20 minutes every hour'
+      priority: 'High',
+      steps: [
+        { title: 'Consultation', status: 'completed', date: '2024-02-10', notes: 'Impaction confirmed' },
+        { title: 'X-Ray', status: 'completed', date: '2024-02-11', notes: 'Position verified' },
+        { title: 'Extraction Procedure', status: 'current', date: '2024-02-15', notes: 'Scheduled for extraction' },
+        { title: 'Post-Op Care', status: 'upcoming', date: '', notes: 'Recovery monitoring' }
+      ],
+      teethStatus: [
+        {
+          toothNumber: 18,
+          conditionStatus: 'Extracted',
+          treatmentPriority: 'High',
+          diagnosedDate: '2024-02-10',
+          notes: 'Requires extraction'
+        }
+      ]
+    },
+    {
+      id: 5,
+      patientId: 105,
+      patientName: 'Robert Brown',
+      dentistId: 1,
+      treatmentType: 'Filling',
+      description: 'Multiple cavity fillings',
+      treatmentStatus: 'In Progress',
+      creationDate: '2024-02-15',
+      totalAmount: 450.00,
+      paidAmount: 225.00,
+      notes: 'Three cavities detected',
+      priority: 'Medium',
+      steps: [
+        { title: 'Diagnosis', status: 'completed', date: '2024-02-15', notes: 'Three cavities found' },
+        { title: 'First Filling', status: 'completed', date: '2024-02-16', notes: 'Tooth #12 done' },
+        { title: 'Second Filling', status: 'current', date: '2024-02-20', notes: 'Tooth #19 in progress' },
+        { title: 'Third Filling', status: 'upcoming', date: '', notes: 'Tooth #30 pending' },
+        { title: 'Follow-up', status: 'upcoming', date: '', notes: 'Check after 1 week' }
+      ],
+      teethStatus: [
+        {
+          toothNumber: 12,
+          conditionStatus: 'Cavity',
+          treatmentPriority: 'Medium',
+          diagnosedDate: '2024-02-15',
+          notes: 'Small cavity'
+        },
+        {
+          toothNumber: 19,
+          conditionStatus: 'Cavity',
+          treatmentPriority: 'High',
+          diagnosedDate: '2024-02-15',
+          notes: 'Deep cavity'
+        },
+        {
+          toothNumber: 30,
+          conditionStatus: 'Cavity',
+          treatmentPriority: 'Low',
+          diagnosedDate: '2024-02-15',
+          notes: 'Surface cavity'
+        }
+      ]
     }
   ]
 
   // Mock patients for new treatment modal
   const mockPatients = [
-    { id: 1, name: 'John Smith' },
-    { id: 2, name: 'Sarah Johnson' },
-    { id: 3, name: 'Mike Wilson' },
-    { id: 4, name: 'Emily Davis' },
-    { id: 5, name: 'Robert Brown' }
+    { id: 101, name: 'John Smith' },
+    { id: 102, name: 'Sarah Johnson' },
+    { id: 103, name: 'Mike Wilson' },
+    { id: 104, name: 'Emily Davis' },
+    { id: 105, name: 'Robert Brown' }
   ]
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return 'bg-red-100 text-red-800 border-red-200'
-      case 'high':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low':
-        return 'bg-green-100 text-green-800 border-green-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
+  // Mock radiology centers
+  const mockRadiologyCenters = [
+    { id: 1, name: 'Central Radiology Center' },
+    { id: 2, name: 'Advanced Imaging Clinic' },
+    { id: 3, name: 'DentaScan Radiology' }
+  ]
+
+  // Mock payments (in real app, this would be fetched per treatment)
+  const mockPayments = {
+    1: [
+      { amount: 200, paymentMethod: 'Cash', paymentDate: '2024-01-15', notes: 'Initial payment' },
+      { amount: 200, paymentMethod: 'Card', paymentDate: '2024-01-22', notes: 'Second installment' }
+    ],
+    5: [
+      { amount: 225, paymentMethod: 'Card', paymentDate: '2024-02-15', notes: 'Down payment' }
+    ]
   }
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'planned':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'on-hold':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200'
+      case 'In Progress':
+        return isDarkMode 
+          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+          : 'bg-blue-100 text-blue-700 border-blue-400'
+      case 'Completed':
+        return isDarkMode 
+          ? 'bg-green-900/30 text-green-400 border-green-600' 
+          : 'bg-green-100 text-green-700 border-green-400'
+      case 'Cancelled':
+        return isDarkMode 
+          ? 'bg-red-900/30 text-red-400 border-red-600' 
+          : 'bg-red-100 text-red-700 border-red-400'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return isDarkMode 
+          ? 'bg-gray-800 text-gray-300 border-gray-600' 
+          : 'bg-white text-gray-700 border-gray-300'
     }
   }
 
   const filteredTreatments = mockTreatments.filter(treatment => {
     const matchesSearch = treatment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          treatment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         treatment.toothNumber.includes(searchTerm)
+                         treatment.teethStatus?.some(t => t.toothNumber.toString().includes(searchTerm))
     
     const matchesView = activeView === 'all' || 
-                       (activeView === 'active' && ['planned', 'in-progress'].includes(treatment.status)) ||
-                       (activeView === 'completed' && treatment.status === 'completed')
+                       (activeView === 'active' && treatment.treatmentStatus === 'In Progress') ||
+                       (activeView === 'completed' && treatment.treatmentStatus === 'Completed')
     
-    const matchesStatus = selectedStatus === 'all' || treatment.status === selectedStatus
-    const matchesPriority = selectedPriority === 'all' || treatment.priority === selectedPriority
+    const matchesStatus = selectedStatus === 'all' || treatment.treatmentStatus === selectedStatus
     
-    return matchesSearch && matchesView && matchesStatus && matchesPriority
+    return matchesSearch && matchesView && matchesStatus
   })
 
   const getStats = () => {
     const total = mockTreatments.length
-    const active = mockTreatments.filter(t => ['planned', 'in-progress'].includes(t.status)).length
-    const completed = mockTreatments.filter(t => t.status === 'completed').length
-    const urgent = mockTreatments.filter(t => t.priority === 'urgent').length
+    const active = mockTreatments.filter(t => t.treatmentStatus === 'In Progress').length
+    const completed = mockTreatments.filter(t => t.treatmentStatus === 'Completed').length
+    const totalRevenue = mockTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
+    const pendingPayments = mockTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
     
-    return { total, active, completed, urgent }
+    return { total, active, completed, totalRevenue, pendingPayments }
   }
 
   const stats = getStats()
@@ -202,7 +299,10 @@ const DentistTreatments = () => {
 
   const handleEditTreatment = (treatment) => {
     console.log('Edit treatment:', treatment)
-    // Here you would open edit modal or navigate to edit page
+    setIsTreatmentDetailsModalOpen(false)
+    // Open edit modal (reuse NewTreatmentModal with initialData)
+    setSelectedTreatment(treatment)
+    setIsNewTreatmentModalOpen(true)
   }
 
   const handleDeleteTreatment = (treatment) => {
@@ -224,212 +324,221 @@ const DentistTreatments = () => {
   const handleUpdateStatus = (treatmentId, newStatus) => {
     console.log('Update status:', treatmentId, newStatus)
     // Here you would update the treatment status in your backend
+    setIsTreatmentDetailsModalOpen(false)
   }
 
-  const handleAddToothChartToTreatment = (treatment) => {
+  const handleAddPayment = (treatment) => {
     setSelectedTreatment(treatment)
-    setIsToothChartModalOpen(true)
+    setIsTreatmentDetailsModalOpen(false)
+    setIsPaymentModalOpen(true)
   }
 
-  const handleOpenToothChart = () => {
-    setIsToothChartModalOpen(true)
-  }
-
-  const handleCloseToothChart = () => {
-    setIsToothChartModalOpen(false)
+  const handleClosePaymentModal = () => {
+    setIsPaymentModalOpen(false)
     setSelectedTreatment(null)
   }
 
-  const handleSaveToothChart = (chartData) => {
-    console.log('Tooth chart data:', chartData)
-    
-    if (selectedTreatment) {
-      // Associate the tooth chart with the selected treatment
-      console.log('Attaching tooth chart to treatment:', selectedTreatment.id)
-      console.log('Treatment:', selectedTreatment.treatmentType)
-      console.log('Patient:', selectedTreatment.patientName)
-      
-      // Here you would save the chart data to your backend
-      // API call example:
-      // await treatmentsAPI.addToothChart(selectedTreatment.id, chartData)
-      
-      alert(`Tooth chart successfully added to treatment: ${selectedTreatment.treatmentType} for ${selectedTreatment.patientName}`)
-    } else {
-      // Save as standalone tooth chart examination
-      console.log('Saving standalone tooth chart')
-      // API call example:
-      // await toothChartsAPI.create(chartData)
-    }
-    
-    // The chartData includes:
-    // - selectedTeeth: array of tooth numbers
-    // - toothConditions: object mapping tooth numbers to their conditions
-    // - toothNotes: object mapping tooth numbers to their specific notes
-    // - formData: general examination data (date, notes, treatment plan, severity)
-    
-    setIsToothChartModalOpen(false)
+  const handleSavePayment = (paymentData) => {
+    console.log('New payment:', paymentData)
+    // Here you would save payment to backend
+  }
+
+  const handleRequestRadiology = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsTreatmentDetailsModalOpen(false)
+    setIsRadiologyModalOpen(true)
+  }
+
+  const handleCloseRadiologyModal = () => {
+    setIsRadiologyModalOpen(false)
     setSelectedTreatment(null)
   }
 
-  const handleCreateTreatmentFromTooth = (toothNumber) => {
-    // Pre-fill the treatment modal with tooth information
-    console.log('Creating treatment for tooth:', toothNumber)
-    setIsToothChartModalOpen(false)
-    setIsNewTreatmentModalOpen(true)
-    // You can pass the tooth number to the NewTreatmentModal to pre-fill it
+  const handleSaveRadiologyRequest = (requestData) => {
+    console.log('New radiology request:', requestData)
+    // Here you would save radiology request to backend
   }
 
-  const handleScheduleAppointmentFromTooth = (toothNumber) => {
-    // Navigate to appointment scheduling with tooth information
-    console.log('Scheduling appointment for tooth:', toothNumber)
-    setIsToothChartModalOpen(false)
-    // You could navigate to the appointments page or open an appointment modal
-  }
+  const TreatmentCard = ({ treatment }) => {
+    const remainingBalance = treatment.totalAmount - treatment.paidAmount
+    const paymentProgress = (treatment.paidAmount / treatment.totalAmount) * 100
 
-  const TreatmentCard = ({ treatment }) => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    } hover:shadow-lg transition-shadow`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-          }`}>
-            <FaTooth className="text-teal-600" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
+    return (
+      <Card className={`p-6 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      } hover:shadow-lg transition-shadow`}>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
+            }`}>
+              <FaStethoscope className="text-teal-600" />
+            </div>
+            <div>
               <h3 className={`font-semibold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>
                 {treatment.treatmentType}
               </h3>
-              {treatment.hasToothChart && (
-                <span className="px-2 py-0.5 bg-teal-600 text-white text-xs rounded-full flex items-center gap-1" title="Has Tooth Chart">
-                  <FaTooth className="w-2.5 h-2.5" />
-                  Chart
-                </span>
-              )}
+              <p className={`text-sm ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                {treatment.patientName}
+              </p>
             </div>
-            <p className={`text-sm ${
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs border ${
+            getStatusColor(treatment.treatmentStatus)
+          }`}>
+            {treatment.treatmentStatus}
+          </span>
+        </div>
+
+        {treatment.description && (
+          <p className={`text-sm mb-4 line-clamp-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {treatment.description}
+          </p>
+        )}
+
+        {/* Teeth Status Preview */}
+        {treatment.teethStatus && treatment.teethStatus.length > 0 && (
+          <div className="mb-4">
+            <TreatmentTeethStatus teethStatus={treatment.teethStatus} compact={true} />
+          </div>
+        )}
+
+        {/* Payment Info */}
+        <div className={`p-3 rounded-lg mb-4 ${
+          isDarkMode ? 'bg-gray-900/50' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              {treatment.patientName}
-              {treatment.toothNumber && ` • Tooth #${treatment.toothNumber}`}
-            </p>
+              Payment Progress
+            </span>
+            <span className={`text-xs font-semibold ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              {paymentProgress.toFixed(0)}%
+            </span>
+          </div>
+          <div className={`w-full h-2 rounded-full overflow-hidden mb-2 ${
+            isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+          }`}>
+            <div
+              className="h-full bg-gradient-to-r from-green-500 to-teal-500"
+              style={{ width: `${paymentProgress}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <div>
+              <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                Paid:{' '}
+              </span>
+              <span className={`font-semibold ${
+                isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`}>
+                ${treatment.paidAmount.toFixed(2)}
+              </span>
+            </div>
+            <div>
+              <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                Balance:{' '}
+              </span>
+              <span className={`font-semibold ${
+                remainingBalance > 0
+                  ? isDarkMode ? 'text-orange-400' : 'text-orange-600'
+                  : isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`}>
+                ${remainingBalance.toFixed(2)}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <span className={`px-2 py-1 rounded-full text-xs border ${
-            getPriorityColor(treatment.priority)
-          }`}>
-            {treatment.priority.charAt(0).toUpperCase() + treatment.priority.slice(1)}
-          </span>
-          <span className={`px-2 py-1 rounded-full text-xs border ${
-            getStatusColor(treatment.status)
-          }`}>
-            {treatment.status.charAt(0).toUpperCase() + treatment.status.slice(1)}
-          </span>
-        </div>
-      </div>
 
-      <p className={`text-sm mb-4 ${
-        isDarkMode ? 'text-gray-300' : 'text-gray-600'
-      }`}>
-        {treatment.description}
-      </p>
+        <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-gray-500" />
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+              {new Date(treatment.creationDate).toLocaleDateString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaDollarSign className="text-gray-500" />
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+              ${treatment.totalAmount.toFixed(2)}
+            </span>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-2">
-          <FaClock className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {treatment.estimatedDuration} min
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaDollarSign className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            ${treatment.estimatedCost}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaCalendarAlt className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {new Date(treatment.startDate).toLocaleDateString()}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaExclamationTriangle className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {treatment.priority} priority
-          </span>
-        </div>
-      </div>
-
-      <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => handleViewTreatment(treatment)}
-          title="View Details"
-        >
-          <FaEye className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => handleEditTreatment(treatment)}
-          title="Edit Treatment"
-        >
-          <FaEdit className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => handleAddToothChartToTreatment(treatment)}
-          title="Add Tooth Chart"
-          className="text-teal-600"
-        >
-          <FaTooth className="w-4 h-4" />
-        </Button>
-        {treatment.status === 'planned' && (
+        <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => handleUpdateStatus(treatment.id, 'in-progress')}
-            title="Start Treatment"
-            className="text-blue-600"
+            onClick={() => handleViewTreatment(treatment)}
+            title="View Details"
           >
-            <FaPlay className="w-4 h-4" />
+            <FaEye className="w-4 h-4" />
           </Button>
-        )}
-        {treatment.status === 'in-progress' && (
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => handleUpdateStatus(treatment.id, 'completed')}
-            title="Mark Complete"
-            className="text-green-600"
+            onClick={() => handleEditTreatment(treatment)}
+            title="Edit Treatment"
           >
-            <FaCheck className="w-4 h-4" />
+            <FaEdit className="w-4 h-4" />
           </Button>
-        )}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-red-600"
-          onClick={() => handleDeleteTreatment(treatment)}
-          title="Delete Treatment"
-        >
-          <FaTrash className="w-4 h-4" />
-        </Button>
-      </div>
-    </Card>
-  )
+          {remainingBalance > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleAddPayment(treatment)}
+              title="Add Payment"
+              className="text-green-600"
+            >
+              <FaMoneyBillWave className="w-4 h-4" />
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleRequestRadiology(treatment)}
+            title="Request Radiology"
+            className="text-purple-600"
+          >
+            <FaXRay className="w-4 h-4" />
+          </Button>
+          {treatment.treatmentStatus === 'In Progress' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleUpdateStatus(treatment.id, 'Completed')}
+              title="Mark Complete"
+              className="text-green-600"
+            >
+              <FaCheck className="w-4 h-4" />
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-600"
+            onClick={() => handleDeleteTreatment(treatment)}
+            title="Delete Treatment"
+          >
+            <FaTrash className="w-4 h-4" />
+          </Button>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className={`text-2xl font-bold ${
@@ -440,27 +549,17 @@ const DentistTreatments = () => {
           <p className={`mt-1 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Manage treatment plans and procedures
+            Manage treatment plans and track progress
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleOpenToothChart}
-            className="flex items-center gap-2"
-          >
-            <FaTooth className="w-4 h-4" />
-            Tooth Chart
-          </Button>
-          <Button variant="primary" onClick={handleNewTreatment}>
-            <FaPlus className="w-4 h-4 mr-2" />
-            New Treatment Plan
-          </Button>
-        </div>
+        <Button variant="primary" onClick={handleNewTreatment}>
+          <FaPlus className="w-4 h-4 mr-2" />
+          New Treatment Plan
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
             <div>
@@ -480,12 +579,12 @@ const DentistTreatments = () => {
             <div>
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Active Treatments</p>
+              }`}>Active</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>{stats.active}</p>
             </div>
-            <FaPlay className="w-8 h-8 text-blue-500" />
+            <FaExclamationTriangle className="w-8 h-8 text-blue-500" />
           </div>
         </Card>
 
@@ -508,17 +607,31 @@ const DentistTreatments = () => {
             <div>
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Urgent Cases</p>
+              }`}>Total Revenue</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.urgent}</p>
+              }`}>${stats.totalRevenue.toFixed(0)}</p>
             </div>
-            <FaExclamationTriangle className="w-8 h-8 text-red-500" />
+            <FaDollarSign className="w-8 h-8 text-green-500" />
+          </div>
+        </Card>
+
+        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>Pending</p>
+              <p className={`text-2xl font-bold ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>${stats.pendingPayments.toFixed(0)}</p>
+            </div>
+            <FaMoneyBillWave className="w-8 h-8 text-orange-500" />
           </div>
         </Card>
       </div>
 
-      {/* View Selector */}
+      {/* View Tabs */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex flex-wrap gap-2">
           {['active', 'completed', 'all'].map((view) => (
@@ -562,26 +675,9 @@ const DentistTreatments = () => {
               }`}
             >
               <option value="all">All Status</option>
-              <option value="planned">Planned</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="on-hold">On Hold</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <select
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Priority</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
             <div className="flex border rounded-lg overflow-hidden">
               <button
@@ -613,7 +709,7 @@ const DentistTreatments = () => {
         </div>
       </Card>
 
-      {/* Treatments List */}
+      {/* Treatments Grid/List */}
       {filteredTreatments.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -635,7 +731,15 @@ const DentistTreatments = () => {
       ) : (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
           {filteredTreatments.map((treatment) => (
-            <TreatmentCard key={treatment.id} treatment={treatment} />
+            viewMode === 'grid' ? (
+              <TreatmentPlanCard 
+                key={treatment.id} 
+                treatment={treatment}
+                onClick={() => handleViewTreatment(treatment)}
+              />
+            ) : (
+              <TreatmentCard key={treatment.id} treatment={treatment} />
+            )
           ))}
         </div>
       )}
@@ -646,6 +750,7 @@ const DentistTreatments = () => {
         onClose={handleCloseNewTreatmentModal}
         onSave={handleSaveNewTreatment}
         patients={mockPatients}
+        initialData={selectedTreatment && isNewTreatmentModalOpen ? selectedTreatment : null}
       />
 
       <TreatmentDetailsModal
@@ -654,6 +759,38 @@ const DentistTreatments = () => {
         treatmentData={selectedTreatment}
         onEdit={handleEditTreatment}
         onUpdateStatus={handleUpdateStatus}
+        onAddPayment={handleAddPayment}
+        onRequestRadiology={handleRequestRadiology}
+        onBookStepAppointment={(stepInfo) => {
+          console.log('Book appointment for step:', stepInfo)
+          // TODO: Open appointment booking modal with step info
+        }}
+        payments={selectedTreatment ? mockPayments[selectedTreatment.id] || [] : []}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={handleClosePaymentModal}
+        onSave={handleSavePayment}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentType: selectedTreatment.treatmentType,
+          patientName: selectedTreatment.patientName,
+          totalAmount: selectedTreatment.totalAmount,
+          paidAmount: selectedTreatment.paidAmount
+        } : null}
+      />
+
+      <RadiologyRequestModal
+        isOpen={isRadiologyModalOpen}
+        onClose={handleCloseRadiologyModal}
+        onSave={handleSaveRadiologyRequest}
+        patients={mockPatients}
+        radiologyCenters={mockRadiologyCenters}
+        patientInfo={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName
+        } : null}
       />
 
       <DeleteConfirmationModal
@@ -664,21 +801,6 @@ const DentistTreatments = () => {
           patient: { name: selectedTreatment.patientName },
           treatment: selectedTreatment.treatmentType,
           time: ''
-        } : null}
-      />
-
-      {/* Tooth Chart Modal */}
-      <ToothChartModal
-        isOpen={isToothChartModalOpen}
-        onClose={handleCloseToothChart}
-        onSave={handleSaveToothChart}
-        onCreateTreatment={handleCreateTreatmentFromTooth}
-        onScheduleAppointment={handleScheduleAppointmentFromTooth}
-        patientInfo={selectedTreatment ? { name: selectedTreatment.patientName } : null}
-        treatmentInfo={selectedTreatment ? {
-          id: selectedTreatment.id,
-          treatmentType: selectedTreatment.treatmentType,
-          toothNumber: selectedTreatment.toothNumber
         } : null}
       />
     </div>

@@ -22,6 +22,8 @@ import DentistPatients from './dentist/DentistPatients'
 import DentistSchedule from './dentist/DentistSchedule'
 import DentistSettings from './dentist/DentistSettings'
 import DentistTreatments from './dentist/DentistTreatments'
+import DentistPayments from './dentist/DentistPayments'
+import DentistRadiology from './dentist/DentistRadiology'
 // Import dentist-specific page components (to be created)
 // import DentistReports from './dentist/DentistReports'
 
@@ -283,6 +285,10 @@ const DentistDashboard = () => {
         return <DentistSchedule />
       case 'treatments':
         return <DentistTreatments />
+      case 'payments':
+        return <DentistPayments />
+      case 'radiology':
+        return <DentistRadiology />
       case 'reports':
         return (
           <div className="text-center py-12">

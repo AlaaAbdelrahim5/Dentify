@@ -1,93 +1,94 @@
-import { useState } from 'react'
-import { 
-  FaTimes,
-  FaStethoscope,
-  FaUser,
-  FaCalendarAlt,
-  FaClock,
-  FaDollarSign,
-  FaStickyNote,
-  FaFileAlt,
-  FaTooth,
-  FaExclamationTriangle
-} from 'react-icons/fa'
-import { Button } from '../index'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../contexts/ThemeContext'
+import { FaTimes, FaSave, FaTooth, FaCalendarAlt, FaDollarSign, FaStethoscope, FaPlus, FaTrash, FaExclamationTriangle } from 'react-icons/fa'
+import Button from '../Button'
+import Input from '../Input'
+import Select from '../Select'
+import ToothChart from './ToothChart'
 
-const NewTreatmentModal = ({ isOpen, onClose, onSave, patients = [] }) => {
+const NewTreatmentModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  patients = [],
+  initialData = null
+}) => {
   const { isDarkMode } = useTheme()
   const [formData, setFormData] = useState({
     patientId: '',
     treatmentType: '',
-    toothNumber: '',
     description: '',
-    estimatedDuration: '30',
-    estimatedCost: '',
-    priority: 'medium',
-    status: 'planned',
-    startDate: '',
-    completionDate: '',
+    treatmentStatus: 'In Progress',
+    creationDate: new Date().toISOString().split('T')[0],
+    totalAmount: '',
+    paidAmount: '0',
     notes: '',
-    preConditions: '',
-    postCareInstructions: ''
+    priority: 'Medium'
   })
-
+  const [selectedTeeth, setSelectedTeeth] = useState([])
+  const [toothConditions, setToothConditions] = useState({})
+  const [showToothChart, setShowToothChart] = useState(false)
+  const [treatmentSteps, setTreatmentSteps] = useState([])
   const [errors, setErrors] = useState({})
 
-  const treatmentTypes = [
-    'Dental Cleaning',
-    'Dental Filling',
-    'Root Canal',
-    'Tooth Extraction',
-    'Crown Installation',
-    'Bridge Installation',
-    'Dental Implant',
-    'Teeth Whitening',
-    'Orthodontic Treatment',
-    'Periodontal Treatment',
-    'Wisdom Tooth Removal',
-    'Denture Fitting',
-    'Veneers',
-    'Oral Surgery',
-    'Emergency Treatment',
-    'Consultation',
-    'Follow-up'
-  ]
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          patientId: initialData.patientId || '',
+          treatmentType: initialData.treatmentType || '',
+          description: initialData.description || '',
+          treatmentStatus: initialData.treatmentStatus || 'In Progress',
+          creationDate: initialData.creationDate || new Date().toISOString().split('T')[0],
+          totalAmount: initialData.totalAmount?.toString() || '',
+          paidAmount: initialData.paidAmount?.toString() || '0',
+          notes: initialData.notes || '',
+          priority: initialData.priority || 'Medium'
+        })
+        setSelectedTeeth(initialData.teethStatus?.map(t => t.toothNumber) || [])
+        const conditions = {}
+        initialData.teethStatus?.forEach(tooth => {
+          conditions[tooth.toothNumber] = {
+            status: tooth.conditionStatus,
+            priority: tooth.treatmentPriority,
+            diagnosedDate: tooth.diagnosedDate,
+            notes: tooth.notes
+          }
+        })
+        setToothConditions(conditions)
+        setTreatmentSteps(initialData.steps || [])
+      } else {
+        setFormData({
+          patientId: '',
+          treatmentType: '',
+          description: '',
+          treatmentStatus: 'In Progress',
+          creationDate: new Date().toISOString().split('T')[0],
+          totalAmount: '',
+          paidAmount: '0',
+          notes: '',
+          priority: 'Medium'
+        })
+        setSelectedTeeth([])
+        setToothConditions({})
+        setTreatmentSteps([
+          { title: 'Diagnosis', status: 'current', date: new Date().toISOString().split('T')[0], notes: '' },
+          { title: 'Treatment Planning', status: 'upcoming', date: '', notes: '' },
+          { title: 'Treatment Execution', status: 'upcoming', date: '', notes: '' },
+          { title: 'Follow-up', status: 'upcoming', date: '', notes: '' }
+        ])
+      }
+      setErrors({})
+      setShowToothChart(false)
+    }
+  }, [isOpen, initialData])
 
-  const durationOptions = [
-    { value: '15', label: '15 minutes' },
-    { value: '30', label: '30 minutes' },
-    { value: '45', label: '45 minutes' },
-    { value: '60', label: '1 hour' },
-    { value: '90', label: '1.5 hours' },
-    { value: '120', label: '2 hours' },
-    { value: '180', label: '3 hours' },
-    { value: '240', label: '4 hours' }
-  ]
-
-  const priorityOptions = [
-    { value: 'low', label: 'Low', color: 'text-green-600' },
-    { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-    { value: 'high', label: 'High', color: 'text-orange-600' },
-    { value: 'urgent', label: 'Urgent', color: 'text-red-600' }
-  ]
-
-  const statusOptions = [
-    { value: 'planned', label: 'Planned' },
-    { value: 'in-progress', label: 'In Progress' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'on-hold', label: 'On Hold' }
-  ]
-
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
-    
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -96,27 +97,62 @@ const NewTreatmentModal = ({ isOpen, onClose, onSave, patients = [] }) => {
     }
   }
 
+  const handleToothSelect = (toothNumber) => {
+    setSelectedTeeth(prev => {
+      if (prev.includes(toothNumber)) {
+        const newTeeth = prev.filter(t => t !== toothNumber)
+        setToothConditions(prevConditions => {
+          const newConditions = { ...prevConditions }
+          delete newConditions[toothNumber]
+          return newConditions
+        })
+        return newTeeth
+      } else {
+        setToothConditions(prev => ({
+          ...prev,
+          [toothNumber]: {
+            status: 'Cavity',
+            priority: 'Medium',
+            diagnosedDate: new Date().toISOString().split('T')[0],
+            notes: ''
+          }
+        }))
+        return [...prev, toothNumber]
+      }
+    })
+  }
+
+  const handleToothConditionChange = (toothNumber, field, value) => {
+    setToothConditions(prev => ({
+      ...prev,
+      [toothNumber]: {
+        ...prev[toothNumber],
+        [field]: value
+      }
+    }))
+  }
+
   const validateForm = () => {
     const newErrors = {}
 
     if (!formData.patientId) {
-      newErrors.patientId = 'Patient selection is required'
+      newErrors.patientId = 'Please select a patient'
     }
 
-    if (!formData.treatmentType) {
+    if (!formData.treatmentType.trim()) {
       newErrors.treatmentType = 'Treatment type is required'
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'Treatment description is required'
+    if (!formData.totalAmount || parseFloat(formData.totalAmount) <= 0) {
+      newErrors.totalAmount = 'Please enter a valid total amount'
     }
 
-    if (!formData.startDate) {
-      newErrors.startDate = 'Start date is required'
+    if (parseFloat(formData.paidAmount) < 0) {
+      newErrors.paidAmount = 'Paid amount cannot be negative'
     }
 
-    if (formData.estimatedCost && isNaN(parseFloat(formData.estimatedCost))) {
-      newErrors.estimatedCost = 'Please enter a valid cost'
+    if (parseFloat(formData.paidAmount) > parseFloat(formData.totalAmount)) {
+      newErrors.paidAmount = 'Paid amount cannot exceed total amount'
     }
 
     setErrors(newErrors)
@@ -127,460 +163,592 @@ const NewTreatmentModal = ({ isOpen, onClose, onSave, patients = [] }) => {
     e.preventDefault()
     
     if (validateForm()) {
-      onSave(formData)
-      handleClose()
+      const teethStatus = selectedTeeth.map(toothNumber => ({
+        toothNumber,
+        conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
+        treatmentPriority: toothConditions[toothNumber]?.priority || 'Medium',
+        diagnosedDate: toothConditions[toothNumber]?.diagnosedDate || new Date().toISOString().split('T')[0],
+        notes: toothConditions[toothNumber]?.notes || ''
+      }))
+
+      const treatmentData = {
+        ...formData,
+        totalAmount: parseFloat(formData.totalAmount),
+        paidAmount: parseFloat(formData.paidAmount),
+        teethStatus,
+        steps: treatmentSteps
+      }
+      
+      onSave(treatmentData)
+      onClose()
     }
+  }
+
+  const handleAddStep = () => {
+    setTreatmentSteps([...treatmentSteps, {
+      title: '',
+      status: 'upcoming',
+      date: '',
+      notes: ''
+    }])
+  }
+
+  const handleUpdateStep = (index, field, value) => {
+    const updated = [...treatmentSteps]
+    updated[index][field] = value
+    setTreatmentSteps(updated)
+  }
+
+  const handleRemoveStep = (index) => {
+    setTreatmentSteps(treatmentSteps.filter((_, i) => i !== index))
   }
 
   const handleClose = () => {
     setFormData({
       patientId: '',
       treatmentType: '',
-      toothNumber: '',
       description: '',
-      estimatedDuration: '30',
-      estimatedCost: '',
-      priority: 'medium',
-      status: 'planned',
-      startDate: '',
-      completionDate: '',
-      notes: '',
-      preConditions: '',
-      postCareInstructions: ''
+      treatmentStatus: 'In Progress',
+      creationDate: new Date().toISOString().split('T')[0],
+      totalAmount: '',
+      paidAmount: '0',
+      notes: ''
     })
+    setSelectedTeeth([])
+    setToothConditions({})
     setErrors({})
     onClose()
   }
 
   if (!isOpen) return null
 
+  const treatmentTypes = [
+    { value: '', label: 'Select treatment type' },
+    { value: 'Root Canal', label: 'Root Canal' },
+    { value: 'Extraction', label: 'Extraction' },
+    { value: 'Cleaning', label: 'Cleaning' },
+    { value: 'Filling', label: 'Filling' },
+    { value: 'Crown Installation', label: 'Crown Installation' },
+    { value: 'Bridge', label: 'Bridge' },
+    { value: 'Implant', label: 'Implant' },
+    { value: 'Whitening', label: 'Whitening' },
+    { value: 'Orthodontics', label: 'Orthodontics' },
+    { value: 'Veneer', label: 'Veneer' },
+    { value: 'Other', label: 'Other' }
+  ]
+
+  const statusOptions = [
+    { value: 'In Progress', label: 'In Progress' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'Cancelled', label: 'Cancelled' }
+  ]
+
+  const conditionOptions = [
+    { value: 'Healthy', label: 'Healthy' },
+    { value: 'Cavity', label: 'Cavity' },
+    { value: 'Root Canal', label: 'Root Canal' },
+    { value: 'Crown', label: 'Crown' },
+    { value: 'Extracted', label: 'Extracted' },
+    { value: 'Implant', label: 'Implant' },
+    { value: 'Filling', label: 'Filling' },
+    { value: 'Bridge', label: 'Bridge' }
+  ]
+
+  const priorityOptions = [
+    { value: 'Low', label: 'Low' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'High', label: 'High' }
+  ]
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl ${
+      <div className={`w-full max-w-5xl rounded-xl shadow-2xl ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+      } max-h-[90vh] overflow-y-auto`}>
+        <div className={`sticky top-0 flex items-center justify-between p-6 border-b ${
+          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
         }`}>
-          <h2 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Create New Treatment Plan
-          </h2>
+          <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-lg ${
+              isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+            }`}>
+              <FaStethoscope className="w-6 h-6 text-teal-600" />
+            </div>
+            <div>
+              <h2 className={`text-2xl font-bold ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>
+                {initialData ? 'Edit Treatment Plan' : 'New Treatment Plan'}
+              </h2>
+              <p className={`text-sm ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Create a comprehensive treatment plan
+              </p>
+            </div>
+          </div>
           <button
             onClick={handleClose}
-            className={`p-2 rounded-lg hover:bg-opacity-80 transition-colors ${
-              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode 
+                ? 'hover:bg-gray-700 text-gray-400' 
+                : 'hover:bg-gray-100 text-gray-600'
             }`}
           >
-            <FaTimes className={`w-5 h-5 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
+            <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
-          {/* Patient and Treatment Info */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
-              <FaStethoscope className="text-teal-600" />
-              Treatment Information
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Patient *
-                </label>
-                <div className="relative">
-                  <FaUser className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <select
-                    name="patientId"
-                    value={formData.patientId}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      errors.patientId 
-                        ? 'border-red-500' 
-                        : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-white'
-                          : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  >
-                    <option value="">Select patient</option>
-                    {patients.map(patient => (
-                      <option key={patient.id} value={patient.id}>
-                        {patient.name || `${patient.firstName} ${patient.lastName}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.patientId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
-                )}
-              </div>
+              Patient <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="patientId"
+              value={formData.patientId}
+              onChange={handleChange}
+              options={[
+                { value: '', label: 'Select a patient' },
+                ...patients.map(p => ({ value: p.id, label: p.name }))
+              ]}
+            />
+            {errors.patientId && (
+              <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
+            )}
+          </div>
 
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Treatment Type *
-                </label>
-                <div className="relative">
-                  <FaTooth className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <select
-                    name="treatmentType"
-                    value={formData.treatmentType}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      errors.treatmentType 
-                        ? 'border-red-500' 
-                        : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-white'
-                          : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  >
-                    <option value="">Select treatment type</option>
-                    {treatmentTypes.map(type => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.treatmentType && (
-                  <p className="text-red-500 text-sm mt-1">{errors.treatmentType}</p>
-                )}
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Tooth Number (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="toothNumber"
-                  value={formData.toothNumber}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'border-gray-600 bg-gray-700 text-white'
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
-                  placeholder="e.g., 14, 25, 36"
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Priority
-                </label>
-                <div className="relative">
-                  <FaExclamationTriangle className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'border-gray-600 bg-gray-700 text-white'
-                        : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  >
-                    {priorityOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
               <label className={`block text-sm font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Treatment Description *
+                Treatment Type <span className="text-red-500">*</span>
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={3}
-                className={`w-full px-3 py-2 border rounded-lg ${
-                  errors.description 
-                    ? 'border-red-500' 
-                    : isDarkMode
-                      ? 'border-gray-600 bg-gray-700 text-white'
-                      : 'border-gray-300 bg-white text-gray-900'
-                }`}
-                placeholder="Detailed description of the treatment plan..."
+              <Select
+                name="treatmentType"
+                value={formData.treatmentType}
+                onChange={handleChange}
+                options={treatmentTypes}
               />
-              {errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+              {errors.treatmentType && (
+                <p className="text-red-500 text-sm mt-1">{errors.treatmentType}</p>
+              )}
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Treatment Priority
+              </label>
+              <Select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                options={[
+                  { value: 'Low', label: 'Low Priority' },
+                  { value: 'Medium', label: 'Medium Priority' },
+                  { value: 'High', label: 'High Priority' }
+                ]}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Treatment Status
+            </label>
+            <Select
+              name="treatmentStatus"
+              value={formData.treatmentStatus}
+              onChange={handleChange}
+              options={statusOptions}
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Description (Optional)
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Describe the treatment plan..."
+              className={`w-full px-4 py-2 rounded-lg border transition-colors ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
+              } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Creation Date
+              </label>
+              <Input
+                type="date"
+                name="creationDate"
+                value={formData.creationDate}
+                onChange={handleChange}
+                icon={FaCalendarAlt}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Total Amount <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                name="totalAmount"
+                value={formData.totalAmount}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                icon={FaDollarSign}
+              />
+              {errors.totalAmount && (
+                <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
+              )}
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Paid Amount
+              </label>
+              <Input
+                type="number"
+                name="paidAmount"
+                value={formData.paidAmount}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                icon={FaDollarSign}
+              />
+              {errors.paidAmount && (
+                <p className="text-red-500 text-sm mt-1">{errors.paidAmount}</p>
               )}
             </div>
           </div>
 
-          {/* Treatment Details */}
           <div>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              <FaCalendarAlt className="text-teal-600" />
-              Treatment Schedule & Details
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <label className={`block text-sm font-medium ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Affected Teeth (Optional)
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowToothChart(!showToothChart)}
+              >
+                <FaTooth className="w-4 h-4 mr-2" />
+                {showToothChart ? 'Hide' : 'Show'} Tooth Chart
+              </Button>
+            </div>
+
+            {showToothChart && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <ToothChart
+                  selectedTeeth={selectedTeeth}
+                  onToothSelect={handleToothSelect}
+                  toothConditions={toothConditions}
+                />
+              </div>
+            )}
+
+            {selectedTeeth.length > 0 && (
+              <div className={`mt-4 p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <h4 className={`font-medium mb-3 ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  Selected Teeth Details ({selectedTeeth.length})
+                </h4>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {selectedTeeth.map(toothNumber => (
+                    <div
+                      key={toothNumber}
+                      className={`p-3 rounded-lg border ${
+                        isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <FaTooth className="text-teal-500" />
+                        <span className={`font-semibold ${
+                          isDarkMode ? 'text-white' : 'text-gray-800'
+                        }`}>
+                          Tooth #{toothNumber}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            Condition
+                          </label>
+                          <select
+                            value={toothConditions[toothNumber]?.status || 'Cavity'}
+                            onChange={(e) => handleToothConditionChange(toothNumber, 'status', e.target.value)}
+                            className={`w-full mt-1 px-2 py-1 text-sm rounded border ${
+                              isDarkMode
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                            }`}
+                          >
+                            {conditionOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={`text-xs ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            Priority
+                          </label>
+                          <select
+                            value={toothConditions[toothNumber]?.priority || 'Medium'}
+                            onChange={(e) => handleToothConditionChange(toothNumber, 'priority', e.target.value)}
+                            className={`w-full mt-1 px-2 py-1 text-sm rounded border ${
+                              isDarkMode
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                            }`}
+                          >
+                            {priorityOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <label className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          Notes
+                        </label>
+                        <input
+                          type="text"
+                          value={toothConditions[toothNumber]?.notes || ''}
+                          onChange={(e) => handleToothConditionChange(toothNumber, 'notes', e.target.value)}
+                          placeholder="Add notes..."
+                          className={`w-full mt-1 px-2 py-1 text-sm rounded border ${
+                            isDarkMode
+                              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
+                              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Treatment Steps Section */}
+          <div className={`p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FaStethoscope className="text-teal-500 w-5 h-5" />
+                <h3 className={`font-medium ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  Treatment Plan Steps
+                </h3>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddStep}
+              >
+                <FaPlus className="w-4 h-4 mr-2" />
+                Add Step
+              </Button>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Start Date *
-                </label>
-                <div className="relative">
-                  <FaCalendarAlt className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      errors.startDate 
-                        ? 'border-red-500' 
-                        : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-white'
-                          : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  />
-                </div>
-                {errors.startDate && (
-                  <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>
-                )}
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Expected Completion Date
-                </label>
-                <div className="relative">
-                  <FaCalendarAlt className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <input
-                    type="date"
-                    name="completionDate"
-                    value={formData.completionDate}
-                    onChange={handleInputChange}
-                    min={formData.startDate || new Date().toISOString().split('T')[0]}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'border-gray-600 bg-gray-700 text-white'
-                        : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Estimated Duration
-                </label>
-                <div className="relative">
-                  <FaClock className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <select
-                    name="estimatedDuration"
-                    value={formData.estimatedDuration}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'border-gray-600 bg-gray-700 text-white'
-                        : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  >
-                    {durationOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Estimated Cost ($)
-                </label>
-                <div className="relative">
-                  <FaDollarSign className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <input
-                    type="number"
-                    name="estimatedCost"
-                    value={formData.estimatedCost}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    min="0"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      errors.estimatedCost 
-                        ? 'border-red-500' 
-                        : isDarkMode
-                          ? 'border-gray-600 bg-gray-700 text-white'
-                          : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                    placeholder="0.00"
-                  />
-                </div>
-                {errors.estimatedCost && (
-                  <p className="text-red-500 text-sm mt-1">{errors.estimatedCost}</p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'border-gray-600 bg-gray-700 text-white'
-                      : 'border-gray-300 bg-white text-gray-900'
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {treatmentSteps.map((step, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border ${
+                    isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
                   }`}
                 >
-                  {statusOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              <FaFileAlt className="text-teal-600" />
-              Additional Information
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Pre-conditions & Prerequisites
-                </label>
-                <textarea
-                  name="preConditions"
-                  value={formData.preConditions}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className={`w-full px-3 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'border-gray-600 bg-gray-700 text-white'
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
-                  placeholder="Any preparations needed before treatment..."
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Post-care Instructions
-                </label>
-                <textarea
-                  name="postCareInstructions"
-                  value={formData.postCareInstructions}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className={`w-full px-3 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'border-gray-600 bg-gray-700 text-white'
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
-                  placeholder="Instructions for patient after treatment..."
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Additional Notes
-                </label>
-                <div className="relative">
-                  <FaStickyNote className={`absolute left-3 top-3 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'border-gray-600 bg-gray-700 text-white'
-                        : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                    placeholder="Any additional notes about the treatment..."
-                  />
+                  <div className="flex items-start justify-between mb-3">
+                    <span className={`font-medium ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>
+                      Step {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveStep(index)}
+                      className="text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className={`text-xs ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Step Title
+                      </label>
+                      <input
+                        type="text"
+                        value={step.title}
+                        onChange={(e) => handleUpdateStep(index, 'title', e.target.value)}
+                        placeholder="e.g., Diagnosis, Treatment, Follow-up"
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                        }`}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className={`text-xs ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Status
+                      </label>
+                      <select
+                        value={step.status}
+                        onChange={(e) => handleUpdateStep(index, 'status', e.target.value)}
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      >
+                        <option value="upcoming">Upcoming</option>
+                        <option value="current">Current</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <label className={`text-xs ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={step.date}
+                        onChange={(e) => handleUpdateStep(index, 'date', e.target.value)}
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className={`text-xs ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Notes
+                      </label>
+                      <input
+                        type="text"
+                        value={step.notes}
+                        onChange={(e) => handleUpdateStep(index, 'notes', e.target.value)}
+                        placeholder="Step notes..."
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                          isDarkMode
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                        }`}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
+              
+              {treatmentSteps.length === 0 && (
+                <div className={`text-center py-8 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  <p>No treatment steps defined yet.</p>
+                  <p className="text-sm mt-2">Click "Add Step" to create a treatment plan.</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              General Notes (Optional)
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Add any additional notes..."
+              className={`w-full px-4 py-2 rounded-lg border transition-colors ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
+              } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
+              className="flex-1"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
+              className="flex-1"
             >
-              Create Treatment Plan
+              <FaSave className="w-4 h-4 mr-2" />
+              {initialData ? 'Update Treatment' : 'Create Treatment'}
             </Button>
           </div>
         </form>

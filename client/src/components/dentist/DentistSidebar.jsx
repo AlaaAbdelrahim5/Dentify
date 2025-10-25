@@ -6,7 +6,9 @@ import {
   FaCog,
   FaClock,
   FaStethoscope,
-  FaFileAlt
+  FaFileAlt,
+  FaMoneyBillWave,
+  FaXRay
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -46,6 +48,18 @@ const DentistSidebar = ({ activeTab, setActiveTab, stats }) => {
       label: 'Treatments', 
       icon: FaStethoscope,
       description: 'Treatment plans and procedures'
+    },
+    { 
+      id: 'payments', 
+      label: 'Payments', 
+      icon: FaMoneyBillWave,
+      description: 'Track and manage payments'
+    },
+    { 
+      id: 'radiology', 
+      label: 'Radiology', 
+      icon: FaXRay,
+      description: 'Diagnostic imaging requests'
     },
     { 
       id: 'reports', 

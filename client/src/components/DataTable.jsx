@@ -6,14 +6,24 @@ import { useTheme } from '../contexts/ThemeContext'
  * Displays data in a table format with loading and empty states
  * Reusable across all dashboards (Admin, Clinic, Dentist, Patient)
  * 
- * @param {Array} columns - Array of column objects with structure:
- *   {
- *     key: string,
- *     label: string,
- *     className: string (optional)
- *   }
- * @param {Array} data - Array of data objects to display
- * @param {Function} renderRow - Function to render each row, receives (item, index)
+ * Two usage modes:
+ * 
+ * 1. With columns config (automatic rendering):
+ *    @param {Array} columns - Array of column objects:
+ *      {
+ *        key: string (optional, for unique key),
+ *        label: string (header label),
+ *        accessor: string (property name to access in data object),
+ *        render: function(value, item, index) (optional, custom renderer),
+ *        className: string (optional, cell classes)
+ *      }
+ *    @param {Array} data - Array of data objects
+ * 
+ * 2. With renderRow function (manual rendering):
+ *    @param {Array} columns - Array with { key, label, className }
+ *    @param {Array} data - Array of data objects
+ *    @param {Function} renderRow - Function(item, index) that returns a <tr> element
+ * 
  * @param {boolean} loading - Loading state
  * @param {string} emptyMessage - Message to show when no data
  * @param {ReactComponent} emptyIcon - Icon to show when no data
@@ -87,7 +97,33 @@ const DataTable = ({
             <tbody className={`${
               isDarkMode ? 'divide-y divide-gray-700' : 'divide-y divide-gray-200'
             } ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {data.map((item, index) => renderRow(item, index))}
+              {data.map((item, index) => {
+                // If renderRow function is provided, use it
+                if (renderRow) {
+                  return renderRow(item, index)
+                }
+                
+                // Otherwise, render using columns config
+                return (
+                  <tr key={index} className={isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
+                    {columns.map((column, colIndex) => {
+                      const value = column.accessor ? item[column.accessor] : null
+                      const cellContent = column.render ? column.render(value, item, index) : value
+                      
+                      return (
+                        <td
+                          key={colIndex}
+                          className={`px-6 py-4 whitespace-nowrap text-sm ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-900'
+                          } ${column.className || ''}`}
+                        >
+                          {cellContent}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
