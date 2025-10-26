@@ -316,14 +316,16 @@ const DentistRadiology = () => {
       </div>
 
       <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => handleEditRequest(request)}
-          title="Edit Request"
-        >
-          <FaEdit className="w-4 h-4" />
-        </Button>
+        {request.status === 'Requested' && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleEditRequest(request)}
+            title="Edit Request"
+          >
+            <FaEdit className="w-4 h-4" />
+          </Button>
+        )}
         {request.reportFile && (
           <Button 
             variant="outline" 
@@ -556,14 +558,6 @@ const DentistRadiology = () => {
                     accessor: 'id',
                     render: (value, row) => (
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEditRequest(row)}
-                          title="Edit Request"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </Button>
                         {row.reportFile && (
                           <Button 
                             variant="outline" 
