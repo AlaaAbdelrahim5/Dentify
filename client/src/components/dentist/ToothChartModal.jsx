@@ -167,42 +167,54 @@ const ToothChartModal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-transparent transition-opacity"
         onClick={handleClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${
+          className={`relative rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col ${
             isDarkMode
-              ? 'bg-gray-900 border border-gray-700'
-              : 'bg-white border border-gray-200'
+              ? 'bg-gray-800 border-2 border-gray-700'
+              : 'bg-white border-2 border-gray-200'
           }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700/50 bg-gradient-to-r from-teal-600 to-cyan-600">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <FaTooth className="w-6 h-6 text-white" />
+          <div className={`flex items-center justify-between p-6 border-b ${
+            isDarkMode ? 'border-gray-700 bg-gradient-to-r from-teal-900/50 to-cyan-900/50' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                isDarkMode ? 'bg-teal-900/50 border-2 border-teal-700' : 'bg-teal-100 border-2 border-teal-300'
+              }`}>
+                <FaTooth className={`w-7 h-7 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">
-                  Dental Chart
+                <h2 className={`text-2xl font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  Interactive Dental Chart
                 </h2>
                 {patientInfo && (
-                  <p className="text-teal-100 text-sm">
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-teal-300' : 'text-teal-600'
+                  }`}>
                     Patient: {patientInfo.name}
                   </p>
                 )}
                 {treatmentInfo && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium text-white border border-white/30">
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                      isDarkMode ? 'bg-teal-900/50 text-teal-300 border border-teal-700' : 'bg-white text-teal-700 border border-teal-300'
+                    }`}>
                       Adding to: {treatmentInfo.treatmentType}
                     </span>
                     {treatmentInfo.toothNumber && (
-                      <span className="px-2 py-1 bg-yellow-400/20 backdrop-blur-sm rounded-full text-xs font-medium text-yellow-100 border border-yellow-400/30">
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                        isDarkMode ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-700' : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                      }`}>
                         Tooth #{treatmentInfo.toothNumber}
                       </span>
                     )}
@@ -212,9 +224,13 @@ const ToothChartModal = ({
             </div>
             <button
               onClick={handleClose}
-              className="p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
+              className={`p-3 rounded-xl transition-all ${
+                isDarkMode 
+                  ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
+                  : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <FaTimes className="w-5 h-5" />
+              <FaTimes className="w-6 h-6" />
             </button>
           </div>
 
@@ -223,33 +239,43 @@ const ToothChartModal = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
               {/* Left Panel - Tooth Chart */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Patient Info & Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Examination Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      icon={FaCalendarAlt}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Follow-up Date (Optional)
-                    </label>
-                    <Input
-                      type="date"
-                      value={formData.followUpDate}
-                      onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
-                      icon={FaCalendarAlt}
-                    />
+                {/* Date Section */}
+                <div className={`p-5 rounded-xl ${
+                  isDarkMode ? 'bg-gray-900/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'
+                }`}>
+                  <h3 className={`text-sm font-bold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    <FaCalendarAlt className="text-teal-500" />
+                    Examination Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-semibold mb-2 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Examination Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        icon={FaCalendarAlt}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-semibold mb-2 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Follow-up Date (Optional)
+                      </label>
+                      <Input
+                        type="date"
+                        value={formData.followUpDate}
+                        onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+                        icon={FaClock}
+                      />
+                    </div>
                   </div>
                 </div>
 

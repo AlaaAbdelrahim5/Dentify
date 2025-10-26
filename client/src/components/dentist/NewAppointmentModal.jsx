@@ -199,6 +199,38 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
         <div className="flex-1 overflow-y-auto">
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          
+          {/* Treatment Connection Banner */}
+          {prefilledData?.patientId && (
+            <div className={`p-4 rounded-xl border-2 ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-teal-700' 
+                : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-300'
+            }`}>
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${
+                  isDarkMode ? 'bg-teal-900/50' : 'bg-teal-100'
+                }`}>
+                  <FaStethoscope className={`w-5 h-5 ${
+                    isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                  }`} />
+                </div>
+                <div className="flex-1">
+                  <h4 className={`font-bold text-sm mb-1 ${
+                    isDarkMode ? 'text-teal-400' : 'text-teal-700'
+                  }`}>
+                    Connected to Treatment Plan
+                  </h4>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-teal-300/80' : 'text-teal-600/80'
+                  }`}>
+                    This appointment is automatically linked to the patient's treatment plan. Patient information has been pre-filled.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Patient Information */}
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${
@@ -255,7 +287,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
                 <label className={`block text-sm font-medium mb-2 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
-                  Patient Name *
+                  Patient Name {prefilledData?.patientId ? '' : '*'}
                 </label>
                 <div className="relative">
                   <FaUser className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
@@ -277,6 +309,14 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
                     placeholder="Enter patient name"
                   />
                 </div>
+                {(formData.patientId || prefilledData?.patientId) && (
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Auto-filled from patient record
+                  </p>
+                )}
                 {errors.patientName && (
                   <p className="text-red-500 text-sm mt-1">{errors.patientName}</p>
                 )}
@@ -286,7 +326,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
                 <label className={`block text-sm font-medium mb-2 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
-                  Phone Number *
+                  Phone Number {prefilledData?.patientId ? '' : '*'}
                 </label>
                 <div className="relative">
                   <FaPhone className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
@@ -308,6 +348,14 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
                     placeholder="Enter phone number"
                   />
                 </div>
+                {(formData.patientId || prefilledData?.patientId) && (
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Auto-filled from patient record
+                  </p>
+                )}
                 {errors.patientPhone && (
                   <p className="text-red-500 text-sm mt-1">{errors.patientPhone}</p>
                 )}
@@ -444,26 +492,48 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilled
                   <FaStethoscope className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
                     isDarkMode ? 'text-gray-500' : 'text-gray-400'
                   }`} />
-                  <select
-                    name="treatment"
-                    value={formData.treatment}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                      errors.treatment 
-                        ? 'border-red-500' 
-                        : isDarkMode
+                  {prefilledData?.reason ? (
+                    <input
+                      type="text"
+                      name="treatment"
+                      value={formData.treatment}
+                      readOnly
+                      className={`w-full pl-10 pr-3 py-2 border rounded-lg bg-opacity-50 cursor-not-allowed ${
+                        isDarkMode
                           ? 'border-gray-600 bg-gray-700 text-white'
                           : 'border-gray-300 bg-white text-gray-900'
-                    }`}
-                  >
-                    <option value="">Select treatment</option>
-                    {treatmentOptions.map(treatment => (
-                      <option key={treatment} value={treatment}>
-                        {treatment}
-                      </option>
-                    ))}
-                  </select>
+                      }`}
+                    />
+                  ) : (
+                    <select
+                      name="treatment"
+                      value={formData.treatment}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
+                        errors.treatment 
+                          ? 'border-red-500' 
+                          : isDarkMode
+                            ? 'border-gray-600 bg-gray-700 text-white'
+                            : 'border-gray-300 bg-white text-gray-900'
+                      }`}
+                    >
+                      <option value="">Select treatment</option>
+                      {treatmentOptions.map(treatment => (
+                        <option key={treatment} value={treatment}>
+                          {treatment}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+                {prefilledData?.reason && (
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    From treatment plan step
+                  </p>
+                )}
                 {errors.treatment && (
                   <p className="text-red-500 text-sm mt-1">{errors.treatment}</p>
                 )}

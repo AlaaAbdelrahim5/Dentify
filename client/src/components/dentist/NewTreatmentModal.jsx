@@ -118,7 +118,7 @@ const NewTreatmentModal = ({
         setToothConditions(prev => ({
           ...prev,
           [toothNumber]: {
-            status: 'Cavity',
+            status: 'cavity',
             priority: 'Medium',
             diagnosedDate: new Date().toISOString().split('T')[0],
             notes: ''
@@ -274,14 +274,14 @@ const NewTreatmentModal = ({
   ]
 
   const conditionOptions = [
-    { value: 'Healthy', label: 'Healthy' },
-    { value: 'Cavity', label: 'Cavity' },
-    { value: 'Root Canal', label: 'Root Canal' },
-    { value: 'Crown', label: 'Crown' },
-    { value: 'Extracted', label: 'Extracted' },
-    { value: 'Implant', label: 'Implant' },
-    { value: 'Filling', label: 'Filling' },
-    { value: 'Bridge', label: 'Bridge' }
+    { value: 'healthy', label: 'Healthy' },
+    { value: 'cavity', label: 'Cavity' },
+    { value: 'root-canal', label: 'Root Canal' },
+    { value: 'crown', label: 'Crown' },
+    { value: 'extracted', label: 'Extracted' },
+    { value: 'implant', label: 'Implant' },
+    { value: 'filling', label: 'Filling' },
+    { value: 'bridge', label: 'Bridge' }
   ]
 
   const priorityOptions = [
@@ -655,7 +655,7 @@ const NewTreatmentModal = ({
                                   Condition
                                 </label>
                                 <select
-                                  value={toothConditions[toothNumber]?.status || 'Cavity'}
+                                  value={toothConditions[toothNumber]?.status || 'cavity'}
                                   onChange={(e) => handleToothConditionChange(toothNumber, 'status', e.target.value)}
                                   className={`w-full mt-1 px-3 py-2 rounded-lg border ${
                                     isDarkMode
