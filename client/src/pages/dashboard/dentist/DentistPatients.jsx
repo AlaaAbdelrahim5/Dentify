@@ -13,9 +13,13 @@ import {
   FaFileAlt,
   FaBirthdayCake,
   FaMapMarkerAlt,
-  FaTrash
+  FaTrash,
+  FaTh,
+  FaListAlt,
+  FaUserCheck,
+  FaUserTimes
 } from 'react-icons/fa'
-import { Card, Button, Input } from '../../../components'
+import { Card, Button, Input, StatsOverview, FilterBar, PageHeader, DataTable } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import NewPatientModal from '../../../components/dentist/NewPatientModal'
 import EditPatientModal from '../../../components/dentist/EditPatientModal'
@@ -201,6 +205,149 @@ const DentistPatients = () => {
     setIsEditPatientModalOpen(true)
   }
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedFilter('all')
+  }
+
+  // Calculate stats
+  const stats = {
+    total: mockPatients.length,
+    active: mockPatients.filter(p => p.status === 'active').length,
+    inactive: mockPatients.filter(p => p.status === 'inactive').length,
+    thisMonth: 12, // Mock data
+    reports: 45 // Mock data
+  }
+
+  // DataTable columns configuration
+  const columns = [
+    {
+      label: 'Patient',
+      accessor: 'name',
+      render: (value, patient) => (
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
+          }`}>
+            <FaUser className="text-teal-600" />
+          </div>
+          <div>
+            <p className="font-semibold">{value}</p>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              patient.status === 'active' 
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+            }`}>
+              {patient.status}
+            </span>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: 'Contact',
+      accessor: 'phone',
+      render: (value, patient) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sm">
+            <FaPhone className="text-gray-500 w-3 h-3" />
+            <span>{value}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <FaEnvelope className="text-gray-500 w-3 h-3" />
+            <span className="text-gray-500">{patient.email}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: 'Age',
+      accessor: 'dateOfBirth',
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <FaBirthdayCake className="text-gray-500 w-4 h-4" />
+          <span>{calculateAge(value)} years</span>
+        </div>
+      )
+    },
+    {
+      label: 'Location',
+      accessor: 'address',
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <FaMapMarkerAlt className="text-gray-500 w-4 h-4" />
+          <span>{value}</span>
+        </div>
+      )
+    },
+    {
+      label: 'Last Visit',
+      accessor: 'lastVisit',
+      render: (value) => (
+        <div className="text-sm">
+          {formatDate(value)}
+        </div>
+      )
+    },
+    {
+      label: 'Next Appointment',
+      accessor: 'nextAppointment',
+      render: (value) => (
+        <div className="text-sm">
+          {value ? (
+            <span className="text-teal-600 dark:text-teal-400">
+              {formatDate(value)}
+            </span>
+          ) : (
+            <span className="text-gray-400">Not scheduled</span>
+          )}
+        </div>
+      )
+    },
+    {
+      label: 'Visits',
+      accessor: 'totalVisits',
+      render: (value) => (
+        <div className="text-center">
+          <span className="font-semibold">{value}</span>
+        </div>
+      )
+    },
+    {
+      label: 'Actions',
+      accessor: 'id',
+      render: (value, patient) => (
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleViewPatient(patient)}
+            title="View Details"
+          >
+            <FaEye className="w-3 h-3" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleEditPatient(patient)}
+            title="Edit"
+          >
+            <FaEdit className="w-3 h-3" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-600"
+            onClick={() => handleDeletePatient(patient)}
+            title="Delete"
+          >
+            <FaTrash className="w-3 h-3" />
+          </Button>
+        </div>
+      )
+    }
+  ]
+
   const PatientCard = ({ patient }) => (
     <Card className={`p-6 ${
       isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -315,233 +462,91 @@ const DentistPatients = () => {
     </Card>
   )
 
-  const PatientRow = ({ patient }) => (
-    <Card className={`p-4 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    }`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-          }`}>
-            <FaUser className="text-teal-600" />
-          </div>
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <h3 className={`font-semibold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {patient.name}
-              </h3>
-              <span className={`px-2 py-1 rounded-full text-xs border ${
-                getStatusColor(patient.status)
-              }`}>
-                {patient.status}
-              </span>
-            </div>
-            <div className="text-sm">
-              <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                {patient.phone}
-              </p>
-              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                {patient.email}
-              </p>
-            </div>
-            <div className="text-sm">
-              <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                Last: {formatDate(patient.lastVisit)}
-              </p>
-              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Next: {formatDate(patient.nextAppointment)}
-              </p>
-            </div>
-            <div className="text-sm">
-              <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                {patient.totalVisits} visits
-              </p>
-              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Age: {calculateAge(patient.dateOfBirth)}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleViewPatient(patient)}
-            title="View Patient Details"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleEditPatient(patient)}
-            title="Edit Patient"
-          >
-            <FaEdit className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-600"
-            onClick={() => handleDeletePatient(patient)}
-            title="Delete Patient"
-          >
-            <FaTrash className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </Card>
-  )
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            My Patients
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Manage patient records and information
-          </p>
-        </div>
-        <Button variant="primary" onClick={handleNewPatient}>
-          <FaPlus className="w-4 h-4 mr-2" />
-          Add Patient
-        </Button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="My Patients"
+        description="Manage patient records and information"
+        action={{
+          label: 'Add Patient',
+          onClick: handleNewPatient,
+          icon: FaPlus,
+          gradient: 'from-teal-600 to-cyan-600'
+        }}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className={`p-4 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Total Patients</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{mockPatients.length}</p>
-            </div>
-            <FaUsers className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
+      {/* Stats Overview */}
+      <StatsOverview stats={[
+        {
+          label: 'Total Patients',
+          value: stats.total,
+          icon: FaUsers,
+          gradient: 'from-blue-600 to-blue-700'
+        },
+        {
+          label: 'Active Patients',
+          value: stats.active,
+          icon: FaUserCheck,
+          gradient: 'from-green-600 to-green-700'
+        },
+        {
+          label: 'Inactive Patients',
+          value: stats.inactive,
+          icon: FaUserTimes,
+          gradient: 'from-gray-600 to-gray-700'
+        },
+        {
+          label: 'This Month',
+          value: stats.thisMonth,
+          icon: FaCalendarAlt,
+          gradient: 'from-purple-600 to-purple-700'
+        }
+      ]} />
 
-        <Card className={`p-4 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Active</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{mockPatients.filter(p => p.status === 'active').length}</p>
-            </div>
-            <FaUser className="w-8 h-8 text-green-500" />
+      {/* Filters and View Mode */}
+      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div className="flex-1 w-full">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              searchPlaceholder="Search patients by name, email, or phone..."
+              filters={[
+                {
+                  value: selectedFilter,
+                  onChange: (e) => setSelectedFilter(e.target.value),
+                  options: [
+                    { value: 'all', label: 'All Patients' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'new', label: 'New' }
+                  ],
+                  placeholder: 'Filter by status'
+                }
+              ]}
+              onClearFilters={handleClearFilters}
+            />
           </div>
-        </Card>
-
-        <Card className={`p-4 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>This Month</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>12</p>
-            </div>
-            <FaCalendarAlt className="w-8 h-8 text-purple-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-4 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Reports</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>45</p>
-            </div>
-            <FaFileAlt className="w-8 h-8 text-orange-500" />
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters and Controls */}
-      <Card className={`p-4 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder="Search patients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                icon={FaSearch}
-              />
-            </div>
-            <div className="sm:w-48">
-              <select
-                value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg ${
-                  isDarkMode
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
-                }`}
-              >
-                <option value="all">All Patients</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="new">New</option>
-              </select>
-            </div>
-          </div>
+          
+          {/* View Mode Toggle */}
           <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg ${
-                viewMode === 'grid'
-                  ? 'bg-teal-600 text-white'
-                  : isDarkMode
-                    ? 'bg-gray-700 text-gray-300'
-                    : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              Grid
-            </button>
-            <button
+            <Button
+              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg ${
-                viewMode === 'list'
-                  ? 'bg-teal-600 text-white'
-                  : isDarkMode
-                    ? 'bg-gray-700 text-gray-300'
-                    : 'bg-gray-100 text-gray-600'
-              }`}
+              title="Table View"
             >
-              List
-            </button>
+              <FaListAlt className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+            >
+              <FaTh className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </Card>
@@ -566,16 +571,23 @@ const DentistPatients = () => {
           </p>
         </Card>
       ) : (
-        <div className={viewMode === 'grid' 
-          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-          : 'space-y-4'
-        }>
-          {filteredPatients.map((patient) => (
-            viewMode === 'grid' 
-              ? <PatientCard key={patient.id} patient={patient} />
-              : <PatientRow key={patient.id} patient={patient} />
-          ))}
-        </div>
+        <>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPatients.map((patient) => (
+                <PatientCard key={patient.id} patient={patient} />
+              ))}
+            </div>
+          ) : (
+            <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <DataTable
+                columns={columns}
+                data={filteredPatients}
+                emptyMessage="No patients found"
+              />
+            </Card>
+          )}
+        </>
       )}
 
       {/* New Patient Modal */}
