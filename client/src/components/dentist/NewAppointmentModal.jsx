@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaTimes,
   FaUser,
@@ -12,9 +12,10 @@ import {
 import { Button, Input, Card } from '../index'
 import { useTheme } from '../../contexts/ThemeContext'
 
-const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
+const NewAppointmentModal = ({ isOpen, onClose, onSave, patients = [], prefilledData = null }) => {
   const { isDarkMode } = useTheme()
   const [formData, setFormData] = useState({
+    patientId: '',
     patientName: '',
     patientPhone: '',
     patientEmail: '',
@@ -27,6 +28,40 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
   })
 
   const [errors, setErrors] = useState({})
+
+  // Effect to handle prefilled data
+  useEffect(() => {
+    if (isOpen && prefilledData) {
+      const selectedPatient = patients.find(p => p.id === prefilledData.patientId)
+      
+      setFormData({
+        patientId: prefilledData.patientId || '',
+        patientName: selectedPatient?.name || prefilledData.patientName || '',
+        patientPhone: selectedPatient?.phone || prefilledData.patientPhone || '',
+        patientEmail: selectedPatient?.email || prefilledData.patientEmail || '',
+        date: prefilledData.appointmentDate || prefilledData.date || '',
+        time: prefilledData.time || '',
+        duration: prefilledData.duration || '30',
+        treatment: prefilledData.reason || prefilledData.treatment || '',
+        notes: prefilledData.notes || '',
+        status: prefilledData.status || 'pending'
+      })
+    } else if (isOpen && !prefilledData) {
+      // Reset form when opening without prefilled data
+      setFormData({
+        patientId: '',
+        patientName: '',
+        patientPhone: '',
+        patientEmail: '',
+        date: '',
+        time: '',
+        duration: '30',
+        treatment: '',
+        notes: '',
+        status: 'pending'
+      })
+    }
+  }, [isOpen, prefilledData, patients])
 
   const treatmentOptions = [
     'Dental Cleaning',
@@ -122,14 +157,27 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-transparent transition-opacity"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
+            isDarkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          }`}>
           <h2 className={`text-2xl font-bold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
@@ -147,6 +195,8 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
           </button>
         </div>
 
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto">
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Patient Information */}
@@ -157,6 +207,49 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
               Patient Information
             </h3>
             
+            {/* Patient Selector (if patients list is provided) */}
+            {patients && patients.length > 0 && (
+              <div className="mb-4">
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Select Patient
+                </label>
+                <select
+                  name="patientId"
+                  value={formData.patientId}
+                  onChange={(e) => {
+                    const selectedPatient = patients.find(p => p.id.toString() === e.target.value)
+                    setFormData(prev => ({
+                      ...prev,
+                      patientId: e.target.value,
+                      patientName: selectedPatient?.name || '',
+                      patientPhone: selectedPatient?.phone || '',
+                      patientEmail: selectedPatient?.email || ''
+                    }))
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg ${
+                    isDarkMode
+                      ? 'border-gray-600 bg-gray-700 text-white'
+                      : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                  disabled={!!prefilledData?.patientId}
+                >
+                  <option value="">Select a patient...</option>
+                  {patients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.name}
+                    </option>
+                  ))}
+                </select>
+                {prefilledData?.patientId && (
+                  <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Patient is pre-selected from treatment
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${
@@ -173,13 +266,14 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
                     name="patientName"
                     value={formData.patientName}
                     onChange={handleInputChange}
+                    readOnly={!!formData.patientId || !!prefilledData?.patientId}
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
                       errors.patientName 
                         ? 'border-red-500' 
                         : isDarkMode
                           ? 'border-gray-600 bg-gray-700 text-white'
                           : 'border-gray-300 bg-white text-gray-900'
-                    }`}
+                    } ${(formData.patientId || prefilledData?.patientId) ? 'bg-opacity-50 cursor-not-allowed' : ''}`}
                     placeholder="Enter patient name"
                   />
                 </div>
@@ -203,13 +297,14 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
                     name="patientPhone"
                     value={formData.patientPhone}
                     onChange={handleInputChange}
+                    readOnly={!!formData.patientId || !!prefilledData?.patientId}
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
                       errors.patientPhone 
                         ? 'border-red-500' 
                         : isDarkMode
                           ? 'border-gray-600 bg-gray-700 text-white'
                           : 'border-gray-300 bg-white text-gray-900'
-                    }`}
+                    } ${(formData.patientId || prefilledData?.patientId) ? 'bg-opacity-50 cursor-not-allowed' : ''}`}
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -418,7 +513,9 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave }) => {
             </Button>
           </div>
         </form>
+        </div>
       </div>
+    </div>
     </div>
   )
 }

@@ -169,14 +169,27 @@ const RadiologyRequestModal = ({
   ]
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`w-full max-w-3xl rounded-xl shadow-2xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      } max-h-[90vh] overflow-y-auto`}>
-        {/* Header */}
-        <div className={`sticky top-0 flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-transparent transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col ${
+            isDarkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          }`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'
@@ -208,6 +221,8 @@ const RadiologyRequestModal = ({
           </button>
         </div>
 
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto">
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Patient Selection */}
@@ -405,7 +420,9 @@ const RadiologyRequestModal = ({
             </Button>
           </div>
         </form>
+        </div>
       </div>
+    </div>
     </div>
   )
 }

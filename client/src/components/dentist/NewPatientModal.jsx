@@ -124,14 +124,27 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-transparent transition-opacity"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
+            isDarkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          }`}>
           <h2 className={`text-2xl font-bold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
@@ -597,6 +610,7 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
           </div>
         </form>
       </div>
+    </div>
     </div>
   )
 }

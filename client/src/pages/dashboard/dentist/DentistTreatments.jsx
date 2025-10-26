@@ -23,6 +23,7 @@ import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsM
 import PaymentModal from '../../../components/dentist/PaymentModal'
 import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
 import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
 import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
 
@@ -39,7 +40,9 @@ const DentistTreatments = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
+  const [selectedStepForAppointment, setSelectedStepForAppointment] = useState(null)
 
   // Mock treatments data with new database structure
   const mockTreatments = [
@@ -357,6 +360,24 @@ const DentistTreatments = () => {
   const handleSaveRadiologyRequest = (requestData) => {
     console.log('New radiology request:', requestData)
     // Here you would save radiology request to backend
+  }
+
+  const handleBookStepAppointment = (stepInfo) => {
+    console.log('Book appointment for step:', stepInfo)
+    setSelectedStepForAppointment(stepInfo)
+    setIsAppointmentModalOpen(true)
+  }
+
+  const handleCloseAppointmentModal = () => {
+    setIsAppointmentModalOpen(false)
+    setSelectedStepForAppointment(null)
+  }
+
+  const handleSaveStepAppointment = (appointmentData) => {
+    console.log('Appointment saved for step:', selectedStepForAppointment)
+    console.log('Appointment data:', appointmentData)
+    handleCloseAppointmentModal()
+    // You can add additional logic here to save the appointment to your backend
   }
 
   const TreatmentCard = ({ treatment }) => {
@@ -761,10 +782,7 @@ const DentistTreatments = () => {
         onUpdateStatus={handleUpdateStatus}
         onAddPayment={handleAddPayment}
         onRequestRadiology={handleRequestRadiology}
-        onBookStepAppointment={(stepInfo) => {
-          console.log('Book appointment for step:', stepInfo)
-          // TODO: Open appointment booking modal with step info
-        }}
+        onBookStepAppointment={handleBookStepAppointment}
         payments={selectedTreatment ? mockPayments[selectedTreatment.id] || [] : []}
       />
 
@@ -802,6 +820,24 @@ const DentistTreatments = () => {
           treatment: selectedTreatment.treatmentType,
           time: ''
         } : null}
+      />
+
+      <NewAppointmentModal
+        isOpen={isAppointmentModalOpen}
+        onClose={handleCloseAppointmentModal}
+        onSave={handleSaveStepAppointment}
+        patients={mockPatients}
+        prefilledData={
+          selectedStepForAppointment
+            ? {
+                patientId: selectedStepForAppointment.patientId,
+                patientName: selectedStepForAppointment.patientName,
+                appointmentDate: selectedStepForAppointment.step.date || '',
+                reason: `${selectedStepForAppointment.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.stepIndex + 1}`}`,
+                notes: selectedStepForAppointment.step.notes || ''
+              }
+            : null
+        }
       />
     </div>
   )

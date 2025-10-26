@@ -6,6 +6,7 @@ import Input from '../Input'
 import Select from '../Select'
 import ToothChart from './ToothChart'
 import { Card } from '../index'
+import NewAppointmentModal from './NewAppointmentModal'
 
 const NewTreatmentModal = ({
   isOpen,
@@ -16,6 +17,8 @@ const NewTreatmentModal = ({
 }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('basic') // basic, teeth, steps, payment
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+  const [selectedStepForAppointment, setSelectedStepForAppointment] = useState(null)
   const [formData, setFormData] = useState({
     patientId: '',
     treatmentType: '',
@@ -206,6 +209,29 @@ const NewTreatmentModal = ({
     setTreatmentSteps(treatmentSteps.filter((_, i) => i !== index))
   }
 
+  const handleBookAppointmentForStep = (step, index) => {
+    setSelectedStepForAppointment({ step, index })
+    setIsAppointmentModalOpen(true)
+  }
+
+  const handleCloseAppointmentModal = () => {
+    setIsAppointmentModalOpen(false)
+    setSelectedStepForAppointment(null)
+  }
+
+  const handleSaveAppointment = (appointmentData) => {
+    console.log('Appointment saved for step:', selectedStepForAppointment)
+    console.log('Appointment data:', appointmentData)
+    
+    // Update the step's date with the appointment date
+    if (selectedStepForAppointment && appointmentData.appointmentDate) {
+      handleUpdateStep(selectedStepForAppointment.index, 'date', appointmentData.appointmentDate)
+    }
+    
+    handleCloseAppointmentModal()
+    // You can add additional logic here to save the appointment to your backend
+  }
+
   const handleClose = () => {
     setFormData({
       patientId: '',
@@ -264,6 +290,7 @@ const NewTreatmentModal = ({
   ]
 
   return (
+    <>
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
@@ -760,13 +787,28 @@ const NewTreatmentModal = ({
                               }`}>
                                 Step {index + 1}
                               </h4>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveStep(index)}
-                                className="text-red-500 hover:text-red-600"
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </button>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleBookAppointmentForStep(step, index)}
+                                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                                    isDarkMode
+                                      ? 'bg-teal-900/30 text-teal-400 hover:bg-teal-900/50'
+                                      : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                                  }`}
+                                  title="Book appointment for this step"
+                                >
+                                  <FaCalendarAlt className="w-3.5 h-3.5" />
+                                  Book
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveStep(index)}
+                                  className="text-red-500 hover:text-red-600"
+                                >
+                                  <FaTrash className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1008,6 +1050,25 @@ const NewTreatmentModal = ({
       </div>
     </div>
     </div>
+
+    {/* Appointment Modal for Steps */}
+    <NewAppointmentModal
+      isOpen={isAppointmentModalOpen}
+      onClose={handleCloseAppointmentModal}
+      onSave={handleSaveAppointment}
+      patients={patients}
+      prefilledData={
+        selectedStepForAppointment && formData.patientId
+          ? {
+              patientId: formData.patientId,
+              appointmentDate: selectedStepForAppointment.step.date || '',
+              reason: `${formData.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.index + 1}`}`,
+              notes: selectedStepForAppointment.step.notes || ''
+            }
+          : null
+      }
+    />
+    </>
   )
 }
 
