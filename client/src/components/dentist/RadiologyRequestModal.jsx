@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../contexts/ThemeContext'
-import { FaTimes, FaSave, FaXRay, FaCalendarAlt, FaUser, FaHospital, FaStickyNote, FaFileUpload } from 'react-icons/fa'
+import { FaTimes, FaSave, FaXRay, FaCalendarAlt, FaUser, FaHospital, FaStickyNote, FaStethoscope } from 'react-icons/fa'
 import Button from '../Button'
 import Input from '../Input'
 import Select from '../Select'
@@ -11,20 +11,23 @@ const RadiologyRequestModal = ({
   onSave, 
   patients = [],
   radiologyCenters = [],
+  treatments = [],
   initialData = null,
-  patientInfo = null
+  patientInfo = null,
+  treatmentInfo = null
 }) => {
   const { isDarkMode } = useTheme()
   const [formData, setFormData] = useState({
     patientId: '',
     radiologyCenterId: '',
+    treatmentId: '',
     requestDate: new Date().toISOString().split('T')[0],
     imagingType: 'X-ray',
     status: 'Requested',
-    notes: '',
-    reportFile: null
+    notes: ''
   })
   const [errors, setErrors] = useState({})
+  const [filteredTreatments, setFilteredTreatments] = useState([])
 
   useEffect(() => {
     if (isOpen) {
@@ -33,27 +36,35 @@ const RadiologyRequestModal = ({
         setFormData({
           patientId: initialData.patientId || '',
           radiologyCenterId: initialData.radiologyCenterId || '',
+          treatmentId: initialData.treatmentId || '',
           requestDate: initialData.requestDate || new Date().toISOString().split('T')[0],
           imagingType: initialData.imagingType || 'X-ray',
           status: initialData.status || 'Requested',
-          notes: initialData.notes || '',
-          reportFile: null
+          notes: initialData.notes || ''
         })
+        // Filter treatments for this patient
+        if (initialData.patientId && treatments) {
+          setFilteredTreatments(treatments.filter(t => t.patientId.toString() === initialData.patientId.toString()))
+        }
       } else {
         // New request mode
         setFormData({
           patientId: patientInfo?.id || '',
           radiologyCenterId: '',
+          treatmentId: treatmentInfo?.id || '',
           requestDate: new Date().toISOString().split('T')[0],
           imagingType: 'X-ray',
           status: 'Requested',
-          notes: '',
-          reportFile: null
+          notes: ''
         })
+        // Filter treatments for prefilled patient
+        if (patientInfo?.id && treatments) {
+          setFilteredTreatments(treatments.filter(t => t.patientId.toString() === patientInfo.id.toString()))
+        }
       }
       setErrors({})
     }
-  }, [isOpen, initialData, patientInfo])
+  }, [isOpen, initialData, patientInfo, treatmentInfo, treatments])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -61,44 +72,26 @@ const RadiologyRequestModal = ({
       ...prev,
       [name]: value
     }))
+    
+    // If patient changes, filter treatments and reset treatment selection
+    if (name === 'patientId') {
+      setFormData(prev => ({
+        ...prev,
+        treatmentId: '' // Reset treatment when patient changes
+      }))
+      
+      if (value && treatments) {
+        setFilteredTreatments(treatments.filter(t => t.patientId.toString() === value.toString()))
+      } else {
+        setFilteredTreatments([])
+      }
+    }
+    
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
       }))
-    }
-  }
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
-      if (!allowedTypes.includes(file.type)) {
-        setErrors(prev => ({
-          ...prev,
-          reportFile: 'Please upload a PDF or image file'
-        }))
-        return
-      }
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors(prev => ({
-          ...prev,
-          reportFile: 'File size must be less than 10MB'
-        }))
-        return
-      }
-      setFormData(prev => ({
-        ...prev,
-        reportFile: file
-      }))
-      if (errors.reportFile) {
-        setErrors(prev => ({
-          ...prev,
-          reportFile: ''
-        }))
-      }
     }
   }
 
@@ -138,11 +131,11 @@ const RadiologyRequestModal = ({
     setFormData({
       patientId: '',
       radiologyCenterId: '',
+      treatmentId: '',
       requestDate: new Date().toISOString().split('T')[0],
       imagingType: 'X-ray',
       status: 'Requested',
-      notes: '',
-      reportFile: null
+      notes: ''
     })
     setErrors({})
     onClose()
@@ -275,7 +268,59 @@ const RadiologyRequestModal = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Treatment (Optional) */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Related Treatment (Optional)
+            </label>
+            <div className="relative">
+              <FaStethoscope className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
+              }`} />
+              <select
+                name="treatmentId"
+                value={formData.treatmentId}
+                onChange={handleChange}
+                disabled={!!treatmentInfo || !formData.patientId}
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                } ${(treatmentInfo || !formData.patientId) ? 'bg-opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <option value="">
+                  {!formData.patientId ? 'Select a patient first' : 'No related treatment'}
+                </option>
+                {filteredTreatments && filteredTreatments.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.treatmentType} {t.date ? `(${new Date(t.date).toLocaleDateString()})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {treatmentInfo && (
+              <p className={`text-xs mt-1 flex items-center gap-1 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Connected to treatment plan: {treatmentInfo.treatmentType}
+              </p>
+            )}
+            {!formData.patientId && (
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Select a patient to see their treatments
+              </p>
+            )}
+            {formData.patientId && filteredTreatments.length === 0 && !treatmentInfo && (
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                No treatments found for this patient
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Imaging Type */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
@@ -328,54 +373,9 @@ const RadiologyRequestModal = ({
                 onChange={handleChange}
                 options={statusOptions}
               />
-            </div>
-          )}
-
-          {/* Report File Upload (only for edit mode or completed status) */}
-          {(initialData || formData.status === 'Completed') && (
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Report File (PDF or Image)
-              </label>
-              <div className={`border-2 border-dashed rounded-lg p-4 ${
-                isDarkMode 
-                  ? 'border-gray-600 hover:border-purple-500' 
-                  : 'border-gray-300 hover:border-purple-400'
-              } transition-colors`}>
-                <input
-                  type="file"
-                  id="reportFile"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="reportFile"
-                  className="cursor-pointer flex flex-col items-center gap-2"
-                >
-                  <FaFileUpload className={`w-8 h-8 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`} />
-                  <span className={`text-sm ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    {formData.reportFile 
-                      ? formData.reportFile.name 
-                      : 'Click to upload report file'
-                    }
-                  </span>
-                  <span className={`text-xs ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    PDF, JPG, PNG (Max 10MB)
-                  </span>
-                </label>
-              </div>
-              {errors.reportFile && (
-                <p className="text-red-500 text-sm mt-1">{errors.reportFile}</p>
-              )}
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Note: Available Date and Report File can only be set by Radiology Center
+              </p>
             </div>
           )}
 

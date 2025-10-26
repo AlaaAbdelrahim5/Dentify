@@ -14,7 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select } from '../../../components'
+import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader } from '../../../components'
 import PaymentModal from '../../../components/dentist/PaymentModal'
 
 const DentistPayments = () => {
@@ -255,6 +255,13 @@ const DentistPayments = () => {
     // Here you would save to backend
   }
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedPatient('all')
+    setSelectedPaymentMethod('all')
+    setSelectedDateRange('all')
+  }
+
   const handlePrintInvoice = (payment) => {
     // Create a printable invoice
     const printWindow = window.open('', '_blank')
@@ -316,20 +323,31 @@ const DentistPayments = () => {
 
   const columns = [
     {
-      header: 'Date',
+      label: 'Date',
       accessor: 'paymentDate',
-      render: (value) => new Date(value).toLocaleDateString()
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <FaCalendarAlt className="text-gray-500 w-4 h-4" />
+          <span>{new Date(value).toLocaleDateString()}</span>
+        </div>
+      )
     },
     {
-      header: 'Patient',
-      accessor: 'patientName'
+      label: 'Patient',
+      accessor: 'patientName',
+      render: (value) => (
+        <div className="flex items-center gap-2">
+          <FaUser className="text-gray-500 w-4 h-4" />
+          <span className="font-medium">{value}</span>
+        </div>
+      )
     },
     {
-      header: 'Treatment',
+      label: 'Treatment',
       accessor: 'treatmentType'
     },
     {
-      header: 'Amount',
+      label: 'Amount',
       accessor: 'amount',
       render: (value) => (
         <span className="font-semibold text-green-600 dark:text-green-400">
@@ -338,7 +356,7 @@ const DentistPayments = () => {
       )
     },
     {
-      header: 'Method',
+      label: 'Method',
       accessor: 'paymentMethod',
       render: (value) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -346,17 +364,17 @@ const DentistPayments = () => {
             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
             : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
         }`}>
-          {value}
+          {value === 'Cash' ? '💵 Cash' : '💳 Card'}
         </span>
       )
     },
     {
-      header: 'Notes',
+      label: 'Notes',
       accessor: 'notes',
       render: (value) => value || '-'
     },
     {
-      header: 'Actions',
+      label: 'Actions',
       accessor: 'id',
       render: (value, payment) => (
         <Button
@@ -374,87 +392,46 @@ const DentistPayments = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Payment Management
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Track and manage treatment payments
-          </p>
-        </div>
-        <Button variant="primary" onClick={() => handleAddPayment()}>
-          <FaPlus className="w-4 h-4 mr-2" />
-          Record Payment
-        </Button>
-      </div>
+      <PageHeader
+        title="Payment Management"
+        description="Track and manage treatment payments"
+        action={{
+          label: 'Record Payment',
+          onClick: () => handleAddPayment(),
+          icon: FaPlus,
+          gradient: 'from-green-600 to-green-700'
+        }}
+      />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                {selectedDateRange === 'all' ? 'Total' : 
-                 selectedDateRange === 'today' ? 'Today' :
-                 selectedDateRange === 'week' ? 'This Week' : 'This Month'} Revenue
-              </p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>${stats.total.toFixed(2)}</p>
-            </div>
-            <FaDollarSign className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Cash Payments</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>${stats.cashPayments.toFixed(2)}</p>
-            </div>
-            <FaMoneyBillWave className="w-8 h-8 text-green-600" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Card Payments</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>${stats.cardPayments.toFixed(2)}</p>
-            </div>
-            <FaCreditCard className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Transactions</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.count}</p>
-            </div>
-            <FaChartLine className="w-8 h-8 text-purple-500" />
-          </div>
-        </Card>
-      </div>
+      <StatsOverview stats={[
+        {
+          label: `${selectedDateRange === 'all' ? 'Total' : 
+                   selectedDateRange === 'today' ? 'Today' :
+                   selectedDateRange === 'week' ? 'This Week' : 'This Month'} Revenue`,
+          value: `$${stats.total.toFixed(2)}`,
+          icon: FaDollarSign,
+          gradient: 'from-green-600 to-green-700'
+        },
+        {
+          label: 'Cash Payments',
+          value: `$${stats.cashPayments.toFixed(2)}`,
+          icon: FaMoneyBillWave,
+          gradient: 'from-emerald-600 to-emerald-700'
+        },
+        {
+          label: 'Card Payments',
+          value: `$${stats.cardPayments.toFixed(2)}`,
+          icon: FaCreditCard,
+          gradient: 'from-blue-600 to-blue-700'
+        },
+        {
+          label: 'Transactions',
+          value: stats.count,
+          icon: FaChartLine,
+          gradient: 'from-purple-600 to-purple-700'
+        }
+      ]} />
 
       {/* Active Treatments - Quick Payment */}
       <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -692,62 +669,41 @@ const DentistPayments = () => {
 
       {/* Filters */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder="Search by patient name or treatment..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={FaSearch}
-            />
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <select
-              value={selectedPatient}
-              onChange={(e) => setSelectedPatient(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Patients</option>
-              {mockPatients.map(patient => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedDateRange}
-              onChange={(e) => setSelectedDateRange(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-            <select
-              value={selectedPaymentMethod}
-              onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Methods</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-            </select>
-          </div>
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          searchPlaceholder="Search by patient name or treatment..."
+          filters={[
+            {
+              value: selectedPatient,
+              onChange: (e) => setSelectedPatient(e.target.value),
+              options: mockPatients.map(p => ({ value: p.id.toString(), label: p.name })),
+              placeholder: 'All Patients'
+            },
+            {
+              value: selectedDateRange,
+              onChange: (e) => setSelectedDateRange(e.target.value),
+              options: [
+                { value: 'all', label: 'All Time' },
+                { value: 'today', label: 'Today' },
+                { value: 'week', label: 'This Week' },
+                { value: 'month', label: 'This Month' }
+              ],
+              placeholder: 'Date Range'
+            },
+            {
+              value: selectedPaymentMethod,
+              onChange: (e) => setSelectedPaymentMethod(e.target.value),
+              options: [
+                { value: 'all', label: 'All Methods' },
+                { value: 'Cash', label: 'Cash' },
+                { value: 'Card', label: 'Card' }
+              ],
+              placeholder: 'Payment Method'
+            }
+          ]}
+          onClearFilters={handleClearFilters}
+        />
       </Card>
 
       {/* Payments Table */}
@@ -772,6 +728,7 @@ const DentistPayments = () => {
           <DataTable
             columns={columns}
             data={filteredPayments}
+            emptyMessage="No payments found"
           />
         )}
       </Card>
