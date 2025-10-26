@@ -13,7 +13,8 @@ const NewTreatmentModal = ({
   onClose,
   onSave,
   patients = [],
-  initialData = null
+  initialData = null,
+  asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('basic') // basic, teeth, steps, payment
@@ -289,48 +290,33 @@ const NewTreatmentModal = ({
     { value: 'High', label: 'High' }
   ]
 
-  return (
-    <>
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+  // Main content
+  const content = (
+    <div className="w-full flex flex-col">
+      {/* Header */}
+      <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+        isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 rounded-lg ${
+            isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
           }`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg ${
-              isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-            }`}>
-              <FaStethoscope className="w-5 h-5 text-teal-600" />
-            </div>
-            <div>
-              <h2 className={`text-xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {initialData ? 'Edit Treatment Plan' : 'New Treatment Plan'}
-              </h2>
-              <p className={`text-xs ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                {initialData ? 'Update treatment details' : 'Create a comprehensive treatment plan'}
-              </p>
-            </div>
+            <FaStethoscope className="w-5 h-5 text-teal-600" />
           </div>
+          <div>
+            <h2 className={`text-xl font-bold ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              {initialData ? 'Edit Treatment Plan' : 'New Treatment Plan'}
+            </h2>
+            <p className={`text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              {initialData ? 'Update treatment details' : 'Create a comprehensive treatment plan'}
+            </p>
+          </div>
+        </div>
+        {!asFullPage && (
           <button
             onClick={handleClose}
             className={`p-2 rounded-lg transition-colors ${
@@ -341,7 +327,8 @@ const NewTreatmentModal = ({
           >
             <FaTimes className="w-5 h-5" />
           </button>
-        </div>
+        )}
+      </div>
 
         {/* Tabs Navigation */}
         <div className={`flex gap-1 p-3 border-b ${
@@ -1024,31 +1011,82 @@ const NewTreatmentModal = ({
         </div>
 
         {/* Footer with Actions */}
-        <div className={`p-4 border-t ${
-          isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'
-        }`}>
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleSubmit}
-              className="flex-1"
-            >
-              <FaSave className="w-3.5 h-3.5 mr-2" />
-              {initialData ? 'Update Treatment' : 'Create Treatment'}
-            </Button>
+        {!asFullPage && (
+          <div className={`p-4 border-t ${
+            isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'
+          }`}>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleSubmit}
+                className="flex-1"
+              >
+                <FaSave className="w-3.5 h-3.5 mr-2" />
+                {initialData ? 'Update Treatment' : 'Create Treatment'}
+              </Button>
+            </div>
           </div>
+        )}
+      </div>
+    )
+
+  // Wrap content in modal backdrop if not full page
+  if (asFullPage) {
+    return (
+      <>
+        {content}
+        {/* Appointment Modal for Steps */}
+        <NewAppointmentModal
+          isOpen={isAppointmentModalOpen}
+          onClose={handleCloseAppointmentModal}
+          onSave={handleSaveAppointment}
+          patients={patients}
+          prefilledData={
+            selectedStepForAppointment && formData.patientId
+              ? {
+                  patientId: formData.patientId,
+                  appointmentDate: selectedStepForAppointment.step.date || '',
+                  reason: `${formData.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.index + 1}`}`,
+                  notes: selectedStepForAppointment.step.notes || ''
+                }
+              : null
+          }
+        />
+      </>
+    )
+  }
+
+  return (
+    <>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-transparent transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${
+            isDarkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {content}
         </div>
       </div>
-    </div>
     </div>
 
     {/* Appointment Modal for Steps */}

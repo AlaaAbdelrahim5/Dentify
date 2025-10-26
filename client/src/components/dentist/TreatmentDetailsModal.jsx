@@ -19,7 +19,8 @@ const TreatmentDetailsModal = ({
   onAddPayment,
   onRequestRadiology,
   onBookStepAppointment,
-  payments = []
+  payments = [],
+  asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('overview') // overview, steps, payments
@@ -42,82 +43,71 @@ const TreatmentDetailsModal = ({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+  // Render content without modal wrapper if used as full page
+  const content = (
+    <div className="w-full flex flex-col">
+      {/* Header */}
+      <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+        isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
           }`}>
-          <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-            }`}>
-              <FaStethoscope className="w-6 h-6 text-teal-600" />
-            </div>
-            <div>
-              <h2 className={`text-xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {treatmentData.treatmentType}
-              </h2>
-              <p className={`text-xs ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Patient: {treatmentData.patientName}
-              </p>
-            </div>
+            <FaStethoscope className="w-6 h-6 text-teal-600" />
           </div>
-          <div className="flex items-center gap-2">
-            {treatmentData.priority && (
-              <div className={`
-                px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium
-                ${treatmentData.priority === 'High' 
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                  : treatmentData.priority === 'Medium'
-                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                }
-              `}>
-                <FaExclamationTriangle className="w-3 h-3" />
-                {treatmentData.priority}
-              </div>
-            )}
-            <StatusBadge status={treatmentData.treatmentStatus} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(treatmentData)}
-            >
-              <FaEdit className="w-4 h-4" />
-            </Button>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-400' 
-                  : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              <FaTimes className="w-5 h-5" />
-            </button>
+          <div>
+            <h2 className={`text-xl font-bold ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              {treatmentData.treatmentType}
+            </h2>
+            <p className={`text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Patient: {treatmentData.patientName}
+            </p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          {treatmentData.priority && (
+            <div className={`
+              px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium
+              ${treatmentData.priority === 'High' 
+                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                : treatmentData.priority === 'Medium'
+                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              }
+            `}>
+              <FaExclamationTriangle className="w-3 h-3" />
+              {treatmentData.priority}
+            </div>
+          )}
+          <StatusBadge status={treatmentData.treatmentStatus} />
+          {!asFullPage && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(treatmentData)}
+              >
+                <FaEdit className="w-4 h-4" />
+              </Button>
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'hover:bg-gray-700 text-gray-400' 
+                    : 'hover:bg-gray-100 text-gray-600'
+                }`}
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
         {/* Tabs Navigation */}
         <div className={`flex gap-1 p-3 border-b ${
@@ -632,20 +622,49 @@ const TreatmentDetailsModal = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className={`p-4 border-t ${
-          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="w-full"
-          >
-            Close
-          </Button>
+        {/* Footer - Only show in modal mode */}
+        {!asFullPage && (
+          <div className={`p-4 border-t ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          }`}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="w-full"
+            >
+              Close
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+
+  // Wrap content in modal backdrop if not full page
+  if (asFullPage) {
+    return content
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-transparent transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className={`relative rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${
+            isDarkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {content}
         </div>
       </div>
-    </div>
     </div>
   )
 }

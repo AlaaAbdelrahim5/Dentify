@@ -15,7 +15,9 @@ import {
   FaTooth,
   FaMoneyBillWave,
   FaXRay,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaArrowLeft,
+  FaSave
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import NewTreatmentModal from '../../../components/dentist/NewTreatmentModal'
@@ -34,9 +36,10 @@ const DentistTreatments = () => {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or list
   
-  // Modals state
-  const [isNewTreatmentModalOpen, setIsNewTreatmentModalOpen] = useState(false)
-  const [isTreatmentDetailsModalOpen, setIsTreatmentDetailsModalOpen] = useState(false)
+  // Page view state: 'list', 'view', 'new', 'edit'
+  const [currentPage, setCurrentPage] = useState('list')
+  
+  // Modals state (now only for smaller modals like payment, radiology, delete)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -276,36 +279,32 @@ const DentistTreatments = () => {
 
   const stats = getStats()
 
-  // Modal handlers
-  const handleNewTreatment = () => {
-    setIsNewTreatmentModalOpen(true)
+  // Navigation handlers
+  const handleBackToList = () => {
+    setCurrentPage('list')
+    setSelectedTreatment(null)
   }
 
-  const handleCloseNewTreatmentModal = () => {
-    setIsNewTreatmentModalOpen(false)
+  // Modal handlers
+  const handleNewTreatment = () => {
+    setSelectedTreatment(null)
+    setCurrentPage('new')
   }
 
   const handleSaveNewTreatment = (treatmentData) => {
     console.log('New treatment:', treatmentData)
     // Here you would typically save to your backend
+    handleBackToList()
   }
 
   const handleViewTreatment = (treatment) => {
     setSelectedTreatment(treatment)
-    setIsTreatmentDetailsModalOpen(true)
-  }
-
-  const handleCloseTreatmentDetailsModal = () => {
-    setIsTreatmentDetailsModalOpen(false)
-    setSelectedTreatment(null)
+    setCurrentPage('view')
   }
 
   const handleEditTreatment = (treatment) => {
-    console.log('Edit treatment:', treatment)
-    setIsTreatmentDetailsModalOpen(false)
-    // Open edit modal (reuse NewTreatmentModal with initialData)
     setSelectedTreatment(treatment)
-    setIsNewTreatmentModalOpen(true)
+    setCurrentPage('edit')
   }
 
   const handleDeleteTreatment = (treatment) => {
@@ -327,12 +326,11 @@ const DentistTreatments = () => {
   const handleUpdateStatus = (treatmentId, newStatus) => {
     console.log('Update status:', treatmentId, newStatus)
     // Here you would update the treatment status in your backend
-    setIsTreatmentDetailsModalOpen(false)
+    handleBackToList()
   }
 
   const handleAddPayment = (treatment) => {
     setSelectedTreatment(treatment)
-    setIsTreatmentDetailsModalOpen(false)
     setIsPaymentModalOpen(true)
   }
 
@@ -348,7 +346,6 @@ const DentistTreatments = () => {
 
   const handleRequestRadiology = (treatment) => {
     setSelectedTreatment(treatment)
-    setIsTreatmentDetailsModalOpen(false)
     setIsRadiologyModalOpen(true)
   }
 
@@ -559,6 +556,125 @@ const DentistTreatments = () => {
 
   return (
     <div className="space-y-6">
+      {/* Show New Treatment Page */}
+      {currentPage === 'new' && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => {
+                // The save handler is called from within the modal
+                // This button is just for visual consistency
+              }}
+              className="flex items-center gap-2"
+              form="treatment-form"
+              type="submit"
+            >
+              <FaSave className="w-4 h-4" />
+              Create Treatment
+            </Button>
+          </div>
+          
+          {/* New Treatment Form - Full Page */}
+          <NewTreatmentModal
+            isOpen={true}
+            onClose={handleBackToList}
+            onSave={handleSaveNewTreatment}
+            patients={mockPatients}
+            initialData={null}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show Edit Treatment Page */}
+      {currentPage === 'edit' && selectedTreatment && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => {
+                // The save handler is called from within the modal
+                // This button is just for visual consistency
+              }}
+              className="flex items-center gap-2"
+              form="treatment-form"
+              type="submit"
+            >
+              <FaSave className="w-4 h-4" />
+              Update Treatment
+            </Button>
+          </div>
+          
+          {/* Edit Treatment Form - Full Page */}
+          <NewTreatmentModal
+            isOpen={true}
+            onClose={handleBackToList}
+            onSave={handleSaveNewTreatment}
+            patients={mockPatients}
+            initialData={selectedTreatment}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show View Treatment Page */}
+      {currentPage === 'view' && selectedTreatment && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => handleEditTreatment(selectedTreatment)}
+              className="flex items-center gap-2"
+            >
+              <FaEdit className="w-4 h-4" />
+              Edit Treatment
+            </Button>
+          </div>
+          
+          {/* Treatment Details Content - Full Page Mode */}
+          <TreatmentDetailsModal
+            isOpen={true}
+            onClose={handleBackToList}
+            treatmentData={selectedTreatment}
+            onEdit={handleEditTreatment}
+            onUpdateStatus={handleUpdateStatus}
+            onAddPayment={handleAddPayment}
+            onRequestRadiology={handleRequestRadiology}
+            onBookStepAppointment={handleBookStepAppointment}
+            payments={selectedTreatment ? mockPayments[selectedTreatment.id] || [] : []}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show Treatments List Page */}
+      {currentPage === 'list' && (
+        <>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -765,27 +881,11 @@ const DentistTreatments = () => {
         </div>
       )}
 
-      {/* Modals */}
-      <NewTreatmentModal
-        isOpen={isNewTreatmentModalOpen}
-        onClose={handleCloseNewTreatmentModal}
-        onSave={handleSaveNewTreatment}
-        patients={mockPatients}
-        initialData={selectedTreatment && isNewTreatmentModalOpen ? selectedTreatment : null}
-      />
+      {/* Close Treatments List Page */}
+      </>
+      )}
 
-      <TreatmentDetailsModal
-        isOpen={isTreatmentDetailsModalOpen}
-        onClose={handleCloseTreatmentDetailsModal}
-        treatmentData={selectedTreatment}
-        onEdit={handleEditTreatment}
-        onUpdateStatus={handleUpdateStatus}
-        onAddPayment={handleAddPayment}
-        onRequestRadiology={handleRequestRadiology}
-        onBookStepAppointment={handleBookStepAppointment}
-        payments={selectedTreatment ? mockPayments[selectedTreatment.id] || [] : []}
-      />
-
+      {/* Modals - These work across all pages */}
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={handleClosePaymentModal}
