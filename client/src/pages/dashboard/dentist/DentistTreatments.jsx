@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaStethoscope,
@@ -25,15 +25,15 @@ import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsM
 import PaymentModal from '../../../components/dentist/PaymentModal'
 import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
-import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
 import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
 import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
+import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI } from '../../../services/api'
 
 const DentistTreatments = () => {
   const { isDarkMode } = useTheme()
-  const [activeView, setActiveView] = useState('active') // active, completed, all
+  const [activeView, setActiveView] = useState('all') // active, completed, all
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('In Progress')
   const [viewMode, setViewMode] = useState('grid') // grid or list
   
   // Page view state: 'list', 'view', 'new', 'edit'
@@ -43,206 +43,118 @@ const DentistTreatments = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
-  const [selectedStepForAppointment, setSelectedStepForAppointment] = useState(null)
+  
+  // Data states
+  const [treatments, setTreatments] = useState([])
+  const [patients, setPatients] = useState([])
+  const [radiologyCenters, setRadiologyCenters] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Mock treatments data with new database structure
-  const mockTreatments = [
-    {
-      id: 1,
-      patientId: 101,
-      patientName: 'John Smith',
-      dentistId: 1,
-      treatmentType: 'Root Canal',
-      description: 'Root canal treatment for infected tooth',
-      treatmentStatus: 'In Progress',
-      creationDate: '2024-01-15',
-      totalAmount: 800.00,
-      paidAmount: 400.00,
-      notes: 'Patient experiencing mild discomfort',
-      priority: 'High',
-      steps: [
-        { title: 'Diagnosis', status: 'completed', date: '2024-01-15', notes: 'Infected pulp confirmed' },
-        { title: 'X-Ray & Analysis', status: 'completed', date: '2024-01-16', notes: 'Root canal imaging done' },
-        { title: 'Root Canal Procedure', status: 'current', date: '2024-01-20', notes: 'Treatment in progress' },
-        { title: 'Crown Installation', status: 'upcoming', date: '', notes: 'Scheduled after healing' },
-        { title: 'Follow-up', status: 'upcoming', date: '', notes: 'Check after 2 weeks' }
-      ],
-      teethStatus: [
-        {
-          toothNumber: 14,
-          conditionStatus: 'Root Canal',
-          treatmentPriority: 'High',
-          diagnosedDate: '2024-01-15',
-          notes: 'Infected pulp'
-        }
-      ]
-    },
-    {
-      id: 2,
-      patientId: 102,
-      patientName: 'Sarah Johnson',
-      dentistId: 1,
-      treatmentType: 'Cleaning',
-      description: 'Routine dental cleaning and checkup',
-      treatmentStatus: 'Completed',
-      creationDate: '2024-02-01',
-      totalAmount: 120.00,
-      paidAmount: 120.00,
-      notes: 'Regular maintenance cleaning',
-      priority: 'Low',
-      steps: [
-        { title: 'Initial Checkup', status: 'completed', date: '2024-02-01', notes: 'No issues found' },
-        { title: 'Cleaning', status: 'completed', date: '2024-02-01', notes: 'Deep cleaning done' },
-        { title: 'Polishing', status: 'completed', date: '2024-02-01', notes: 'Teeth polished' },
-        { title: 'Final Check', status: 'completed', date: '2024-02-01', notes: 'All clear' }
-      ],
-      teethStatus: []
-    },
-    {
-      id: 3,
-      patientId: 103,
-      patientName: 'Mike Wilson',
-      dentistId: 1,
-      treatmentType: 'Crown Installation',
-      description: 'Ceramic crown installation on molar',
-      treatmentStatus: 'Completed',
-      creationDate: '2024-01-10',
-      totalAmount: 1200.00,
-      paidAmount: 1200.00,
-      notes: 'Crown fitted successfully',
-      priority: 'Medium',
-      steps: [
-        { title: 'Diagnosis', status: 'completed', date: '2024-01-10', notes: 'Tooth prepared' },
-        { title: 'Tooth Preparation', status: 'completed', date: '2024-01-11', notes: 'Shaped for crown' },
-        { title: 'Impression', status: 'completed', date: '2024-01-11', notes: 'Mold taken' },
-        { title: 'Temporary Crown', status: 'completed', date: '2024-01-12', notes: 'Temporary installed' },
-        { title: 'Crown Installation', status: 'completed', date: '2024-01-20', notes: 'Permanent crown fitted' }
-      ],
-      teethStatus: [
-        {
-          toothNumber: 25,
-          conditionStatus: 'Crown',
-          treatmentPriority: 'Medium',
-          diagnosedDate: '2024-01-10',
-          notes: 'Crown installation complete'
-        }
-      ]
-    },
-    {
-      id: 4,
-      patientId: 104,
-      patientName: 'Emily Davis',
-      dentistId: 1,
-      treatmentType: 'Extraction',
-      description: 'Wisdom tooth extraction due to impaction',
-      treatmentStatus: 'In Progress',
-      creationDate: '2024-02-10',
-      totalAmount: 300.00,
-      paidAmount: 0.00,
-      notes: 'Impacted wisdom tooth causing pain',
-      priority: 'High',
-      steps: [
-        { title: 'Consultation', status: 'completed', date: '2024-02-10', notes: 'Impaction confirmed' },
-        { title: 'X-Ray', status: 'completed', date: '2024-02-11', notes: 'Position verified' },
-        { title: 'Extraction Procedure', status: 'current', date: '2024-02-15', notes: 'Scheduled for extraction' },
-        { title: 'Post-Op Care', status: 'upcoming', date: '', notes: 'Recovery monitoring' }
-      ],
-      teethStatus: [
-        {
-          toothNumber: 18,
-          conditionStatus: 'Extracted',
-          treatmentPriority: 'High',
-          diagnosedDate: '2024-02-10',
-          notes: 'Requires extraction'
-        }
-      ]
-    },
-    {
-      id: 5,
-      patientId: 105,
-      patientName: 'Robert Brown',
-      dentistId: 1,
-      treatmentType: 'Filling',
-      description: 'Multiple cavity fillings',
-      treatmentStatus: 'In Progress',
-      creationDate: '2024-02-15',
-      totalAmount: 450.00,
-      paidAmount: 225.00,
-      notes: 'Three cavities detected',
-      priority: 'Medium',
-      steps: [
-        { title: 'Diagnosis', status: 'completed', date: '2024-02-15', notes: 'Three cavities found' },
-        { title: 'First Filling', status: 'completed', date: '2024-02-16', notes: 'Tooth #12 done' },
-        { title: 'Second Filling', status: 'current', date: '2024-02-20', notes: 'Tooth #19 in progress' },
-        { title: 'Third Filling', status: 'upcoming', date: '', notes: 'Tooth #30 pending' },
-        { title: 'Follow-up', status: 'upcoming', date: '', notes: 'Check after 1 week' }
-      ],
-      teethStatus: [
-        {
-          toothNumber: 12,
-          conditionStatus: 'Cavity',
-          treatmentPriority: 'Medium',
-          diagnosedDate: '2024-02-15',
-          notes: 'Small cavity'
-        },
-        {
-          toothNumber: 19,
-          conditionStatus: 'Cavity',
-          treatmentPriority: 'High',
-          diagnosedDate: '2024-02-15',
-          notes: 'Deep cavity'
-        },
-        {
-          toothNumber: 30,
-          conditionStatus: 'Cavity',
-          treatmentPriority: 'Low',
-          diagnosedDate: '2024-02-15',
-          notes: 'Surface cavity'
-        }
-      ]
+  // Fetch data on mount
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('Fetching treatments data...')
+      const [treatmentsRes, patientsRes, radiologyRes] = await Promise.all([
+        treatmentsAPI.getDentistTreatments(),
+        patientsAPI.getAll(),
+        radiologyAPI.getAll()
+      ])
+      console.log('Treatments response:', treatmentsRes)
+      console.log('Patients response:', patientsRes)
+      console.log('Radiology response:', radiologyRes)
+      
+      setTreatments(treatmentsRes.treatments || [])
+      setPatients(patientsRes.patients || [])
+      setRadiologyCenters(radiologyRes.radiology || [])
+      
+      console.log('Patients state set to:', patientsRes.patients || [])
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to load data. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  ]
-
-  // Mock patients for new treatment modal
-  const mockPatients = [
-    { id: 101, name: 'John Smith' },
-    { id: 102, name: 'Sarah Johnson' },
-    { id: 103, name: 'Mike Wilson' },
-    { id: 104, name: 'Emily Davis' },
-    { id: 105, name: 'Robert Brown' }
-  ]
-
-  // Mock radiology centers
-  const mockRadiologyCenters = [
-    { id: 1, name: 'Central Radiology Center' },
-    { id: 2, name: 'Advanced Imaging Clinic' },
-    { id: 3, name: 'DentaScan Radiology' }
-  ]
-
-  // Mock payments (in real app, this would be fetched per treatment)
-  const mockPayments = {
-    1: [
-      { amount: 200, paymentMethod: 'Cash', paymentDate: '2024-01-15', notes: 'Initial payment' },
-      { amount: 200, paymentMethod: 'Card', paymentDate: '2024-01-22', notes: 'Second installment' }
-    ],
-    5: [
-      { amount: 225, paymentMethod: 'Card', paymentDate: '2024-02-15', notes: 'Down payment' }
-    ]
   }
+
+  // Transform treatment data from API
+  const transformTreatments = (apiTreatments) => {
+    return apiTreatments.map(treatment => {
+      // Parse teethStatus if it's a string, otherwise use as-is
+      let teethStatus = []
+      try {
+        if (typeof treatment.teethStatus === 'string') {
+          teethStatus = JSON.parse(treatment.teethStatus)
+        } else if (Array.isArray(treatment.teethStatus)) {
+          teethStatus = treatment.teethStatus
+        }
+      } catch (e) {
+        console.error('Error parsing teethStatus:', e)
+        teethStatus = []
+      }
+
+      // Convert database status to display format
+      const statusMap = {
+        'IN_PROGRESS': 'In Progress',
+        'COMPLETED': 'Completed',
+        'CANCELLED': 'Cancelled'
+      }
+
+      return {
+        id: treatment.id,
+        patientId: treatment.patientId,
+        patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
+        dentistId: treatment.dentistId,
+        treatmentType: treatment.treatmentType,
+        description: treatment.description || '',
+        treatmentStatus: statusMap[treatment.status] || treatment.status,
+        creationDate: treatment.createdAt,
+        totalAmount: treatment.totalAmount || 0,
+        paidAmount: treatment.paidAmount || 0,
+        notes: treatment.notes || '',
+        priority: 'Medium', // TODO: Add priority field to schema
+        teethStatus: teethStatus
+      }
+    })
+  }
+
+  // Transform patients for modal
+  const mockPatients = patients.map(p => ({
+    id: p.userId,
+    name: `${p.firstName} ${p.lastName}`
+  }))
+  
+  console.log('Raw patients from state:', patients)
+  console.log('Available patients for treatment:', mockPatients)
+
+
+  // Transform radiology centers for modal
+  const mockRadiologyCenters = radiologyCenters.map(r => ({
+    id: r.userId,
+    name: r.centerName
+  }))
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'In Progress':
-        return isDarkMode 
-          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
-          : 'bg-blue-100 text-blue-700 border-blue-400'
-      case 'Completed':
+      case 'IN_PROGRESS':
         return isDarkMode 
           ? 'bg-green-900/30 text-green-400 border-green-600' 
           : 'bg-green-100 text-green-700 border-green-400'
+      case 'Completed':
+      case 'COMPLETED':
+        return isDarkMode 
+          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+          : 'bg-blue-100 text-blue-700 border-blue-400'
       case 'Cancelled':
+      case 'CANCELLED':
         return isDarkMode 
           ? 'bg-red-900/30 text-red-400 border-red-600' 
           : 'bg-red-100 text-red-700 border-red-400'
@@ -253,7 +165,9 @@ const DentistTreatments = () => {
     }
   }
 
-  const filteredTreatments = mockTreatments.filter(treatment => {
+  const displayTreatments = transformTreatments(treatments)
+
+  const filteredTreatments = displayTreatments.filter(treatment => {
     const matchesSearch = treatment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          treatment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          treatment.teethStatus?.some(t => t.toothNumber.toString().includes(searchTerm))
@@ -268,11 +182,11 @@ const DentistTreatments = () => {
   })
 
   const getStats = () => {
-    const total = mockTreatments.length
-    const active = mockTreatments.filter(t => t.treatmentStatus === 'In Progress').length
-    const completed = mockTreatments.filter(t => t.treatmentStatus === 'Completed').length
-    const totalRevenue = mockTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
-    const pendingPayments = mockTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
+    const total = displayTreatments.length
+    const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress' || t.treatmentStatus === 'IN_PROGRESS').length
+    const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed' || t.treatmentStatus === 'COMPLETED').length
+    const totalRevenue = displayTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
+    const pendingPayments = displayTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
     
     return { total, active, completed, totalRevenue, pendingPayments }
   }
@@ -291,10 +205,67 @@ const DentistTreatments = () => {
     setCurrentPage('new')
   }
 
-  const handleSaveNewTreatment = (treatmentData) => {
-    console.log('New treatment:', treatmentData)
-    // Here you would typically save to your backend
-    handleBackToList()
+  const handleSaveNewTreatment = async (treatmentData) => {
+    try {
+      console.log('========================================')
+      console.log('handleSaveNewTreatment CALLED!')
+      console.log('Raw treatment data received:', treatmentData)
+      console.log('========================================')
+      
+      // Prepare data for API (convert string IDs to integers)
+      const apiData = {
+        patientId: parseInt(treatmentData.patientId),
+        treatmentType: treatmentData.treatmentType,
+        description: treatmentData.description,
+        totalAmount: parseFloat(treatmentData.totalAmount) || 0,
+        notes: treatmentData.notes,
+        teethStatus: treatmentData.teethStatus || []
+      }
+      
+      console.log('Formatted API data:', apiData)
+      console.log('Sending to treatmentsAPI.create...')
+      const response = await treatmentsAPI.create(apiData)
+      console.log('Create response:', response)
+      
+      alert('Treatment created successfully!')
+      await fetchAllData()
+      handleBackToList()
+    } catch (error) {
+      console.error('========================================')
+      console.error('ERROR in handleSaveNewTreatment:')
+      console.error('Error:', error)
+      console.error('Error response:', error.response?.data)
+      console.error('========================================')
+      alert(error.response?.data?.error || 'Failed to create treatment. Please try again.')
+    }
+  }
+
+  const handleUpdateTreatment = async (treatmentData) => {
+    try {
+      console.log('Updating treatment with data:', treatmentData)
+      
+      // Prepare data for API
+      const apiData = {
+        patientId: parseInt(treatmentData.patientId),
+        treatmentType: treatmentData.treatmentType,
+        description: treatmentData.description,
+        totalAmount: parseFloat(treatmentData.totalAmount) || 0,
+        notes: treatmentData.notes,
+        teethStatus: treatmentData.teethStatus || []
+      }
+      
+      console.log('Sending update to API:', apiData)
+      const response = await treatmentsAPI.update(selectedTreatment.id, apiData)
+      console.log('Update response:', response)
+      
+      alert('Treatment updated successfully!')
+      await fetchAllData()
+      handleBackToList()
+    } catch (error) {
+      console.error('Error updating treatment:', error)
+      console.error('Error response:', error.response?.data)
+      alert(error.response?.data?.error || 'Failed to update treatment. Please try again.')
+    }
   }
 
   const handleViewTreatment = (treatment) => {
@@ -312,10 +283,19 @@ const DentistTreatments = () => {
     setIsDeleteModalOpen(true)
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Delete treatment:', selectedTreatment.id)
-    setIsDeleteModalOpen(false)
-    setSelectedTreatment(null)
+  const handleConfirmDelete = async () => {
+    try {
+      console.log('Deleting treatment:', selectedTreatment.id)
+      await treatmentsAPI.delete(selectedTreatment.id)
+      alert('Treatment deleted successfully!')
+      await fetchAllData()
+      setIsDeleteModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error deleting treatment:', error)
+      console.error('Error response:', error.response?.data)
+      alert(error.response?.data?.error || 'Failed to delete treatment. Please try again.')
+    }
   }
 
   const handleCloseDeleteModal = () => {
@@ -323,10 +303,20 @@ const DentistTreatments = () => {
     setSelectedTreatment(null)
   }
 
-  const handleUpdateStatus = (treatmentId, newStatus) => {
-    console.log('Update status:', treatmentId, newStatus)
-    // Here you would update the treatment status in your backend
-    handleBackToList()
+  const handleUpdateStatus = async (treatmentId, newStatus) => {
+    try {
+      // Convert status to database format (e.g., "Completed" -> "COMPLETED")
+      const dbStatus = newStatus.toUpperCase().replace(' ', '_')
+      console.log('Updating treatment status:', treatmentId, dbStatus)
+      
+      await treatmentsAPI.update(treatmentId, { status: dbStatus })
+      alert('Treatment status updated successfully!')
+      await fetchAllData()
+    } catch (error) {
+      console.error('Error updating treatment status:', error)
+      console.error('Error response:', error.response?.data)
+      alert(error.response?.data?.error || 'Failed to update treatment status. Please try again.')
+    }
   }
 
   const handleAddPayment = (treatment) => {
@@ -339,9 +329,20 @@ const DentistTreatments = () => {
     setSelectedTreatment(null)
   }
 
-  const handleSavePayment = (paymentData) => {
-    console.log('New payment:', paymentData)
-    // Here you would save payment to backend
+  const handleSavePayment = async (paymentData) => {
+    try {
+      console.log('Creating payment:', paymentData)
+      const response = await paymentsAPI.create(paymentData)
+      console.log('Payment created:', response)
+      alert('Payment recorded successfully!')
+      await fetchAllData()
+      setIsPaymentModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      console.error('Error response:', error.response?.data)
+      alert(error.response?.data?.error || 'Failed to record payment. Please try again.')
+    }
   }
 
   const handleRequestRadiology = (treatment) => {
@@ -354,27 +355,20 @@ const DentistTreatments = () => {
     setSelectedTreatment(null)
   }
 
-  const handleSaveRadiologyRequest = (requestData) => {
-    console.log('New radiology request:', requestData)
-    // Here you would save radiology request to backend
-  }
-
-  const handleBookStepAppointment = (stepInfo) => {
-    console.log('Book appointment for step:', stepInfo)
-    setSelectedStepForAppointment(stepInfo)
-    setIsAppointmentModalOpen(true)
-  }
-
-  const handleCloseAppointmentModal = () => {
-    setIsAppointmentModalOpen(false)
-    setSelectedStepForAppointment(null)
-  }
-
-  const handleSaveStepAppointment = (appointmentData) => {
-    console.log('Appointment saved for step:', selectedStepForAppointment)
-    console.log('Appointment data:', appointmentData)
-    handleCloseAppointmentModal()
-    // You can add additional logic here to save the appointment to your backend
+  const handleSaveRadiologyRequest = async (requestData) => {
+    try {
+      console.log('Creating radiology request:', requestData)
+      const { radiologyRequestsAPI } = await import('../../../services/api')
+      const response = await radiologyRequestsAPI.create(requestData)
+      console.log('Radiology request created:', response)
+      alert('Radiology request created successfully!')
+      setIsRadiologyModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating radiology request:', error)
+      console.error('Error response:', error.response?.data)
+      alert(error.response?.data?.error || 'Failed to create radiology request. Please try again.')
+    }
   }
 
   const TreatmentCard = ({ treatment }) => {
@@ -626,7 +620,7 @@ const DentistTreatments = () => {
           <NewTreatmentModal
             isOpen={true}
             onClose={handleBackToList}
-            onSave={handleSaveNewTreatment}
+            onSave={handleUpdateTreatment}
             patients={mockPatients}
             initialData={selectedTreatment}
             asFullPage={true}
@@ -665,8 +659,7 @@ const DentistTreatments = () => {
             onUpdateStatus={handleUpdateStatus}
             onAddPayment={handleAddPayment}
             onRequestRadiology={handleRequestRadiology}
-            onBookStepAppointment={handleBookStepAppointment}
-            payments={selectedTreatment ? mockPayments[selectedTreatment.id] || [] : []}
+            payments={[]}
             asFullPage={true}
           />
         </div>
@@ -768,27 +761,6 @@ const DentistTreatments = () => {
         </Card>
       </div>
 
-      {/* View Tabs */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-wrap gap-2">
-          {['active', 'completed', 'all'].map((view) => (
-            <button
-              key={view}
-              onClick={() => setActiveView(view)}
-              className={`px-4 py-2 rounded-lg capitalize transition-colors ${
-                activeView === view
-                  ? 'bg-teal-600 text-white'
-                  : isDarkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {view === 'active' ? 'Active Treatments' : view === 'completed' ? 'Completed' : 'All Treatments'}
-            </button>
-          ))}
-        </div>
-      </Card>
-
       {/* Filters and Search */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex flex-col lg:flex-row gap-4">
@@ -816,32 +788,6 @@ const DentistTreatments = () => {
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <div className="flex border rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 ${
-                  viewMode === 'grid'
-                    ? 'bg-teal-600 text-white'
-                    : isDarkMode
-                      ? 'bg-gray-700 text-gray-300'
-                      : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                <FaTh className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-2 ${
-                  viewMode === 'list'
-                    ? 'bg-teal-600 text-white'
-                    : isDarkMode
-                      ? 'bg-gray-700 text-gray-300'
-                      : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                <FaListAlt className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
       </Card>
@@ -920,24 +866,6 @@ const DentistTreatments = () => {
           treatment: selectedTreatment.treatmentType,
           time: ''
         } : null}
-      />
-
-      <NewAppointmentModal
-        isOpen={isAppointmentModalOpen}
-        onClose={handleCloseAppointmentModal}
-        onSave={handleSaveStepAppointment}
-        patients={mockPatients}
-        prefilledData={
-          selectedStepForAppointment
-            ? {
-                patientId: selectedStepForAppointment.patientId,
-                patientName: selectedStepForAppointment.patientName,
-                appointmentDate: selectedStepForAppointment.step.date || '',
-                reason: `${selectedStepForAppointment.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.stepIndex + 1}`}`,
-                notes: selectedStepForAppointment.step.notes || ''
-              }
-            : null
-        }
       />
     </div>
   )

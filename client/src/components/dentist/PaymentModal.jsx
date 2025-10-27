@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../contexts/ThemeContext'
-import { FaTimes, FaSave, FaDollarSign, FaCalendarAlt, FaCreditCard, FaMoneyBillWave, FaStickyNote, FaUser, FaStethoscope } from 'react-icons/fa'
+import { FaTimes, FaSave, FaDollarSign, FaCreditCard, FaMoneyBillWave, FaStickyNote, FaUser, FaStethoscope } from 'react-icons/fa'
 import Button from '../Button'
 import Input from '../Input'
 import Select from '../Select'
@@ -13,7 +13,6 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
   const [formData, setFormData] = useState({
     amount: '',
     paymentMethod: 'Cash',
-    paymentDate: new Date().toISOString().split('T')[0],
     notes: ''
   })
   const [errors, setErrors] = useState({})
@@ -34,7 +33,6 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       setFormData({
         amount: '',
         paymentMethod: 'Cash',
-        paymentDate: new Date().toISOString().split('T')[0],
         notes: ''
       })
       setErrors({})
@@ -90,10 +88,6 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       }
     }
 
-    if (!formData.paymentDate) {
-      newErrors.paymentDate = 'Payment date is required'
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -106,12 +100,10 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       const patient = patients.find(p => p.id.toString() === (treatmentInfo?.patientId || selectedPatient))
       
       const paymentData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
         treatmentId: treatment.id,
-        patientId: patient.id,
-        patientName: patient.name,
-        treatmentType: treatment.treatmentType
+        amount: parseFloat(formData.amount),
+        method: formData.paymentMethod, // Backend expects 'method' not 'paymentMethod'
+        notes: formData.notes || undefined
       }
       onSave(paymentData)
       onClose()
@@ -125,7 +117,6 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
     setFormData({
       amount: '',
       paymentMethod: 'Cash',
-      paymentDate: new Date().toISOString().split('T')[0],
       notes: ''
     })
     setErrors({})
@@ -412,25 +403,6 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
                 </span>
               </button>
             </div>
-          </div>
-
-          {/* Payment Date */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Payment Date <span className="text-red-500">*</span>
-            </label>
-            <Input
-              type="date"
-              name="paymentDate"
-              value={formData.paymentDate}
-              onChange={handleChange}
-              icon={FaCalendarAlt}
-            />
-            {errors.paymentDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.paymentDate}</p>
-            )}
           </div>
 
           {/* Notes */}

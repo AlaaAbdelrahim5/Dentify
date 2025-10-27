@@ -1,115 +1,119 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
-  FaUsers,
   FaUser,
   FaPhone,
   FaEnvelope,
-  FaCalendarAlt,
   FaSearch,
-  FaFilter,
-  FaPlus,
-  FaEdit,
-  FaEye,
-  FaFileAlt,
   FaBirthdayCake,
   FaMapMarkerAlt,
-  FaTrash,
-  FaTh,
-  FaListAlt,
-  FaUserCheck,
-  FaUserTimes,
-  FaArrowLeft
+  FaArrowLeft,
+  FaUsers,
+  FaTooth,
+  FaDollarSign,
+  FaExclamationCircle
 } from 'react-icons/fa'
-import { Card, Button, Input, StatsOverview, FilterBar, PageHeader, DataTable } from '../../../components'
+import { Card, Input, Button } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import NewPatientModal from '../../../components/dentist/NewPatientModal'
-import EditPatientModal from '../../../components/dentist/EditPatientModal'
-import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
 import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
+import { patientsAPI, treatmentsAPI, paymentsAPI } from '../../../services/api'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all')
-  const [viewMode, setViewMode] = useState('grid') // grid or list
-  const [currentPage, setCurrentPage] = useState('list') // 'list', 'view', 'new', 'edit'
-  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
-  const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState('list') // 'list' or 'view'
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [patients, setPatients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [patientTreatments, setPatientTreatments] = useState([])
+  const [patientAppointments, setPatientAppointments] = useState([])
+  const [patientPayments, setPatientPayments] = useState([])
+  
+  // Stats state
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    activeTreatments: 0,
+    totalRevenue: 0,
+    pendingPayments: 0
+  })
 
-  // Mock patients data
-  const mockPatients = [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john@email.com',
-      phone: '+1234567890',
-      dateOfBirth: '1985-03-15',
-      address: 'New York, NY',
-      lastVisit: '2024-01-15',
-      nextAppointment: '2024-02-20',
-      totalVisits: 8,
-      status: 'active',
-      medicalHistory: ['Diabetes', 'High Blood Pressure'],
-      avatar: null
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah@email.com',
-      phone: '+1234567891',
-      dateOfBirth: '1990-07-22',
-      address: 'Los Angeles, CA',
-      lastVisit: '2024-01-20',
-      nextAppointment: null,
-      totalVisits: 12,
-      status: 'active',
-      medicalHistory: ['Allergic to Penicillin'],
-      avatar: null
-    },
-    {
-      id: 3,
-      name: 'Mike Wilson',
-      email: 'mike@email.com',
-      phone: '+1234567892',
-      dateOfBirth: '1978-11-03',
-      address: 'Chicago, IL',
-      lastVisit: '2023-12-10',
-      nextAppointment: '2024-02-25',
-      totalVisits: 5,
-      status: 'inactive',
-      medicalHistory: [],
-      avatar: null
-    },
-    {
-      id: 4,
-      name: 'Emily Davis',
-      email: 'emily@email.com',
-      phone: '+1234567893',
-      dateOfBirth: '1995-05-18',
-      address: 'Houston, TX',
-      lastVisit: '2024-01-25',
-      nextAppointment: '2024-02-15',
-      totalVisits: 3,
-      status: 'active',
-      medicalHistory: ['Gum Disease'],
-      avatar: null
-    }
-  ]
+  // Fetch patients on mount
+  useEffect(() => {
+    fetchPatients()
+    fetchStats()
+  }, [])
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-      case 'new':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+  const fetchPatients = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await patientsAPI.getAll()
+      setPatients(response.patients || [])
+    } catch (err) {
+      console.error('Error fetching patients:', err)
+      setError('Failed to load patients. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
+
+  const fetchStats = async () => {
+    try {
+      // Fetch treatments to calculate stats
+      const treatmentsRes = await treatmentsAPI.getDentistTreatments()
+      const treatments = treatmentsRes.treatments || []
+      
+      // Calculate active treatments (IN_PROGRESS status)
+      const activeTreatments = treatments.filter(t => t.status === 'IN_PROGRESS').length
+      
+      // Calculate total revenue (sum of all paidAmount)
+      const totalRevenue = treatments.reduce((sum, t) => sum + (t.paidAmount || 0), 0)
+      
+      // Calculate pending payments (sum of totalAmount - paidAmount)
+      const pendingPayments = treatments.reduce((sum, t) => {
+        const pending = (t.totalAmount || 0) - (t.paidAmount || 0)
+        return sum + (pending > 0 ? pending : 0)
+      }, 0)
+      
+      setStats({
+        totalPatients: 0, // Will be set from patients data
+        activeTreatments,
+        totalRevenue,
+        pendingPayments
+      })
+    } catch (err) {
+      console.error('Error fetching stats:', err)
+    }
+  }
+
+  // Transform patient data from API
+  const transformPatients = (apiPatients) => {
+    return apiPatients.map(patient => ({
+      id: patient.userId,
+      name: `${patient.firstName} ${patient.lastName}`,
+      email: patient.user?.email || 'N/A',
+      phone: patient.user?.phone || 'N/A',
+      dateOfBirth: patient.birthDate,
+      address: patient.city,
+      gender: patient.gender,
+      status: patient.user?.status === 'ACTIVE' ? 'active' : 'inactive',
+      avatar: patient.user?.profileImage,
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      city: patient.city,
+      birthDate: patient.birthDate
+    }))
+  }
+
+  // Update stats when patients change
+  useEffect(() => {
+    if (patients.length > 0) {
+      setStats(prev => ({
+        ...prev,
+        totalPatients: patients.length
+      }))
+    }
+  }, [patients])
 
   const calculateAge = (dateOfBirth) => {
     const today = new Date()
@@ -122,6 +126,11 @@ const DentistPatients = () => {
     return age
   }
 
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return ''
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Not scheduled'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -131,68 +140,67 @@ const DentistPatients = () => {
     })
   }
 
-  const filteredPatients = mockPatients.filter(patient => {
+  // Use transformed patients
+  const displayPatients = transformPatients(patients).filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          patient.phone.includes(searchTerm)
-    const matchesFilter = selectedFilter === 'all' || patient.status === selectedFilter
-    return matchesSearch && matchesFilter
+    return matchesSearch
   })
 
-  // Modal handlers
-  const handleNewPatient = () => {
-    setIsNewPatientModalOpen(true)
-  }
-
-  const handleCloseNewPatientModal = () => {
-    setIsNewPatientModalOpen(false)
-  }
-
-  const handleSaveNewPatient = (patientData) => {
-    // Here you would typically save to your backend
-    console.log('New patient:', patientData)
-    // For now, just log the data
-    // You can implement the actual save logic here
-  }
-
-  const handleEditPatient = (patient) => {
-    setSelectedPatient(patient)
-    setIsEditPatientModalOpen(true)
-  }
-
-  const handleCloseEditModal = () => {
-    setIsEditPatientModalOpen(false)
-    setSelectedPatient(null)
-  }
-
-  const handleUpdatePatient = (updatedPatient) => {
-    // Here you would typically update in your backend
-    console.log('Updated patient:', updatedPatient)
-    // For now, just log the data
-    // You can implement the actual update logic here
-  }
-
-  const handleDeletePatient = (patient) => {
-    setSelectedPatient(patient)
-    setIsDeleteModalOpen(true)
-  }
-
-  const handleConfirmDelete = () => {
-    // Here you would typically delete from your backend
-    console.log('Delete patient:', selectedPatient.id)
-    // You can implement the actual delete logic here
-    setIsDeleteModalOpen(false)
-    setSelectedPatient(null)
-  }
-
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false)
-    setSelectedPatient(null)
-  }
-
-  const handleViewPatient = (patient) => {
+  const handleViewPatient = async (patient) => {
     setSelectedPatient(patient)
     setCurrentPage('view')
+    
+    // Fetch patient's treatments, appointments, and payments
+    try {
+      const treatmentsResponse = await treatmentsAPI.getDentistTreatments()
+      const patientTreatmentsData = treatmentsResponse.treatments.filter(t => t.patientId === patient.id)
+      
+      // Transform treatments to match expected format
+      const transformedTreatments = patientTreatmentsData.map(treatment => {
+        let teethStatus = []
+        try {
+          if (typeof treatment.teethStatus === 'string') {
+            teethStatus = JSON.parse(treatment.teethStatus)
+          } else if (Array.isArray(treatment.teethStatus)) {
+            teethStatus = treatment.teethStatus
+          }
+        } catch (e) {
+          console.error('Error parsing teethStatus:', e)
+        }
+
+        const statusMap = {
+          'IN_PROGRESS': 'In Progress',
+          'COMPLETED': 'Completed',
+          'CANCELLED': 'Cancelled'
+        }
+
+        return {
+          id: treatment.id,
+          treatmentType: treatment.treatmentType,
+          status: statusMap[treatment.status] || treatment.status,
+          createdAt: treatment.createdAt,
+          totalAmount: treatment.totalAmount || 0,
+          paidAmount: treatment.paidAmount || 0,
+          teethStatus: teethStatus,
+          description: treatment.description,
+          notes: treatment.notes
+        }
+      })
+      
+      setPatientTreatments(transformedTreatments)
+      
+      // TODO: Fetch appointments and payments when those endpoints are ready
+      setPatientAppointments([])
+      setPatientPayments([])
+      
+    } catch (error) {
+      console.error('Error fetching patient data:', error)
+      setPatientTreatments([])
+      setPatientAppointments([])
+      setPatientPayments([])
+    }
   }
 
   const handleBackToList = () => {
@@ -200,268 +208,123 @@ const DentistPatients = () => {
     setSelectedPatient(null)
   }
 
-  const handleEditFromDetails = (patient) => {
-    setCurrentPage('list')
-    setSelectedPatient(patient)
-    setIsEditPatientModalOpen(true)
-  }
-
-  const handleClearFilters = () => {
-    setSearchTerm('')
-    setSelectedFilter('all')
-  }
-
-  // Calculate stats
-  const stats = {
-    total: mockPatients.length,
-    active: mockPatients.filter(p => p.status === 'active').length,
-    inactive: mockPatients.filter(p => p.status === 'inactive').length,
-    thisMonth: 12, // Mock data
-    reports: 45 // Mock data
-  }
-
-  // DataTable columns configuration
-  const columns = [
-    {
-      label: 'Patient',
-      accessor: 'name',
-      render: (value, patient) => (
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-          }`}>
-            <FaUser className="text-teal-600" />
-          </div>
-          <div>
-            <p className="font-semibold">{value}</p>
-            <span className={`px-2 py-0.5 rounded-full text-xs ${
-              patient.status === 'active' 
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
-            }`}>
-              {patient.status}
-            </span>
-          </div>
-        </div>
-      )
-    },
-    {
-      label: 'Contact',
-      accessor: 'phone',
-      render: (value, patient) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm">
-            <FaPhone className="text-gray-500 w-3 h-3" />
-            <span>{value}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <FaEnvelope className="text-gray-500 w-3 h-3" />
-            <span className="text-gray-500">{patient.email}</span>
-          </div>
-        </div>
-      )
-    },
-    {
-      label: 'Age',
-      accessor: 'dateOfBirth',
-      render: (value) => (
-        <div className="flex items-center gap-2">
-          <FaBirthdayCake className="text-gray-500 w-4 h-4" />
-          <span>{calculateAge(value)} years</span>
-        </div>
-      )
-    },
-    {
-      label: 'Location',
-      accessor: 'address',
-      render: (value) => (
-        <div className="flex items-center gap-2">
-          <FaMapMarkerAlt className="text-gray-500 w-4 h-4" />
-          <span>{value}</span>
-        </div>
-      )
-    },
-    {
-      label: 'Last Visit',
-      accessor: 'lastVisit',
-      render: (value) => (
-        <div className="text-sm">
-          {formatDate(value)}
-        </div>
-      )
-    },
-    {
-      label: 'Next Appointment',
-      accessor: 'nextAppointment',
-      render: (value) => (
-        <div className="text-sm">
-          {value ? (
-            <span className="text-teal-600 dark:text-teal-400">
-              {formatDate(value)}
-            </span>
-          ) : (
-            <span className="text-gray-400">Not scheduled</span>
-          )}
-        </div>
-      )
-    },
-    {
-      label: 'Visits',
-      accessor: 'totalVisits',
-      render: (value) => (
-        <div className="text-center">
-          <span className="font-semibold">{value}</span>
-        </div>
-      )
-    },
-    {
-      label: 'Actions',
-      accessor: 'id',
-      render: (value, patient) => (
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleViewPatient(patient)}
-            title="View Details"
-          >
-            <FaEye className="w-3 h-3" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleEditPatient(patient)}
-            title="Edit"
-          >
-            <FaEdit className="w-3 h-3" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-600"
-            onClick={() => handleDeletePatient(patient)}
-            title="Delete"
-          >
-            <FaTrash className="w-3 h-3" />
-          </Button>
-        </div>
-      )
+  const PatientCard = ({ patient }) => {
+    const getStatusDisplay = (status) => {
+      switch (status) {
+        case 'active':
+          return {
+            label: 'Active',
+            className: isDarkMode 
+              ? 'bg-green-900/30 text-green-400 border-green-600' 
+              : 'bg-green-100 text-green-700 border-green-400'
+          }
+        case 'inactive':
+          return {
+            label: 'Inactive',
+            className: isDarkMode 
+              ? 'bg-gray-700 text-gray-400 border-gray-600' 
+              : 'bg-gray-100 text-gray-600 border-gray-400'
+          }
+        default:
+          return {
+            label: status,
+            className: isDarkMode 
+              ? 'bg-gray-700 text-gray-300 border-gray-600' 
+              : 'bg-gray-100 text-gray-700 border-gray-300'
+          }
+      }
     }
-  ]
 
-  const PatientCard = ({ patient }) => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    } hover:shadow-lg transition-shadow`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-          }`}>
-            <FaUser className="text-teal-600" />
-          </div>
-          <div>
-            <h3 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {patient.name}
-            </h3>
-            <span className={`px-2 py-1 rounded-full text-xs border ${
-              getStatusColor(patient.status)
-            }`}>
-              {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
+    const statusDisplay = getStatusDisplay(patient.status)
+
+    return (
+      <Card 
+        hover 
+        onClick={() => handleViewPatient(patient)}
+        className="group cursor-pointer"
+      >
+        <Card.Header className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className={`
+                w-12 h-12 rounded-lg flex items-center justify-center
+                ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
+                group-hover:scale-110 transition-transform duration-300
+              `}>
+                <FaUser className="w-6 h-6 text-teal-600" />
+              </div>
+              <div>
+                <h3 className={`text-lg font-bold ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  {patient.name}
+                </h3>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {capitalizeFirstLetter(patient.gender) || 'N/A'} • {calculateAge(patient.dateOfBirth)} years
+                </p>
+              </div>
+            </div>
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>
+              {statusDisplay.label}
             </span>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleViewPatient(patient)}
-            title="View Patient Details"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleEditPatient(patient)}
-            title="Edit Patient"
-          >
-            <FaEdit className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-600"
-            onClick={() => handleDeletePatient(patient)}
-            title="Delete Patient"
-          >
-            <FaTrash className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+        </Card.Header>
 
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center gap-2">
-          <FaBirthdayCake className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Age: {calculateAge(patient.dateOfBirth)} years
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaPhone className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {patient.phone}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaEnvelope className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {patient.email}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaMapMarkerAlt className="text-gray-500" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {patient.address}
-          </span>
-        </div>
-      </div>
+        <Card.Content className="space-y-4">
+          {/* Contact Information */}
+          <div className={`
+            p-3 rounded-lg 
+            ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}
+          `}>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FaPhone className={`w-4 h-4 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {patient.phone}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaEnvelope className={`w-4 h-4 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {patient.email}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaMapMarkerAlt className={`w-4 h-4 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {capitalizeFirstLetter(patient.city)}
+                </span>
+              </div>
+            </div>
+          </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className={`font-medium ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Last Visit
-            </p>
-            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-              {formatDate(patient.lastVisit)}
-            </p>
+          {/* Birth Date */}
+          <div className="flex items-center gap-2 text-sm">
+            <FaBirthdayCake className={`w-4 h-4 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`} />
+            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+              Born: {new Date(patient.dateOfBirth).toLocaleDateString()}
+            </span>
           </div>
-          <div>
-            <p className={`font-medium ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Next Visit
-            </p>
-            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-              {formatDate(patient.nextAppointment)}
-            </p>
-          </div>
-        </div>
-        <div className="mt-2">
-          <p className={`font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Total Visits: {patient.totalVisits}
-          </p>
-        </div>
-      </div>
-    </Card>
-  )
+        </Card.Content>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -469,7 +332,7 @@ const DentistPatients = () => {
       {currentPage === 'view' && selectedPatient && (
         <div>
           {/* Back Button Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6">
             <Button
               variant="outline"
               onClick={handleBackToList}
@@ -478,22 +341,19 @@ const DentistPatients = () => {
               <FaArrowLeft className="w-4 h-4" />
               Back to Patients
             </Button>
-            <Button
-              onClick={() => handleEditFromDetails(selectedPatient)}
-              className="flex items-center gap-2"
-            >
-              <FaEdit className="w-4 h-4" />
-              Edit Patient
-            </Button>
           </div>
           
-          {/* Patient Details - Full Page Mode */}
+          {/* Patient Details - Full Page Mode (Read-only for Dentist) */}
           <PatientDetailsModal
             isOpen={true}
             onClose={handleBackToList}
             patientData={selectedPatient}
-            onEdit={handleEditFromDetails}
+            onEdit={null}
             asFullPage={true}
+            readOnly={true}
+            treatments={patientTreatments}
+            appointments={patientAppointments}
+            payments={patientPayments}
           />
         </div>
       )}
@@ -501,99 +361,166 @@ const DentistPatients = () => {
       {/* Show Patients List Page */}
       {currentPage === 'list' && (
         <>
-          {/* Page Header */}
-          <PageHeader
-            title="My Patients"
-            description="Manage patient records and information"
-            action={{
-              label: 'Add Patient',
-              onClick: handleNewPatient,
-              icon: FaPlus,
-              gradient: 'from-teal-600 to-cyan-600'
-            }}
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className={`text-2xl font-bold ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>
+            My Patients
+          </h1>
+          <p className={`mt-1 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            View and manage patient records
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Total Patients */}
+        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-blue-500`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Total Patients
+              </p>
+              <h3 className={`text-2xl font-bold mt-2 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {stats.totalPatients}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-full ${
+              isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'
+            }`}>
+              <FaUsers className="text-blue-600 text-xl" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Active Treatments */}
+        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-green-500`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Active Treatments
+              </p>
+              <h3 className={`text-2xl font-bold mt-2 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {stats.activeTreatments}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-full ${
+              isDarkMode ? 'bg-green-900/30' : 'bg-green-100'
+            }`}>
+              <FaTooth className="text-green-600 text-xl" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Total Revenue */}
+        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-teal-500`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Total Revenue
+              </p>
+              <h3 className={`text-2xl font-bold mt-2 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                ${stats.totalRevenue.toFixed(2)}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-full ${
+              isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+            }`}>
+              <FaDollarSign className="text-teal-600 text-xl" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Pending Payments */}
+        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-orange-500`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Pending Payments
+              </p>
+              <h3 className={`text-2xl font-bold mt-2 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                ${stats.pendingPayments.toFixed(2)}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-full ${
+              isDarkMode ? 'bg-orange-900/30' : 'bg-orange-100'
+            }`}>
+              <FaExclamationCircle className="text-orange-600 text-xl" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Search Bar */}
+      <Card className={`p-4 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex-1">
+          <Input
+            type="text"
+            placeholder="Search patients by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            icon={FaSearch}
           />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        {
-          label: 'Total Patients',
-          value: stats.total,
-          icon: FaUsers,
-          gradient: 'from-blue-600 to-blue-700'
-        },
-        {
-          label: 'Active Patients',
-          value: stats.active,
-          icon: FaUserCheck,
-          gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Inactive Patients',
-          value: stats.inactive,
-          icon: FaUserTimes,
-          gradient: 'from-gray-600 to-gray-700'
-        },
-        {
-          label: 'This Month',
-          value: stats.thisMonth,
-          icon: FaCalendarAlt,
-          gradient: 'from-purple-600 to-purple-700'
-        }
-      ]} />
-
-      {/* Filters and View Mode */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex-1 w-full">
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={(e) => setSearchTerm(e.target.value)}
-              searchPlaceholder="Search patients by name, email, or phone..."
-              filters={[
-                {
-                  value: selectedFilter,
-                  onChange: (e) => setSelectedFilter(e.target.value),
-                  options: [
-                    { value: 'all', label: 'All Patients' },
-                    { value: 'active', label: 'Active' },
-                    { value: 'inactive', label: 'Inactive' },
-                    { value: 'new', label: 'New' }
-                  ],
-                  placeholder: 'Filter by status'
-                }
-              ]}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              title="Table View"
-            >
-              <FaListAlt className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              title="Grid View"
-            >
-              <FaTh className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
       </Card>
 
       {/* Patients Display */}
-      {filteredPatients.length === 0 ? (
+      {loading ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
-          <FaUsers className={`w-12 h-12 mx-auto mb-4 ${
+          <div className="flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mb-4"></div>
+            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+              Loading patients...
+            </p>
+          </div>
+        </Card>
+      ) : error ? (
+        <Card className={`p-8 text-center ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <FaUsers className={`w-12 h-12 mx-auto mb-4 text-red-500`} />
+          <h3 className={`text-lg font-semibold mb-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Error Loading Patients
+          </h3>
+          <p className={`mb-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            {error}
+          </p>
+          <Button onClick={fetchPatients}>
+            Try Again
+          </Button>
+        </Card>
+      ) : displayPatients.length === 0 ? (
+        <Card className={`p-8 text-center ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <FaUser className={`w-12 h-12 mx-auto mb-4 ${
             isDarkMode ? 'text-gray-500' : 'text-gray-400'
           }`} />
           <h3 className={`text-lg font-semibold mb-2 ${
@@ -604,56 +531,18 @@ const DentistPatients = () => {
           <p className={`${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            No patients match your current search or filter
+            No patients match your current search
           </p>
         </Card>
       ) : (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPatients.map((patient) => (
-              <PatientCard key={patient.id} patient={patient} />
-            ))}
-          </div>
-        ) : (
-          <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <DataTable
-              columns={columns}
-              data={filteredPatients}
-              emptyMessage="No patients found"
-            />
-          </Card>
-        )
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayPatients.map((patient) => (
+            <PatientCard key={patient.id} patient={patient} />
+          ))}
+        </div>
       )}
         </>
       )}
-
-      {/* Modals - These work across all pages */}
-      {/* New Patient Modal */}
-      <NewPatientModal
-        isOpen={isNewPatientModalOpen}
-        onClose={handleCloseNewPatientModal}
-        onSave={handleSaveNewPatient}
-      />
-
-      {/* Edit Patient Modal */}
-      <EditPatientModal
-        isOpen={isEditPatientModalOpen}
-        onClose={handleCloseEditModal}
-        onSave={handleUpdatePatient}
-        patientData={selectedPatient}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        onConfirm={handleConfirmDelete}
-        appointmentData={selectedPatient ? {
-          patient: { name: selectedPatient.name },
-          treatment: 'Patient Record',
-          time: ''
-        } : null}
-      />
     </div>
   )
 }

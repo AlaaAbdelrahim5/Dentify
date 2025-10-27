@@ -23,6 +23,7 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
     gender: '',
     phone: '',
     email: '',
+    password: '',
     address: '',
     emergencyContact: '',
     emergencyPhone: '',
@@ -82,8 +83,16 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
       newErrors.gender = 'Gender is required'
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      newErrors.password = 'Password is required (minimum 6 characters)'
+    }
+
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
+    }
+
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Email is required'
     }
 
     setErrors(newErrors)
@@ -107,6 +116,7 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
       gender: '',
       phone: '',
       email: '',
+      password: '',
       address: '',
       emergencyContact: '',
       emergencyPhone: '',
@@ -335,7 +345,7 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
                 <label className={`block text-sm font-medium mb-2 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
-                  Email (Optional)
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FaEnvelope className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
@@ -358,6 +368,33 @@ const NewPatientModal = ({ isOpen, onClose, onSave }) => {
                 </div>
                 {errors.email && (
                   <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      errors.password 
+                        ? 'border-red-500' 
+                        : isDarkMode
+                          ? 'border-gray-600 bg-gray-700 text-white'
+                          : 'border-gray-300 bg-white text-gray-900'
+                    }`}
+                    placeholder="Enter temporary password"
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
               </div>
 

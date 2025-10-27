@@ -77,6 +77,18 @@ app.use('/api/radiology-centers', radiologyRoutes); // Alias for frontend compat
 const appointmentRoutes = require('./routes/appointments');
 app.use('/api/appointments', appointmentRoutes);
 
+// Treatment routes
+const treatmentRoutes = require('./routes/treatments');
+app.use('/api/treatments', treatmentRoutes);
+
+// Payment routes
+const paymentRoutes = require('./routes/payments');
+app.use('/api/payments', paymentRoutes);
+
+// Radiology Request routes
+const radiologyRequestRoutes = require('./routes/radiologyRequests');
+app.use('/api/radiology-requests', radiologyRequestRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

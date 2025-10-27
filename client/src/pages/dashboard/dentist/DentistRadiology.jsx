@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaXRay,
@@ -23,6 +23,7 @@ import {
 import { Card, Button, Input, DataTable, FilterBar, StatsOverview } from '../../../components'
 import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
   const { isDarkMode } = useTheme()
@@ -34,113 +35,78 @@ const DentistRadiology = () => {
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [viewMode, setViewMode] = useState('table') // table or grid
 
-  // Mock radiology requests data
-  const mockRadiologyRequests = [
-    {
-      id: 1,
-      patientId: 101,
-      patientName: 'John Smith',
-      dentistId: 1,
-      radiologyCenterId: 1,
-      radiologyCenterName: 'Central Radiology Center',
-      treatmentId: 201,
-      treatmentType: 'Dental Implant',
-      requestDate: '2024-02-15',
-      availableDate: '2024-02-20',
-      imagingType: 'CBCT',
-      reportFile: 'report_001.pdf',
-      status: 'Completed',
-      notes: 'Detailed scan for implant planning'
-    },
-    {
-      id: 2,
-      patientId: 102,
-      patientName: 'Sarah Johnson',
-      dentistId: 1,
-      radiologyCenterId: 2,
-      radiologyCenterName: 'Advanced Imaging Clinic',
-      treatmentId: 202,
-      treatmentType: 'Orthodontic Treatment',
-      requestDate: '2024-02-18',
-      availableDate: '2024-02-22',
-      imagingType: 'Panoramic X-ray',
-      reportFile: null,
-      status: 'In Progress',
-      notes: 'Pre-orthodontic assessment'
-    },
-    {
-      id: 3,
-      patientId: 104,
-      patientName: 'Emily Davis',
-      dentistId: 1,
-      radiologyCenterId: 1,
-      radiologyCenterName: 'Central Radiology Center',
-      treatmentId: null,
-      treatmentType: null,
-      requestDate: '2024-02-20',
-      availableDate: '2024-02-25',
-      imagingType: 'Periapical',
-      reportFile: null,
-      status: 'Requested',
-      notes: 'Check tooth #18 before extraction'
-    },
-    {
-      id: 4,
-      patientId: 105,
-      patientName: 'Robert Brown',
-      dentistId: 1,
-      radiologyCenterId: 3,
-      radiologyCenterName: 'DentaScan Radiology',
-      treatmentId: 203,
-      treatmentType: 'Root Canal',
-      requestDate: '2024-02-10',
-      availableDate: '2024-02-15',
-      imagingType: 'Bitewing',
-      reportFile: 'report_004.pdf',
-      status: 'Completed',
-      notes: 'Cavity detection'
-    },
-    {
-      id: 5,
-      patientId: 103,
-      patientName: 'Mike Wilson',
-      dentistId: 1,
-      radiologyCenterId: 2,
-      radiologyCenterName: 'Advanced Imaging Clinic',
-      treatmentId: null,
-      treatmentType: null,
-      requestDate: '2024-02-22',
-      availableDate: '',
-      imagingType: '3D Imaging',
-      reportFile: null,
-      status: 'Requested',
-      notes: 'TMJ assessment'
+  // Data states
+  const [radiologyRequests, setRadiologyRequests] = useState([])
+  const [patients, setPatients] = useState([])
+  const [radiologyCenters, setRadiologyCenters] = useState([])
+  const [treatments, setTreatments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [requestsRes, patientsRes, radiologyRes, treatmentsRes] = await Promise.all([
+        radiologyRequestsAPI.getDentistRequests(),
+        patientsAPI.getAll(),
+        radiologyAPI.getAll(),
+        treatmentsAPI.getDentistTreatments()
+      ])
+      setRadiologyRequests(requestsRes.radiologyRequests || [])
+      setPatients(patientsRes.patients || [])
+      setRadiologyCenters(radiologyRes.radiology || [])
+      setTreatments(treatmentsRes.treatments || [])
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to load data. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
-  // Mock patients
-  const mockPatients = [
-    { id: 101, name: 'John Smith' },
-    { id: 102, name: 'Sarah Johnson' },
-    { id: 103, name: 'Mike Wilson' },
-    { id: 104, name: 'Emily Davis' },
-    { id: 105, name: 'Robert Brown' }
-  ]
+  // Transform radiology requests from API
+  const mockRadiologyRequests = radiologyRequests.map(r => ({
+    id: r.id,
+    patientId: r.patientId,
+    patientName: `${r.patient.firstName} ${r.patient.lastName}`,
+    dentistId: r.dentistId,
+    radiologyCenterId: r.radiologyCenterId,
+    radiologyCenterName: r.radiologyCenter.centerName,
+    treatmentId: r.treatmentId,
+    treatmentType: r.treatment?.treatmentType || null,
+    requestDate: r.requestDate,
+    availableDate: r.availableDate,
+    imagingType: r.imagingType,
+    reportFile: r.reportFile,
+    status: r.status.replace('_', ' '),
+    notes: r.notes || ''
+  }))
 
-  // Mock radiology centers
-  const mockRadiologyCenters = [
-    { id: 1, name: 'Central Radiology Center' },
-    { id: 2, name: 'Advanced Imaging Clinic' },
-    { id: 3, name: 'DentaScan Radiology' }
-  ]
+  // Transform patients for modal
+  const mockPatients = patients.map(p => ({
+    id: p.userId,
+    name: `${p.firstName} ${p.lastName}`
+  }))
 
-  // Mock treatments
-  const mockTreatments = [
-    { id: 201, treatmentType: 'Dental Implant', patientName: 'John Smith', patientId: 101 },
-    { id: 202, treatmentType: 'Orthodontic Treatment', patientName: 'Sarah Johnson', patientId: 102 },
-    { id: 203, treatmentType: 'Root Canal', patientName: 'Robert Brown', patientId: 105 },
-    { id: 204, treatmentType: 'Crown Installation', patientName: 'Mike Wilson', patientId: 103 }
-  ]
+  // Transform radiology centers for modal
+  const mockRadiologyCenters = radiologyCenters.map(r => ({
+    id: r.userId,
+    name: r.centerName
+  }))
+
+  // Transform treatments for modal
+  const mockTreatments = treatments.map(t => ({
+    id: t.id,
+    treatmentType: t.treatmentType,
+    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+    patientId: t.patientId
+  }))
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -219,9 +185,20 @@ const DentistRadiology = () => {
     setSelectedRequest(null)
   }
 
-  const handleSaveRequest = (requestData) => {
-    console.log('Radiology request:', requestData)
-    // Here you would save to backend
+  const handleSaveRequest = async (requestData) => {
+    try {
+      if (selectedRequest) {
+        await radiologyRequestsAPI.update(selectedRequest.id, requestData)
+      } else {
+        await radiologyRequestsAPI.create(requestData)
+      }
+      await fetchAllData()
+      setIsRequestModalOpen(false)
+      setSelectedRequest(null)
+    } catch (error) {
+      console.error('Error saving radiology request:', error)
+      alert('Failed to save radiology request. Please try again.')
+    }
   }
 
   const handleDeleteRequest = (request) => {
@@ -229,10 +206,16 @@ const DentistRadiology = () => {
     setIsDeleteModalOpen(true)
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Delete request:', selectedRequest.id)
-    setIsDeleteModalOpen(false)
-    setSelectedRequest(null)
+  const handleConfirmDelete = async () => {
+    try {
+      await radiologyRequestsAPI.delete(selectedRequest.id)
+      await fetchAllData()
+      setIsDeleteModalOpen(false)
+      setSelectedRequest(null)
+    } catch (error) {
+      console.error('Error deleting radiology request:', error)
+      alert('Failed to delete radiology request. Please try again.')
+    }
   }
 
   const handleCloseDeleteModal = () => {

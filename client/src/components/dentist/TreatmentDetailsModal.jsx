@@ -6,7 +6,6 @@ import {
   FaExclamationTriangle, FaClock, FaCheckCircle
 } from 'react-icons/fa'
 import Button from '../Button'
-import StatusBadge from '../StatusBadge'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { Card } from '../index'
 
@@ -18,30 +17,56 @@ const TreatmentDetailsModal = ({
   onUpdateStatus,
   onAddPayment,
   onRequestRadiology,
-  onBookStepAppointment,
   payments = [],
   asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview') // overview, steps, payments
+  const [activeTab, setActiveTab] = useState('overview') // overview, payments
 
   if (!isOpen || !treatmentData) return null
 
   const remainingBalance = treatmentData.totalAmount - treatmentData.paidAmount
   const paymentProgress = (treatmentData.paidAmount / treatmentData.totalAmount) * 100
 
-  const handleBookAppointment = (step, stepIndex) => {
-    if (onBookStepAppointment) {
-      onBookStepAppointment({
-        treatmentId: treatmentData.id,
-        patientId: treatmentData.patientId,
-        patientName: treatmentData.patientName,
-        treatmentType: treatmentData.treatmentType,
-        step: step,
-        stepIndex: stepIndex
-      })
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'In Progress':
+        return {
+          icon: FaClock,
+          label: 'In Progress',
+          className: isDarkMode 
+            ? 'bg-green-900/30 text-green-400 border-green-600' 
+            : 'bg-green-100 text-green-700 border-green-400'
+        }
+      case 'Completed':
+        return {
+          icon: FaCheckCircle,
+          label: 'Completed',
+          className: isDarkMode 
+            ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+            : 'bg-blue-100 text-blue-700 border-blue-400'
+        }
+      case 'Cancelled':
+        return {
+          icon: FaTimes,
+          label: 'Cancelled',
+          className: isDarkMode 
+            ? 'bg-red-900/30 text-red-400 border-red-600' 
+            : 'bg-red-100 text-red-700 border-red-400'
+        }
+      default:
+        return {
+          icon: FaClock,
+          label: status,
+          className: isDarkMode 
+            ? 'bg-gray-800 text-gray-300 border-gray-600' 
+            : 'bg-white text-gray-700 border-gray-300'
+        }
     }
   }
+
+  const statusDisplay = getStatusDisplay(treatmentData.treatmentStatus)
+  const StatusIcon = statusDisplay.icon
 
   // Render content without modal wrapper if used as full page
   const content = (
@@ -84,7 +109,10 @@ const TreatmentDetailsModal = ({
               {treatmentData.priority}
             </div>
           )}
-          <StatusBadge status={treatmentData.treatmentStatus} />
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>
+            <StatusIcon className="w-3 h-3" />
+            {statusDisplay.label}
+          </span>
           {!asFullPage && (
             <>
               <Button
@@ -128,25 +156,6 @@ const TreatmentDetailsModal = ({
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('steps')}
-            className={`
-              px-6 py-2.5 rounded-lg font-medium transition-all duration-200
-              ${activeTab === 'steps'
-                ? 'bg-teal-600 text-white shadow-md'
-                : isDarkMode
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-              }
-            `}
-          >
-            Treatment Steps
-            {treatmentData.steps && treatmentData.steps.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
-                {treatmentData.steps.filter(s => s.status === 'completed').length}/{treatmentData.steps.length}
-              </span>
-            )}
-          </button>
-          <button
             onClick={() => setActiveTab('payments')}
             className={`
               px-6 py-2.5 rounded-lg font-medium transition-all duration-200
@@ -159,11 +168,6 @@ const TreatmentDetailsModal = ({
             `}
           >
             Payments
-            {remainingBalance > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-red-500 text-white rounded-full text-xs">
-                Due
-              </span>
-            )}
           </button>
         </div>
 
@@ -312,7 +316,7 @@ const TreatmentDetailsModal = ({
                         Request Radiology
                       </Button>
                     )}
-                    {treatmentData.treatmentStatus !== 'Cancelled' && (
+                    {treatmentData.treatmentStatus !== 'Cancelled' && treatmentData.treatmentStatus !== 'Completed' && (
                       <Button
                         variant="outline"
                         onClick={() => onUpdateStatus(treatmentData.id, 'Cancelled')}
@@ -324,107 +328,6 @@ const TreatmentDetailsModal = ({
                   </div>
                 </Card.Content>
               </Card>
-            </div>
-          )}
-
-          {/* Treatment Steps Tab */}
-          {activeTab === 'steps' && (
-            <div className="space-y-4">
-              {treatmentData.steps && treatmentData.steps.length > 0 ? (
-                treatmentData.steps.map((step, index) => {
-                  const getStepIcon = (status) => {
-                    if (status === 'completed') return <FaCheckCircle className="w-6 h-6 text-green-500" />
-                    if (status === 'current') return <FaClock className="w-6 h-6 text-teal-500" />
-                    return <FaClock className="w-6 h-6 text-gray-400" />
-                  }
-
-                  const getStepBg = (status) => {
-                    if (status === 'completed') 
-                      return isDarkMode ? 'bg-green-900/20 border-green-700' : 'bg-green-50 border-green-200'
-                    if (status === 'current')
-                      return isDarkMode ? 'bg-teal-900/20 border-teal-700' : 'bg-teal-50 border-teal-200'
-                    return isDarkMode ? 'bg-gray-700/30 border-gray-600' : 'bg-gray-50 border-gray-200'
-                  }
-
-                  return (
-                    <Card key={index} className={`border-2 ${getStepBg(step.status)}`}>
-                      <Card.Content className="p-5">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="mt-1">
-                              {getStepIcon(step.status)}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className={`text-lg font-bold ${
-                                  isDarkMode ? 'text-white' : 'text-gray-800'
-                                }`}>
-                                  Step {index + 1}: {step.title}
-                                </h4>
-                                <span className={`
-                                  px-3 py-1 rounded-full text-xs font-medium
-                                  ${step.status === 'completed'
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                    : step.status === 'current'
-                                    ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'
-                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                                  }
-                                `}>
-                                  {step.status === 'completed' ? 'Completed' : step.status === 'current' ? 'In Progress' : 'Upcoming'}
-                                </span>
-                              </div>
-
-                              <div className="space-y-2">
-                                {step.date && (
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <FaCalendarAlt className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
-                                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                                      {step.status === 'completed' ? 'Completed on:' : 'Scheduled for:'} {new Date(step.date).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                )}
-                                {step.notes && (
-                                  <p className={`text-sm ${
-                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                  }`}>
-                                    {step.notes}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Book Appointment Button */}
-                          {step.status !== 'completed' && onBookStepAppointment && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleBookAppointment(step, index)}
-                              className="ml-4"
-                            >
-                              <FaCalendarAlt className="w-4 h-4 mr-2" />
-                              Book Appointment
-                            </Button>
-                          )}
-                        </div>
-                      </Card.Content>
-                    </Card>
-                  )
-                })
-              ) : (
-                <Card>
-                  <Card.Content className="p-8 text-center">
-                    <FaStethoscope className={`w-12 h-12 mx-auto mb-4 ${
-                      isDarkMode ? 'text-gray-600' : 'text-gray-400'
-                    }`} />
-                    <p className={`text-lg ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
-                      No treatment steps defined yet
-                    </p>
-                  </Card.Content>
-                </Card>
-              )}
             </div>
           )}
 

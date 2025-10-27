@@ -426,4 +426,94 @@ export const appointmentsAPI = {
     ApiService.get(`/appointments/clinics/${clinicId}/dentists`),
 };
 
+// Treatments API functions
+export const treatmentsAPI = {
+  // Get treatment statistics for dentist
+  getStats: () => ApiService.get('/treatments/stats'),
+  
+  // Get dentist's treatments
+  getDentistTreatments: (status = null) => {
+    const params = status && status !== 'all' ? `?status=${status}` : '';
+    return ApiService.get(`/treatments/dentist/my-treatments${params}`);
+  },
+  
+  // Get all treatments (Admin/Clinic only)
+  getAll: () => ApiService.get('/treatments'),
+  
+  // Get treatment by ID
+  getById: (id) => ApiService.get(`/treatments/${id}`),
+  
+  // Create new treatment
+  create: (treatmentData) => ApiService.post('/treatments', treatmentData),
+  
+  // Update treatment
+  update: (id, treatmentData) => ApiService.put(`/treatments/${id}`, treatmentData),
+  
+  // Delete treatment
+  delete: (id) => ApiService.delete(`/treatments/${id}`),
+};
+
+// Payments API functions
+export const paymentsAPI = {
+  // Get payment statistics for dentist
+  getStats: () => ApiService.get('/payments/stats'),
+  
+  // Get dentist's payments
+  getDentistPayments: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/payments/dentist/my-payments${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Get payments for a specific treatment
+  getByTreatment: (treatmentId) => ApiService.get(`/payments/treatment/${treatmentId}`),
+  
+  // Get payment by ID
+  getById: (id) => ApiService.get(`/payments/${id}`),
+  
+  // Create new payment
+  create: (paymentData) => ApiService.post('/payments', paymentData),
+  
+  // Update payment
+  update: (id, paymentData) => ApiService.put(`/payments/${id}`, paymentData),
+  
+  // Delete payment
+  delete: (id) => ApiService.delete(`/payments/${id}`),
+};
+
+// Radiology Requests API functions
+export const radiologyRequestsAPI = {
+  // Get radiology request statistics for dentist
+  getStats: () => ApiService.get('/radiology-requests/stats'),
+  
+  // Get dentist's radiology requests
+  getDentistRequests: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/radiology-requests/dentist/my-requests${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Get radiology center's requests
+  getCenterRequests: (status = null) => {
+    const params = status && status !== 'all' ? `?status=${status}` : '';
+    return ApiService.get(`/radiology-requests/center/my-requests${params}`);
+  },
+  
+  // Get all radiology requests (Admin only)
+  getAll: () => ApiService.get('/radiology-requests'),
+  
+  // Get radiology request by ID
+  getById: (id) => ApiService.get(`/radiology-requests/${id}`),
+  
+  // Create new radiology request
+  create: (requestData) => ApiService.post('/radiology-requests', requestData),
+  
+  // Update radiology request status
+  updateStatus: (id, statusData) => ApiService.patch(`/radiology-requests/${id}/status`, statusData),
+  
+  // Update radiology request
+  update: (id, requestData) => ApiService.put(`/radiology-requests/${id}`, requestData),
+  
+  // Delete radiology request
+  delete: (id) => ApiService.delete(`/radiology-requests/${id}`),
+};
+
 export default ApiService;

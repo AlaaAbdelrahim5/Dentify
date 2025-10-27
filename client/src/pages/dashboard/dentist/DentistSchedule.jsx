@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaClock,
   FaCalendarAlt,
@@ -11,13 +11,71 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { dentistsAPI } from '../../../services/api'
 
 const DentistSchedule = () => {
   const { isDarkMode } = useTheme()
   const [editingDay, setEditingDay] = useState(null)
   const [isAddingBreak, setIsAddingBreak] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
   
-  // Mock schedule data
+  // Fetch dentist profile on mount
+  useEffect(() => {
+    fetchDentistProfile()
+  }, [])
+
+  const fetchDentistProfile = async () => {
+    try {
+      setLoading(true)
+      const response = await dentistsAPI.getMyProfile()
+      const dentist = response.dentist
+      
+      // If workingHours exists, use it; otherwise, use default
+      if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
+        const scheduleMap = {}
+        dentist.workingHours.forEach(daySchedule => {
+          scheduleMap[daySchedule.day] = {
+            isWorking: daySchedule.isWorking !== false,
+            startTime: daySchedule.start || '09:00',
+            endTime: daySchedule.end || '17:00',
+            breaks: daySchedule.breaks || []
+          }
+        })
+        
+        // Fill in missing days with defaults
+        daysOfWeek.forEach(day => {
+          if (!scheduleMap[day]) {
+            scheduleMap[day] = {
+              isWorking: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day),
+              startTime: '09:00',
+              endTime: '17:00',
+              breaks: day !== 'Friday' && day !== 'Saturday' && day !== 'Sunday' 
+                ? [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
+                : []
+            }
+          }
+        })
+        
+        setSchedule(scheduleMap)
+      }
+      
+      if (dentist.appointmentDuration) {
+        setAppointmentSettings(prev => ({
+          ...prev,
+          defaultDuration: dentist.appointmentDuration
+        }))
+      }
+    } catch (err) {
+      console.error('Error fetching dentist profile:', err)
+      setError('Failed to load schedule. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Mock schedule data (will be replaced with fetched data)
   const [schedule, setSchedule] = useState({
     Sunday: { 
       isWorking: false, 
@@ -162,6 +220,41 @@ const DentistSchedule = () => {
     return daysOfWeek.filter(day => schedule[day].isWorking).length
   }
 
+  const handleSaveSchedule = async () => {
+    try {
+      setSaving(true)
+      
+      // Convert schedule to API format
+      const workingHours = daysOfWeek.map(day => ({
+        day,
+        isWorking: schedule[day].isWorking,
+        start: schedule[day].startTime,
+        end: schedule[day].endTime,
+        breaks: schedule[day].breaks
+      }))
+      
+      await dentistsAPI.updateMyProfile({
+        workingHours,
+        appointmentDuration: appointmentSettings.defaultDuration
+      })
+      
+      alert('Schedule saved successfully!')
+    } catch (error) {
+      console.error('Error saving schedule:', error)
+      alert('Failed to save schedule. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -178,9 +271,9 @@ const DentistSchedule = () => {
             Manage your working hours and availability
           </p>
         </div>
-        <Button variant="primary">
+        <Button variant="primary" onClick={handleSaveSchedule} disabled={saving}>
           <FaSave className="w-4 h-4 mr-2" />
-          Save Schedule
+          {saving ? 'Saving...' : 'Save Schedule'}
         </Button>
       </div>
 

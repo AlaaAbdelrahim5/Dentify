@@ -31,7 +31,16 @@ import {
 import { Button, StatusBadge, Card } from '../index'
 import { useTheme } from '../../contexts/ThemeContext'
 
-const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage = false }) => {
+const PatientDetailsModal = ({ 
+  isOpen, 
+  onClose, 
+  patientData, 
+  onEdit, 
+  asFullPage = false,
+  treatments = [],
+  appointments = [],
+  payments = []
+}) => {
   const { isDarkMode} = useTheme()
   const [activeTab, setActiveTab] = useState('information')
 
@@ -71,96 +80,8 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
     }
   }
 
-  // Mock data for appointments, treatments, and payments
-  const mockAppointments = [
-    {
-      id: 1,
-      date: '2024-02-20',
-      time: '10:00 AM',
-      treatment: 'Dental Cleaning',
-      status: 'PENDING',
-      duration: 30,
-      cost: 200
-    },
-    {
-      id: 2,
-      date: '2024-01-15',
-      time: '2:00 PM',
-      treatment: 'Root Canal',
-      status: 'COMPLETED',
-      duration: 60,
-      cost: 800
-    },
-    {
-      id: 3,
-      date: '2023-12-10',
-      time: '11:30 AM',
-      treatment: 'Checkup',
-      status: 'COMPLETED',
-      duration: 20,
-      cost: 150
-    }
-  ]
-
-  const mockTreatments = [
-    {
-      id: 1,
-      type: 'Root Canal',
-      tooth: '14',
-      status: 'In Progress',
-      startDate: '2024-01-10',
-      cost: 1200,
-      paid: 800,
-      steps: [
-        { name: 'Initial Consultation', status: 'completed', date: '2024-01-10' },
-        { name: 'Root Canal Procedure', status: 'completed', date: '2024-01-15' },
-        { name: 'Crown Placement', status: 'pending', date: '2024-02-20' }
-      ]
-    },
-    {
-      id: 2,
-      type: 'Dental Cleaning',
-      tooth: 'All',
-      status: 'Completed',
-      startDate: '2023-12-10',
-      cost: 150,
-      paid: 150,
-      steps: [
-        { name: 'Cleaning', status: 'completed', date: '2023-12-10' }
-      ]
-    }
-  ]
-
-  const mockPayments = [
-    {
-      id: 1,
-      date: '2024-01-15',
-      description: 'Root Canal - Session 2',
-      amount: 400,
-      method: 'Credit Card',
-      status: 'Paid'
-    },
-    {
-      id: 2,
-      date: '2024-01-10',
-      description: 'Root Canal - Initial',
-      amount: 400,
-      method: 'Cash',
-      status: 'Paid'
-    },
-    {
-      id: 3,
-      date: '2023-12-10',
-      description: 'Dental Cleaning',
-      amount: 150,
-      method: 'Insurance',
-      status: 'Paid'
-    }
-  ]
-
   const tabs = [
     { id: 'information', label: 'Information', icon: FaUser },
-    { id: 'appointments', label: 'Appointments', icon: FaCalendarCheck },
     { id: 'treatments', label: 'Treatments', icon: FaStethoscope },
     { id: 'payments', label: 'Payments', icon: FaMoneyBillWave }
   ]
@@ -272,163 +193,16 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
             </div>
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <label className={`text-sm font-medium ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>Address</label>
+            }`}>City</label>
             <div className="flex items-start gap-2 mt-1">
               <FaMapMarkerAlt className="text-teal-500 mt-1" />
               <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {patientData.address || 'Not provided'}
+                {patientData.city || patientData.address || 'Not provided'}
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Medical Information */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaMedkit className="text-purple-500" />
-          Medical Information
-        </h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className={`text-sm font-medium flex items-center gap-2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              <FaHistory className="w-4 h-4" />
-              Medical History
-            </label>
-            <div className={`mt-2 p-3 rounded-lg ${
-              isDarkMode ? 'bg-gray-800' : 'bg-white'
-            }`}>
-              <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                {patientData.medicalHistory && patientData.medicalHistory.length > 0 
-                  ? (Array.isArray(patientData.medicalHistory) 
-                      ? patientData.medicalHistory.join(', ')
-                      : patientData.medicalHistory)
-                  : 'No medical history recorded'
-                }
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <label className={`text-sm font-medium flex items-center gap-2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              <FaExclamationTriangle className="w-4 h-4 text-red-500" />
-              Allergies
-            </label>
-            <div className={`mt-2 p-3 rounded-lg border-2 ${
-              isDarkMode ? 'bg-red-900/10 border-red-900/30' : 'bg-red-50 border-red-200'
-            }`}>
-              <p className={isDarkMode ? 'text-red-300' : 'text-red-700'}>
-                {patientData.allergies || 'No known allergies'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Emergency Contact & Insurance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            <FaIdCard className="text-orange-500" />
-            Emergency Contact
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Name</label>
-              <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {patientData.emergencyContact || 'Not provided'}
-              </p>
-            </div>
-            <div>
-              <label className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Phone</label>
-              <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {patientData.emergencyPhone || 'Not provided'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            <FaShieldAlt className="text-blue-500" />
-            Insurance
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Provider</label>
-              <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {patientData.insuranceProvider || 'Not provided'}
-              </p>
-            </div>
-            <div>
-              <label className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Policy #</label>
-              <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                {patientData.insuranceNumber || 'Not provided'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Patient Statistics */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-          Patient Statistics
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>
-              {patientData.totalVisits || 0}
-            </p>
-            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Total Visits
-            </p>
-          </div>
-          <div className="text-center">
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              {mockTreatments.length}
-            </p>
-            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Treatments
-            </p>
-          </div>
-          <div className="text-center">
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-              {mockAppointments.length}
-            </p>
-            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Appointments
-            </p>
-          </div>
-          <div className="text-center">
-            <p className={`text-sm font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-              {formatDate(patientData.lastVisit)}
-            </p>
-            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Last Visit
-            </p>
           </div>
         </div>
       </div>
@@ -599,11 +373,17 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
           Treatment Plans
         </h3>
         <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          {mockTreatments.length} treatments
+          {treatments.length} treatments
         </span>
       </div>
 
-      {mockTreatments.map((treatment) => (
+      {treatments.length === 0 ? (
+        <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          <FaStethoscope className={`mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} size={48} />
+          <p>No treatments found for this patient</p>
+        </div>
+      ) : (
+        treatments.map((treatment) => (
         <div key={treatment.id} className={`p-4 rounded-lg border ${
           isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
         }`}>
@@ -617,26 +397,28 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {treatment.type}
+                    {treatment.treatmentType}
                   </h4>
-                  {treatment.tooth !== 'All' && (
+                  {treatment.teethStatus && treatment.teethStatus.length > 0 && (
                     <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 rounded text-xs">
                       <FaTooth className="w-3 h-3" />
-                      <span>Tooth #{treatment.tooth}</span>
+                      <span>{treatment.teethStatus.length} Teeth</span>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-2 text-sm">
                   <div className="flex items-center gap-2">
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                      Started: {formatDate(treatment.startDate)}
+                      Started: {formatDate(treatment.createdAt)}
                     </span>
                   </div>
                   <div>
                     <span className={`px-2 py-0.5 rounded-full text-xs ${
                       treatment.status === 'Completed'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : treatment.status === 'In Progress'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
                       {treatment.status}
                     </span>
@@ -646,36 +428,6 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
             </div>
           </div>
 
-          {/* Treatment Steps */}
-          <div className="ml-14 space-y-2">
-            <h5 className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Treatment Steps:
-            </h5>
-            {treatment.steps.map((step, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  step.status === 'completed'
-                    ? 'bg-green-100 dark:bg-green-900/30'
-                    : 'bg-gray-200 dark:bg-gray-700'
-                }`}>
-                  {step.status === 'completed' ? (
-                    <FaCheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <FaHourglassHalf className="w-3 h-3 text-gray-400" />
-                  )}
-                </div>
-                <div className="flex-1 flex items-center justify-between">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {step.name}
-                  </span>
-                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {formatDate(step.date)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Payment Progress */}
           <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between mb-2">
@@ -683,30 +435,31 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
                 Payment Progress
               </span>
               <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {treatment.paid} / {treatment.cost} EGP
+                ${treatment.paidAmount.toFixed(2)} / ${treatment.totalAmount.toFixed(2)}
               </span>
             </div>
             <div className={`h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div 
                 className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
-                style={{ width: `${(treatment.paid / treatment.cost) * 100}%` }}
+                style={{ width: `${(treatment.paidAmount / treatment.totalAmount) * 100}%` }}
               />
             </div>
-            {treatment.cost > treatment.paid && (
+            {treatment.totalAmount > treatment.paidAmount && (
               <p className={`text-sm mt-2 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                Remaining: {treatment.cost - treatment.paid} EGP
+                Remaining: ${(treatment.totalAmount - treatment.paidAmount).toFixed(2)}
               </p>
             )}
           </div>
         </div>
-      ))}
+        ))
+      )}
     </div>
   )
 
   const renderPayments = () => {
-    const totalPaid = mockPayments.reduce((sum, payment) => sum + payment.amount, 0)
-    const totalCost = mockTreatments.reduce((sum, treatment) => sum + treatment.cost, 0)
-    const totalRemaining = mockTreatments.reduce((sum, treatment) => sum + (treatment.cost - treatment.paid), 0)
+    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0)
+    const totalCost = treatments.reduce((sum, treatment) => sum + treatment.totalAmount, 0)
+    const totalRemaining = treatments.reduce((sum, treatment) => sum + (treatment.totalAmount - treatment.paidAmount), 0)
     
     return (
       <div className="space-y-4">
@@ -724,7 +477,7 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
               </p>
             </div>
             <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {totalPaid} EGP
+              ${totalPaid.toFixed(2)}
             </p>
           </div>
 
@@ -740,7 +493,7 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
               </p>
             </div>
             <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {totalCost} EGP
+              ${totalCost.toFixed(2)}
             </p>
           </div>
 
@@ -756,7 +509,7 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
               </p>
             </div>
             <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {totalRemaining} EGP
+              ${totalRemaining.toFixed(2)}
             </p>
           </div>
         </div>
@@ -767,11 +520,17 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
             Payment History
           </h3>
           <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {mockPayments.length} transactions
+            {payments.length} transactions
           </span>
         </div>
 
-        {mockPayments.map((payment) => (
+        {payments.length === 0 ? (
+          <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <FaMoneyBillWave className={`mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} size={48} />
+            <p>No payment history for this patient</p>
+          </div>
+        ) : (
+          payments.map((payment) => (
           <div key={payment.id} className={`p-4 rounded-lg border ${
             isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
           }`}>
@@ -804,15 +563,16 @@ const PatientDetailsModal = ({ isOpen, onClose, patientData, onEdit, asFullPage 
               </div>
               <div className="text-right">
                 <p className={`text-xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                  {payment.amount} EGP
+                  ${payment.amount.toFixed(2)}
                 </p>
                 <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  {payment.status}
+                  Paid
                 </span>
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     )
   }

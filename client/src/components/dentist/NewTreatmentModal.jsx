@@ -6,7 +6,6 @@ import Input from '../Input'
 import Select from '../Select'
 import ToothChart from './ToothChart'
 import { Card } from '../index'
-import NewAppointmentModal from './NewAppointmentModal'
 
 const NewTreatmentModal = ({
   isOpen,
@@ -17,9 +16,7 @@ const NewTreatmentModal = ({
   asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('basic') // basic, teeth, steps, payment
-  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
-  const [selectedStepForAppointment, setSelectedStepForAppointment] = useState(null)
+  const [activeTab, setActiveTab] = useState('basic') // basic, teeth, payment
   const [formData, setFormData] = useState({
     patientId: '',
     treatmentType: '',
@@ -34,7 +31,6 @@ const NewTreatmentModal = ({
   const [selectedTeeth, setSelectedTeeth] = useState([])
   const [toothConditions, setToothConditions] = useState({})
   const [showToothChart, setShowToothChart] = useState(false)
-  const [treatmentSteps, setTreatmentSteps] = useState([])
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
@@ -62,7 +58,6 @@ const NewTreatmentModal = ({
           }
         })
         setToothConditions(conditions)
-        setTreatmentSteps(initialData.steps || [])
       } else {
         setFormData({
           patientId: '',
@@ -77,12 +72,6 @@ const NewTreatmentModal = ({
         })
         setSelectedTeeth([])
         setToothConditions({})
-        setTreatmentSteps([
-          { title: 'Diagnosis', status: 'current', date: new Date().toISOString().split('T')[0], notes: '' },
-          { title: 'Treatment Planning', status: 'upcoming', date: '', notes: '' },
-          { title: 'Treatment Execution', status: 'upcoming', date: '', notes: '' },
-          { title: 'Follow-up', status: 'upcoming', date: '', notes: '' }
-        ])
       }
       setErrors({})
       setShowToothChart(false)
@@ -144,10 +133,12 @@ const NewTreatmentModal = ({
 
     if (!formData.patientId) {
       newErrors.patientId = 'Please select a patient'
+      setActiveTab('basic') // Switch to basic tab to show error
     }
 
     if (!formData.treatmentType.trim()) {
       newErrors.treatmentType = 'Treatment type is required'
+      if (!newErrors.patientId) setActiveTab('basic') // Switch to basic tab if not already there
     }
 
     if (!formData.totalAmount || parseFloat(formData.totalAmount) <= 0) {
@@ -163,13 +154,27 @@ const NewTreatmentModal = ({
     }
 
     setErrors(newErrors)
+    
+    // Show alert with all errors
+    if (Object.keys(newErrors).length > 0) {
+      const errorMessages = Object.values(newErrors).join('\n')
+      alert('Please fix the following errors:\n\n' + errorMessages)
+    }
+    
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     
+    console.log('=== TREATMENT FORM SUBMIT ===')
+    console.log('Form Data:', formData)
+    console.log('Selected Teeth:', selectedTeeth)
+    console.log('Tooth Conditions:', toothConditions)
+    console.log('Validation starting...')
+    
     if (validateForm()) {
+      console.log('Validation passed!')
       const teethStatus = selectedTeeth.map(toothNumber => ({
         toothNumber,
         conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
@@ -182,55 +187,18 @@ const NewTreatmentModal = ({
         ...formData,
         totalAmount: parseFloat(formData.totalAmount),
         paidAmount: parseFloat(formData.paidAmount),
-        teethStatus,
-        steps: treatmentSteps
+        teethStatus
       }
       
+      console.log('Treatment Data to Save:', treatmentData)
+      console.log('Calling onSave...')
       onSave(treatmentData)
+      console.log('Calling onClose...')
       onClose()
+    } else {
+      console.log('Validation failed!')
+      console.log('Errors:', errors)
     }
-  }
-
-  const handleAddStep = () => {
-    setTreatmentSteps([...treatmentSteps, {
-      title: '',
-      status: 'upcoming',
-      date: '',
-      notes: ''
-    }])
-  }
-
-  const handleUpdateStep = (index, field, value) => {
-    const updated = [...treatmentSteps]
-    updated[index][field] = value
-    setTreatmentSteps(updated)
-  }
-
-  const handleRemoveStep = (index) => {
-    setTreatmentSteps(treatmentSteps.filter((_, i) => i !== index))
-  }
-
-  const handleBookAppointmentForStep = (step, index) => {
-    setSelectedStepForAppointment({ step, index })
-    setIsAppointmentModalOpen(true)
-  }
-
-  const handleCloseAppointmentModal = () => {
-    setIsAppointmentModalOpen(false)
-    setSelectedStepForAppointment(null)
-  }
-
-  const handleSaveAppointment = (appointmentData) => {
-    console.log('Appointment saved for step:', selectedStepForAppointment)
-    console.log('Appointment data:', appointmentData)
-    
-    // Update the step's date with the appointment date
-    if (selectedStepForAppointment && appointmentData.appointmentDate) {
-      handleUpdateStep(selectedStepForAppointment.index, 'date', appointmentData.appointmentDate)
-    }
-    
-    handleCloseAppointmentModal()
-    // You can add additional logic here to save the appointment to your backend
   }
 
   const handleClose = () => {
@@ -292,7 +260,7 @@ const NewTreatmentModal = ({
 
   // Main content
   const content = (
-    <div className="w-full flex flex-col">
+    <form id="treatment-form" onSubmit={handleSubmit} className="w-full flex flex-col">
       {/* Header */}
       <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
         isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
@@ -318,6 +286,7 @@ const NewTreatmentModal = ({
         </div>
         {!asFullPage && (
           <button
+            type="button"
             onClick={handleClose}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode 
@@ -350,6 +319,7 @@ const NewTreatmentModal = ({
             <div className="flex items-center gap-2">
               <FaUser className="w-3.5 h-3.5" />
               Basic Info
+              <span className="text-red-500 font-bold">*</span>
             </div>
           </button>
           <button
@@ -377,29 +347,6 @@ const NewTreatmentModal = ({
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('steps')}
-            className={`
-              px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-              ${activeTab === 'steps'
-                ? 'bg-teal-600 text-white shadow-md'
-                : isDarkMode
-                ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-              }
-            `}
-          >
-            <div className="flex items-center gap-2">
-              <FaStethoscope className="w-3.5 h-3.5" />
-              Treatment Steps
-              {treatmentSteps.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                  {treatmentSteps.length}
-                </span>
-              )}
-            </div>
-          </button>
-          <button
-            type="button"
             onClick={() => setActiveTab('payment')}
             className={`
               px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -414,6 +361,7 @@ const NewTreatmentModal = ({
             <div className="flex items-center gap-2">
               <FaDollarSign className="w-3.5 h-3.5" />
               Payment
+              <span className="text-red-500 font-bold">*</span>
             </div>
           </button>
         </div>
@@ -733,175 +681,6 @@ const NewTreatmentModal = ({
             </div>
           )}
 
-          {/* Treatment Steps Tab */}
-          {activeTab === 'steps' && (
-            <div className="space-y-4">
-              <Card>
-                <Card.Header>
-                  <div className="flex items-center justify-between">
-                    <h3 className={`font-semibold text-lg flex items-center gap-2 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      <FaStethoscope className="w-5 h-5 text-teal-500" />
-                      Treatment Plan Steps
-                    </h3>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      onClick={handleAddStep}
-                    >
-                      <FaPlus className="w-4 h-4 mr-2" />
-                      Add Step
-                    </Button>
-                  </div>
-                </Card.Header>
-                <Card.Content>
-                  {treatmentSteps.length > 0 ? (
-                    <div className="space-y-4">
-                      {treatmentSteps.map((step, index) => (
-                        <Card key={index} className={`border-2 ${
-                          step.status === 'completed' 
-                            ? isDarkMode ? 'border-green-700 bg-green-900/10' : 'border-green-200 bg-green-50'
-                            : step.status === 'current'
-                            ? isDarkMode ? 'border-teal-700 bg-teal-900/10' : 'border-teal-200 bg-teal-50'
-                            : isDarkMode ? 'border-gray-600' : 'border-gray-200'
-                        }`}>
-                          <Card.Content className="p-4">
-                            <div className="flex items-start justify-between mb-4">
-                              <h4 className={`font-semibold text-lg ${
-                                isDarkMode ? 'text-white' : 'text-gray-800'
-                              }`}>
-                                Step {index + 1}
-                              </h4>
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleBookAppointmentForStep(step, index)}
-                                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                                    isDarkMode
-                                      ? 'bg-teal-900/30 text-teal-400 hover:bg-teal-900/50'
-                                      : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-                                  }`}
-                                  title="Book appointment for this step"
-                                >
-                                  <FaCalendarAlt className="w-3.5 h-3.5" />
-                                  Book
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveStep(index)}
-                                  className="text-red-500 hover:text-red-600"
-                                >
-                                  <FaTrash className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className={`text-sm font-medium ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  Step Title
-                                </label>
-                                <input
-                                  type="text"
-                                  value={step.title}
-                                  onChange={(e) => handleUpdateStep(index, 'title', e.target.value)}
-                                  placeholder="e.g., Diagnosis, Treatment, Follow-up"
-                                  className={`w-full mt-1 px-3 py-2 rounded-lg border ${
-                                    isDarkMode
-                                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                                  }`}
-                                />
-                              </div>
-                              
-                              <div>
-                                <label className={`text-sm font-medium ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  Status
-                                </label>
-                                <select
-                                  value={step.status}
-                                  onChange={(e) => handleUpdateStep(index, 'status', e.target.value)}
-                                  className={`w-full mt-1 px-3 py-2 rounded-lg border ${
-                                    isDarkMode
-                                      ? 'bg-gray-700 border-gray-600 text-white'
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
-                                >
-                                  <option value="upcoming">Upcoming</option>
-                                  <option value="current">Current</option>
-                                  <option value="completed">Completed</option>
-                                </select>
-                              </div>
-                              
-                              <div>
-                                <label className={`text-sm font-medium ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  Date
-                                </label>
-                                <input
-                                  type="date"
-                                  value={step.date}
-                                  onChange={(e) => handleUpdateStep(index, 'date', e.target.value)}
-                                  className={`w-full mt-1 px-3 py-2 rounded-lg border ${
-                                    isDarkMode
-                                      ? 'bg-gray-700 border-gray-600 text-white'
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
-                                />
-                              </div>
-                              
-                              <div>
-                                <label className={`text-sm font-medium ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  Notes
-                                </label>
-                                <input
-                                  type="text"
-                                  value={step.notes}
-                                  onChange={(e) => handleUpdateStep(index, 'notes', e.target.value)}
-                                  placeholder="Step notes..."
-                                  className={`w-full mt-1 px-3 py-2 rounded-lg border ${
-                                    isDarkMode
-                                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
-                                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                                  }`}
-                                />
-                              </div>
-                            </div>
-                          </Card.Content>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <FaStethoscope className={`w-16 h-16 mx-auto mb-4 ${
-                        isDarkMode ? 'text-gray-600' : 'text-gray-400'
-                      }`} />
-                      <p className={`text-lg ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        No treatment steps yet
-                      </p>
-                      <p className={`text-sm mt-2 ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                      }`}>
-                        Click "Add Step" to create your treatment plan
-                      </p>
-                    </div>
-                  )}
-                </Card.Content>
-              </Card>
-            </div>
-          )}
-
           {/* Payment Tab */}
           {activeTab === 'payment' && (
             <div className="space-y-6">
@@ -1036,37 +815,15 @@ const NewTreatmentModal = ({
             </div>
           </div>
         )}
-      </div>
+      </form>
     )
 
   // Wrap content in modal backdrop if not full page
   if (asFullPage) {
-    return (
-      <>
-        {content}
-        {/* Appointment Modal for Steps */}
-        <NewAppointmentModal
-          isOpen={isAppointmentModalOpen}
-          onClose={handleCloseAppointmentModal}
-          onSave={handleSaveAppointment}
-          patients={patients}
-          prefilledData={
-            selectedStepForAppointment && formData.patientId
-              ? {
-                  patientId: formData.patientId,
-                  appointmentDate: selectedStepForAppointment.step.date || '',
-                  reason: `${formData.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.index + 1}`}`,
-                  notes: selectedStepForAppointment.step.notes || ''
-                }
-              : null
-          }
-        />
-      </>
-    )
+    return content
   }
 
   return (
-    <>
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
@@ -1088,25 +845,6 @@ const NewTreatmentModal = ({
         </div>
       </div>
     </div>
-
-    {/* Appointment Modal for Steps */}
-    <NewAppointmentModal
-      isOpen={isAppointmentModalOpen}
-      onClose={handleCloseAppointmentModal}
-      onSave={handleSaveAppointment}
-      patients={patients}
-      prefilledData={
-        selectedStepForAppointment && formData.patientId
-          ? {
-              patientId: formData.patientId,
-              appointmentDate: selectedStepForAppointment.step.date || '',
-              reason: `${formData.treatmentType} - ${selectedStepForAppointment.step.title || `Step ${selectedStepForAppointment.index + 1}`}`,
-              notes: selectedStepForAppointment.step.notes || ''
-            }
-          : null
-      }
-    />
-    </>
   )
 }
 

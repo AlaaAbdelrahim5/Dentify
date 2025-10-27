@@ -109,6 +109,78 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
+// Create new patient (for dentists/clinics/admins)
+router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (req, res) => {
+  try {
+    const { email, password, phone, firstName, lastName, gender, birthDate, city } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !phone || !firstName || !lastName || !birthDate || !city) {
+      return res.status(400).json({ error: 'All required fields must be provided' });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user and patient in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          phone,
+          role: 'Patient',
+          status: 'ACTIVE'
+        }
+      });
+
+      // Create patient profile
+      const patient = await tx.patient.create({
+        data: {
+          userId: user.id,
+          firstName,
+          lastName,
+          gender: gender || null,
+          birthDate: new Date(birthDate),
+          city
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return patient;
+    });
+
+    res.status(201).json({ 
+      message: 'Patient created successfully', 
+      patient: result 
+    });
+  } catch (error) {
+    console.error('Create patient error:', error);
+    res.status(500).json({ error: 'Failed to create patient' });
+  }
+});
+
 // Update patient
 router.put('/:id', authenticate, async (req, res) => {
   try {

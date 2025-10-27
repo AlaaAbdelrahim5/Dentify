@@ -1,18 +1,15 @@
 import { useTheme } from '../../contexts/ThemeContext'
 import { 
   FaTooth, FaCalendarAlt, FaDollarSign, FaClipboardList, 
-  FaCheck, FaClock, FaExclamationTriangle 
+  FaCheck, FaClock, FaExclamationTriangle, FaTimes, FaCheckCircle
 } from 'react-icons/fa'
 import { Card } from '../index'
-import StatusBadge from '../StatusBadge'
 
 const TreatmentPlanCard = ({ treatment, onClick }) => {
   const { isDarkMode } = useTheme()
 
   const remainingBalance = treatment.totalAmount - treatment.paidAmount
   const paymentProgress = (treatment.paidAmount / treatment.totalAmount) * 100
-  const completedSteps = treatment.steps?.filter(s => s.status === 'completed').length || 0
-  const totalSteps = treatment.steps?.length || 0
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -27,11 +24,45 @@ const TreatmentPlanCard = ({ treatment, onClick }) => {
     }
   }
 
-  const getProgressColor = () => {
-    if (completedSteps === totalSteps) return 'bg-green-600'
-    if (completedSteps > 0) return 'bg-teal-600'
-    return isDarkMode ? 'bg-gray-600' : 'bg-gray-400'
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'In Progress':
+        return {
+          icon: FaClock,
+          label: 'In Progress',
+          className: isDarkMode 
+            ? 'bg-green-900/30 text-green-400 border-green-600' 
+            : 'bg-green-100 text-green-700 border-green-400'
+        }
+      case 'Completed':
+        return {
+          icon: FaCheckCircle,
+          label: 'Completed',
+          className: isDarkMode 
+            ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+            : 'bg-blue-100 text-blue-700 border-blue-400'
+        }
+      case 'Cancelled':
+        return {
+          icon: FaTimes,
+          label: 'Cancelled',
+          className: isDarkMode 
+            ? 'bg-red-900/30 text-red-400 border-red-600' 
+            : 'bg-red-100 text-red-700 border-red-400'
+        }
+      default:
+        return {
+          icon: FaClock,
+          label: status,
+          className: isDarkMode 
+            ? 'bg-gray-800 text-gray-300 border-gray-600' 
+            : 'bg-white text-gray-700 border-gray-300'
+        }
+    }
   }
+
+  const statusDisplay = getStatusDisplay(treatment.treatmentStatus)
+  const StatusIcon = statusDisplay.icon
 
   return (
     <Card 
@@ -62,7 +93,10 @@ const TreatmentPlanCard = ({ treatment, onClick }) => {
               </p>
             </div>
           </div>
-          <StatusBadge status={treatment.treatmentStatus} />
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>
+            <StatusIcon className="w-3 h-3" />
+            {statusDisplay.label}
+          </span>
         </div>
       </Card.Header>
 
@@ -73,32 +107,6 @@ const TreatmentPlanCard = ({ treatment, onClick }) => {
         }`}>
           {treatment.description}
         </p>
-
-        {/* Treatment Progress */}
-        {totalSteps > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Treatment Progress
-              </span>
-              <span className={`text-xs font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {completedSteps}/{totalSteps} Steps
-              </span>
-            </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden ${
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-            }`}>
-              <div 
-                className={`h-full ${getProgressColor()} transition-all duration-500`}
-                style={{ width: `${(completedSteps / totalSteps) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Teeth Affected */}
         {treatment.teethStatus && treatment.teethStatus.length > 0 && (
@@ -198,41 +206,6 @@ const TreatmentPlanCard = ({ treatment, onClick }) => {
           </span>
         </div>
       </Card.Content>
-
-      {/* Quick Actions Footer */}
-      <Card.Footer className="pt-3">
-        <div className="flex gap-2 text-xs">
-          {treatment.treatmentStatus === 'In Progress' && (
-            <>
-              <span className={`
-                px-2 py-1 rounded-md flex items-center gap-1
-                ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'}
-              `}>
-                <FaClock className="w-3 h-3" />
-                In Progress
-              </span>
-              {remainingBalance > 0 && (
-                <span className={`
-                  px-2 py-1 rounded-md flex items-center gap-1
-                  ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'}
-                `}>
-                  <FaDollarSign className="w-3 h-3" />
-                  Payment Due
-                </span>
-              )}
-            </>
-          )}
-          {treatment.treatmentStatus === 'Completed' && (
-            <span className={`
-              px-2 py-1 rounded-md flex items-center gap-1
-              ${isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'}
-            `}>
-              <FaCheck className="w-3 h-3" />
-              Completed
-            </span>
-          )}
-        </div>
-      </Card.Footer>
     </Card>
   )
 }

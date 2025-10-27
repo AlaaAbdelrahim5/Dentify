@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaMoneyBillWave,
@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader } from '../../../components'
 import PaymentModal from '../../../components/dentist/PaymentModal'
+import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 
 const DentistPayments = () => {
   const { isDarkMode } = useTheme()
@@ -28,148 +29,69 @@ const DentistPayments = () => {
   const [viewPatientId, setViewPatientId] = useState(null)
   const printRef = useRef()
 
-  // Mock patients data
-  const mockPatients = [
-    { id: 1, name: 'John Smith', phone: '555-0101' },
-    { id: 2, name: 'Sarah Johnson', phone: '555-0102' },
-    { id: 3, name: 'Mike Wilson', phone: '555-0103' },
-    { id: 4, name: 'Emily Davis', phone: '555-0104' },
-    { id: 5, name: 'Robert Brown', phone: '555-0105' }
-  ]
+  // Data states
+  const [payments, setPayments] = useState([])
+  const [treatments, setTreatments] = useState([])
+  const [patients, setPatients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Mock treatments with patient linkage
-  const mockTreatments = [
-    {
-      id: 1,
-      patientId: 1,
-      patientName: 'John Smith',
-      treatmentType: 'Root Canal',
-      totalAmount: 800.00,
-      paidAmount: 400.00,
-      status: 'In Progress',
-      creationDate: '2024-01-15'
-    },
-    {
-      id: 2,
-      patientId: 2,
-      patientName: 'Sarah Johnson',
-      treatmentType: 'Cleaning',
-      totalAmount: 120.00,
-      paidAmount: 120.00,
-      status: 'Completed',
-      creationDate: '2024-02-01'
-    },
-    {
-      id: 3,
-      patientId: 3,
-      patientName: 'Mike Wilson',
-      treatmentType: 'Crown Installation',
-      totalAmount: 1200.00,
-      paidAmount: 1200.00,
-      status: 'Completed',
-      creationDate: '2024-01-10'
-    },
-    {
-      id: 4,
-      patientId: 4,
-      patientName: 'Emily Davis',
-      treatmentType: 'Extraction',
-      totalAmount: 300.00,
-      paidAmount: 0.00,
-      status: 'In Progress',
-      creationDate: '2024-02-10'
-    },
-    {
-      id: 5,
-      patientId: 5,
-      patientName: 'Robert Brown',
-      treatmentType: 'Filling',
-      totalAmount: 450.00,
-      paidAmount: 225.00,
-      status: 'In Progress',
-      creationDate: '2024-02-08'
-    },
-    {
-      id: 6,
-      patientId: 1,
-      patientName: 'John Smith',
-      treatmentType: 'Whitening',
-      totalAmount: 400.00,
-      paidAmount: 0.00,
-      status: 'In Progress',
-      creationDate: '2024-02-18'
-    }
-  ]
+  // Fetch data on mount
+  useEffect(() => {
+    fetchAllData()
+  }, [])
 
-  // Mock payments data
-  const mockPayments = [
-    {
-      id: 1,
-      treatmentId: 1,
-      patientId: 1,
-      patientName: 'John Smith',
-      treatmentType: 'Root Canal',
-      amount: 200.00,
-      paymentMethod: 'Cash',
-      paymentDate: '2024-02-20',
-      notes: 'Initial payment'
-    },
-    {
-      id: 2,
-      treatmentId: 1,
-      patientId: 1,
-      patientName: 'John Smith',
-      treatmentType: 'Root Canal',
-      amount: 200.00,
-      paymentMethod: 'Card',
-      paymentDate: '2024-02-22',
-      notes: 'Second installment'
-    },
-    {
-      id: 3,
-      treatmentId: 2,
-      patientId: 2,
-      patientName: 'Sarah Johnson',
-      treatmentType: 'Cleaning',
-      amount: 120.00,
-      paymentMethod: 'Card',
-      paymentDate: '2024-02-01',
-      notes: 'Full payment'
-    },
-    {
-      id: 4,
-      treatmentId: 3,
-      patientId: 3,
-      patientName: 'Mike Wilson',
-      treatmentType: 'Crown Installation',
-      amount: 600.00,
-      paymentMethod: 'Card',
-      paymentDate: '2024-01-10',
-      notes: 'Down payment'
-    },
-    {
-      id: 5,
-      treatmentId: 3,
-      patientId: 3,
-      patientName: 'Mike Wilson',
-      treatmentType: 'Crown Installation',
-      amount: 600.00,
-      paymentMethod: 'Cash',
-      paymentDate: '2024-01-25',
-      notes: 'Final payment'
-    },
-    {
-      id: 6,
-      treatmentId: 5,
-      patientId: 5,
-      patientName: 'Robert Brown',
-      treatmentType: 'Filling',
-      amount: 225.00,
-      paymentMethod: 'Card',
-      paymentDate: '2024-02-15',
-      notes: 'Down payment'
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [paymentsRes, treatmentsRes, patientsRes] = await Promise.all([
+        paymentsAPI.getDentistPayments(),
+        treatmentsAPI.getDentistTreatments(),
+        patientsAPI.getAll()
+      ])
+      setPayments(paymentsRes.payments || [])
+      setTreatments(treatmentsRes.treatments || [])
+      setPatients(patientsRes.patients || [])
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to load data. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  // Transform patients for display
+  const mockPatients = patients.map(p => ({
+    id: p.userId,
+    name: `${p.firstName} ${p.lastName}`,
+    phone: p.user?.phone || 'N/A'
+  }))
+
+  // Transform treatments for display
+  const mockTreatments = treatments.map(t => ({
+    id: t.id,
+    patientId: t.patientId,
+    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+    treatmentType: t.treatmentType,
+    totalAmount: t.totalAmount,
+    paidAmount: t.paidAmount,
+    status: t.status.replace('_', ' '),
+    creationDate: t.createdAt
+  }))
+
+  // Transform payments for display
+  const mockPayments = payments.map(p => ({
+    id: p.id,
+    treatmentId: p.treatmentId,
+    patientId: p.treatment.patientId,
+    patientName: `${p.treatment.patient.firstName} ${p.treatment.patient.lastName}`,
+    treatmentType: p.treatment.treatmentType,
+    amount: p.amount,
+    paymentMethod: p.method, // Keep uppercase: 'CASH' or 'CARD'
+    paymentDate: p.paymentDate,
+    notes: p.notes || ''
+  }))
 
   // Get patient summary (all treatments and total balance)
   const getPatientSummary = (patientId) => {
@@ -231,8 +153,8 @@ const DentistPayments = () => {
   const getStats = () => {
     const dateFilteredPayments = filterPaymentsByDate(mockPayments)
     const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
-    const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'Cash').reduce((sum, p) => sum + p.amount, 0)
-    const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'Card').reduce((sum, p) => sum + p.amount, 0)
+    const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
+    const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CARD').reduce((sum, p) => sum + p.amount, 0)
     const count = dateFilteredPayments.length
     
     return { total, cashPayments, cardPayments, count }
@@ -250,9 +172,16 @@ const DentistPayments = () => {
     setSelectedTreatment(null)
   }
 
-  const handleSavePayment = (paymentData) => {
-    console.log('New payment:', paymentData)
-    // Here you would save to backend
+  const handleSavePayment = async (paymentData) => {
+    try {
+      await paymentsAPI.create(paymentData)
+      await fetchAllData()
+      setIsPaymentModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      alert('Failed to create payment. Please try again.')
+    }
   }
 
   const handleClearFilters = () => {
@@ -290,7 +219,7 @@ const DentistPayments = () => {
           <p><strong>Patient:</strong> ${payment.patientName}</p>
           <p><strong>Date:</strong> ${new Date(payment.paymentDate).toLocaleDateString()}</p>
           <p><strong>Treatment:</strong> ${payment.treatmentType}</p>
-          <p><strong>Payment Method:</strong> ${payment.paymentMethod}</p>
+          <p><strong>Payment Method:</strong> ${payment.paymentMethod === 'CASH' ? 'Cash' : 'Card'}</p>
         </div>
         <table class="invoice-table">
           <thead>
@@ -360,11 +289,11 @@ const DentistPayments = () => {
       accessor: 'paymentMethod',
       render: (value) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          value === 'Cash'
+          value === 'CASH'
             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
             : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
         }`}>
-          {value === 'Cash' ? '💵 Cash' : '💳 Card'}
+          {value === 'CASH' ? '💵 Cash' : '💳 Card'}
         </span>
       )
     },
@@ -675,12 +604,6 @@ const DentistPayments = () => {
           searchPlaceholder="Search by patient name or treatment..."
           filters={[
             {
-              value: selectedPatient,
-              onChange: (e) => setSelectedPatient(e.target.value),
-              options: mockPatients.map(p => ({ value: p.id.toString(), label: p.name })),
-              placeholder: 'All Patients'
-            },
-            {
               value: selectedDateRange,
               onChange: (e) => setSelectedDateRange(e.target.value),
               options: [
@@ -696,8 +619,8 @@ const DentistPayments = () => {
               onChange: (e) => setSelectedPaymentMethod(e.target.value),
               options: [
                 { value: 'all', label: 'All Methods' },
-                { value: 'Cash', label: 'Cash' },
-                { value: 'Card', label: 'Card' }
+                { value: 'CASH', label: 'Cash' },
+                { value: 'CARD', label: 'Card' }
               ],
               placeholder: 'Payment Method'
             }
