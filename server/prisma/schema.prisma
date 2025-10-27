@@ -17,15 +17,15 @@ datasource db {
 
 // User model
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
   password     String
   phone        String?
-  role         Role
+  role         UserRole
   profileImage String?
-  status       Status   @default(ACTIVE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   admin     Admin?
   clinic    Clinic?
@@ -58,9 +58,9 @@ model Clinic {
   servicesAvailable  String[]
   workingHours       Json?
 
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dentists    Dentist[]
-  secretaries Secretary[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dentists     Dentist[]
+  secretaries  Secretary[]
   appointments Appointment[]
 }
 
@@ -75,13 +75,15 @@ model Dentist {
   gender              Gender?
   city                String
   clinicId            Int
-  workingHours        Json?
-  appointmentDuration Int
-  socialLinks         Json?
+  workingHours        Json? // [{ day, start, end, breaks: [...] }]
+  appointmentDuration Int // in minutes
+  socialLinks         Json? // { facebook:'', instagram:'', whatsapp:'', tiktok:'' }
 
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic      Clinic      @relation(fields: [clinicId], references: [userId])
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic       Clinic             @relation(fields: [clinicId], references: [userId])
   appointments Appointment[]
+  treatments   Treatment[]
+  radiologyReq RadiologyRequest[]
 }
 
 // Secretary model
@@ -107,8 +109,11 @@ model Patient {
   birthDate DateTime
   city      String
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  treatments        Treatment[]
+  payments          Payment[]
+  radiologyRequests RadiologyRequest[]
 }
 
 // Radiology Center model
@@ -122,35 +127,95 @@ model RadiologyCenter {
   coordinates        String?
   description        String?
   workingHours       Json?
-  supportedTypes     String[]
+  supportedTypes     String[] // ["X-ray","CT","3D",...]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  radiologyRequests RadiologyRequest[]
 }
 
 // Appointment model
 model Appointment {
-  id               Int             @id @default(autoincrement())
-  patientId        Int
-  dentistId        Int
-  clinicId         Int
-  appointmentDate  DateTime
-  startTime        DateTime
-  endTime          DateTime
-  status           AppointmentStatus @default(PENDING)
-  patientNotes     String?
-  treatmentId      Int?
-  sessionNotes     String?
-  sessionCost      Float?
+  id              Int               @id @default(autoincrement())
+  patientId       Int
+  dentistId       Int
+  clinicId        Int
+  appointmentDate DateTime // date of visit
+  startTime       DateTime // exact start timestamp
+  endTime         DateTime // start + duration
+  status          AppointmentStatus @default(PENDING)
+  patientNotes    String? // patient request / reason
+  treatmentId     Int? // optional: link to Treatment
+  sessionNotes    String? // dentist notes for that session
+  sessionCost     Float? // cost for that session
 
-  patient Patient @relation(fields: [patientId], references: [userId], onDelete: Cascade)
-  dentist Dentist @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
-  clinic  Clinic  @relation(fields: [clinicId], references: [userId], onDelete: Cascade)
+  patient   Patient    @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dentist   Dentist    @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
+  clinic    Clinic     @relation(fields: [clinicId], references: [userId])
+  treatment Treatment? @relation(fields: [treatmentId], references: [id])
+}
+
+// Treatment model
+model Treatment {
+  id            Int             @id @default(autoincrement())
+  patientId     Int
+  dentistId     Int
+  treatmentType String // e.g. "Root Canal", "Extraction"
+  description   String?
+  status        TreatmentStatus @default(IN_PROGRESS)
+  createdAt     DateTime        @default(now())
+  totalAmount   Float           @default(0)
+  paidAmount    Float           @default(0)
+  notes         String?
+
+  // Teeth status list for this treatment.
+  // [{ toothNumber: 12, conditionStatus:"Cavity", priority:"High", diagnosedDate:"2025-10-27", notes:"Deep decay" }, ...]
+  teethStatus Json?
+
+  patient       Patient            @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dentist       Dentist            @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
+  appointments  Appointment[]
+  payments      Payment[]
+  radiologyReqs RadiologyRequest[]
+}
+
+// Payment model
+model Payment {
+  id          Int           @id @default(autoincrement())
+  treatmentId Int
+  amount      Float
+  method      PaymentMethod
+  paymentDate DateTime      @default(now())
+  notes       String?
+
+  treatment     Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  Patient       Patient?  @relation(fields: [patientUserId], references: [userId])
+  patientUserId Int?
+}
+
+// Radiology Request model
+model RadiologyRequest {
+  id                Int           @id @default(autoincrement())
+  patientId         Int
+  dentistId         Int
+  radiologyCenterId Int
+  treatmentId       Int?
+  requestDate       DateTime      @default(now())
+  imagingType       String // "X-ray", "CT", "3D", etc.
+  availableDate     DateTime? // when result is ready
+  reportFile        String? // URL or file ID
+  status            RequestStatus @default(REQUESTED)
+  notes             String?
+
+  patient         Patient         @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  dentist         Dentist         @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
+  radiologyCenter RadiologyCenter @relation(fields: [radiologyCenterId], references: [userId], onDelete: Cascade)
+  treatment       Treatment?      @relation(fields: [treatmentId], references: [id])
 }
 
 // =======================
 //         ENUMS
 // =======================
-enum Role {
+enum UserRole {
   Admin
   Clinic
   Dentist
@@ -159,7 +224,7 @@ enum Role {
   RadiologyCenter
 }
 
-enum Status {
+enum UserStatus {
   ACTIVE
   PENDING
   REJECTED
@@ -170,7 +235,6 @@ enum Status {
 enum Gender {
   Male
   Female
-  Other
 }
 
 enum AppointmentStatus {
@@ -178,4 +242,22 @@ enum AppointmentStatus {
   PENDING
   CANCELLED
   COMPLETED
+}
+
+enum TreatmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+}
+
+enum RequestStatus {
+  REQUESTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
