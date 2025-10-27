@@ -17,7 +17,8 @@ import {
   FaTh,
   FaListAlt,
   FaUserCheck,
-  FaUserTimes
+  FaUserTimes,
+  FaArrowLeft
 } from 'react-icons/fa'
 import { Card, Button, Input, StatsOverview, FilterBar, PageHeader, DataTable } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -31,10 +32,10 @@ const DentistPatients = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or list
+  const [currentPage, setCurrentPage] = useState('list') // 'list', 'view', 'new', 'edit'
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
 
   // Mock patients data
@@ -191,16 +192,16 @@ const DentistPatients = () => {
 
   const handleViewPatient = (patient) => {
     setSelectedPatient(patient)
-    setIsDetailsModalOpen(true)
+    setCurrentPage('view')
   }
 
-  const handleCloseDetailsModal = () => {
-    setIsDetailsModalOpen(false)
+  const handleBackToList = () => {
+    setCurrentPage('list')
     setSelectedPatient(null)
   }
 
   const handleEditFromDetails = (patient) => {
-    setIsDetailsModalOpen(false)
+    setCurrentPage('list')
     setSelectedPatient(patient)
     setIsEditPatientModalOpen(true)
   }
@@ -464,17 +465,53 @@ const DentistPatients = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="My Patients"
-        description="Manage patient records and information"
-        action={{
-          label: 'Add Patient',
-          onClick: handleNewPatient,
-          icon: FaPlus,
-          gradient: 'from-teal-600 to-cyan-600'
-        }}
-      />
+      {/* Show View Patient Page */}
+      {currentPage === 'view' && selectedPatient && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Patients
+            </Button>
+            <Button
+              onClick={() => handleEditFromDetails(selectedPatient)}
+              className="flex items-center gap-2"
+            >
+              <FaEdit className="w-4 h-4" />
+              Edit Patient
+            </Button>
+          </div>
+          
+          {/* Patient Details - Full Page Mode */}
+          <PatientDetailsModal
+            isOpen={true}
+            onClose={handleBackToList}
+            patientData={selectedPatient}
+            onEdit={handleEditFromDetails}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show Patients List Page */}
+      {currentPage === 'list' && (
+        <>
+          {/* Page Header */}
+          <PageHeader
+            title="My Patients"
+            description="Manage patient records and information"
+            action={{
+              label: 'Add Patient',
+              onClick: handleNewPatient,
+              icon: FaPlus,
+              gradient: 'from-teal-600 to-cyan-600'
+            }}
+          />
 
       {/* Stats Overview */}
       <StatsOverview stats={[
@@ -571,25 +608,26 @@ const DentistPatients = () => {
           </p>
         </Card>
       ) : (
-        <>
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPatients.map((patient) => (
-                <PatientCard key={patient.id} patient={patient} />
-              ))}
-            </div>
-          ) : (
-            <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <DataTable
-                columns={columns}
-                data={filteredPatients}
-                emptyMessage="No patients found"
-              />
-            </Card>
-          )}
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPatients.map((patient) => (
+              <PatientCard key={patient.id} patient={patient} />
+            ))}
+          </div>
+        ) : (
+          <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <DataTable
+              columns={columns}
+              data={filteredPatients}
+              emptyMessage="No patients found"
+            />
+          </Card>
+        )
+      )}
         </>
       )}
 
+      {/* Modals - These work across all pages */}
       {/* New Patient Modal */}
       <NewPatientModal
         isOpen={isNewPatientModalOpen}
@@ -615,14 +653,6 @@ const DentistPatients = () => {
           treatment: 'Patient Record',
           time: ''
         } : null}
-      />
-
-      {/* Patient Details Modal */}
-      <PatientDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        patientData={selectedPatient}
-        onEdit={handleEditFromDetails}
       />
     </div>
   )
