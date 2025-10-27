@@ -17,6 +17,8 @@ import { Navbar, Card, Button } from '../../components'
 import { authUtils } from '../../utils/auth'
 import { useTheme } from '../../contexts/ThemeContext'
 import DentistSidebar from '../../components/dentist/DentistSidebar'
+import AppointmentSchedule from '../../components/dentist/AppointmentSchedule'
+import AppointmentDetailsModal from '../../components/dentist/AppointmentDetailsModal'
 import DentistAppointments from './dentist/DentistAppointments'
 import DentistPatients from './dentist/DentistPatients'
 import DentistSchedule from './dentist/DentistSchedule'
@@ -24,6 +26,7 @@ import DentistSettings from './dentist/DentistSettings'
 import DentistTreatments from './dentist/DentistTreatments'
 import DentistPayments from './dentist/DentistPayments'
 import DentistRadiology from './dentist/DentistRadiology'
+import { appointmentsAPI } from '../../services/api'
 // Import dentist-specific page components (to be created)
 // import DentistReports from './dentist/DentistReports'
 
@@ -34,6 +37,9 @@ const DentistDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview')
   const [currentUser, setCurrentUser] = useState(null)
   const [dentistData, setDentistData] = useState(null)
+  const [appointments, setAppointments] = useState([])
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [stats, setStats] = useState({
     todayAppointments: 0,
     totalPatients: 0,
@@ -110,6 +116,75 @@ const DentistDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
+    }
+  }
+
+  // Fetch appointments for the schedule
+  const fetchAppointments = async () => {
+    try {
+      const response = await appointmentsAPI.getDentistAppointments()
+      setAppointments(response.appointments || [])
+    } catch (error) {
+      console.error('Error fetching appointments:', error)
+    }
+  }
+
+  // Fetch appointments when user is loaded
+  useEffect(() => {
+    if (currentUser) {
+      fetchAppointments()
+    }
+  }, [currentUser])
+
+  // Handler for adding new appointment
+  const handleAddAppointment = () => {
+    setActiveTab('appointments')
+  }
+
+  // Handler for clicking on an appointment in the schedule
+  const handleAppointmentClick = (appointment) => {
+    // Show details modal
+    setSelectedAppointment(appointment)
+    setIsDetailsModalOpen(true)
+  }
+
+  // Handler for editing appointment from details modal
+  const handleEditAppointment = (appointment) => {
+    setSelectedAppointment(appointment)
+    setActiveTab('appointments')
+  }
+
+  // Handler for confirming appointment
+  const handleConfirmAppointment = async (appointment) => {
+    try {
+      await appointmentsAPI.update(appointment.id, { status: 'CONFIRMED' })
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error confirming appointment:', err)
+      alert('Failed to confirm appointment. Please try again.')
+    }
+  }
+
+  // Handler for cancelling appointment
+  const handleCancelAppointment = async (appointment) => {
+    try {
+      await appointmentsAPI.cancel(appointment.id)
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error cancelling appointment:', err)
+      alert('Failed to cancel appointment. Please try again.')
+    }
+  }
+
+  // Handler for completing appointment
+  const handleCompleteAppointment = async (appointment) => {
+    try {
+      await appointmentsAPI.complete(appointment.id)
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error completing appointment:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to complete appointment. Please try again.'
+      alert(errorMessage)
     }
   }
 
@@ -209,29 +284,11 @@ const DentistDashboard = () => {
       </div>
 
       {/* Today's Schedule */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className={`text-xl font-semibold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>Today's Schedule</h2>
-          <Button variant="outline" size="sm">
-            <FaPlus className="w-4 h-4 mr-2" />
-            Add Appointment
-          </Button>
-        </div>
-        
-        {/* Placeholder for today's appointments */}
-        <div className="text-center py-8">
-          <FaCalendarAlt className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <p className={`${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>No appointments scheduled for today</p>
-        </div>
-      </Card>
+      <AppointmentSchedule
+        appointments={appointments}
+        onAddAppointment={handleAddAppointment}
+        onAppointmentClick={handleAppointmentClick}
+      />
 
       {/* Quick Actions */}
       <Card className={`p-6 ${
@@ -348,6 +405,20 @@ const DentistDashboard = () => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Appointment Details Modal */}
+      <AppointmentDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false)
+          setSelectedAppointment(null)
+        }}
+        appointment={selectedAppointment}
+        onEdit={handleEditAppointment}
+        onCancel={handleCancelAppointment}
+        onConfirm={handleConfirmAppointment}
+        onComplete={handleCompleteAppointment}
+      />
     </div>
   )
 }
