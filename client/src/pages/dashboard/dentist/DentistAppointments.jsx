@@ -570,20 +570,10 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
         title="Appointments"
         description="Manage and track your daily appointment schedule"
         actions={
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => handleOpenToothChart(null)}
-              className="flex items-center gap-2"
-            >
-              <FaTooth className="w-4 h-4" />
-              Tooth Chart
-            </Button>
-            <Button variant="primary" onClick={handleNewAppointment}>
-              <FaPlus className="w-4 h-4 mr-2" />
-              New Appointment
-            </Button>
-          </div>
+          <Button variant="primary" onClick={handleNewAppointment}>
+            <FaPlus className="w-4 h-4 mr-2" />
+            New Appointment
+          </Button>
         }
       />
 

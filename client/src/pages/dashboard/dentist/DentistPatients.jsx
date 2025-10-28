@@ -39,66 +39,49 @@ const DentistPatients = () => {
 
   // Fetch patients on mount
   useEffect(() => {
-    fetchPatients()
-    fetchStats()
+    fetchPatientsAndStats()
   }, [])
 
-  const fetchPatients = async () => {
+  const fetchPatientsAndStats = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      // First, get all treatments for this dentist
+      // Get all treatments for this dentist (which include patient data)
       const treatmentsRes = await treatmentsAPI.getDentistTreatments()
       const treatments = treatmentsRes.treatments || []
       
-      // Get unique patient IDs from treatments
-      const patientIds = [...new Set(treatments.map(t => t.patientId))]
+      // Extract unique patients from treatments
+      const patientMap = new Map()
+      treatments.forEach(treatment => {
+        const patientId = treatment.patient.userId
+        if (!patientMap.has(patientId)) {
+          patientMap.set(patientId, treatment.patient)
+        }
+      })
       
-      // Fetch all patients
-      const response = await patientsAPI.getAll()
-      const allPatients = response.patients || []
+      const uniquePatients = Array.from(patientMap.values())
+      setPatients(uniquePatients)
       
-      // Filter to only include patients who have treatments with this dentist
-      const patientsWithTreatments = allPatients.filter(patient => 
-        patientIds.includes(patient.userId)
-      )
-      
-      setPatients(patientsWithTreatments)
-    } catch (err) {
-      console.error('Error fetching patients:', err)
-      setError('Failed to load patients. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchStats = async () => {
-    try {
-      // Fetch treatments to calculate stats
-      const treatmentsRes = await treatmentsAPI.getDentistTreatments()
-      const treatments = treatmentsRes.treatments || []
-      
-      // Calculate active treatments (IN_PROGRESS status)
+      // Calculate stats from treatments
       const activeTreatments = treatments.filter(t => t.status === 'IN_PROGRESS').length
-      
-      // Calculate total revenue (sum of all paidAmount)
       const totalRevenue = treatments.reduce((sum, t) => sum + (t.paidAmount || 0), 0)
-      
-      // Calculate pending payments (sum of totalAmount - paidAmount)
       const pendingPayments = treatments.reduce((sum, t) => {
         const pending = (t.totalAmount || 0) - (t.paidAmount || 0)
         return sum + (pending > 0 ? pending : 0)
       }, 0)
       
       setStats({
-        totalPatients: 0, // Will be set from patients data
+        totalPatients: uniquePatients.length,
         activeTreatments,
         totalRevenue,
         pendingPayments
       })
     } catch (err) {
-      console.error('Error fetching stats:', err)
+      console.error('Error fetching patients and stats:', err)
+      setError('Failed to load patients. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -120,16 +103,6 @@ const DentistPatients = () => {
       birthDate: patient.birthDate
     }))
   }
-
-  // Update stats when patients change
-  useEffect(() => {
-    if (patients.length > 0) {
-      setStats(prev => ({
-        ...prev,
-        totalPatients: patients.length
-      }))
-    }
-  }, [patients])
 
   const calculateAge = (dateOfBirth) => {
     const today = new Date()
