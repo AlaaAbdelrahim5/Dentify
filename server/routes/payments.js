@@ -126,6 +126,23 @@ router.get('/treatment/:treatmentId', authenticate, async (req, res) => {
 
     const payments = await prisma.payment.findMany({
       where: { treatmentId: parseInt(treatmentId) },
+      include: {
+        treatment: {
+          include: {
+            patient: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    phone: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       orderBy: {
         paymentDate: 'desc'
       }

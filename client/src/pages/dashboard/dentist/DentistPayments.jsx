@@ -45,14 +45,27 @@ const DentistPayments = () => {
     try {
       setLoading(true)
       setError(null)
-      const [paymentsRes, treatmentsRes, patientsRes] = await Promise.all([
+      const [paymentsRes, treatmentsRes] = await Promise.all([
         paymentsAPI.getDentistPayments(),
-        treatmentsAPI.getDentistTreatments(),
-        patientsAPI.getAll()
+        treatmentsAPI.getDentistTreatments()
       ])
       setPayments(paymentsRes.payments || [])
       setTreatments(treatmentsRes.treatments || [])
-      setPatients(patientsRes.patients || [])
+      
+      // Extract unique patients from the dentist's treatments
+      // Only include patients with IN_PROGRESS or COMPLETED treatments
+      const patientMap = new Map()
+      treatmentsRes.treatments?.forEach(treatment => {
+        const status = treatment.status // This is already "IN_PROGRESS", "COMPLETED", or "CANCELLED" from DB
+        if (status === 'IN_PROGRESS' || status === 'COMPLETED') {
+          const patientId = treatment.patient.userId
+          if (!patientMap.has(patientId)) {
+            patientMap.set(patientId, treatment.patient)
+          }
+        }
+      })
+      
+      setPatients(Array.from(patientMap.values()))
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load data. Please try again.')
@@ -361,77 +374,6 @@ const DentistPayments = () => {
           gradient: 'from-purple-600 to-purple-700'
         }
       ]} />
-
-      {/* Active Treatments - Quick Payment */}
-      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <h2 className={`text-lg font-semibold mb-4 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          Active Treatments - Quick Payment
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {getActiveTreatments().slice(0, 6).map(treatment => {
-            const remainingBalance = treatment.totalAmount - treatment.paidAmount
-            return (
-              <div
-                key={treatment.id}
-                className={`p-4 rounded-lg border ${
-                  isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className={`font-semibold ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      {treatment.patientName}
-                    </h3>
-                    <p className={`text-sm ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
-                      {treatment.treatmentType}
-                    </p>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleAddPayment(treatment)}
-                  >
-                    <FaPlus className="w-3 h-3 mr-1" />
-                    Pay
-                  </Button>
-                </div>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                      Total:
-                    </span>
-                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      ${treatment.totalAmount.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                      Paid:
-                    </span>
-                    <span className="text-green-600 dark:text-green-400">
-                      ${treatment.paidAmount.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-semibold">
-                    <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      Balance:
-                    </span>
-                    <span className="text-orange-600 dark:text-orange-400">
-                      ${remainingBalance.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </Card>
 
       {/* Patient Summary Section - Shows when patient filter is selected */}
       {selectedPatient !== 'all' && (

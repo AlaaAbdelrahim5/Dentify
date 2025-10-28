@@ -12,7 +12,7 @@ import {
   FaDollarSign,
   FaExclamationCircle
 } from 'react-icons/fa'
-import { Card, Input, Button } from '../../../components'
+import { Card, Input, Button, StatsOverview } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
 import { patientsAPI, treatmentsAPI, paymentsAPI } from '../../../services/api'
@@ -47,8 +47,24 @@ const DentistPatients = () => {
     try {
       setLoading(true)
       setError(null)
+      
+      // First, get all treatments for this dentist
+      const treatmentsRes = await treatmentsAPI.getDentistTreatments()
+      const treatments = treatmentsRes.treatments || []
+      
+      // Get unique patient IDs from treatments
+      const patientIds = [...new Set(treatments.map(t => t.patientId))]
+      
+      // Fetch all patients
       const response = await patientsAPI.getAll()
-      setPatients(response.patients || [])
+      const allPatients = response.patients || []
+      
+      // Filter to only include patients who have treatments with this dentist
+      const patientsWithTreatments = allPatients.filter(patient => 
+        patientIds.includes(patient.userId)
+      )
+      
+      setPatients(patientsWithTreatments)
     } catch (err) {
       console.error('Error fetching patients:', err)
       setError('Failed to load patients. Please try again.')
@@ -377,100 +393,33 @@ const DentistPatients = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {/* Total Patients */}
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-blue-500`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Total Patients
-              </p>
-              <h3 className={`text-2xl font-bold mt-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                {stats.totalPatients}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-full ${
-              isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'
-            }`}>
-              <FaUsers className="text-blue-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        {/* Active Treatments */}
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-green-500`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Active Treatments
-              </p>
-              <h3 className={`text-2xl font-bold mt-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                {stats.activeTreatments}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-full ${
-              isDarkMode ? 'bg-green-900/30' : 'bg-green-100'
-            }`}>
-              <FaTooth className="text-green-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        {/* Total Revenue */}
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-teal-500`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Total Revenue
-              </p>
-              <h3 className={`text-2xl font-bold mt-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                ${stats.totalRevenue.toFixed(2)}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-full ${
-              isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-            }`}>
-              <FaDollarSign className="text-teal-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-
-        {/* Pending Payments */}
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-l-4 border-orange-500`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Pending Payments
-              </p>
-              <h3 className={`text-2xl font-bold mt-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                ${stats.pendingPayments.toFixed(2)}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-full ${
-              isDarkMode ? 'bg-orange-900/30' : 'bg-orange-100'
-            }`}>
-              <FaExclamationCircle className="text-orange-600 text-xl" />
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Stats Overview */}
+      <StatsOverview stats={[
+        {
+          label: 'Total Patients',
+          value: stats.totalPatients,
+          icon: FaUsers,
+          gradient: 'from-blue-600 to-blue-700'
+        },
+        {
+          label: 'Active Treatments',
+          value: stats.activeTreatments,
+          icon: FaTooth,
+          gradient: 'from-green-600 to-green-700'
+        },
+        {
+          label: 'Total Revenue',
+          value: `$${stats.totalRevenue.toFixed(2)}`,
+          icon: FaDollarSign,
+          gradient: 'from-teal-600 to-teal-700'
+        },
+        {
+          label: 'Pending Payments',
+          value: `$${stats.pendingPayments.toFixed(2)}`,
+          icon: FaExclamationCircle,
+          gradient: 'from-orange-600 to-orange-700'
+        }
+      ]} />
 
       {/* Search Bar */}
       <Card className={`p-4 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

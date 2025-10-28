@@ -10,7 +10,9 @@ import {
   FaStethoscope,
   FaCheckCircle,
   FaTimesCircle,
-  FaHourglassHalf
+  FaHourglassHalf,
+  FaClock,
+  FaList
 } from 'react-icons/fa'
 import { 
   Button, 
@@ -29,9 +31,9 @@ import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal
 import ToothChartModal from '../../../components/dentist/ToothChartModal'
 import { appointmentsAPI } from '../../../services/api'
 
-const DentistAppointments = () => {
+const DentistAppointments = ({ onNavigateToTreatments }) => {
   const { isDarkMode } = useTheme()
-  const [activeView, setActiveView] = useState('upcoming') // upcoming or past
+  const [activeView, setActiveView] = useState('today') // today, pending, past, all
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false)
@@ -46,6 +48,11 @@ const DentistAppointments = () => {
   useEffect(() => {
     fetchAppointments()
   }, [])
+
+  // Reset status filter when changing views
+  useEffect(() => {
+    setSelectedStatus('all')
+  }, [activeView])
 
   const fetchAppointments = async () => {
     try {
@@ -94,30 +101,68 @@ const DentistAppointments = () => {
     return appointments.map(transformAppointment)
   }, [appointments])
 
-  // Separate appointments into upcoming and past
-  const upcomingAppointments = useMemo(() => {
+  // Separate appointments into different categories
+  const todayAppointments = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
     return displayAppointments
       .filter(apt => {
         const aptDate = new Date(apt.appointmentDate)
-        return aptDate >= today && apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
+        return aptDate >= today && aptDate < tomorrow && apt.status === 'CONFIRMED'
+      })
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+  }, [displayAppointments])
+
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date()
+    return displayAppointments
+      .filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= now && apt.status === 'CONFIRMED'
       })
       .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
   }, [displayAppointments])
 
+  const pendingAppointments = useMemo(() => {
+    return displayAppointments
+      .filter(apt => apt.status === 'PENDING')
+      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+  }, [displayAppointments])
+
   const pastAppointments = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const now = new Date()
     return displayAppointments
       .filter(apt => {
         const aptDate = new Date(apt.appointmentDate)
-        return aptDate < today || apt.status === 'COMPLETED' || apt.status === 'CANCELLED'
+        return aptDate < now
       })
       .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
   }, [displayAppointments])
 
-  const currentAppointments = activeView === 'upcoming' ? upcomingAppointments : pastAppointments
+  const allAppointments = useMemo(() => {
+    return displayAppointments
+      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+  }, [displayAppointments])
+
+  const currentAppointments = useMemo(() => {
+    switch (activeView) {
+      case 'today':
+        return todayAppointments
+      case 'upcoming':
+        return upcomingAppointments
+      case 'pending':
+        return pendingAppointments
+      case 'past':
+        return pastAppointments
+      case 'all':
+        return allAppointments
+      default:
+        return todayAppointments
+    }
+  }, [activeView, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
 
   const getStatusIcon = (status) => {
     switch (status.toUpperCase()) {
@@ -223,8 +268,24 @@ const DentistAppointments = () => {
   }
 
   const handleAddToothChartToAppointment = (appointment) => {
-    setSelectedAppointment(appointment)
-    setIsToothChartModalOpen(true)
+    // Check if appointment already has a treatment
+    if (appointment.rawData?.treatmentId) {
+      // If linked to treatment, open tooth chart modal
+      setSelectedAppointment(appointment)
+      setIsToothChartModalOpen(true)
+    } else {
+      // If not linked, call parent callback to navigate to treatments
+      if (onNavigateToTreatments) {
+        onNavigateToTreatments({
+          id: appointment.id,
+          patientId: appointment.rawData?.patientId,
+          patientName: appointment.patient.name,
+          appointmentDate: appointment.appointmentDate,
+          treatmentType: appointment.treatment,
+          notes: appointment.notes
+        })
+      }
+    }
   }
 
   const handleCreateTreatmentFromTooth = (toothNumber) => {
@@ -245,30 +306,36 @@ const DentistAppointments = () => {
   // Computed stats using useMemo
   const stats = useMemo(() => [
     {
-      label: 'Upcoming',
-      value: upcomingAppointments.length,
+      label: 'Today',
+      value: todayAppointments.length,
       icon: FaCalendarAlt,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
-      label: 'Confirmed',
-      value: upcomingAppointments.filter(a => a.status === 'CONFIRMED').length,
-      icon: FaCheckCircle,
-      gradient: 'from-green-600 to-emerald-600'
-    },
-    {
       label: 'Pending',
-      value: upcomingAppointments.filter(a => a.status === 'PENDING').length,
+      value: pendingAppointments.length,
       icon: FaHourglassHalf,
       gradient: 'from-yellow-600 to-orange-600'
     },
     {
-      label: 'Completed',
-      value: pastAppointments.filter(a => a.status === 'COMPLETED').length,
+      label: 'Upcoming',
+      value: upcomingAppointments.length,
+      icon: FaClock,
+      gradient: 'from-emerald-600 to-teal-600'
+    },
+    {
+      label: 'Past',
+      value: pastAppointments.length,
       icon: FaCheckCircle,
       gradient: 'from-blue-600 to-indigo-600'
+    },
+    {
+      label: 'All',
+      value: allAppointments.length,
+      icon: FaCheckCircle,
+      gradient: 'from-purple-600 to-purple-700'
     }
-  ], [upcomingAppointments, pastAppointments])
+  ], [todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
 
   // Filtered appointments using useMemo
   const filteredAppointments = useMemo(() => {
@@ -435,16 +502,19 @@ const DentistAppointments = () => {
               >
                 <FaTimesCircle className="w-4 h-4" />
               </Button>
+              {/* Only show tooth button if not linked to treatment */}
+              {!appointment.rawData?.treatmentId && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAddToothChartToAppointment(appointment)}
+                  title="Create Treatment Plan"
+                >
+                  <FaTooth className="w-4 h-4" />
+                </Button>
+              )}
             </>
           )}
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleAddToothChartToAppointment(appointment)}
-            title="Add Tooth Chart"
-          >
-            <FaTooth className="w-4 h-4" />
-          </Button>
         </div>
       </td>
     </tr>
@@ -524,6 +594,20 @@ const DentistAppointments = () => {
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <Button
+            variant={activeView === 'today' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('today')}
+            className={activeView === 'today' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            Today ({todayAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'pending' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('pending')}
+            className={activeView === 'pending' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            Pending ({pendingAppointments.length})
+          </Button>
+          <Button
             variant={activeView === 'upcoming' ? 'primary' : 'outline'}
             onClick={() => setActiveView('upcoming')}
             className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
@@ -536,6 +620,13 @@ const DentistAppointments = () => {
             className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Past ({pastAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'all' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('all')}
+            className={activeView === 'all' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            All Status ({allAppointments.length})
           </Button>
         </div>
       </div>
@@ -555,15 +646,27 @@ const DentistAppointments = () => {
         data={filteredAppointments}
         renderRow={renderTableRow}
         emptyMessage={
-          activeView === 'upcoming' 
-            ? "No upcoming appointments scheduled." 
-            : "No past appointments found"
+          activeView === 'today' 
+            ? "No confirmed appointments scheduled for today." 
+            : activeView === 'upcoming'
+            ? "No upcoming appointments found."
+            : activeView === 'pending'
+            ? "No pending appointments found."
+            : activeView === 'past'
+            ? "No past appointments found."
+            : "No appointments found."
         }
         emptyIcon={FaCalendarAlt}
         emptyTitle={
-          activeView === 'upcoming' 
-            ? "No Upcoming Appointments" 
-            : "No Past Appointments"
+          activeView === 'today' 
+            ? "No Today's Appointments" 
+            : activeView === 'upcoming'
+            ? "No Upcoming Appointments"
+            : activeView === 'pending'
+            ? "No Pending Appointments"
+            : activeView === 'past'
+            ? "No Past Appointments"
+            : "No Appointments"
         }
         hasFilters={searchTerm !== '' || selectedStatus !== 'all'}
       />

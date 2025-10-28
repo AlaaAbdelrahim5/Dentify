@@ -14,10 +14,12 @@ import {
   FaFacebook,
   FaInstagram,
   FaWhatsapp,
-  FaTiktok
+  FaTiktok,
+  FaClock
 } from 'react-icons/fa'
 import { Card, Button, Input } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import DentistSchedule from './DentistSchedule'
 
 const DentistSettings = () => {
   const { isDarkMode } = useTheme()
@@ -680,6 +682,7 @@ const DentistSettings = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FaUser },
+    { id: 'schedule', label: 'Schedule', icon: FaClock },
     { id: 'notifications', label: 'Notifications', icon: FaBell },
     { id: 'security', label: 'Security', icon: FaLock }
   ]
@@ -729,6 +732,7 @@ const DentistSettings = () => {
 
       {/* Tab Content */}
       {activeTab === 'profile' && renderProfileTab()}
+      {activeTab === 'schedule' && <DentistSchedule />}
       {activeTab === 'notifications' && renderNotificationTab()}
       {activeTab === 'security' && renderSecurityTab()}
     </div>

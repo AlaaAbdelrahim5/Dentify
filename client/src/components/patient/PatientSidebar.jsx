@@ -9,12 +9,13 @@ import {
   FaUserMd,
   FaSearch
 } from 'react-icons/fa'
+import { MdDashboard } from 'react-icons/md'
 
 const PatientSidebar = ({ activeTab, setActiveTab }) => {
   const { isDarkMode } = useTheme()
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: FaHome },
+    { id: 'overview', label: 'Overview', icon: MdDashboard },
     { id: 'find-dentist', label: 'Find a Dentist', icon: FaUserMd },
     { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
     { id: 'xrays', label: 'X-ray Results', icon: FaXRay },

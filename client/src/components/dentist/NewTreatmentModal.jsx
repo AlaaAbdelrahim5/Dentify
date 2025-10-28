@@ -13,10 +13,11 @@ const NewTreatmentModal = ({
   onSave,
   patients = [],
   initialData = null,
+  appointmentData = null, // New prop for appointment data
   asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('basic') // basic, teeth, payment
+  const [activeTab, setActiveTab] = useState('basic') // basic, teeth
   const [formData, setFormData] = useState({
     patientId: '',
     treatmentType: '',
@@ -26,7 +27,8 @@ const NewTreatmentModal = ({
     totalAmount: '',
     paidAmount: '0',
     notes: '',
-    priority: 'Medium'
+    priority: '',
+    appointmentId: '' // Add appointmentId field
   })
   const [selectedTeeth, setSelectedTeeth] = useState([])
   const [toothConditions, setToothConditions] = useState({})
@@ -45,7 +47,8 @@ const NewTreatmentModal = ({
           totalAmount: initialData.totalAmount?.toString() || '',
           paidAmount: initialData.paidAmount?.toString() || '0',
           notes: initialData.notes || '',
-          priority: initialData.priority || 'Medium'
+          priority: initialData.priority || 'Medium',
+          appointmentId: initialData.appointmentId || ''
         })
         setSelectedTeeth(initialData.teethStatus?.map(t => t.toothNumber) || [])
         const conditions = {}
@@ -68,7 +71,8 @@ const NewTreatmentModal = ({
           totalAmount: '',
           paidAmount: '0',
           notes: '',
-          priority: 'Medium'
+          priority: '',
+          appointmentId: ''
         })
         setSelectedTeeth([])
         setToothConditions({})
@@ -78,6 +82,20 @@ const NewTreatmentModal = ({
       setActiveTab('basic')
     }
   }, [isOpen, initialData])
+
+  // Handle appointment data pre-filling
+  useEffect(() => {
+    if (appointmentData && isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        patientId: appointmentData.patientId?.toString() || '',
+        treatmentType: appointmentData.treatmentType || '',
+        description: appointmentData.notes || '',
+        notes: appointmentData.notes || '',
+        appointmentId: appointmentData.id
+      }))
+    }
+  }, [appointmentData, isOpen])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -210,7 +228,9 @@ const NewTreatmentModal = ({
       creationDate: new Date().toISOString().split('T')[0],
       totalAmount: '',
       paidAmount: '0',
-      notes: ''
+      notes: '',
+      priority: '',
+      appointmentId: ''
     })
     setSelectedTeeth([])
     setToothConditions({})
@@ -221,7 +241,6 @@ const NewTreatmentModal = ({
   if (!isOpen) return null
 
   const treatmentTypes = [
-    { value: '', label: 'Select treatment type' },
     { value: 'Root Canal', label: 'Root Canal' },
     { value: 'Extraction', label: 'Extraction' },
     { value: 'Cleaning', label: 'Cleaning' },
@@ -280,7 +299,7 @@ const NewTreatmentModal = ({
             <p className={`text-xs ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              {initialData ? 'Update treatment details' : 'Create a comprehensive treatment plan'}
+              {initialData ? 'Update treatment details' : appointmentData ? 'Create treatment from appointment' : 'Create a comprehensive treatment plan'}
             </p>
           </div>
         </div>
@@ -345,25 +364,6 @@ const NewTreatmentModal = ({
               )}
             </div>
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('payment')}
-            className={`
-              px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-              ${activeTab === 'payment'
-                ? 'bg-teal-600 text-white shadow-md'
-                : isDarkMode
-                ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-              }
-            `}
-          >
-            <div className="flex items-center gap-2">
-              <FaDollarSign className="w-3.5 h-3.5" />
-              Payment
-              <span className="text-red-500 font-bold">*</span>
-            </div>
-          </button>
         </div>
 
         {/* Content Area - Scrollable */}
@@ -395,7 +395,6 @@ const NewTreatmentModal = ({
                       value={formData.patientId}
                       onChange={handleChange}
                       options={[
-                        { value: '', label: 'Choose a patient...' },
                         ...patients.map(p => ({ value: p.id, label: p.name }))
                       ]}
                     />
@@ -454,37 +453,6 @@ const NewTreatmentModal = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-xs font-medium mb-1.5 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Status
-                      </label>
-                      <Select
-                        name="treatmentStatus"
-                        value={formData.treatmentStatus}
-                        onChange={handleChange}
-                        options={statusOptions}
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`block text-xs font-medium mb-1.5 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Start Date
-                      </label>
-                      <Input
-                        type="date"
-                        name="creationDate"
-                        value={formData.creationDate}
-                        onChange={handleChange}
-                        icon={FaCalendarAlt}
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <label className={`block text-xs font-medium mb-1.5 ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -503,6 +471,40 @@ const NewTreatmentModal = ({
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
                       } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
                     />
+                  </div>
+                </Card.Content>
+              </Card>
+
+              {/* Payment Information */}
+              <Card>
+                <Card.Header>
+                  <h3 className={`font-semibold text-base flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    <FaDollarSign className="w-4 h-4 text-teal-500" />
+                    Payment Information
+                  </h3>
+                </Card.Header>
+                <Card.Content className="space-y-3">
+                  <div>
+                    <label className={`block text-xs font-medium mb-1.5 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Total Amount <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      name="totalAmount"
+                      value={formData.totalAmount}
+                      onChange={handleChange}
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      icon={FaDollarSign}
+                    />
+                    {errors.totalAmount && (
+                      <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
+                    )}
                   </div>
                 </Card.Content>
               </Card>
@@ -674,113 +676,6 @@ const NewTreatmentModal = ({
                       }`}>
                         {showToothChart ? 'Click on teeth in the chart above to select them' : 'Show the tooth chart to select affected teeth'}
                       </p>
-                    </div>
-                  )}
-                </Card.Content>
-              </Card>
-            </div>
-          )}
-
-          {/* Payment Tab */}
-          {activeTab === 'payment' && (
-            <div className="space-y-6">
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-lg flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    <FaDollarSign className="w-5 h-5 text-green-500" />
-                    Payment Information
-                  </h3>
-                </Card.Header>
-                <Card.Content className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Total Amount <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        name="totalAmount"
-                        value={formData.totalAmount}
-                        onChange={handleChange}
-                        placeholder="0.00"
-                        step="0.01"
-                        min="0"
-                        icon={FaDollarSign}
-                      />
-                      {errors.totalAmount && (
-                        <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Initial Payment
-                      </label>
-                      <Input
-                        type="number"
-                        name="paidAmount"
-                        value={formData.paidAmount}
-                        onChange={handleChange}
-                        placeholder="0.00"
-                        step="0.01"
-                        min="0"
-                        icon={FaDollarSign}
-                      />
-                      {errors.paidAmount && (
-                        <p className="text-red-500 text-sm mt-1">{errors.paidAmount}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Payment Summary */}
-                  {formData.totalAmount && parseFloat(formData.totalAmount) > 0 && (
-                    <div className={`p-4 rounded-lg ${
-                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100'
-                    }`}>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                          <p className={`text-sm ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
-                            Total Cost
-                          </p>
-                          <p className={`text-2xl font-bold ${
-                            isDarkMode ? 'text-white' : 'text-gray-800'
-                          }`}>
-                            ${parseFloat(formData.totalAmount || 0).toFixed(2)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className={`text-sm ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
-                            Initial Payment
-                          </p>
-                          <p className={`text-2xl font-bold text-green-600`}>
-                            ${parseFloat(formData.paidAmount || 0).toFixed(2)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className={`text-sm ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
-                            Remaining
-                          </p>
-                          <p className={`text-2xl font-bold ${
-                            (parseFloat(formData.totalAmount || 0) - parseFloat(formData.paidAmount || 0)) > 0
-                              ? 'text-orange-600'
-                              : 'text-green-600'
-                          }`}>
-                            ${(parseFloat(formData.totalAmount || 0) - parseFloat(formData.paidAmount || 0)).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   )}
                 </Card.Content>

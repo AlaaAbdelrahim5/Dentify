@@ -40,6 +40,7 @@ const DentistDashboard = () => {
   const [appointments, setAppointments] = useState([])
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [appointmentDataForTreatment, setAppointmentDataForTreatment] = useState(null)
   const [stats, setStats] = useState({
     todayAppointments: 0,
     totalPatients: 0,
@@ -188,6 +189,19 @@ const DentistDashboard = () => {
     }
   }
 
+  // Handler for navigating to treatments from appointments
+  const handleNavigateToTreatments = (appointmentData) => {
+    setAppointmentDataForTreatment(appointmentData)
+    setActiveTab('treatments')
+  }
+
+  // Clear appointment data when leaving treatments tab
+  useEffect(() => {
+    if (activeTab !== 'treatments') {
+      setAppointmentDataForTreatment(null)
+    }
+  }, [activeTab])
+
   // Render overview tab
   const renderOverview = () => (
     <div className="space-y-8">
@@ -289,44 +303,6 @@ const DentistDashboard = () => {
         onAddAppointment={handleAddAppointment}
         onAppointmentClick={handleAppointmentClick}
       />
-
-      {/* Quick Actions */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        <h2 className={`text-xl font-semibold mb-6 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>Quick Actions</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button 
-            variant="outline" 
-            className="p-4 h-auto flex-col"
-            onClick={() => setActiveTab('appointments')}
-          >
-            <FaCalendarAlt className="w-6 h-6 mb-2" />
-            <span>Manage Appointments</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="p-4 h-auto flex-col"
-            onClick={() => setActiveTab('patients')}
-          >
-            <FaUsers className="w-6 h-6 mb-2" />
-            <span>View Patients</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="p-4 h-auto flex-col"
-            onClick={() => setActiveTab('schedule')}
-          >
-            <FaClock className="w-6 h-6 mb-2" />
-            <span>Update Schedule</span>
-          </Button>
-        </div>
-      </Card>
     </div>
   )
 
@@ -335,13 +311,13 @@ const DentistDashboard = () => {
       case 'overview':
         return renderOverview()
       case 'appointments':
-        return <DentistAppointments />
+        return <DentistAppointments onNavigateToTreatments={handleNavigateToTreatments} />
       case 'patients':
         return <DentistPatients />
       case 'schedule':
         return <DentistSchedule />
       case 'treatments':
-        return <DentistTreatments />
+        return <DentistTreatments appointmentData={appointmentDataForTreatment} />
       case 'payments':
         return <DentistPayments />
       case 'radiology':

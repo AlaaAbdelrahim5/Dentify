@@ -62,41 +62,45 @@ const ClinicSidebar = ({ activeTab, setActiveTab, stats }) => {
   ]
 
   return (
-    <div className={`fixed left-0 top-20 w-80 shadow-xl ${
-      isDarkMode ? 'bg-gray-800 border-r border-gray-700' : 'bg-white'
-    }`} style={{height: 'calc(100vh - 5rem)', overflowY: 'auto'}}>
-      {/* Navigation */}
-      <nav className="p-4 pt-6">
-        <div className="space-y-2">
+    <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 border-r transition-colors duration-300 z-30 ${
+      isDarkMode 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white border-gray-200'
+    }`}>
+      <div className="h-full overflow-y-auto my-2">
+        {/* Navigation Menu */}
+        <nav className="p-4 space-y-2">
           {sidebarItems.map((item) => {
             const Icon = item.icon
+            const isActive = activeTab === item.id
+            
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-left relative ${
-                  activeTab === item.id
-                    ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                    : isDarkMode 
-                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? isDarkMode
+                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                      : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-md'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
                       : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <div className="flex-1">
-                  <div className="font-medium">{item.label}</div>
-                </div>
+                <span className="font-medium">{item.label}</span>
                 {item.badge && (
-                  <span className="bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="ml-auto bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
                     {item.badge}
                   </span>
                 )}
               </button>
             )
           })}
-        </div>
-      </nav>
-    </div>
+        </nav>
+      </div>
+    </aside>
   )
 }
 

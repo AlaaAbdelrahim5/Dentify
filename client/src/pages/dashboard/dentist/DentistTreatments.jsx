@@ -25,11 +25,12 @@ import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsM
 import PaymentModal from '../../../components/dentist/PaymentModal'
 import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
 import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
 import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
 import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
-import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI } from '../../../services/api'
+import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 
-const DentistTreatments = () => {
+const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('all') // active, completed, all
   const [searchTerm, setSearchTerm] = useState('')
@@ -43,12 +44,16 @@ const DentistTreatments = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
+  const [appointmentDataState, setAppointmentDataState] = useState(null)
   
   // Data states
   const [treatments, setTreatments] = useState([])
   const [patients, setPatients] = useState([])
+  const [appointments, setAppointments] = useState([])
   const [radiologyCenters, setRadiologyCenters] = useState([])
+  const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -57,22 +62,36 @@ const DentistTreatments = () => {
     fetchAllData()
   }, [])
 
+  // Check if coming from appointment (via props)
+  useEffect(() => {
+    if (propsAppointmentData && !appointmentDataState) {
+      setAppointmentDataState(propsAppointmentData)
+      setCurrentPage('new')
+    } else if (!propsAppointmentData && appointmentDataState) {
+      // Clear appointment data when prop is cleared
+      setAppointmentDataState(null)
+    }
+  }, [propsAppointmentData])
+
   const fetchAllData = async () => {
     try {
       setLoading(true)
       setError(null)
       console.log('Fetching treatments data...')
-      const [treatmentsRes, patientsRes, radiologyRes] = await Promise.all([
+      const [treatmentsRes, patientsRes, appointmentsRes, radiologyRes] = await Promise.all([
         treatmentsAPI.getDentistTreatments(),
         patientsAPI.getAll(),
+        appointmentsAPI.getDentistAppointments(),
         radiologyAPI.getAll()
       ])
       console.log('Treatments response:', treatmentsRes)
       console.log('Patients response:', patientsRes)
+      console.log('Appointments response:', appointmentsRes)
       console.log('Radiology response:', radiologyRes)
       
       setTreatments(treatmentsRes.treatments || [])
       setPatients(patientsRes.patients || [])
+      setAppointments(appointmentsRes.appointments || [])
       setRadiologyCenters(radiologyRes.radiology || [])
       
       console.log('Patients state set to:', patientsRes.patients || [])
@@ -125,14 +144,20 @@ const DentistTreatments = () => {
     })
   }
 
-  // Transform patients for modal
-  const mockPatients = patients.map(p => ({
-    id: p.userId,
-    name: `${p.firstName} ${p.lastName}`
-  }))
+  // Transform patients for modal - only show patients with confirmed appointments
+  const mockPatients = patients
+    .filter(p => {
+      // Check if this patient has any CONFIRMED appointments
+      return appointments.some(apt => apt.patientId === p.userId && apt.status === 'CONFIRMED')
+    })
+    .map(p => ({
+      id: p.userId,
+      name: `${p.firstName} ${p.lastName}`
+    }))
   
   console.log('Raw patients from state:', patients)
-  console.log('Available patients for treatment:', mockPatients)
+  console.log('Appointments:', appointments)
+  console.log('Available patients for treatment (with confirmed appointments):', mockPatients)
 
 
   // Transform radiology centers for modal
@@ -193,10 +218,25 @@ const DentistTreatments = () => {
 
   const stats = getStats()
 
+  // Fetch payments for a specific treatment
+  const fetchTreatmentPayments = async (treatmentId) => {
+    try {
+      const response = await paymentsAPI.getByTreatment(treatmentId)
+      console.log('Treatment payments:', response)
+      
+      setPayments(response.payments || [])
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+      setPayments([])
+    }
+  }
+
   // Navigation handlers
   const handleBackToList = () => {
     setCurrentPage('list')
     setSelectedTreatment(null)
+    setAppointmentDataState(null)
+    setPayments([])
   }
 
   // Modal handlers
@@ -226,6 +266,19 @@ const DentistTreatments = () => {
       console.log('Sending to treatmentsAPI.create...')
       const response = await treatmentsAPI.create(apiData)
       console.log('Create response:', response)
+      
+      // If this treatment is linked to an appointment, update the appointment
+      if (treatmentData.appointmentId && response.treatment?.id) {
+        try {
+          await appointmentsAPI.update(treatmentData.appointmentId, {
+            treatmentId: response.treatment.id
+          })
+          console.log('Appointment linked to treatment successfully')
+        } catch (linkError) {
+          console.error('Error linking appointment to treatment:', linkError)
+          // Don't fail the whole operation if linking fails
+        }
+      }
       
       alert('Treatment created successfully!')
       await fetchAllData()
@@ -268,14 +321,16 @@ const DentistTreatments = () => {
     }
   }
 
-  const handleViewTreatment = (treatment) => {
+  const handleViewTreatment = async (treatment) => {
     setSelectedTreatment(treatment)
     setCurrentPage('view')
+    await fetchTreatmentPayments(treatment.id)
   }
 
-  const handleEditTreatment = (treatment) => {
+  const handleEditTreatment = async (treatment) => {
     setSelectedTreatment(treatment)
     setCurrentPage('edit')
+    await fetchTreatmentPayments(treatment.id)
   }
 
   const handleDeleteTreatment = (treatment) => {
@@ -342,6 +397,29 @@ const DentistTreatments = () => {
       console.error('Error creating payment:', error)
       console.error('Error response:', error.response?.data)
       alert(error.response?.data?.error || 'Failed to record payment. Please try again.')
+    }
+  }
+
+  const handleBookAppointment = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsAppointmentModalOpen(true)
+  }
+
+  const handleCloseAppointmentModal = () => {
+    setIsAppointmentModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleSaveAppointment = async (appointmentData) => {
+    try {
+      console.log('Creating appointment:', appointmentData)
+      await appointmentsAPI.create(appointmentData)
+      alert('Appointment booked successfully!')
+      setIsAppointmentModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating appointment:', error)
+      alert(error.response?.data?.error || 'Failed to book appointment. Please try again.')
     }
   }
 
@@ -584,6 +662,7 @@ const DentistTreatments = () => {
             onSave={handleSaveNewTreatment}
             patients={mockPatients}
             initialData={null}
+            appointmentData={appointmentDataState}
             asFullPage={true}
           />
         </div>
@@ -659,7 +738,7 @@ const DentistTreatments = () => {
             onUpdateStatus={handleUpdateStatus}
             onAddPayment={handleAddPayment}
             onRequestRadiology={handleRequestRadiology}
-            payments={[]}
+            payments={payments}
             asFullPage={true}
           />
         </div>
@@ -819,6 +898,7 @@ const DentistTreatments = () => {
                 key={treatment.id} 
                 treatment={treatment}
                 onClick={() => handleViewTreatment(treatment)}
+                onBookAppointment={handleBookAppointment}
               />
             ) : (
               <TreatmentCard key={treatment.id} treatment={treatment} />
@@ -842,6 +922,16 @@ const DentistTreatments = () => {
           patientName: selectedTreatment.patientName,
           totalAmount: selectedTreatment.totalAmount,
           paidAmount: selectedTreatment.paidAmount
+        } : null}
+      />
+
+      <NewAppointmentModal
+        isOpen={isAppointmentModalOpen}
+        onClose={handleCloseAppointmentModal}
+        onSave={handleSaveAppointment}
+        preselectedPatient={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName
         } : null}
       />
 

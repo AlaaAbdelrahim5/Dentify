@@ -23,7 +23,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     dentistId: '',
     date: '',
     time: '',
-    treatment: '',
     notes: ''
   })
 
@@ -114,6 +113,15 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     'Emergency Care',
     'General Consultation'
   ]
+
+  // Convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24) => {
+    const [hours, minutes] = time24.split(':')
+    const hour = parseInt(hours)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${hour12}:${minutes} ${period}`
+  }
 
   // Generate available time slots
   const generateTimeSlots = () => {
@@ -231,10 +239,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
       
       if (!formData.time) {
         newErrors.time = 'Time is required'
-      }
-      
-      if (!formData.treatment) {
-        newErrors.treatment = 'Treatment type is required'
       }
     }
 
@@ -608,43 +612,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                           >
-                            {time}
+                            {convertTo12Hour(time)}
                           </button>
                         )
                       })}
                     </div>
                     {errors.time && (
                       <p className="text-red-500 text-sm mt-2">{errors.time}</p>
-                    )}
-                  </div>
-
-                  {/* Treatment Selection */}
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      <FaStethoscope className="inline mr-2" />
-                      Treatment Type
-                    </label>
-                    <select
-                      name="treatment"
-                      value={formData.treatment}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-2 rounded-lg border transition-colors ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } ${errors.treatment ? 'border-red-500' : ''}`}
-                    >
-                      <option value="">Select treatment type</option>
-                      {treatmentOptions.map((treatment) => (
-                        <option key={treatment} value={treatment}>
-                          {treatment}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.treatment && (
-                      <p className="text-red-500 text-sm mt-2">{errors.treatment}</p>
                     )}
                   </div>
 
@@ -728,7 +702,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                             })}
                           </p>
                           <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {formData.time}
+                            {convertTo12Hour(formData.time)}
                           </p>
                         </div>
                       </div>

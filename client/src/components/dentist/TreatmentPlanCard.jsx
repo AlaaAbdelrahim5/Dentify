@@ -1,11 +1,12 @@
 import { useTheme } from '../../contexts/ThemeContext'
 import { 
   FaTooth, FaCalendarAlt, FaDollarSign, FaClipboardList, 
-  FaCheck, FaClock, FaExclamationTriangle, FaTimes, FaCheckCircle
+  FaCheck, FaClock, FaExclamationTriangle, FaTimes, FaCheckCircle, FaCalendarPlus
 } from 'react-icons/fa'
 import { Card } from '../index'
+import Button from '../Button'
 
-const TreatmentPlanCard = ({ treatment, onClick }) => {
+const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
   const { isDarkMode } = useTheme()
 
   const remainingBalance = treatment.totalAmount - treatment.paidAmount
@@ -205,6 +206,23 @@ const TreatmentPlanCard = ({ treatment, onClick }) => {
             Started: {new Date(treatment.creationDate).toLocaleDateString()}
           </span>
         </div>
+
+        {/* Book Appointment Button - Only show if not Completed or Cancelled */}
+        {onBookAppointment && 
+         treatment.treatmentStatus !== 'Completed' && 
+         treatment.treatmentStatus !== 'Cancelled' && (
+          <Button
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation() // Prevent card click
+              onBookAppointment(treatment)
+            }}
+            className="w-full mt-2 flex items-center justify-center gap-2"
+          >
+            <FaCalendarPlus className="w-4 h-4" />
+            Book Appointment
+          </Button>
+        )}
       </Card.Content>
     </Card>
   )

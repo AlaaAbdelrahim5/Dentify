@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../contexts/ThemeContext'
 import { 
   FaTimes, FaEdit, FaCalendarAlt, FaDollarSign, FaStethoscope, 
   FaUser, FaStickyNote, FaTooth, FaPlus, FaXRay, FaMoneyBillWave,
-  FaExclamationTriangle, FaClock, FaCheckCircle
+  FaExclamationTriangle, FaClock, FaCheckCircle, FaEye, FaPhone,
+  FaTimesCircle
 } from 'react-icons/fa'
 import Button from '../Button'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
-import { Card } from '../index'
+import { Card, LoadingSpinner } from '../index'
+import { appointmentsAPI } from '../../services/api'
 
 const TreatmentDetailsModal = ({ 
   isOpen, 
@@ -21,9 +23,35 @@ const TreatmentDetailsModal = ({
   asFullPage = false // New prop to render as full page instead of modal
 }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview') // overview, payments
+  const [activeTab, setActiveTab] = useState('overview') // overview, payments, appointments
+  const [appointments, setAppointments] = useState([])
+  const [loadingAppointments, setLoadingAppointments] = useState(false)
 
   if (!isOpen || !treatmentData) return null
+
+  // Fetch appointments for this treatment
+  useEffect(() => {
+    if (isOpen && treatmentData && activeTab === 'appointments') {
+      fetchTreatmentAppointments()
+    }
+  }, [isOpen, treatmentData, activeTab])
+
+  const fetchTreatmentAppointments = async () => {
+    try {
+      setLoadingAppointments(true)
+      const response = await appointmentsAPI.getDentistAppointments()
+      // Filter appointments that are linked to this treatment
+      const treatmentAppointments = response.appointments.filter(
+        apt => apt.treatmentId === treatmentData.id
+      )
+      setAppointments(treatmentAppointments)
+    } catch (error) {
+      console.error('Error fetching appointments:', error)
+      setAppointments([])
+    } finally {
+      setLoadingAppointments(false)
+    }
+  }
 
   const remainingBalance = treatmentData.totalAmount - treatmentData.paidAmount
   const paymentProgress = (treatmentData.paidAmount / treatmentData.totalAmount) * 100
@@ -168,6 +196,20 @@ const TreatmentDetailsModal = ({
             `}
           >
             Payments
+          </button>
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={`
+              px-6 py-2.5 rounded-lg font-medium transition-all duration-200
+              ${activeTab === 'appointments'
+                ? 'bg-teal-600 text-white shadow-md'
+                : isDarkMode
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+              }
+            `}
+          >
+            Appointments
           </button>
         </div>
 
@@ -424,18 +466,6 @@ const TreatmentDetailsModal = ({
                     </div>
                   </div>
                 </Card.Content>
-                {onAddPayment && remainingBalance > 0 && (
-                  <Card.Footer>
-                    <Button
-                      variant="primary"
-                      onClick={() => onAddPayment(treatmentData)}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <FaPlus className="w-4 h-4 mr-2" />
-                      Add New Payment
-                    </Button>
-                  </Card.Footer>
-                )}
               </Card>
 
               {/* Payment History */}
@@ -449,63 +479,109 @@ const TreatmentDetailsModal = ({
                 </Card.Header>
                 <Card.Content>
                   {payments && payments.length > 0 ? (
-                    <div className="space-y-3">
-                      {payments.map((payment, index) => (
-                        <div
-                          key={index}
-                          className={`
-                            flex items-center justify-between p-4 rounded-lg border
-                            ${isDarkMode 
-                              ? 'bg-gray-700/50 border-gray-600' 
-                              : 'bg-gray-50 border-gray-200'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`
-                              w-12 h-12 rounded-full flex items-center justify-center
-                              ${payment.paymentMethod === 'Cash'
-                                ? 'bg-green-100 dark:bg-green-900/30'
-                                : 'bg-blue-100 dark:bg-blue-900/30'
+                    <div className="space-y-4">
+                      {/* Table Header */}
+                      <div className={`
+                        grid grid-cols-6 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
+                        ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-700'}
+                      `}>
+                        <div>DATE</div>
+                        <div>PATIENT</div>
+                        <div>TREATMENT</div>
+                        <div>AMOUNT</div>
+                        <div>METHOD</div>
+                        <div>NOTES</div>
+                      </div>
+
+                      {/* Table Rows */}
+                      <div className="space-y-2">
+                        {payments.map((payment, index) => (
+                          <div
+                            key={index}
+                            className={`
+                              grid grid-cols-6 gap-4 p-3 rounded-lg border items-center
+                              ${isDarkMode 
+                                ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' 
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
                               }
-                            `}>
-                              <FaMoneyBillWave className={`w-6 h-6 ${
-                                payment.paymentMethod === 'Cash' ? 'text-green-600' : 'text-blue-600'
+                              transition-colors
+                            `}
+                          >
+                            {/* Date */}
+                            <div className="flex items-center gap-2">
+                              <FaCalendarAlt className={`w-4 h-4 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
                               }`} />
-                            </div>
-                            <div>
-                              <p className={`font-semibold ${
-                                isDarkMode ? 'text-white' : 'text-gray-800'
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
                               }`}>
+                                {new Date(payment.paymentDate).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Patient Name */}
+                            <div className="flex items-center gap-2">
+                              <FaUser className={`w-4 h-4 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>
+                                {payment.treatment?.patient 
+                                  ? `${payment.treatment.patient.firstName} ${payment.treatment.patient.lastName}`
+                                  : treatmentData.patientName
+                                }
+                              </span>
+                            </div>
+
+                            {/* Treatment Type */}
+                            <div>
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>
+                                {payment.treatment?.treatmentType || treatmentData.treatmentType}
+                              </span>
+                            </div>
+
+                            {/* Amount */}
+                            <div>
+                              <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                                 ${payment.amount.toFixed(2)}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-sm ${
-                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                  {new Date(payment.paymentDate).toLocaleDateString()}
-                                </span>
-                                <span className={`
-                                  px-2 py-0.5 rounded text-xs font-medium
-                                  ${payment.paymentMethod === 'Cash'
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                                  }
-                                `}>
-                                  {payment.paymentMethod}
-                                </span>
-                              </div>
-                              {payment.notes && (
-                                <p className={`text-sm mt-1 ${
-                                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                                }`}>
-                                  {payment.notes}
-                                </p>
-                              )}
+                              </span>
+                            </div>
+
+                            {/* Payment Method */}
+                            <div>
+                              <span className={`
+                                px-2 py-1 rounded text-xs font-medium inline-flex items-center gap-1
+                                ${payment.method === 'CASH'
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                }
+                              `}>
+                                <FaDollarSign className="w-3 h-3" />
+                                {payment.method === 'CASH' ? 'Cash' : 'Card'}
+                              </span>
+                            </div>
+
+                            {/* Notes */}
+                            <div>
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
+                                {payment.notes || '-'}
+                              </span>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+
+                      {/* Results Count */}
+                      <div className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Showing {payments.length} result{payments.length !== 1 ? 's' : ''}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -516,6 +592,126 @@ const TreatmentDetailsModal = ({
                         isDarkMode ? 'text-gray-400' : 'text-gray-600'
                       }`}>
                         No payments recorded yet
+                      </p>
+                    </div>
+                  )}
+                </Card.Content>
+              </Card>
+            </div>
+          )}
+
+          {/* Appointments Tab */}
+          {activeTab === 'appointments' && (
+            <div className="space-y-6">
+              <Card>
+                <Card.Header>
+                  <h3 className={`font-semibold text-lg ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    Linked Appointments
+                  </h3>
+                </Card.Header>
+                <Card.Content>
+                  {loadingAppointments ? (
+                    <div className="flex justify-center py-8">
+                      <LoadingSpinner />
+                    </div>
+                  ) : appointments && appointments.length > 0 ? (
+                    <div className="space-y-4">
+                      {/* Table Header */}
+                      <div className={`
+                        grid grid-cols-3 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
+                        ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-700'}
+                      `}>
+                        <div>DATE</div>
+                        <div>TIME</div>
+                        <div>STATUS</div>
+                      </div>
+
+                      {/* Table Rows */}
+                      <div className="space-y-2">
+                        {appointments.map((appointment) => (
+                          <div
+                            key={appointment.id}
+                            className={`
+                              grid grid-cols-3 gap-4 p-3 rounded-lg border items-center
+                              ${isDarkMode 
+                                ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' 
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }
+                              transition-colors
+                            `}
+                          >
+                            {/* Date */}
+                            <div className="flex items-center gap-2">
+                              <FaCalendarAlt className={`w-4 h-4 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm font-medium ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>
+                                {new Date(appointment.appointmentDate).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {/* Time */}
+                            <div className="flex items-center gap-2">
+                              <FaClock className={`w-4 h-4 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>
+                                {new Date(appointment.startTime).toLocaleTimeString('en-US', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })} - {new Date(appointment.endTime).toLocaleTimeString('en-US', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })}
+                              </span>
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                              <span className={`
+                                inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+                                ${appointment.status === 'CONFIRMED'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                  : appointment.status === 'PENDING'
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                  : appointment.status === 'CANCELLED'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                }
+                              `}>
+                                {appointment.status === 'CONFIRMED' && <FaCheckCircle className="w-3 h-3" />}
+                                {appointment.status === 'CANCELLED' && <FaTimesCircle className="w-3 h-3" />}
+                                {appointment.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Results Count */}
+                      <div className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Showing {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FaCalendarAlt className={`w-12 h-12 mx-auto mb-4 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                      }`} />
+                      <p className={`text-lg ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        No appointments linked to this treatment
                       </p>
                     </div>
                   )}

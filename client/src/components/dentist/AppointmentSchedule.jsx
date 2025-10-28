@@ -24,6 +24,15 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
   const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek])
 
+  // Convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24) => {
+    const [hours, minutes] = time24.split(':')
+    const hour = parseInt(hours)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${hour12}:${minutes} ${period}`
+  }
+
   // Time slots (8 AM - 8 PM)
   const timeSlots = useMemo(() => {
     const slots = []
@@ -228,7 +237,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                     ? 'text-gray-400 border-gray-700' 
                     : 'text-gray-600 border-gray-200'
                 }`}>
-                  {time}
+                  {convertTo12Hour(time)}
                 </div>
 
                 {/* Day Cells */}
