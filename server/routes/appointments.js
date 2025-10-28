@@ -28,6 +28,14 @@ router.get('/patient/my-appointments', authenticate, authorize('Patient'), async
               }
             }
           }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true,
+            status: true
+          }
         }
       },
       orderBy: {
@@ -67,12 +75,29 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
               }
             }
           }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true,
+            status: true
+          }
         }
       },
       orderBy: {
         appointmentDate: 'desc'
       }
     });
+
+    // Debug: Log the first appointment to see if treatment is included
+    if (appointments.length > 0) {
+      console.log('Sample appointment with treatment:', JSON.stringify({
+        id: appointments[0].id,
+        treatmentId: appointments[0].treatmentId,
+        treatment: appointments[0].treatment
+      }, null, 2));
+    }
 
     res.json({ appointments });
   } catch (error) {
@@ -105,6 +130,14 @@ router.get('/clinic/my-appointments', authenticate, authorize('Clinic'), async (
                 phone: true
               }
             }
+          }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true,
+            status: true
           }
         }
       },
@@ -153,6 +186,14 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
                 phone: true
               }
             }
+          }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true,
+            status: true
           }
         }
       },
@@ -203,6 +244,14 @@ router.get('/:id', authenticate, async (req, res) => {
                 phone: true
               }
             }
+          }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true,
+            status: true
           }
         }
       }

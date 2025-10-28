@@ -59,6 +59,14 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
       setLoading(true)
       setError(null)
       const response = await appointmentsAPI.getDentistAppointments()
+      console.log('Fetched appointments:', response.appointments)
+      if (response.appointments && response.appointments.length > 0) {
+        console.log('First appointment sample:', {
+          id: response.appointments[0].id,
+          treatmentId: response.appointments[0].treatmentId,
+          treatment: response.appointments[0].treatment
+        })
+      }
       setAppointments(response.appointments || [])
     } catch (err) {
       console.error('Error fetching appointments:', err)
@@ -86,7 +94,7 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
         phone: apt.patient.user?.phone || apt.patient.phone || 'N/A',
         email: apt.patient.user?.email || 'N/A'
       },
-      treatment: apt.patientNotes || 'General Consultation',
+      treatment: apt.treatment?.treatmentType || 'General Consultation',
       status: apt.status, // Keep original status (uppercase)
       notes: apt.sessionNotes || apt.patientNotes || '',
       toothNumber: '',

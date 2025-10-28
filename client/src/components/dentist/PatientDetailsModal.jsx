@@ -82,8 +82,7 @@ const PatientDetailsModal = ({
 
   const tabs = [
     { id: 'information', label: 'Information', icon: FaUser },
-    { id: 'treatments', label: 'Treatments', icon: FaStethoscope },
-    { id: 'payments', label: 'Payments', icon: FaMoneyBillWave }
+    { id: 'treatments', label: 'Treatments', icon: FaStethoscope }
   ]
 
   const getStatusIcon = (status) => {
@@ -160,11 +159,11 @@ const PatientDetailsModal = ({
             }`}>Status</label>
             <div className="mt-1">
               <span className={`inline-flex px-3 py-1 rounded-full text-sm ${
-                patientData.status === 'active' 
+                patientData.status?.toLowerCase() === 'active' 
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
               }`}>
-                {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1) || 'Active'}
+                {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1).toLowerCase() || 'Inactive'}
               </span>
             </div>
           </div>
@@ -310,7 +309,7 @@ const PatientDetailsModal = ({
                 <h4 className={`font-medium ${
                   isDarkMode ? 'text-white' : 'text-gray-800'
                 }`}>
-                  {appointment.treatment}
+                  {appointment.treatment?.treatmentType || 'General Appointment'}
                 </h4>
                 <p className={`text-sm ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -456,127 +455,6 @@ const PatientDetailsModal = ({
     </div>
   )
 
-  const renderPayments = () => {
-    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0)
-    const totalCost = treatments.reduce((sum, treatment) => sum + treatment.totalAmount, 0)
-    const totalRemaining = treatments.reduce((sum, treatment) => sum + (treatment.totalAmount - treatment.paidAmount), 0)
-    
-    return (
-      <div className="space-y-4">
-        {/* Payment Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-6 rounded-lg ${
-            isDarkMode ? 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700' : 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-full ${isDarkMode ? 'bg-green-900/50' : 'bg-green-100'}`}>
-                <FaMoneyBillWave className="w-5 h-5 text-green-600" />
-              </div>
-              <p className={`text-sm ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>
-                Total Paid
-              </p>
-            </div>
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              ${totalPaid.toFixed(2)}
-            </p>
-          </div>
-
-          <div className={`p-6 rounded-lg ${
-            isDarkMode ? 'bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-700' : 'bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-full ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-100'}`}>
-                <FaFileInvoiceDollar className="w-5 h-5 text-blue-600" />
-              </div>
-              <p className={`text-sm ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-                Total Cost
-              </p>
-            </div>
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              ${totalCost.toFixed(2)}
-            </p>
-          </div>
-
-          <div className={`p-6 rounded-lg ${
-            isDarkMode ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-700' : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-full ${isDarkMode ? 'bg-orange-900/50' : 'bg-orange-100'}`}>
-                <FaExclamationTriangle className="w-5 h-5 text-orange-600" />
-              </div>
-              <p className={`text-sm ${isDarkMode ? 'text-orange-400' : 'text-orange-700'}`}>
-                Remaining
-              </p>
-            </div>
-            <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              ${totalRemaining.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        {/* Payment History */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            Payment History
-          </h3>
-          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {payments.length} transactions
-          </span>
-        </div>
-
-        {payments.length === 0 ? (
-          <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            <FaMoneyBillWave className={`mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} size={48} />
-            <p>No payment history for this patient</p>
-          </div>
-        ) : (
-          payments.map((payment) => (
-          <div key={payment.id} className={`p-4 rounded-lg border ${
-            isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3 flex-1">
-                <div className={`p-3 rounded-lg ${
-                  isDarkMode ? 'bg-green-900/30' : 'bg-green-100'
-                }`}>
-                  <FaMoneyBillWave className="text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {payment.description}
-                  </h4>
-                  <div className="flex items-center gap-4 mt-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <FaCalendarAlt className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {formatDate(payment.date)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaCreditCard className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {payment.method}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`text-xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                  ${payment.amount.toFixed(2)}
-                </p>
-                <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  Paid
-                </span>
-              </div>
-            </div>
-          </div>
-          ))
-        )}
-      </div>
-    )
-  }
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'information':
@@ -585,8 +463,6 @@ const PatientDetailsModal = ({
         return renderAppointments()
       case 'treatments':
         return renderTreatments()
-      case 'payments':
-        return renderPayments()
       default:
         return renderInformation()
     }
@@ -614,7 +490,7 @@ const PatientDetailsModal = ({
                 <p className={`text-lg ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 }`}>
-                  Patient ID: #{patientData.id || 'N/A'} • {patientData.phone || 'No phone'}
+                  {patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : ''} • {calculateAge(patientData.dateOfBirth)} years
                 </p>
               </div>
             </div>
@@ -696,7 +572,7 @@ const PatientDetailsModal = ({
               <p className={`${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                Patient ID: #{patientData.id || 'N/A'} • {patientData.phone || 'No phone'}
+                {patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : ''} • {calculateAge(patientData.dateOfBirth)} years
               </p>
             </div>
           </div>

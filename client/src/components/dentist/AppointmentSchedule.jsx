@@ -271,7 +271,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                             {apt.patient?.name || `${apt.patient?.firstName} ${apt.patient?.lastName}`}
                           </div>
                           <div className="text-xs opacity-80 truncate mt-0.5">
-                            {apt.patientNotes || apt.treatment || 'Consultation'}
+                            {apt.treatment?.treatmentType || 'Consultation'}
                           </div>
                           <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
                             <FaClock className="w-2.5 h-2.5" />

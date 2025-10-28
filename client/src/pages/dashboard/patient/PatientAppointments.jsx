@@ -190,7 +190,7 @@ const PatientAppointments = () => {
   const filteredAppointments = useMemo(() => {
     return displayAppointments.filter(appointment => {
       const dentistName = `${appointment.dentist?.firstName || ''} ${appointment.dentist?.lastName || ''}`
-      const treatment = appointment.patientNotes || ''
+      const treatment = appointment.treatment?.treatmentType || ''
       
       const matchesSearch = searchTerm === '' || 
         treatment.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -296,7 +296,7 @@ const PatientAppointments = () => {
           <div className="flex items-center gap-2">
             <FaStethoscope className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {appointment.patientNotes || 'Consultation'}
+              {appointment.treatment?.treatmentType || 'Consultation'}
             </span>
           </div>
         </td>

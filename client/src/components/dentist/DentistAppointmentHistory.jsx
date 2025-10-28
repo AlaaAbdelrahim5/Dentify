@@ -76,7 +76,7 @@ const DentistAppointmentHistory = () => {
         phone: apt.patient.user?.phone || apt.patient.phone || 'N/A',
         email: apt.patient.user?.email || 'N/A'
       },
-      treatment: apt.patientNotes || 'General Consultation',
+      treatment: apt.treatment?.treatmentType || 'General Consultation',
       status: apt.status,
       notes: apt.sessionNotes || apt.patientNotes || '',
       clinic: apt.clinic,
