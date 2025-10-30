@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FaTimes, FaBars, FaBell, FaSignOutAlt } from 'react-icons/fa'
+import { FaTimes, FaBars, FaBell, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
 import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
@@ -10,10 +10,12 @@ import { authUtils } from '../utils/auth'
 
 const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const { isDarkMode } = useTheme()
   const navigate = useNavigate()
+  const dropdownRef = useRef(null)
 
   // Check authentication status
   useEffect(() => {
@@ -27,8 +29,26 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
     checkAuth()
   }, [])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const toggleProfileDropdown = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen)
   }
 
   const handleLogout = () => {
@@ -36,6 +56,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
       console.log('Navbar: Starting logout process')
       authUtils.logout()
       console.log('Navbar: Logout completed, navigating to login page')
+      setIsProfileDropdownOpen(false)
       // Navigate to login page after logout
       navigate('/login', { replace: true })
     } catch (error) {
@@ -43,6 +64,21 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
       // Even if there's an error, try to navigate to login
       navigate('/login', { replace: true })
     }
+  }
+
+  const getDashboardRoute = () => {
+    if (!currentUser?.role) return '/'
+    
+    const roleRoutes = {
+      'admin': '/admin/dashboard',
+      'clinic': '/clinic/dashboard',
+      'dentist': '/dentist/dashboard',
+      'patient': '/patient/dashboard',
+      'secretary': '/clinic/dashboard',
+      'radiology': '/radiology/dashboard'
+    }
+    
+    return roleRoutes[currentUser.role.toLowerCase()] || '/'
   }
 
   return (
@@ -143,37 +179,151 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                     </span>
                   </div>
 
-                  {/* User Profile */}
-                  <div className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    isDarkMode 
-                      ? 'hover:bg-gray-800/50' 
-                      : 'hover:bg-gray-100/50'
-                  }`}>
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500">
-                        <span className="text-white text-sm font-bold">
-                          {currentUser ? authUtils.getUserInitials() : 'U'}
-                        </span>
+                  {/* User Profile with Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={toggleProfileDropdown}
+                      className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                        isDarkMode 
+                          ? 'hover:bg-gray-800/50' 
+                          : 'hover:bg-gray-100/50'
+                      } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/50') : ''}`}
+                    >
+                      <div className="relative">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500">
+                          <span className="text-white text-sm font-bold">
+                            {currentUser ? authUtils.getUserInitials() : 'U'}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className={`text-sm font-semibold ${
-                        isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                      }`}>
-                        {currentUser ? authUtils.getUserName() : 'User'}
-                      </span>
-                      {currentUser?.role && (
-                        <span className={`text-xs font-medium ${
-                          isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                      <div className="flex flex-col">
+                        <span className={`text-sm font-semibold ${
+                          isDarkMode ? 'text-gray-200' : 'text-gray-800'
                         }`}>
-                          {currentUser.role}
+                          {currentUser ? authUtils.getUserName() : 'User'}
                         </span>
-                      )}
-                    </div>
+                        {currentUser?.role && (
+                          <span className={`text-xs font-medium ${
+                            isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                          }`}>
+                            {currentUser.role}
+                          </span>
+                        )}
+                      </div>
+                      {/* Dropdown Indicator */}
+                      <FaChevronDown 
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        } ${isProfileDropdownOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {isProfileDropdownOpen && (
+                      <div className={`absolute right-0 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden transition-all duration-200 ${
+                        isDarkMode 
+                          ? 'bg-gray-800 border-gray-700' 
+                          : 'bg-white border-gray-200'
+                      }`}>
+                        {/* User Info Header */}
+                        <div className={`px-4 py-3 border-b ${
+                          isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
+                        }`}>
+                          <p className={`text-sm font-semibold truncate ${
+                            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                          }`}>
+                            {currentUser ? authUtils.getUserName() : 'User'}
+                          </p>
+                          {currentUser?.email && (
+                            <p className={`text-xs truncate ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
+                              {currentUser.email}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Menu Items */}
+                        <div className="py-2">
+                          <Link
+                            to={getDashboardRoute()}
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className={`flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'hover:bg-gray-700 text-gray-300' 
+                                : 'hover:bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            <MdDashboard className="w-5 h-5" />
+                            <span className="text-sm font-medium">Dashboard</span>
+                          </Link>
+
+                          <Link
+                            to="/"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className={`flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'hover:bg-gray-700 text-gray-300' 
+                                : 'hover:bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            <FaHome className="w-5 h-5" />
+                            <span className="text-sm font-medium">Home</span>
+                          </Link>
+
+                          <button
+                            onClick={() => {
+                              setIsProfileDropdownOpen(false)
+                              // You can add profile page navigation here
+                            }}
+                            className={`w-full flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'hover:bg-gray-700 text-gray-300' 
+                                : 'hover:bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            <FaUser className="w-5 h-5" />
+                            <span className="text-sm font-medium">Profile</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setIsProfileDropdownOpen(false)
+                              // You can add settings page navigation here
+                            }}
+                            className={`w-full flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'hover:bg-gray-700 text-gray-300' 
+                                : 'hover:bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            <FaCog className="w-5 h-5" />
+                            <span className="text-sm font-medium">Settings</span>
+                          </button>
+                        </div>
+
+                        {/* Logout Section */}
+                        <div className={`border-t ${
+                          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                        }`}>
+                          <button
+                            onClick={handleLogout}
+                            className={`w-full flex items-center space-x-3 px-4 py-3 transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'hover:bg-red-900/20 text-red-400' 
+                                : 'hover:bg-red-50 text-red-600'
+                            }`}
+                          >
+                            <FaSignOutAlt className="w-5 h-5" />
+                            <span className="text-sm font-semibold">Logout</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Logout Button */}
+                  {/* Logout Button - Keep for quick access */}
                   <button
                     onClick={handleLogout}
                     className={`p-2.5 rounded-lg transition-all duration-200 group ${
