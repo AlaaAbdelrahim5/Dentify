@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaStethoscope,
@@ -19,7 +19,7 @@ import {
   FaArrowLeft,
   FaSave
 } from 'react-icons/fa'
-import { Card, Button, Input } from '../../../components'
+import { Card, Button, Input, LoadingSpinner } from '../../../components'
 import NewTreatmentModal from '../../../components/dentist/NewTreatmentModal'
 import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsModal'
 import PaymentModal from '../../../components/dentist/PaymentModal'
@@ -34,6 +34,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('all') // active, completed, all
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('In Progress')
   const [viewMode, setViewMode] = useState('grid') // grid or list
   
@@ -61,6 +62,15 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   useEffect(() => {
     fetchAllData()
   }, [])
+
+  // Debounce search term to avoid excessive filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300) // 300ms delay
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   // Check if coming from appointment (via props)
   useEffect(() => {
@@ -103,9 +113,9 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     }
   }
 
-  // Transform treatment data from API
-  const transformTreatments = (apiTreatments) => {
-    return apiTreatments.map(treatment => {
+  // Transform treatment data from API - MEMOIZED to avoid re-parsing on every render
+  const displayTreatments = useMemo(() => {
+    return treatments.map(treatment => {
       // Parse teethStatus if it's a string, otherwise use as-is
       let teethStatus = []
       try {
@@ -142,29 +152,17 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         teethStatus: teethStatus
       }
     })
-  }
+  }, [treatments]) // Only recalculate when treatments data changes
 
-  // Transform patients for modal - only show patients with confirmed appointments
-  const mockPatients = patients
-    .filter(p => {
-      // Check if this patient has any CONFIRMED appointments
-      return appointments.some(apt => apt.patientId === p.userId && apt.status === 'CONFIRMED')
-    })
-    .map(p => ({
-      id: p.userId,
-      name: `${p.firstName} ${p.lastName}`
-    }))
-  
-  console.log('Raw patients from state:', patients)
-  console.log('Appointments:', appointments)
-  console.log('Available patients for treatment (with confirmed appointments):', mockPatients)
-
-
-  // Transform radiology centers for modal
-  const mockRadiologyCenters = radiologyCenters.map(r => ({
-    id: r.userId,
-    name: r.centerName
-  }))
+  // Update selectedTreatment when treatments data changes
+  useEffect(() => {
+    if (selectedTreatment && displayTreatments.length > 0) {
+      const updatedTreatment = displayTreatments.find(t => t.id === selectedTreatment.id)
+      if (updatedTreatment) {
+        setSelectedTreatment(updatedTreatment)
+      }
+    }
+  }, [displayTreatments])
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -190,23 +188,47 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     }
   }
 
-  const displayTreatments = transformTreatments(treatments)
+  // Transform patients for modal - MEMOIZED to avoid filtering on every render
+  const mockPatients = useMemo(() => {
+    return patients
+      .filter(p => {
+        // Check if this patient has any CONFIRMED appointments
+        return appointments.some(apt => apt.patientId === p.userId && apt.status === 'CONFIRMED')
+      })
+      .map(p => ({
+        id: p.userId,
+        name: `${p.firstName} ${p.lastName}`
+      }))
+  }, [patients, appointments]) // Only recalculate when patients or appointments change
 
-  const filteredTreatments = displayTreatments.filter(treatment => {
-    const matchesSearch = treatment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         treatment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         treatment.teethStatus?.some(t => t.toothNumber.toString().includes(searchTerm))
-    
-    const matchesView = activeView === 'all' || 
-                       (activeView === 'active' && treatment.treatmentStatus === 'In Progress') ||
-                       (activeView === 'completed' && treatment.treatmentStatus === 'Completed')
-    
-    const matchesStatus = selectedStatus === 'all' || treatment.treatmentStatus === selectedStatus
-    
-    return matchesSearch && matchesView && matchesStatus
-  })
+  // Transform radiology centers for modal - MEMOIZED
+  const mockRadiologyCenters = useMemo(() => {
+    return radiologyCenters.map(r => ({
+      id: r.userId,
+      name: r.centerName
+    }))
+  }, [radiologyCenters])
 
-  const getStats = () => {
+  // Filter treatments - MEMOIZED to avoid filtering on every render
+  const filteredTreatments = useMemo(() => {
+    return displayTreatments.filter(treatment => {
+      const matchesSearch = debouncedSearchTerm === '' || 
+                           treatment.patientName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.treatmentType.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.teethStatus?.some(t => t.toothNumber.toString().includes(debouncedSearchTerm))
+      
+      const matchesView = activeView === 'all' || 
+                         (activeView === 'active' && treatment.treatmentStatus === 'In Progress') ||
+                         (activeView === 'completed' && treatment.treatmentStatus === 'Completed')
+      
+      const matchesStatus = selectedStatus === 'all' || treatment.treatmentStatus === selectedStatus
+      
+      return matchesSearch && matchesView && matchesStatus
+    })
+  }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
+
+  // Calculate stats - MEMOIZED to avoid recalculating on every render
+  const stats = useMemo(() => {
     const total = displayTreatments.length
     const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress' || t.treatmentStatus === 'IN_PROGRESS').length
     const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed' || t.treatmentStatus === 'COMPLETED').length
@@ -214,9 +236,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     const pendingPayments = displayTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
     
     return { total, active, completed, totalRevenue, pendingPayments }
-  }
-
-  const stats = getStats()
+  }, [displayTreatments])
 
   // Fetch payments for a specific treatment
   const fetchTreatmentPayments = async (treatmentId) => {
@@ -325,6 +345,13 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     setSelectedTreatment(treatment)
     setCurrentPage('view')
     await fetchTreatmentPayments(treatment.id)
+  }
+
+  const handleRefreshTreatment = async () => {
+    // Refresh the current treatment data after tooth completion
+    if (selectedTreatment) {
+      await fetchAllData()
+    }
   }
 
   const handleEditTreatment = async (treatment) => {
@@ -738,6 +765,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
             onUpdateStatus={handleUpdateStatus}
             onAddPayment={handleAddPayment}
             onRequestRadiology={handleRequestRadiology}
+            onRefresh={handleRefreshTreatment}
             payments={payments}
             asFullPage={true}
           />
@@ -777,7 +805,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               }`}>Total Treatments</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.total}</p>
+              }`}>{loading ? '-' : stats.total}</p>
             </div>
             <FaStethoscope className="w-8 h-8 text-teal-500" />
           </div>
@@ -791,7 +819,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               }`}>Active</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.active}</p>
+              }`}>{loading ? '-' : stats.active}</p>
             </div>
             <FaExclamationTriangle className="w-8 h-8 text-blue-500" />
           </div>
@@ -805,7 +833,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               }`}>Completed</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.completed}</p>
+              }`}>{loading ? '-' : stats.completed}</p>
             </div>
             <FaCheck className="w-8 h-8 text-green-500" />
           </div>
@@ -819,7 +847,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               }`}>Total Revenue</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>${stats.totalRevenue.toFixed(0)}</p>
+              }`}>{loading ? '-' : `$${stats.totalRevenue.toFixed(0)}`}</p>
             </div>
             <FaDollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -833,7 +861,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               }`}>Pending</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>${stats.pendingPayments.toFixed(0)}</p>
+              }`}>{loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}</p>
             </div>
             <FaMoneyBillWave className="w-8 h-8 text-orange-500" />
           </div>
@@ -871,8 +899,33 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         </div>
       </Card>
 
-      {/* Treatments Grid/List */}
-      {filteredTreatments.length === 0 ? (
+      {/* Treatments Grid/List - Show loading state here */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" text="Loading treatments..." />
+        </div>
+      ) : error ? (
+        <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="text-center">
+            <FaExclamationTriangle className={`w-12 h-12 mx-auto mb-4 ${
+              isDarkMode ? 'text-red-400' : 'text-red-500'
+            }`} />
+            <p className={`text-lg font-medium mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              Error Loading Data
+            </p>
+            <p className={`mb-4 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              {error}
+            </p>
+            <Button onClick={fetchAllData}>
+              Try Again
+            </Button>
+          </div>
+        </Card>
+      ) : filteredTreatments.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>

@@ -9,7 +9,7 @@ import {
 import Button from '../Button'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { Card, LoadingSpinner } from '../index'
-import { appointmentsAPI } from '../../services/api'
+import { appointmentsAPI, treatmentsAPI } from '../../services/api'
 
 const TreatmentDetailsModal = ({ 
   isOpen, 
@@ -19,6 +19,7 @@ const TreatmentDetailsModal = ({
   onUpdateStatus,
   onAddPayment,
   onRequestRadiology,
+  onRefresh, // New prop to refresh data
   payments = [],
   asFullPage = false // New prop to render as full page instead of modal
 }) => {
@@ -50,6 +51,37 @@ const TreatmentDetailsModal = ({
       setAppointments([])
     } finally {
       setLoadingAppointments(false)
+    }
+  }
+
+  const handleMarkToothComplete = async (toothNumber) => {
+    try {
+      // Update the tooth status to completed
+      const updatedTeethStatus = treatmentData.teethStatus.map(tooth => {
+        if (tooth.toothNumber === toothNumber) {
+          return {
+            ...tooth,
+            status: 'Completed'
+          }
+        }
+        return tooth
+      })
+      
+      // Update treatment with new teeth status
+      await treatmentsAPI.update(treatmentData.id, {
+        teethStatus: updatedTeethStatus
+      })
+      
+      alert('Tooth marked as complete!')
+      
+      // Refresh the data without closing
+      if (onRefresh) {
+        await onRefresh()
+      }
+      
+    } catch (error) {
+      console.error('Error marking tooth as complete:', error)
+      alert('Failed to update tooth status. Please try again.')
     }
   }
 
@@ -301,7 +333,11 @@ const TreatmentDetailsModal = ({
                     </h3>
                   </Card.Header>
                   <Card.Content>
-                    <TreatmentTeethStatus teethStatus={treatmentData.teethStatus} />
+                    <TreatmentTeethStatus 
+                      teethStatus={treatmentData.teethStatus} 
+                      editable={true}
+                      onMarkComplete={handleMarkToothComplete}
+                    />
                   </Card.Content>
                 </Card>
               )}

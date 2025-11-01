@@ -57,7 +57,8 @@ const NewTreatmentModal = ({
             status: tooth.conditionStatus,
             priority: tooth.treatmentPriority,
             diagnosedDate: tooth.diagnosedDate,
-            notes: tooth.notes
+            notes: tooth.notes,
+            toothStatus: tooth.status || 'In Progress' // Track if tooth is completed
           }
         })
         setToothConditions(conditions)
@@ -112,6 +113,13 @@ const NewTreatmentModal = ({
   }
 
   const handleToothSelect = (toothNumber) => {
+    // Check if this tooth is completed - if so, don't allow deletion
+    const isCompleted = toothConditions[toothNumber]?.toothStatus === 'Completed'
+    if (isCompleted) {
+      alert('Cannot delete a completed tooth. This tooth treatment has been marked as complete.')
+      return
+    }
+    
     setSelectedTeeth(prev => {
       if (prev.includes(toothNumber)) {
         const newTeeth = prev.filter(t => t !== toothNumber)
@@ -128,7 +136,8 @@ const NewTreatmentModal = ({
             status: 'cavity',
             priority: 'Medium',
             diagnosedDate: new Date().toISOString().split('T')[0],
-            notes: ''
+            notes: '',
+            toothStatus: 'In Progress'
           }
         }))
         return [...prev, toothNumber]
@@ -198,7 +207,8 @@ const NewTreatmentModal = ({
         conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
         treatmentPriority: toothConditions[toothNumber]?.priority || 'Medium',
         diagnosedDate: toothConditions[toothNumber]?.diagnosedDate || new Date().toISOString().split('T')[0],
-        notes: toothConditions[toothNumber]?.notes || ''
+        notes: toothConditions[toothNumber]?.notes || '',
+        status: toothConditions[toothNumber]?.toothStatus || 'In Progress' // Include tooth status
       }))
 
       const treatmentData = {
@@ -577,25 +587,44 @@ const NewTreatmentModal = ({
                       }`}>
                         Selected Teeth: {selectedTeeth.length}
                       </p>
-                      {selectedTeeth.map(toothNumber => (
+                      {selectedTeeth.map(toothNumber => {
+                        const isCompleted = toothConditions[toothNumber]?.toothStatus === 'Completed'
+                        return (
                         <Card key={toothNumber} className={`border ${
-                          isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                          isCompleted 
+                            ? isDarkMode ? 'border-green-600 bg-green-900/20' : 'border-green-300 bg-green-50'
+                            : isDarkMode ? 'border-gray-600' : 'border-gray-300'
                         }`}>
                           <Card.Content className="p-4">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className={`font-semibold text-lg flex items-center gap-2 ${
                                 isDarkMode ? 'text-white' : 'text-gray-800'
                               }`}>
-                                <FaTooth className="text-teal-500" />
+                                <FaTooth className={isCompleted ? 'text-green-500' : 'text-teal-500'} />
                                 Tooth #{toothNumber}
+                                {isCompleted && (
+                                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                                    isDarkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-200 text-green-800'
+                                  }`}>
+                                    ✓ Completed
+                                  </span>
+                                )}
                               </h4>
-                              <button
-                                type="button"
-                                onClick={() => handleToothSelect(toothNumber)}
-                                className="text-red-500 hover:text-red-600"
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </button>
+                              {!isCompleted && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToothSelect(toothNumber)}
+                                  className="text-red-500 hover:text-red-600"
+                                  title="Delete tooth"
+                                >
+                                  <FaTrash className="w-4 h-4" />
+                                </button>
+                              )}
+                              {isCompleted && (
+                                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} title="Completed teeth cannot be edited or deleted">
+                                  🔒 Read-only
+                                </span>
+                              )}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
@@ -607,7 +636,10 @@ const NewTreatmentModal = ({
                                 <select
                                   value={toothConditions[toothNumber]?.status || 'cavity'}
                                   onChange={(e) => handleToothConditionChange(toothNumber, 'status', e.target.value)}
+                                  disabled={isCompleted}
                                   className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                                    isCompleted ? 'cursor-not-allowed opacity-60' : ''
+                                  } ${
                                     isDarkMode
                                       ? 'bg-gray-700 border-gray-600 text-white'
                                       : 'bg-white border-gray-300 text-gray-900'
@@ -627,7 +659,10 @@ const NewTreatmentModal = ({
                                 <select
                                   value={toothConditions[toothNumber]?.priority || 'Medium'}
                                   onChange={(e) => handleToothConditionChange(toothNumber, 'priority', e.target.value)}
+                                  disabled={isCompleted}
                                   className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                                    isCompleted ? 'cursor-not-allowed opacity-60' : ''
+                                  } ${
                                     isDarkMode
                                       ? 'bg-gray-700 border-gray-600 text-white'
                                       : 'bg-white border-gray-300 text-gray-900'
@@ -648,8 +683,11 @@ const NewTreatmentModal = ({
                                   type="text"
                                   value={toothConditions[toothNumber]?.notes || ''}
                                   onChange={(e) => handleToothConditionChange(toothNumber, 'notes', e.target.value)}
+                                  disabled={isCompleted}
                                   placeholder="Add notes for this tooth..."
                                   className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                                    isCompleted ? 'cursor-not-allowed opacity-60' : ''
+                                  } ${
                                     isDarkMode
                                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
                                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
@@ -659,7 +697,7 @@ const NewTreatmentModal = ({
                             </div>
                           </Card.Content>
                         </Card>
-                      ))}
+                      )})}
                     </div>
                   ) : (
                     <div className="text-center py-12">

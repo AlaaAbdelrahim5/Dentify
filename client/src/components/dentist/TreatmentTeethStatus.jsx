@@ -1,10 +1,11 @@
 import { useTheme } from '../../contexts/ThemeContext'
-import { FaTooth, FaExclamationTriangle } from 'react-icons/fa'
+import { FaTooth, FaExclamationTriangle, FaCheckCircle, FaClock } from 'react-icons/fa'
+import Button from '../Button'
 
 /**
  * Component to display affected teeth in a treatment with their conditions
  */
-const TreatmentTeethStatus = ({ teethStatus = [], compact = false }) => {
+const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplete = null, editable = false }) => {
   const { isDarkMode } = useTheme()
 
   if (!teethStatus || teethStatus.length === 0) {
@@ -72,6 +73,26 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false }) => {
     }
   }
 
+  const getStatusBadge = (status) => {
+    const lowerStatus = status?.toLowerCase()
+    if (lowerStatus === 'completed') {
+      return {
+        icon: <FaCheckCircle className="w-4 h-4" />,
+        text: 'Completed',
+        className: isDarkMode 
+          ? 'bg-green-900/30 text-green-400 border-green-600' 
+          : 'bg-green-100 text-green-700 border-green-300'
+      }
+    }
+    return {
+      icon: <FaClock className="w-4 h-4" />,
+      text: 'In Progress',
+      className: isDarkMode 
+        ? 'bg-orange-900/30 text-orange-400 border-orange-600' 
+        : 'bg-orange-100 text-orange-700 border-orange-300'
+    }
+  }
+
   if (compact) {
     // Compact view - just show tooth numbers and conditions
     return (
@@ -97,71 +118,101 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false }) => {
   // Full view - detailed cards
   return (
     <div className="space-y-3">
-      {teethStatus.map((tooth, index) => (
-        <div
-          key={index}
-          className={`p-4 rounded-lg border ${
-            isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-          }`}
-        >
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
-                getConditionColor(tooth.conditionStatus)
-              }`}>
-                <FaTooth className="w-5 h-5" />
+      {teethStatus.map((tooth, index) => {
+        const statusBadge = getStatusBadge(tooth.status)
+        const isCompleted = tooth.status?.toLowerCase() === 'completed'
+        
+        return (
+          <div
+            key={index}
+            className={`p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
+                  getConditionColor(tooth.conditionStatus)
+                }`}>
+                  <FaTooth className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className={`font-semibold ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    Tooth #{tooth.toothNumber}
+                  </h4>
+                  <p className={`text-sm capitalize ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {tooth.conditionStatus || 'No condition specified'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className={`font-semibold ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
+              <div className="flex items-center gap-2">
+                {/* Status Badge */}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1.5 ${
+                  statusBadge.className
                 }`}>
-                  Tooth #{tooth.toothNumber}
-                </h4>
-                <p className={`text-sm capitalize ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {tooth.conditionStatus || 'No condition specified'}
-                </p>
+                  {statusBadge.icon}
+                  {statusBadge.text}
+                </span>
+                {/* Priority Badge */}
+                {tooth.treatmentPriority && (
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                    tooth.treatmentPriority.toLowerCase() === 'high'
+                      ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-600'
+                      : tooth.treatmentPriority.toLowerCase() === 'medium'
+                        ? 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-600'
+                        : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-600'
+                  }`}>
+                    {tooth.treatmentPriority} Priority
+                  </span>
+                )}
+                {/* Mark as Complete Button - Small on the side */}
+                {editable && !isCompleted && onMarkComplete && (
+                  <button
+                    onClick={() => onMarkComplete(tooth.toothNumber)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      isDarkMode 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}
+                    title="Mark as Complete"
+                  >
+                    <FaCheckCircle className="w-3.5 h-3.5" />
+                    Complete
+                  </button>
+                )}
               </div>
             </div>
-            {tooth.treatmentPriority && (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                tooth.treatmentPriority.toLowerCase() === 'high'
-                  ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-600'
-                  : tooth.treatmentPriority.toLowerCase() === 'medium'
-                    ? 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-600'
-                    : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-600'
-              }`}>
-                {tooth.treatmentPriority} Priority
-              </span>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {tooth.diagnosedDate && (
-              <div>
-                <p className={`${isDarkMode ? 'text-gray-500' : 'text-gray-500'} text-xs`}>
-                  Diagnosed Date
+            
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {tooth.diagnosedDate && (
+                <div>
+                  <p className={`${isDarkMode ? 'text-gray-500' : 'text-gray-500'} text-xs`}>
+                    Diagnosed Date
+                  </p>
+                  <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {new Date(tooth.diagnosedDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {tooth.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mb-1`}>
+                  Notes
                 </p>
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {new Date(tooth.diagnosedDate).toLocaleDateString()}
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {tooth.notes}
                 </p>
               </div>
             )}
           </div>
-          
-          {tooth.notes && (
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mb-1`}>
-                Notes
-              </p>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                {tooth.notes}
-              </p>
-            </div>
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

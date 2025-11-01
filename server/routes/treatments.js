@@ -73,45 +73,14 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
       where,
       include: {
         patient: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        dentist: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        appointments: {
           select: {
-            id: true,
-            appointmentDate: true,
-            startTime: true,
-            endTime: true,
-            status: true
-          }
-        },
-        payments: {
-          select: {
-            id: true,
-            amount: true,
-            method: true,
-            paymentDate: true,
-            notes: true
+            userId: true,
+            firstName: true,
+            lastName: true
           }
         }
+        // Removed nested appointments and payments - they are rarely needed in list view
+        // and can be fetched separately when viewing treatment details
       },
       orderBy: {
         createdAt: 'desc'
