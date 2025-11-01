@@ -29,18 +29,27 @@ const DentistSchedule = () => {
   const fetchDentistProfile = async () => {
     try {
       setLoading(true)
+      setError(null)
       const response = await dentistsAPI.getMyProfile()
-      const dentist = response.dentist
+      console.log('Dentist profile response:', response)
       
-      // If workingHours exists, use it; otherwise, use default
+      // Handle different response structures
+      const dentist = response.data?.dentist || response.dentist || response.data
+      
+      if (!dentist) {
+        throw new Error('Dentist profile not found in response')
+      }
+      
+      // Load working hours from database
       if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
         const scheduleMap = {}
+        
         dentist.workingHours.forEach(daySchedule => {
           scheduleMap[daySchedule.day] = {
             isWorking: daySchedule.isWorking !== false,
             startTime: daySchedule.start || '09:00',
             endTime: daySchedule.end || '17:00',
-            breaks: daySchedule.breaks || []
+            breaks: Array.isArray(daySchedule.breaks) ? daySchedule.breaks : []
           }
         })
         
@@ -51,21 +60,31 @@ const DentistSchedule = () => {
               isWorking: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day),
               startTime: '09:00',
               endTime: '17:00',
-              breaks: day !== 'Friday' && day !== 'Saturday' && day !== 'Sunday' 
-                ? [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-                : []
+              breaks: []
             }
           }
         })
         
         setSchedule(scheduleMap)
+      } else {
+        // Initialize with default schedule if no data exists
+        const defaultSchedule = {}
+        daysOfWeek.forEach(day => {
+          defaultSchedule[day] = {
+            isWorking: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day),
+            startTime: '09:00',
+            endTime: '17:00',
+            breaks: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'].includes(day) 
+              ? [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
+              : []
+          }
+        })
+        setSchedule(defaultSchedule)
       }
       
+      // Load appointment duration
       if (dentist.appointmentDuration) {
-        setAppointmentSettings(prev => ({
-          ...prev,
-          defaultDuration: dentist.appointmentDuration
-        }))
+        setDefaultDuration(dentist.appointmentDuration)
       }
     } catch (err) {
       console.error('Error fetching dentist profile:', err)
@@ -78,6 +97,7 @@ const DentistSchedule = () => {
   // Mock schedule data (will be replaced with fetched data)
   const [schedule, setSchedule] = useState({
     Sunday: { 
+      
       isWorking: false, 
       startTime: '09:00', 
       endTime: '17:00', 
@@ -121,12 +141,7 @@ const DentistSchedule = () => {
     }
   })
 
-  const [appointmentSettings, setAppointmentSettings] = useState({
-    defaultDuration: 30,
-    bufferTime: 5,
-    maxAdvanceBooking: 30,
-    allowWeekendBooking: false
-  })
+  const [defaultDuration, setDefaultDuration] = useState(30)
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -223,24 +238,27 @@ const DentistSchedule = () => {
   const handleSaveSchedule = async () => {
     try {
       setSaving(true)
+      setError(null)
       
-      // Convert schedule to API format
+      // Convert schedule to JSON array format for database
       const workingHours = daysOfWeek.map(day => ({
         day,
         isWorking: schedule[day].isWorking,
         start: schedule[day].startTime,
         end: schedule[day].endTime,
-        breaks: schedule[day].breaks
+        breaks: schedule[day].breaks || []
       }))
       
+      // Update dentist profile with working hours and appointment duration
       await dentistsAPI.updateMyProfile({
-        workingHours,
-        appointmentDuration: appointmentSettings.defaultDuration
+        workingHours: workingHours,
+        appointmentDuration: defaultDuration
       })
       
       alert('Schedule saved successfully!')
     } catch (error) {
       console.error('Error saving schedule:', error)
+      setError('Failed to save schedule. Please try again.')
       alert('Failed to save schedule. Please try again.')
     } finally {
       setSaving(false)
@@ -257,6 +275,17 @@ const DentistSchedule = () => {
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className={`p-4 rounded-lg border ${
+          isDarkMode 
+            ? 'bg-red-900/20 border-red-800 text-red-400' 
+            : 'bg-red-50 border-red-200 text-red-600'
+        }`}>
+          <p>{error}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -321,7 +350,7 @@ const DentistSchedule = () => {
               }`}>Appointment Duration</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{appointmentSettings.defaultDuration}min</p>
+              }`}>{defaultDuration}min</p>
             </div>
             <FaClock className="w-8 h-8 text-purple-500" />
           </div>
@@ -525,7 +554,7 @@ const DentistSchedule = () => {
           Appointment Settings
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-md">
           <div>
             <label className={`block text-sm font-medium mb-2 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -537,83 +566,19 @@ const DentistSchedule = () => {
               min="15"
               max="120"
               step="15"
-              value={appointmentSettings.defaultDuration}
-              onChange={(e) => setAppointmentSettings(prev => ({
-                ...prev,
-                defaultDuration: parseInt(e.target.value)
-              }))}
+              value={defaultDuration}
+              onChange={(e) => setDefaultDuration(parseInt(e.target.value))}
               className={`w-full px-3 py-2 border rounded-lg ${
                 isDarkMode
                   ? 'bg-gray-700 border-gray-600 text-white'
                   : 'bg-white border-gray-300 text-gray-900'
               }`}
             />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            <p className={`mt-2 text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              Buffer Time Between Appointments (minutes)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="30"
-              step="5"
-              value={appointmentSettings.bufferTime}
-              onChange={(e) => setAppointmentSettings(prev => ({
-                ...prev,
-                bufferTime: parseInt(e.target.value)
-              }))}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Maximum Advance Booking (days)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="365"
-              value={appointmentSettings.maxAdvanceBooking}
-              onChange={(e) => setAppointmentSettings(prev => ({
-                ...prev,
-                maxAdvanceBooking: parseInt(e.target.value)
-              }))}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            />
-          </div>
-
-          <div className="flex items-center">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={appointmentSettings.allowWeekendBooking}
-                onChange={(e) => setAppointmentSettings(prev => ({
-                  ...prev,
-                  allowWeekendBooking: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-              <span className={`font-medium ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Allow Weekend Booking
-              </span>
-            </label>
+              Standard duration for each appointment (in 15-minute increments)
+            </p>
           </div>
         </div>
       </Card>

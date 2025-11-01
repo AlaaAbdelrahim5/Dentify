@@ -31,6 +31,9 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
   const [dentists, setDentists] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [availableSlots, setAvailableSlots] = useState([])
+  const [bookedSlots, setBookedSlots] = useState([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
 
   // Initialize with preselected doctor if provided
   useEffect(() => {
@@ -71,6 +74,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     }
   }, [formData.clinicId])
 
+  // Fetch available slots when dentist and date are selected
+  useEffect(() => {
+    if (isOpen && formData.dentistId && formData.date) {
+      fetchAvailableSlots(formData.dentistId, formData.date)
+    }
+  }, [formData.dentistId, formData.date, isOpen])
+
   const fetchClinics = async () => {
     try {
       setLoading(true)
@@ -100,6 +110,94 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     }
   }
 
+  const fetchAvailableSlots = async (dentistId, date) => {
+    try {
+      setLoadingSlots(true)
+      setError(null)
+      console.log(`Fetching available slots for dentist ${dentistId} on ${date}`)
+      const response = await appointmentsAPI.getAvailableSlots(dentistId, date)
+      console.log('Available slots response:', response)
+      
+      // Generate time slots based on working hours
+      const slots = generateTimeSlotsFromWorkingHours(
+        response.workingHours,
+        response.appointmentDuration || 30
+      )
+      
+      // Mark booked slots
+      const booked = response.appointments.map(apt => {
+        const startTime = new Date(apt.startTime)
+        const timeString = startTime.toTimeString().substring(0, 5) // Format: HH:MM
+        console.log(`Booked slot: ${timeString}`)
+        return timeString
+      })
+      
+      console.log('Generated slots:', slots)
+      console.log('Booked slots:', booked)
+      
+      setAvailableSlots(slots)
+      setBookedSlots(booked)
+    } catch (err) {
+      console.error('Error fetching available slots:', err)
+      setError('Failed to load available time slots')
+      setAvailableSlots([])
+      setBookedSlots([])
+    } finally {
+      setLoadingSlots(false)
+    }
+  }
+
+  const generateTimeSlotsFromWorkingHours = (workingHours, duration = 30) => {
+    if (!workingHours || !workingHours.isWorking) {
+      return []
+    }
+
+    const slots = []
+    const [startHour, startMinute] = workingHours.start.split(':').map(Number)
+    const [endHour, endMinute] = workingHours.end.split(':').map(Number)
+    
+    let currentHour = startHour
+    let currentMinute = startMinute
+
+    while (
+      currentHour < endHour || 
+      (currentHour === endHour && currentMinute < endMinute)
+    ) {
+      const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+      
+      // Check if this slot is during a break
+      let isDuringBreak = false
+      if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
+        for (const breakPeriod of workingHours.breaks) {
+          const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
+          const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number)
+          
+          const slotMinutes = currentHour * 60 + currentMinute
+          const breakStartMinutes = breakStartHour * 60 + breakStartMinute
+          const breakEndMinutes = breakEndHour * 60 + breakEndMinute
+          
+          if (slotMinutes >= breakStartMinutes && slotMinutes < breakEndMinutes) {
+            isDuringBreak = true
+            break
+          }
+        }
+      }
+      
+      if (!isDuringBreak) {
+        slots.push(timeSlot)
+      }
+      
+      // Increment by duration
+      currentMinute += duration
+      if (currentMinute >= 60) {
+        currentHour += Math.floor(currentMinute / 60)
+        currentMinute = currentMinute % 60
+      }
+    }
+
+    return slots
+  }
+
   const treatmentOptions = [
     'Dental Cleaning',
     'Dental Filling',
@@ -122,20 +220,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
     return `${hour12}:${minutes} ${period}`
   }
-
-  // Generate available time slots
-  const generateTimeSlots = () => {
-    const slots = []
-    for (let hour = 9; hour <= 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        slots.push(time)
-      }
-    }
-    return slots
-  }
-
-  const timeSlots = generateTimeSlots()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -317,6 +401,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     setStep(1)
     setClinics([])
     setDentists([])
+    setAvailableSlots([])
+    setBookedSlots([])
     onClose()
   }
 
@@ -585,38 +671,90 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                       <FaClock className="inline mr-2" />
                       Appointment Time
                     </label>
-                    <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2">
-                      {timeSlots.map((time) => {
-                        // Check if this time slot is in the past
-                        const isPastTime = formData.date ? (() => {
-                          const appointmentDateTime = new Date(`${formData.date}T${time}`)
-                          const now = new Date()
-                          return appointmentDateTime <= now
-                        })() : false
+                    
+                    {!formData.date ? (
+                      <p className={`text-sm italic ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        Please select a date first
+                      </p>
+                    ) : loadingSlots ? (
+                      <div className="flex justify-center py-8">
+                        <LoadingSpinner />
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        No available time slots for this date. The dentist may not be working on this day.
+                      </p>
+                    ) : (
+                      <div className={`grid grid-cols-4 gap-2 max-h-64 overflow-y-auto p-2 border rounded-lg ${
+                        isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
+                      }`}>
+                        {availableSlots.map((time) => {
+                          // Check if this time slot is booked
+                          const isBooked = bookedSlots.includes(time)
+                          
+                          // Check if this time slot is in the past
+                          const isPastTime = (() => {
+                            const appointmentDateTime = new Date(`${formData.date}T${time}`)
+                            const now = new Date()
+                            return appointmentDateTime <= now
+                          })()
 
-                        return (
-                          <button
-                            key={time}
-                            type="button"
-                            onClick={() => handleTimeSelect(time)}
-                            disabled={isPastTime}
-                            className={`p-2 rounded text-sm font-medium transition-all ${
-                              isPastTime
-                                ? isDarkMode
-                                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed line-through'
-                                : formData.time === time
-                                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white'
-                                  : isDarkMode
-                                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {convertTo12Hour(time)}
-                          </button>
-                        )
-                      })}
-                    </div>
+                          return (
+                            <button
+                              key={time}
+                              type="button"
+                              onClick={() => !isBooked && !isPastTime && handleTimeSelect(time)}
+                              disabled={isPastTime || isBooked}
+                              className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                                isPastTime
+                                  ? isDarkMode
+                                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed line-through'
+                                  : isBooked
+                                    ? 'bg-red-500/20 text-red-600 dark:text-red-400 border-2 border-red-500 cursor-not-allowed'
+                                    : formData.time === time
+                                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                                      : isDarkMode
+                                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-600'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                              }`}
+                            >
+                              {convertTo12Hour(time)}
+                              {isBooked && (
+                                <div className="text-xs mt-1">Booked</div>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                    
+                    {/* Legend */}
+                    {formData.date && availableSlots.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-4 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-gradient-to-r from-teal-600 to-cyan-600 rounded"></div>
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Selected</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded border-2 border-red-500 ${
+                            isDarkMode ? 'bg-red-500/20' : 'bg-red-500/20'
+                          }`}></div>
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Booked</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded ${
+                            isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
+                          }`}></div>
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Available</span>
+                        </div>
+                      </div>
+                    )}
+                    
                     {errors.time && (
                       <p className="text-red-500 text-sm mt-2">{errors.time}</p>
                     )}

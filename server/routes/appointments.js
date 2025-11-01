@@ -759,11 +759,31 @@ router.get('/dentist/:dentistId/available-slots', authenticate, async (req, res)
       return res.status(404).json({ error: 'Dentist not found' });
     }
 
+    // Get the day of week from the date
+    const selectedDate = new Date(date);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = dayNames[selectedDate.getDay()];
+
+    // Get working hours for that day
+    let workingHours = null;
+    if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
+      workingHours = dentist.workingHours.find(day => day.day === dayOfWeek);
+    }
+
+    // Create start and end of day for date comparison
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
     // Get all appointments for the dentist on that date
     const appointments = await prisma.appointment.findMany({
       where: {
         dentistId: parseInt(dentistId),
-        appointmentDate: new Date(date),
+        appointmentDate: {
+          gte: startOfDay,
+          lte: endOfDay
+        },
         status: { not: 'CANCELLED' }
       },
       select: {
@@ -772,9 +792,14 @@ router.get('/dentist/:dentistId/available-slots', authenticate, async (req, res)
       }
     });
 
+    console.log(`Fetching slots for dentist ${dentistId} on ${date}`);
+    console.log(`Found ${appointments.length} appointments:`, appointments);
+
     res.json({ 
       appointments,
-      appointmentDuration: dentist.appointmentDuration 
+      appointmentDuration: dentist.appointmentDuration,
+      workingHours: workingHours || null,
+      dayOfWeek
     });
   } catch (error) {
     console.error('Error fetching available slots:', error);

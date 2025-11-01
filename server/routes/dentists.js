@@ -188,6 +188,159 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Get current logged-in dentist profile
+router.get('/me', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const dentistUserId = req.user.id;
+
+    const dentist = await prisma.dentist.findUnique({
+      where: { userId: dentistUserId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            role: true,
+            status: true,
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
+        clinic: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!dentist) {
+      return notFoundResponse(res, 'Dentist profile');
+    }
+
+    return successResponse(res, { dentist }, 'Dentist profile fetched successfully');
+  } catch (error) {
+    console.error('Error fetching dentist profile:', error);
+    return errorResponse(res, 'Failed to fetch dentist profile');
+  }
+});
+
+// Update current logged-in dentist profile
+router.put('/me', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const dentistUserId = req.user.id;
+    const updateData = req.body;
+
+    // Check if dentist exists
+    const existingDentist = await prisma.dentist.findUnique({
+      where: { userId: dentistUserId },
+      include: { user: true }
+    });
+
+    if (!existingDentist) {
+      return notFoundResponse(res, 'Dentist profile');
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Separate user and dentist data
+      const userUpdateData = {};
+      const dentistUpdateData = {};
+
+      // User fields
+      if (updateData.email) userUpdateData.email = updateData.email;
+      if (updateData.phone) userUpdateData.phone = updateData.phone;
+      if (updateData.password) {
+        userUpdateData.password = await bcrypt.hash(updateData.password, 10);
+      }
+      if (updateData.profileImage) userUpdateData.profileImage = updateData.profileImage;
+
+      // Dentist fields
+      if (updateData.firstName) dentistUpdateData.firstName = updateData.firstName;
+      if (updateData.lastName) dentistUpdateData.lastName = updateData.lastName;
+      if (updateData.licenseNumber) dentistUpdateData.licenseNumber = updateData.licenseNumber;
+      if (updateData.specialization) dentistUpdateData.specialization = updateData.specialization;
+      if (updateData.birthDate) dentistUpdateData.birthDate = new Date(updateData.birthDate);
+      if (updateData.gender) dentistUpdateData.gender = updateData.gender;
+      if (updateData.city) dentistUpdateData.city = updateData.city;
+      if (updateData.appointmentDuration !== undefined) {
+        dentistUpdateData.appointmentDuration = parseInt(updateData.appointmentDuration);
+      }
+      if (updateData.workingHours !== undefined) {
+        dentistUpdateData.workingHours = updateData.workingHours;
+      }
+      if (updateData.socialLinks !== undefined) {
+        dentistUpdateData.socialLinks = updateData.socialLinks;
+      }
+
+      // Update user data if there's anything to update
+      if (Object.keys(userUpdateData).length > 0) {
+        await tx.user.update({
+          where: { id: dentistUserId },
+          data: userUpdateData
+        });
+      }
+
+      // Update dentist data if there's anything to update
+      if (Object.keys(dentistUpdateData).length > 0) {
+        await tx.dentist.update({
+          where: { userId: dentistUserId },
+          data: dentistUpdateData
+        });
+      }
+
+      // Fetch updated dentist
+      const updatedDentist = await tx.dentist.findUnique({
+        where: { userId: dentistUserId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              role: true,
+              status: true,
+              profileImage: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          clinic: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  phone: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return updatedDentist;
+    });
+
+    return successResponse(res, { dentist: result }, 'Dentist profile updated successfully');
+  } catch (error) {
+    console.error('Error updating dentist profile:', error);
+    if (error.code === 'P2002') {
+      return errorResponse(res, 'Email or license number already exists', 400);
+    }
+    return errorResponse(res, 'Failed to update dentist profile');
+  }
+});
+
 // Create dentist (Clinic creates dentist request)
 router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) => {
   try {
