@@ -7,7 +7,8 @@ import {
   FaCog,
   FaHome,
   FaUserMd,
-  FaSearch
+  FaSearch,
+  FaMoneyBillWave
 } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
 
@@ -17,9 +18,11 @@ const PatientSidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: MdDashboard },
     { id: 'find-dentist', label: 'Find a Dentist', icon: FaUserMd },
+    { id: 'find-clinic', label: 'Find a Clinic', icon: FaSearch },
     { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt },
+    { id: 'payments', label: 'Payments', icon: FaMoneyBillWave },
     { id: 'xrays', label: 'X-ray Results', icon: FaXRay },
-    { id: 'history', label: 'Medical History', icon: FaTooth },
+    { id: 'history', label: 'Treatment History', icon: FaTooth },
     { id: 'settings', label: 'Settings', icon: FaCog }
   ]
 

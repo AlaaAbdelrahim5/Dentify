@@ -437,6 +437,12 @@ export const treatmentsAPI = {
     return ApiService.get(`/treatments/dentist/my-treatments${params}`);
   },
   
+  // Get patient's treatments
+  getPatientTreatments: (status = null) => {
+    const params = status && status !== 'all' ? `?status=${status}` : '';
+    return ApiService.get(`/treatments/patient/my-treatments${params}`);
+  },
+  
   // Get all treatments (Admin/Clinic only)
   getAll: () => ApiService.get('/treatments'),
   
@@ -462,6 +468,12 @@ export const paymentsAPI = {
   getDentistPayments: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/payments/dentist/my-payments${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Get patient's payments
+  getPatientPayments: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/payments/patient/my-payments${queryString ? `?${queryString}` : ''}`);
   },
   
   // Get payments for a specific treatment

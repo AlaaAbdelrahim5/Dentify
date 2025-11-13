@@ -47,9 +47,9 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         dentistId: dentistId
       }))
       
-      // If we have both clinic and dentist, go to step 3
+      // If we have both clinic and dentist, go to step 1 (date/time)
       if (clinicId && dentistId) {
-        setStep(3)
+        setStep(1)
         
         // Set the clinic and dentist in state
         if (preselectedDoctor.clinic) {
@@ -57,6 +57,9 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         }
         setDentists([preselectedDoctor])
       }
+    } else if (isOpen && !preselectedDoctor) {
+      // Reset to actual step 1 (select clinic) if no preselection
+      setStep(1)
     }
   }, [isOpen, preselectedDoctor])
 
@@ -300,15 +303,21 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
   const validateStep = () => {
     const newErrors = {}
 
-    if (step === 1 && !formData.clinicId) {
-      newErrors.clinicId = 'Please select a clinic'
+    // When preselected doctor exists, step 1 is date/time, step 2 is confirmation
+    // When no preselected doctor, step 1 is clinic, step 2 is dentist, step 3 is date/time, step 4 is confirmation
+    
+    if (!preselectedDoctor) {
+      if (step === 1 && !formData.clinicId) {
+        newErrors.clinicId = 'Please select a clinic'
+      }
+
+      if (step === 2 && !formData.dentistId) {
+        newErrors.dentistId = 'Please select a dentist'
+      }
     }
 
-    if (step === 2 && !formData.dentistId) {
-      newErrors.dentistId = 'Please select a dentist'
-    }
-
-    if (step === 3) {
+    // Date/Time validation: step 1 for preselected, step 3 for normal flow
+    if ((preselectedDoctor && step === 1) || (!preselectedDoctor && step === 3)) {
       if (!formData.date) {
         newErrors.date = 'Date is required'
       } else if (formData.date && formData.time) {
@@ -332,7 +341,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 4) {
+      const maxStep = preselectedDoctor ? 2 : 4
+      if (step < maxStep) {
         setStep(step + 1)
       }
     }
@@ -398,7 +408,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     })
     setErrors({})
     setError(null)
-    setStep(1)
     setClinics([])
     setDentists([])
     setAvailableSlots([])
@@ -437,11 +446,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
               }`}>
                 Book an Appointment
               </h2>
-              <p className={`mt-1 text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Step {step} of 4
-              </p>
+              {preselectedDoctor && (
+                <p className={`mt-1 text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  with Dr. {preselectedDoctor.firstName} {preselectedDoctor.lastName}
+                </p>
+              )}
             </div>
             <button
               onClick={handleClose}
@@ -455,53 +466,11 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
             </button>
           </div>
 
-          {/* Progress Bar */}
-          <div className={`px-6 pt-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="flex items-center justify-between mb-2">
-              {[1, 2, 3, 4].map((s) => (
-                <div key={s} className="flex items-center flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
-                    s <= step
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white'
-                      : isDarkMode
-                        ? 'bg-gray-700 text-gray-400'
-                        : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {s}
-                  </div>
-                  {s < 4 && (
-                    <div className={`flex-1 h-1 mx-2 ${
-                      s < step
-                        ? 'bg-gradient-to-r from-teal-600 to-cyan-600'
-                        : isDarkMode
-                          ? 'bg-gray-700'
-                          : 'bg-gray-200'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs mb-4">
-              <span className={step >= 1 ? 'text-teal-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Select Clinic
-              </span>
-              <span className={step >= 2 ? 'text-teal-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Select Dentist
-              </span>
-              <span className={step >= 3 ? 'text-teal-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Date & Time
-              </span>
-              <span className={step >= 4 ? 'text-teal-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                Confirm
-              </span>
-            </div>
-          </div>
-
           {/* Content */}
           <form onSubmit={handleSubmit}>
             <div className="p-6 max-h-[60vh] overflow-y-auto">
-              {/* Step 1: Select Clinic */}
-              {step === 1 && (
+              {/* Step 1: Select Clinic - Only show if no preselected doctor */}
+              {!preselectedDoctor && step === 1 && (
                 <div className="space-y-4">
                   <h3 className={`text-lg font-semibold mb-4 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
@@ -559,8 +528,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                 </div>
               )}
 
-              {/* Step 2: Select Dentist */}
-              {step === 2 && (
+              {/* Step 2: Select Dentist - Only show if no preselected doctor */}
+              {!preselectedDoctor && step === 2 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className={`text-lg font-semibold ${
@@ -636,8 +605,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                 </div>
               )}
 
-              {/* Step 3: Select Date, Time, and Treatment */}
-              {step === 3 && (
+              {/* Date & Time Selection */}
+              {((preselectedDoctor && step === 1) || (!preselectedDoctor && step === 3)) && (
                 <div className="space-y-6">
                   <h3 className={`text-lg font-semibold mb-4 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
@@ -784,8 +753,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                 </div>
               )}
 
-              {/* Step 4: Confirmation */}
-              {step === 4 && (
+              {/* Confirmation */}
+              {((preselectedDoctor && step === 2) || (!preselectedDoctor && step === 4)) && (
                 <div className="space-y-6">
                   <h3 className={`text-lg font-semibold mb-4 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
@@ -886,7 +855,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
             </div>
 
             {/* Error Display */}
-            {error && step === 4 && (
+            {error && ((preselectedDoctor && step === 2) || (!preselectedDoctor && step === 4)) && (
               <div className="px-6 pb-4">
                 <div className={`p-4 rounded-lg ${
                   isDarkMode ? 'bg-red-900/20 border border-red-700' : 'bg-red-50 border border-red-200'
@@ -912,7 +881,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
               </Button>
 
               <div className="flex gap-3">
-                {step < 4 && (
+                {((preselectedDoctor && step < 2) || (!preselectedDoctor && step < 4)) && (
                   <Button
                     type="button"
                     onClick={handleNext}
@@ -922,7 +891,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                     Next
                   </Button>
                 )}
-                {step === 4 && (
+                {((preselectedDoctor && step === 2) || (!preselectedDoctor && step === 4)) && (
                   <Button
                     type="submit"
                     className="bg-gradient-to-r from-teal-600 to-cyan-600"

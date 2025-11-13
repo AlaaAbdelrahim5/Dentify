@@ -94,6 +94,41 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
   }
 });
 
+// Get all treatments for logged-in patient
+router.get('/patient/my-treatments', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const patientId = req.user.id;
+    const { status } = req.query;
+
+    const where = { patientId };
+    if (status && status !== 'all') {
+      where.status = status.toUpperCase().replace(' ', '_');
+    }
+
+    const treatments = await prisma.treatment.findMany({
+      where,
+      include: {
+        dentist: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            specialization: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json({ treatments });
+  } catch (error) {
+    console.error('Error fetching patient treatments:', error);
+    res.status(500).json({ error: 'Failed to fetch treatments' });
+  }
+});
+
 // Get all treatments (for admins and clinics)
 router.get('/', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
   try {

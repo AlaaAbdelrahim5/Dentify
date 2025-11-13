@@ -119,6 +119,58 @@ router.get('/dentist/my-payments', authenticate, authorize('Dentist'), async (re
   }
 });
 
+// Get all payments for patient
+router.get('/patient/my-payments', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const patientId = req.user.id;
+    const { method, startDate, endDate } = req.query;
+
+    const where = {
+      patientUserId: patientId
+    };
+
+    if (method && method !== 'all') {
+      where.method = method.toUpperCase();
+    }
+
+    if (startDate && endDate) {
+      where.paymentDate = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
+    }
+
+    const payments = await prisma.payment.findMany({
+      where,
+      include: {
+        treatment: {
+          include: {
+            dentist: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    phone: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        paymentDate: 'desc'
+      }
+    });
+
+    res.json({ payments });
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
 // Get payments for a specific treatment
 router.get('/treatment/:treatmentId', authenticate, async (req, res) => {
   try {

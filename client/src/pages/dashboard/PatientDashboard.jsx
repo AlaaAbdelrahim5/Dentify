@@ -28,7 +28,10 @@ import { authAPI } from '../../services/api'
 import { useTheme } from '../../contexts/ThemeContext'
 import PatientSidebar from '../../components/patient/PatientSidebar'
 import PatientAppointments from './patient/PatientAppointments'
+import PatientTreatments from './patient/PatientTreatments'
+import PatientPayments from './patient/PatientPayments'
 import FindDoctor from './patient/FindDentist'
+import FindClinic from './patient/FindClinic'
 
 const PatientDashboard = () => {
   const navigate = useNavigate()
@@ -452,37 +455,8 @@ const PatientDashboard = () => {
     )
   }
 
-  // Render Medical History Tab
-  const renderHistory = () => (
-    <div className="space-y-6">
-      <PageHeader
-        title="Medical History"
-        description="Your complete dental treatment timeline"
-      />
-      
-      <Card className="p-8">
-        <div className="text-center py-12">
-          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
-            isDarkMode 
-              ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
-              : 'bg-gradient-to-br from-gray-100 to-gray-200'
-          }`}>
-            <FaTooth className={`w-10 h-10 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-          </div>
-          <h3 className={`text-xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>Treatment History</h3>
-          <p className={`text-sm max-w-md mx-auto ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            Your complete treatment history and medical records will appear here
-          </p>
-        </div>
-      </Card>
-    </div>
-  )
+  // Render Treatment History Tab
+  const renderHistory = () => <PatientTreatments />
 
   // Render Settings Tab
   const renderSettings = () => (
@@ -509,8 +483,12 @@ const PatientDashboard = () => {
         return renderOverview()
       case 'find-dentist':
         return <FindDoctor />
+      case 'find-clinic':
+        return <FindClinic />
       case 'appointments':
         return <PatientAppointments />
+      case 'payments':
+        return <PatientPayments />
       case 'xrays':
         return renderXrays()
       case 'history':
