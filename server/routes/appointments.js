@@ -655,6 +655,7 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
 router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, res) => {
   try {
     const { id } = req.params;
+    const { sessionCost } = req.body;
 
     // Get existing appointment
     const existingAppointment = await prisma.appointment.findUnique({
@@ -682,7 +683,10 @@ router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, re
     // Update appointment status to COMPLETED
     const appointment = await prisma.appointment.update({
       where: { id: parseInt(id) },
-      data: { status: 'COMPLETED' },
+      data: { 
+        status: 'COMPLETED',
+        sessionCost: sessionCost ? parseFloat(sessionCost) : null
+      },
       include: {
         patient: {
           include: {

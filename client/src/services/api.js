@@ -412,7 +412,7 @@ export const appointmentsAPI = {
   cancel: (id) => ApiService.patch(`/appointments/${id}/cancel`),
   
   // Complete appointment (Dentist only)
-  complete: (id) => ApiService.patch(`/appointments/${id}/complete`),
+  complete: (id, data = {}) => ApiService.patch(`/appointments/${id}/complete`, data),
   
   // Delete appointment (Admin/Clinic only)
   delete: (id) => ApiService.delete(`/appointments/${id}`),

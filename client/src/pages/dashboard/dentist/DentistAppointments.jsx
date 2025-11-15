@@ -28,6 +28,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
+import SessionCostModal from '../../../components/dentist/SessionCostModal'
 import ToothChartModal from '../../../components/dentist/ToothChartModal'
 import { appointmentsAPI } from '../../../services/api'
 
@@ -38,6 +39,7 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false)
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+  const [isSessionCostModalOpen, setIsSessionCostModalOpen] = useState(false)
   const [isToothChartModalOpen, setIsToothChartModalOpen] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [appointments, setAppointments] = useState([])
@@ -234,15 +236,27 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
     }
   }
 
-  const handleCompleteAppointment = async (appointmentId) => {
+  const handleCompleteAppointment = (appointment) => {
+    // Check if appointment is linked to a treatment
+    if (!appointment.rawData?.treatmentId) {
+      alert('This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.')
+      return
+    }
+    setSelectedAppointment(appointment)
+    setIsSessionCostModalOpen(true)
+  }
+
+  const handleSaveSessionCost = async (sessionCost) => {
     try {
-      // Mark appointment as completed
-      await appointmentsAPI.complete(appointmentId)
+      // Mark appointment as completed with session cost
+      await appointmentsAPI.complete(selectedAppointment.id, { sessionCost })
       await fetchAppointments()
+      setIsSessionCostModalOpen(false)
+      setSelectedAppointment(null)
     } catch (err) {
       console.error('Error completing appointment:', err)
       const errorMessage = err.response?.data?.error || err.message || 'Failed to complete appointment. Please try again.'
-      alert(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -495,7 +509,7 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => handleCompleteAppointment(appointment.id)}
+                onClick={() => handleCompleteAppointment(appointment)}
                 title="Mark as Completed"
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
@@ -674,6 +688,20 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
         isOpen={isNewAppointmentModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveAppointment}
+      />
+
+      {/* Session Cost Modal */}
+      <SessionCostModal
+        isOpen={isSessionCostModalOpen}
+        onClose={() => {
+          setIsSessionCostModalOpen(false)
+          setSelectedAppointment(null)
+        }}
+        onSave={handleSaveSessionCost}
+        appointmentInfo={selectedAppointment ? {
+          patientName: selectedAppointment.patient.name,
+          treatment: selectedAppointment.treatment
+        } : null}
       />
 
       {/* Cancel Confirmation Modal */}

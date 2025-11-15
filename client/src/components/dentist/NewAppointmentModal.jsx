@@ -16,8 +16,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
   const [formData, setFormData] = useState({
     date: '',
     time: '',
-    sessionNotes: '',
-    sessionCost: ''
+    sessionNotes: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -252,7 +251,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
           startTime: startDateTime.toISOString(),
           endTime: endDateTime.toISOString(),
           sessionNotes: formData.sessionNotes || '',
-          sessionCost: formData.sessionCost ? parseFloat(formData.sessionCost) : null,
           treatmentId: preselectedPatient.treatmentId || null
         }
 
@@ -273,8 +271,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
     setFormData({
       date: '',
       time: '',
-      sessionNotes: '',
-      sessionCost: ''
+      sessionNotes: ''
     })
     setErrors({})
     setAvailableSlots([])
@@ -480,41 +477,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     }`}
                   />
-                </div>
-
-                {/* Session Cost */}
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    Session Cost (Optional)
-                  </label>
-                  <div className="relative">
-                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      name="sessionCost"
-                      value={formData.sessionCost}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      className={`w-full pl-8 pr-4 py-2 rounded-lg border transition-colors ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      }`}
-                    />
-                  </div>
-                  <p className={`text-xs mt-1 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    Estimated cost for this session
-                  </p>
                 </div>
               </div>
             </div>
