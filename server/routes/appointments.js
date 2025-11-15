@@ -290,6 +290,8 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist'), async 
       startTime, 
       endTime, 
       patientNotes,
+      sessionNotes,
+      sessionCost,
       treatmentId 
     } = req.body;
 
@@ -359,6 +361,8 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist'), async 
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         patientNotes,
+        sessionNotes,
+        sessionCost: sessionCost ? parseFloat(sessionCost) : null,
         treatmentId,
         status: req.user.role === 'Patient' ? 'PENDING' : 'CONFIRMED'
       },
@@ -675,6 +679,7 @@ router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, re
       return res.status(400).json({ error: 'Cannot complete a cancelled appointment' });
     }
 
+    // Update appointment status to COMPLETED
     const appointment = await prisma.appointment.update({
       where: { id: parseInt(id) },
       data: { status: 'COMPLETED' },
@@ -711,6 +716,22 @@ router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, re
         }
       }
     });
+
+    // If appointment has a sessionCost and is linked to a treatment, add the cost to treatment's totalAmount
+    if (appointment.sessionCost && appointment.treatmentId) {
+      const treatment = await prisma.treatment.findUnique({
+        where: { id: appointment.treatmentId }
+      });
+
+      if (treatment) {
+        await prisma.treatment.update({
+          where: { id: appointment.treatmentId },
+          data: {
+            totalAmount: treatment.totalAmount + appointment.sessionCost
+          }
+        });
+      }
+    }
 
     res.json({ 
       message: 'Appointment completed successfully',

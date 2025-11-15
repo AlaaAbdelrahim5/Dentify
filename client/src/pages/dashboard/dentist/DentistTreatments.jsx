@@ -984,7 +984,8 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         onSave={handleSaveAppointment}
         preselectedPatient={selectedTreatment ? {
           id: selectedTreatment.patientId,
-          name: selectedTreatment.patientName
+          name: selectedTreatment.patientName,
+          treatmentId: selectedTreatment.id
         } : null}
       />
 

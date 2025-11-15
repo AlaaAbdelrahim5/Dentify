@@ -322,19 +322,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                       </div>
                     )}
                   </div>
-
-                  {/* Logout Button - Keep for quick access */}
-                  <button
-                    onClick={handleLogout}
-                    className={`p-2.5 rounded-lg transition-all duration-200 group ${
-                      isDarkMode 
-                        ? 'hover:bg-red-900/20 text-gray-400 hover:text-red-400' 
-                        : 'hover:bg-red-50 text-gray-500 hover:text-red-600'
-                    }`}
-                    title="Logout"
-                  >
-                    <FaSignOutAlt className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-200" />
-                  </button>
                 </>
               )}
             </div>
