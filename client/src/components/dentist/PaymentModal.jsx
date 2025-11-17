@@ -12,6 +12,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
   const [patientTreatments, setPatientTreatments] = useState([])
   const [formData, setFormData] = useState({
     amount: '',
+    discount: '',
     paymentMethod: 'Cash',
     notes: ''
   })
@@ -32,6 +33,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       
       setFormData({
         amount: '',
+        discount: '',
         paymentMethod: 'Cash',
         notes: ''
       })
@@ -80,11 +82,19 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       newErrors.amount = 'Please enter a valid amount'
     }
 
+    if (formData.discount && parseFloat(formData.discount) < 0) {
+      newErrors.discount = 'Discount cannot be negative'
+    }
+
     const treatment = treatmentInfo || treatments.find(t => t.id.toString() === selectedTreatment)
     if (treatment) {
-      const remainingBalance = treatment.totalAmount - treatment.paidAmount
-      if (parseFloat(formData.amount) > remainingBalance) {
-        newErrors.amount = `Amount exceeds remaining balance ($${remainingBalance.toFixed(2)})`
+      const discount = formData.discount ? parseFloat(formData.discount) : 0
+      const amount = formData.amount ? parseFloat(formData.amount) : 0
+      const remainingBalance = treatment.totalAmount - (treatment.treatmentDiscount || 0) - treatment.paidAmount
+      
+      // Check if payment amount exceeds remaining balance
+      if (amount > remainingBalance) {
+        newErrors.amount = `Payment amount exceeds remaining balance ($${remainingBalance.toFixed(2)})`
       }
     }
 
@@ -102,6 +112,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       const paymentData = {
         treatmentId: treatment.id,
         amount: parseFloat(formData.amount),
+        discount: formData.discount ? parseFloat(formData.discount) : 0,
         method: formData.paymentMethod, // Backend expects 'method' not 'paymentMethod'
         notes: formData.notes || undefined
       }
@@ -116,6 +127,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
     setPatientTreatments([])
     setFormData({
       amount: '',
+      discount: '',
       paymentMethod: 'Cash',
       notes: ''
     })
@@ -127,14 +139,14 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
 
   const currentTreatment = treatmentInfo || treatments.find(t => t.id.toString() === selectedTreatment)
   const remainingBalance = currentTreatment 
-    ? currentTreatment.totalAmount - currentTreatment.paidAmount 
+    ? currentTreatment.totalAmount - (currentTreatment.treatmentDiscount || 0) - currentTreatment.paidAmount 
     : 0
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-transparent transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
 
@@ -196,6 +208,18 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
                   ${currentTreatment.totalAmount.toFixed(2)}
                 </p>
               </div>
+              {(currentTreatment.treatmentDiscount || 0) > 0 && (
+                <div>
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Total Discount
+                  </p>
+                  <p className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-orange-400' : 'text-orange-600'
+                  }`}>
+                    ${(currentTreatment.treatmentDiscount || 0).toFixed(2)}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   Paid Amount
@@ -310,6 +334,10 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               )}
             </>
           )}
+          
+          {/* Payment fields - Only show when treatment is selected */}
+          {currentTreatment && (
+          <>
           {/* Amount */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${
@@ -347,6 +375,35 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
                   Pay Full Balance
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* Discount */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Discount (Optional)
+            </label>
+            <Input
+              type="number"
+              name="discount"
+              value={formData.discount}
+              onChange={handleChange}
+              placeholder="Enter discount amount"
+              step="0.01"
+              min="0"
+              icon={FaDollarSign}
+            />
+            {errors.discount && (
+              <p className="text-red-500 text-sm mt-1">{errors.discount}</p>
+            )}
+            {formData.discount && parseFloat(formData.discount) > 0 && (
+              <p className={`text-xs mt-2 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                This discount will reduce the total treatment amount
+              </p>
             )}
           </div>
 
@@ -440,12 +497,14 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               type="submit"
               variant="primary"
               className="flex-1"
-              disabled={!treatmentInfo && (!selectedPatient || !selectedTreatment)}
+              disabled={!currentTreatment}
             >
               <FaSave className="w-4 h-4 mr-2" />
               Record Payment
             </Button>
           </div>
+          </>
+          )}
         </form>
         </div>
       </div>

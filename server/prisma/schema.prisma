@@ -156,16 +156,17 @@ model Appointment {
 
 // Treatment model
 model Treatment {
-  id            Int             @id @default(autoincrement())
-  patientId     Int
-  dentistId     Int
-  treatmentType String // e.g. "Root Canal", "Extraction"
-  description   String?
-  status        TreatmentStatus @default(IN_PROGRESS)
-  createdAt     DateTime        @default(now())
-  totalAmount   Float           @default(0)
-  paidAmount    Float           @default(0)
-  notes         String?
+  id               Int             @id @default(autoincrement())
+  patientId        Int
+  dentistId        Int
+  treatmentType    String // e.g. "Root Canal", "Extraction"
+  description      String?
+  status           TreatmentStatus @default(IN_PROGRESS)
+  createdAt        DateTime        @default(now())
+  totalAmount      Float           @default(0)
+  treatmentDiscount Float          @default(0) // Total discount applied to treatment from payments
+  paidAmount       Float           @default(0)
+  notes            String?
 
   // Teeth status list for this treatment.
   // [{ toothNumber: 12, conditionStatus:"Cavity", priority:"High", diagnosedDate:"2025-10-27", notes:"Deep decay" }, ...]
@@ -183,6 +184,7 @@ model Payment {
   id          Int           @id @default(autoincrement())
   treatmentId Int
   amount      Float
+  discount    Float         @default(0) // Payment-specific discount
   method      PaymentMethod
   paymentDate DateTime      @default(now())
   notes       String?

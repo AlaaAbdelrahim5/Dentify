@@ -88,6 +88,7 @@ const DentistPayments = () => {
     patientName: `${t.patient.firstName} ${t.patient.lastName}`,
     treatmentType: t.treatmentType,
     totalAmount: t.totalAmount,
+    treatmentDiscount: t.treatmentDiscount || 0,
     paidAmount: t.paidAmount,
     status: t.status.replace('_', ' '),
     creationDate: t.createdAt
@@ -101,6 +102,7 @@ const DentistPayments = () => {
     patientName: `${p.treatment.patient.firstName} ${p.treatment.patient.lastName}`,
     treatmentType: p.treatment.treatmentType,
     amount: p.amount,
+    discount: p.discount || 0,
     paymentMethod: p.method, // Keep uppercase: 'CASH' or 'CARD'
     paymentDate: p.paymentDate,
     notes: p.notes || ''
@@ -166,11 +168,12 @@ const DentistPayments = () => {
   const getStats = () => {
     const dateFilteredPayments = filterPaymentsByDate(mockPayments)
     const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
+    const totalDiscount = dateFilteredPayments.reduce((sum, p) => sum + p.discount, 0)
     const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
     const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CARD').reduce((sum, p) => sum + p.amount, 0)
     const count = dateFilteredPayments.length
     
-    return { total, cashPayments, cardPayments, count }
+    return { total, totalDiscount, cashPayments, cardPayments, count }
   }
 
   const stats = getStats()
@@ -246,10 +249,17 @@ const DentistPayments = () => {
               <td>${payment.treatmentType} - Payment</td>
               <td>$${payment.amount.toFixed(2)}</td>
             </tr>
+            ${payment.discount > 0 ? `
+            <tr>
+              <td>Discount Applied to Treatment</td>
+              <td style="color: #f97316;">$${payment.discount.toFixed(2)}</td>
+            </tr>
+            ` : ''}
           </tbody>
         </table>
         <div class="total">
           Total Paid: $${payment.amount.toFixed(2)}
+          ${payment.discount > 0 ? `<br><small style="color: #f97316;">($${payment.discount.toFixed(2)} discount applied to treatment total)</small>` : ''}
         </div>
         ${payment.notes ? `<p><strong>Notes:</strong> ${payment.notes}</p>` : ''}
         <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Invoice</button>
@@ -293,6 +303,15 @@ const DentistPayments = () => {
       accessor: 'amount',
       render: (value) => (
         <span className="font-semibold text-green-600 dark:text-green-400">
+          ${value.toFixed(2)}
+        </span>
+      )
+    },
+    {
+      label: 'Discount',
+      accessor: 'discount',
+      render: (value) => (
+        <span className={`font-semibold ${value > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`}>
           ${value.toFixed(2)}
         </span>
       )
@@ -354,6 +373,12 @@ const DentistPayments = () => {
           value: `$${stats.total.toFixed(2)}`,
           icon: FaDollarSign,
           gradient: 'from-green-600 to-green-700'
+        },
+        {
+          label: 'Total Discounts',
+          value: `$${stats.totalDiscount.toFixed(2)}`,
+          icon: FaFileInvoiceDollar,
+          gradient: 'from-orange-600 to-orange-700'
         },
         {
           label: 'Cash Payments',

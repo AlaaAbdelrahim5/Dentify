@@ -82,7 +82,7 @@ const DentistDashboard = () => {
       const token = authUtils.getAccessToken()
       
       // Fetch dentist profile
-      const dentistResponse = await fetch(`http://localhost:5000/api/dentists/profile`, {
+      const dentistResponse = await fetch(`http://localhost:5000/api/dentists/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -91,7 +91,8 @@ const DentistDashboard = () => {
       
       if (dentistResponse.ok) {
         const dentistData = await dentistResponse.json()
-        setDentistData(dentistData.data)
+        // The response structure is { data: { dentist: {...} } }
+        setDentistData(dentistData.data?.dentist || dentistData.data)
         
         // Fetch dashboard statistics
         await fetchDashboardStats(token)
@@ -234,7 +235,7 @@ const DentistDashboard = () => {
             <p className={`mt-2 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              {dentistData?.specialization?.join(', ') || 'General Practice'} • {dentistData?.clinic?.name || 'Clinic'}
+              {dentistData?.specialization?.join(', ') || 'General Practice'} • {dentistData?.clinic?.clinicName || 'Clinic'}
             </p>
           </div>
           <div className={`p-4 rounded-full ${
@@ -317,6 +318,7 @@ const DentistDashboard = () => {
         appointments={appointments}
         onAddAppointment={handleAddAppointment}
         onAppointmentClick={handleAppointmentClick}
+        dentistData={dentistData}
       />
     </div>
   )

@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.17.1",
+    "@prisma/client": "^6.19.0",
     "@supabase/supabase-js": "^2.75.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
@@ -20,13 +20,13 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^2.7.0",
-    "pg": "^8.16.3",
-    "prisma": "^6.17.1"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.7",
+    "prisma": "^6.19.0",
     "supertest": "^7.1.4"
   }
 }

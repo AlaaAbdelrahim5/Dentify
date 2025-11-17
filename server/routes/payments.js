@@ -247,7 +247,7 @@ router.get('/:id', authenticate, async (req, res) => {
 router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
   try {
     const dentistId = req.user.id;
-    const { treatmentId, amount, method, notes } = req.body;
+    const { treatmentId, amount, discount = 0, method, notes } = req.body;
 
     // Validate required fields
     if (!treatmentId || !amount || !method) {
@@ -267,11 +267,20 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Check if payment amount doesn't exceed remaining balance
-    const remainingBalance = treatment.totalAmount - treatment.paidAmount;
+    // Validate payment amount
+    if (parseFloat(amount) <= 0) {
+      return res.status(400).json({ 
+        error: 'Payment amount must be greater than zero' 
+      });
+    }
+
+    // Calculate remaining balance after considering existing payments and discounts
+    const remainingBalance = treatment.totalAmount - treatment.treatmentDiscount - treatment.paidAmount;
+    
+    // Check if payment doesn't exceed remaining balance
     if (parseFloat(amount) > remainingBalance) {
       return res.status(400).json({ 
-        error: `Payment amount (${amount}) exceeds remaining balance (${remainingBalance})` 
+        error: `Payment amount ($${amount}) exceeds remaining balance ($${remainingBalance.toFixed(2)})` 
       });
     }
 
@@ -281,6 +290,7 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
         treatmentId: parseInt(treatmentId),
         patientUserId: treatment.patientId,
         amount: parseFloat(amount),
+        discount: parseFloat(discount),
         method: method.toUpperCase(),
         notes
       },
@@ -303,19 +313,34 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       }
     });
 
-    // Update treatment paidAmount
-    await prisma.treatment.update({
+    // Update treatment: 
+    // - Discount reduces the total amount owed
+    // - Payment amount increases what's been paid
+    const updatedTreatment = await prisma.treatment.update({
       where: { id: parseInt(treatmentId) },
       data: {
         paidAmount: {
           increment: parseFloat(amount)
+        },
+        treatmentDiscount: {
+          increment: parseFloat(discount)
+        }
+      },
+      include: {
+        patient: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true
+          }
         }
       }
     });
 
     res.status(201).json({ 
       message: 'Payment recorded successfully', 
-      payment 
+      payment,
+      treatment: updatedTreatment
     });
   } catch (error) {
     console.error('Error creating payment:', error);
@@ -329,7 +354,7 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res)
     const { id } = req.params;
     const userId = req.user.id;
     const userRole = req.user.role;
-    const { amount, method, notes } = req.body;
+    const { amount, discount, method, notes } = req.body;
 
     // Check if payment exists
     const existingPayment = await prisma.payment.findUnique({
@@ -348,16 +373,26 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res)
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // If amount is being changed, adjust the treatment's paidAmount
-    if (amount !== undefined && parseFloat(amount) !== existingPayment.amount) {
-      const amountDifference = parseFloat(amount) - existingPayment.amount;
-      
-      // Update treatment paidAmount
+    // If amount or discount is being changed, adjust the treatment's paidAmount and treatmentDiscount
+    const oldAmount = existingPayment.amount;
+    const oldDiscount = existingPayment.discount;
+    const newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
+    const newDiscount = discount !== undefined ? parseFloat(discount) : oldDiscount;
+    
+    // Calculate the differences
+    const amountDifference = newAmount - oldAmount;
+    const discountDifference = newDiscount - oldDiscount;
+    
+    if (amountDifference !== 0 || discountDifference !== 0) {
+      // Update treatment: amount goes to paidAmount, discount reduces total amount owed
       await prisma.treatment.update({
         where: { id: existingPayment.treatmentId },
         data: {
           paidAmount: {
             increment: amountDifference
+          },
+          treatmentDiscount: {
+            increment: discountDifference
           }
         }
       });
@@ -365,6 +400,7 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res)
 
     const updateData = {};
     if (amount !== undefined) updateData.amount = parseFloat(amount);
+    if (discount !== undefined) updateData.discount = parseFloat(discount);
     if (method) updateData.method = method.toUpperCase();
     if (notes !== undefined) updateData.notes = notes;
 
@@ -424,12 +460,15 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, r
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Update treatment paidAmount before deleting payment
+    // Update treatment paidAmount and treatmentDiscount before deleting payment
     await prisma.treatment.update({
       where: { id: payment.treatmentId },
       data: {
         paidAmount: {
           decrement: payment.amount
+        },
+        treatmentDiscount: {
+          decrement: payment.discount
         }
       }
     });

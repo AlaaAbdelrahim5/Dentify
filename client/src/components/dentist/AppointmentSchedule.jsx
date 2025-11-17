@@ -3,19 +3,47 @@ import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaUser, FaClock, FaPlus }
 import { useTheme } from '../../contexts/ThemeContext'
 import { Button } from '../index'
 
-const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmentClick }) => {
+const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmentClick, dentistData = null }) => {
   const { isDarkMode } = useTheme()
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState('week') // week or day
+  
+  // Filter out pending and cancelled appointments
+  const filteredAppointments = useMemo(() => {
+    const filtered = appointments.filter(apt => 
+      apt.status !== 'PENDING' && apt.status !== 'CANCELLED'
+    )
+    
+    // Debug: Log appointment data to help troubleshoot
+    if (filtered.length > 0) {
+      console.log('📅 Appointments for calendar:', filtered.map(apt => ({
+        id: apt.id,
+        patient: apt.patient?.firstName || apt.patient?.name,
+        date: new Date(apt.appointmentDate).toLocaleDateString(),
+        startTime: new Date(apt.startTime).toLocaleTimeString(),
+        endTime: apt.endTime ? new Date(apt.endTime).toLocaleTimeString() : 'No end time',
+        status: apt.status
+      })))
+    }
+    
+    return filtered
+  }, [appointments])
 
   // Get week dates (Mon-Sat for dental practice)
   const getWeekDates = (date) => {
     const current = new Date(date)
-    const first = current.getDate() - current.getDay() + 1 // Monday
-    const weekDates = []
+    current.setHours(0, 0, 0, 0) // Reset time to start of day
     
+    const currentDay = current.getDay()
+    const diff = currentDay === 0 ? -6 : 1 - currentDay // Calculate days to Monday
+    
+    const monday = new Date(current)
+    monday.setDate(current.getDate() + diff)
+    
+    const weekDates = []
     for (let i = 0; i < 6; i++) { // Mon-Sat (6 days)
-      const day = new Date(current.setDate(first + i))
+      const day = new Date(monday)
+      day.setDate(monday.getDate() + i)
       weekDates.push(day)
     }
     
@@ -33,52 +61,112 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return `${hour12}:${minutes} ${period}`
   }
 
-  // Time slots (8 AM - 8 PM)
+  // Generate time slots based on dentist working hours
   const timeSlots = useMemo(() => {
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours) || dentistData.workingHours.length === 0) {
+      // Default: 8 AM - 8 PM
+      const slots = []
+      for (let hour = 8; hour <= 20; hour++) {
+        slots.push(`${hour.toString().padStart(2, '0')}:00`)
+        if (hour < 20) {
+          slots.push(`${hour.toString().padStart(2, '0')}:30`)
+        }
+      }
+      return slots
+    }
+
+    // Find earliest start and latest end from working hours
+    let earliestHour = 24
+    let latestHour = 0
+    
+    dentistData.workingHours.forEach(schedule => {
+      if (schedule.start) {
+        const startHour = parseInt(schedule.start.split(':')[0])
+        earliestHour = Math.min(earliestHour, startHour)
+      }
+      if (schedule.end) {
+        const endHour = parseInt(schedule.end.split(':')[0])
+        latestHour = Math.max(latestHour, endHour)
+      }
+    })
+
+    // Default to 8-20 if no valid hours found
+    if (earliestHour === 24 || latestHour === 0) {
+      earliestHour = 8
+      latestHour = 20
+    }
+
+    // Generate slots for working hours range
     const slots = []
-    for (let hour = 8; hour <= 20; hour++) {
+    for (let hour = earliestHour; hour <= latestHour; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`)
-      if (hour < 20) {
+      if (hour < latestHour) {
         slots.push(`${hour.toString().padStart(2, '0')}:30`)
       }
     }
     return slots
-  }, [])
+  }, [dentistData])
 
-  // Group appointments by date
+  // Group filtered appointments by date
   const appointmentsByDate = useMemo(() => {
     const grouped = {}
-    appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate).toDateString()
-      if (!grouped[date]) {
-        grouped[date] = []
+    filteredAppointments.forEach(apt => {
+      const aptDate = new Date(apt.appointmentDate)
+      aptDate.setHours(0, 0, 0, 0) // Reset time for consistent comparison
+      const dateKey = aptDate.toDateString()
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = []
       }
-      grouped[date].push(apt)
+      grouped[dateKey].push(apt)
     })
     return grouped
-  }, [appointments])
+  }, [filteredAppointments])
 
-  // Get appointments for a specific time slot
+  // Get appointments for a specific time slot (shows appointments that START in or near this slot)
   const getAppointmentsForSlot = (date, timeSlot) => {
-    const dateStr = date.toDateString()
+    const dateObj = new Date(date)
+    dateObj.setHours(0, 0, 0, 0) // Reset time for consistent comparison
+    const dateStr = dateObj.toDateString()
     const dayAppointments = appointmentsByDate[dateStr] || []
     
     return dayAppointments.filter(apt => {
+      if (!apt.startTime) return false
+      
       const startTime = new Date(apt.startTime)
       const hours = startTime.getHours()
       const minutes = startTime.getMinutes()
-      const slotTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-      return slotTime === timeSlot
+      
+      // Parse the time slot
+      const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+      
+      // Calculate slot boundaries (30-minute slots)
+      // An appointment shows in the slot where it starts
+      // Round down to nearest 30-minute slot
+      const aptSlotMinute = minutes >= 30 ? 30 : 0
+      
+      return hours === slotHour && aptSlotMinute === slotMinute
     })
   }
 
-  // Calculate appointment height based on duration
+  // Calculate appointment height based on duration (minimum 1 slot = 60px)
   const getAppointmentHeight = (apt) => {
+    if (!apt.endTime || !apt.startTime) {
+      // If no end time, use default appointment duration or 30 minutes
+      const duration = dentistData?.appointmentDuration || 30
+      return (duration / 30) * 60 // 60px per 30-minute slot
+    }
+    
     const start = new Date(apt.startTime)
     const end = new Date(apt.endTime)
     const duration = (end - start) / (1000 * 60) // minutes
-    const slots = duration / 30 // each slot is 30 min
-    return slots * 60 // 60px per slot
+    
+    // Ensure minimum height of one slot even for very short appointments
+    const minDuration = 30
+    const actualDuration = Math.max(duration, minDuration)
+    
+    const slots = actualDuration / 30 // each slot is 30 min
+    return Math.ceil(slots) * 60 // 60px per slot, rounded up to nearest slot
   }
 
   // Navigation
@@ -100,7 +188,10 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
   const isToday = (date) => {
     const today = new Date()
-    return date.toDateString() === today.toDateString()
+    today.setHours(0, 0, 0, 0)
+    const compareDate = new Date(date)
+    compareDate.setHours(0, 0, 0, 0)
+    return compareDate.getTime() === today.getTime()
   }
 
   const getStatusColor = (status) => {
@@ -184,7 +275,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[900px]">
           {/* Day Headers */}
           <div className={`grid grid-cols-7 border-b sticky top-0 z-10 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
@@ -194,31 +285,34 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             }`}>
               Time
             </div>
-            {weekDates.map((date, index) => (
-              <div
-                key={index}
-                className={`p-3 text-center ${
-                  isToday(date)
-                    ? 'bg-teal-500/10'
-                    : ''
-                }`}
-              >
-                <div className={`text-xs font-semibold ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+            {weekDates.map((date, index) => {
+              const dateObj = new Date(date)
+              return (
+                <div
+                  key={index}
+                  className={`p-3 text-center ${
+                    isToday(dateObj)
+                      ? 'bg-teal-500/10'
+                      : ''
+                  }`}
+                >
+                  <div className={`text-xs font-semibold ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {dateObj.toLocaleDateString('en-US', { weekday: 'short' })}
+                  </div>
+                  <div className={`text-lg font-bold mt-1 ${
+                    isToday(dateObj)
+                      ? 'text-teal-600'
+                      : isDarkMode
+                        ? 'text-white'
+                        : 'text-gray-800'
+                  }`}>
+                    {dateObj.getDate()}
+                  </div>
                 </div>
-                <div className={`text-lg font-bold mt-1 ${
-                  isToday(date)
-                    ? 'text-teal-600'
-                    : isDarkMode
-                      ? 'text-white'
-                      : 'text-gray-800'
-                }`}>
-                  {date.getDate()}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Time Grid */}
@@ -242,7 +336,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
                 {/* Day Cells */}
                 {weekDates.map((date, dateIndex) => {
-                  const appointments = getAppointmentsForSlot(date, time)
+                  const dateObj = new Date(date)
+                  const appointments = getAppointmentsForSlot(dateObj, time)
                   
                   return (
                     <div
@@ -250,7 +345,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                       className={`relative p-1 border-r ${
                         isDarkMode ? 'border-gray-700' : 'border-gray-200'
                       } ${
-                        isToday(date) ? 'bg-teal-500/5' : ''
+                        isToday(dateObj) ? 'bg-teal-500/5' : ''
                       }`}
                     >
                       {appointments.map((apt, aptIndex) => (
@@ -277,7 +372,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                             <FaClock className="w-2.5 h-2.5" />
                             {new Date(apt.startTime).toLocaleTimeString('en-US', { 
                               hour: '2-digit', 
-                              minute: '2-digit' 
+                              minute: '2-digit',
+                              hour12: true
                             })}
                           </div>
                         </div>
@@ -306,21 +402,9 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Pending
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500"></div>
             <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               Completed
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Cancelled
             </span>
           </div>
         </div>

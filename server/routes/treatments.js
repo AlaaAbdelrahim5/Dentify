@@ -76,7 +76,17 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
           select: {
             userId: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            birthDate: true,
+            gender: true,
+            city: true,
+            user: {
+              select: {
+                email: true,
+                phone: true,
+                status: true
+              }
+            }
           }
         }
         // Removed nested appointments and payments - they are rarely needed in list view
@@ -248,6 +258,8 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
         treatmentType,
         description,
         totalAmount: parseFloat(totalAmount) || 0,
+        treatmentDiscount: 0, // Initialize with 0, will be updated when payments with discounts are made
+        paidAmount: 0, // Initialize with 0
         notes,
         teethStatus: teethStatus || [],
         status: 'IN_PROGRESS'
@@ -288,6 +300,7 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
       status,
       totalAmount, 
       paidAmount,
+      treatmentDiscount,
       notes,
       teethStatus 
     } = req.body;
@@ -311,6 +324,7 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
     if (status) updateData.status = status;
     if (totalAmount !== undefined) updateData.totalAmount = parseFloat(totalAmount);
     if (paidAmount !== undefined) updateData.paidAmount = parseFloat(paidAmount);
+    if (treatmentDiscount !== undefined) updateData.treatmentDiscount = parseFloat(treatmentDiscount);
     if (notes !== undefined) updateData.notes = notes;
     if (teethStatus !== undefined) updateData.teethStatus = teethStatus;
 

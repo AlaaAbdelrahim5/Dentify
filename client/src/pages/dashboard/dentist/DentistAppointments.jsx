@@ -121,7 +121,7 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
     return displayAppointments
       .filter(apt => {
         const aptDate = new Date(apt.appointmentDate)
-        return aptDate >= today && aptDate < tomorrow && apt.status === 'CONFIRMED'
+        return aptDate >= today && aptDate < tomorrow && (apt.status === 'CONFIRMED' || apt.status === 'COMPLETED')
       })
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
   }, [displayAppointments])
@@ -146,8 +146,8 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
     const now = new Date()
     return displayAppointments
       .filter(apt => {
-        const aptDate = new Date(apt.appointmentDate)
-        return aptDate < now
+        const aptEndTime = new Date(apt.endTime)
+        return aptEndTime < now
       })
       .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
   }, [displayAppointments])
@@ -591,12 +591,6 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
       <PageHeader
         title="Appointments"
         description="Manage and track your daily appointment schedule"
-        actions={
-          <Button variant="primary" onClick={handleNewAppointment}>
-            <FaPlus className="w-4 h-4 mr-2" />
-            New Appointment
-          </Button>
-        }
       />
 
       {/* Stats Overview */}

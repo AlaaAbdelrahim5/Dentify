@@ -188,6 +188,71 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Get dashboard statistics for dentist
+router.get('/dashboard-stats', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const dentistUserId = req.user.id;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get today's appointments (excluding pending and cancelled)
+    const todayAppointments = await prisma.appointment.count({
+      where: {
+        dentistId: dentistUserId,
+        appointmentDate: {
+          gte: today,
+          lt: tomorrow
+        },
+        status: {
+          notIn: ['PENDING', 'CANCELLED']
+        }
+      }
+    });
+
+    // Get total unique patients
+    const totalPatients = await prisma.treatment.groupBy({
+      by: ['patientId'],
+      where: {
+        dentistId: dentistUserId
+      }
+    });
+
+    // Get pending treatments
+    const pendingTreatments = await prisma.treatment.count({
+      where: {
+        dentistId: dentistUserId,
+        status: 'IN_PROGRESS'
+      }
+    });
+
+    // Get completed appointments today
+    const completedToday = await prisma.appointment.count({
+      where: {
+        dentistId: dentistUserId,
+        appointmentDate: {
+          gte: today,
+          lt: tomorrow
+        },
+        status: 'COMPLETED'
+      }
+    });
+
+    return successResponse(res, {
+      stats: {
+        todayAppointments,
+        totalPatients: totalPatients.length,
+        pendingTreatments,
+        completedToday
+      }
+    }, 'Dashboard stats fetched successfully');
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    return errorResponse(res, 'Failed to fetch dashboard stats');
+  }
+});
+
 // Get current logged-in dentist profile
 router.get('/me', authenticate, authorize('Dentist'), async (req, res) => {
   try {

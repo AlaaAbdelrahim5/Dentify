@@ -85,8 +85,9 @@ const TreatmentDetailsModal = ({
     }
   }
 
-  const remainingBalance = treatmentData.totalAmount - treatmentData.paidAmount
-  const paymentProgress = (treatmentData.paidAmount / treatmentData.totalAmount) * 100
+  const remainingBalance = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0) - treatmentData.paidAmount
+  const effectiveTotal = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0)
+  const paymentProgress = effectiveTotal > 0 ? (treatmentData.paidAmount / effectiveTotal) * 100 : 0
 
   const getStatusDisplay = (status) => {
     switch (status) {
@@ -413,7 +414,7 @@ const TreatmentDetailsModal = ({
           {activeTab === 'payments' && (
             <div className="space-y-6">
               {/* Payment Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-green-50 to-green-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
@@ -429,6 +430,24 @@ const TreatmentDetailsModal = ({
                     </div>
                   </Card.Content>
                 </Card>
+
+                {(treatmentData.treatmentDiscount || 0) > 0 && (
+                  <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-orange-50 to-orange-100'}>
+                    <Card.Content className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-orange-600'}`}>
+                            Total Discount
+                          </p>
+                          <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-orange-900'}`}>
+                            ${(treatmentData.treatmentDiscount || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <FaDollarSign className={`w-10 h-10 ${isDarkMode ? 'text-orange-400' : 'text-orange-500'}`} />
+                      </div>
+                    </Card.Content>
+                  </Card>
+                )}
 
                 <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-teal-50 to-teal-100'}>
                   <Card.Content className="p-4">
@@ -447,23 +466,24 @@ const TreatmentDetailsModal = ({
                 </Card>
 
                 <Card className={isDarkMode ? 'bg-gray-700/50' : remainingBalance > 0 
-                  ? 'bg-gradient-to-br from-orange-50 to-orange-100' 
-                  : 'bg-gradient-to-br from-green-50 to-green-100'
+                  ? 'bg-gradient-to-br from-red-50 to-red-100' 
+                  : 'bg-gradient-to-br from-blue-50 to-blue-100'
                 }>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' 
-                          : remainingBalance > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                          : remainingBalance > 0 ? 'text-red-600' : 'text-blue-600'}`}>
                           {remainingBalance > 0 ? 'Balance Due' : 'Fully Paid'}
                         </p>
                         <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' 
-                          : remainingBalance > 0 ? 'text-orange-900' : 'text-green-900'}`}>
+                          : remainingBalance > 0 ? 'text-red-900' : 'text-blue-900'}`}>
                           ${remainingBalance.toFixed(2)}
                         </p>
                       </div>
-                      <FaDollarSign className={`w-10 h-10 ${isDarkMode ? 'text-orange-400' 
-                        : remainingBalance > 0 ? 'text-orange-500' : 'text-green-500'}`} />
+                      <FaDollarSign className={`w-10 h-10 ${isDarkMode 
+                        ? remainingBalance > 0 ? 'text-red-400' : 'text-blue-400'
+                        : remainingBalance > 0 ? 'text-red-500' : 'text-blue-500'}`} />
                     </div>
                   </Card.Content>
                 </Card>

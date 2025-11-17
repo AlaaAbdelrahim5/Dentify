@@ -146,6 +146,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         treatmentStatus: statusMap[treatment.status] || treatment.status,
         creationDate: treatment.createdAt,
         totalAmount: treatment.totalAmount || 0,
+        treatmentDiscount: treatment.treatmentDiscount || 0,
         paidAmount: treatment.paidAmount || 0,
         notes: treatment.notes || '',
         priority: 'Medium', // TODO: Add priority field to schema
@@ -416,8 +417,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       console.log('Creating payment:', paymentData)
       const response = await paymentsAPI.create(paymentData)
       console.log('Payment created:', response)
-      alert('Payment recorded successfully!')
+      
+      // Wait a brief moment for database consistency
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Refresh all data to get updated treatment amounts
       await fetchAllData()
+      
+      alert('Payment recorded successfully!')
       setIsPaymentModalOpen(false)
       setSelectedTreatment(null)
     } catch (error) {
@@ -477,8 +484,10 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   }
 
   const TreatmentCard = ({ treatment }) => {
-    const remainingBalance = treatment.totalAmount - treatment.paidAmount
-    const paymentProgress = (treatment.paidAmount / treatment.totalAmount) * 100
+    const treatmentDiscount = treatment.treatmentDiscount || 0
+    const effectiveTotal = treatment.totalAmount - treatmentDiscount
+    const remainingBalance = effectiveTotal - treatment.paidAmount
+    const paymentProgress = effectiveTotal > 0 ? (treatment.paidAmount / effectiveTotal) * 100 : 0
 
     return (
       <Card className={`p-6 ${
@@ -561,6 +570,18 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
                 ${treatment.paidAmount.toFixed(2)}
               </span>
             </div>
+            {treatmentDiscount > 0 && (
+              <div>
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  Discount:{' '}
+                </span>
+                <span className={`font-semibold ${
+                  isDarkMode ? 'text-orange-400' : 'text-orange-600'
+                }`}>
+                  ${treatmentDiscount.toFixed(2)}
+                </span>
+              </div>
+            )}
             <div>
               <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                 Balance:{' '}
@@ -570,7 +591,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
                   ? isDarkMode ? 'text-orange-400' : 'text-orange-600'
                   : isDarkMode ? 'text-green-400' : 'text-green-600'
               }`}>
-                ${remainingBalance.toFixed(2)}
+                ${Math.max(0, remainingBalance).toFixed(2)}
               </span>
             </div>
           </div>

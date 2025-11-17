@@ -56,7 +56,16 @@ const DentistPatients = () => {
       treatments.forEach(treatment => {
         const patientId = treatment.patient.userId
         if (!patientMap.has(patientId)) {
-          patientMap.set(patientId, treatment.patient)
+          // Store the complete patient data with user info
+          const patientData = {
+            ...treatment.patient,
+            user: treatment.patient.user || {
+              email: treatment.patient.email,
+              phone: treatment.patient.phone,
+              status: treatment.patient.status || 'ACTIVE'
+            }
+          }
+          patientMap.set(patientId, patientData)
         }
       })
       
@@ -105,8 +114,10 @@ const DentistPatients = () => {
   }
 
   const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return 'N/A'
     const today = new Date()
     const birthDate = new Date(dateOfBirth)
+    if (isNaN(birthDate.getTime())) return 'N/A'
     let age = today.getFullYear() - birthDate.getFullYear()
     const monthDiff = today.getMonth() - birthDate.getMonth()
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -307,7 +318,9 @@ const DentistPatients = () => {
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`} />
             <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-              Born: {new Date(patient.dateOfBirth).toLocaleDateString()}
+              Born: {patient.dateOfBirth && !isNaN(new Date(patient.dateOfBirth).getTime()) 
+                ? new Date(patient.dateOfBirth).toLocaleDateString() 
+                : 'N/A'}
             </span>
           </div>
         </Card.Content>
