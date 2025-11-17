@@ -6,6 +6,21 @@ const prisma = require('../utils/prisma');
 // Get patient's appointments
 router.get('/patient/my-appointments', authenticate, authorize('Patient'), async (req, res) => {
   try {
+    // Auto-cancel pending appointments that have passed
+    const now = new Date();
+    await prisma.appointment.updateMany({
+      where: {
+        patientId: req.user.id,
+        status: 'PENDING',
+        endTime: {
+          lt: now
+        }
+      },
+      data: {
+        status: 'CANCELLED'
+      }
+    });
+
     const appointments = await prisma.appointment.findMany({
       where: { patientId: req.user.id },
       include: {
@@ -53,6 +68,21 @@ router.get('/patient/my-appointments', authenticate, authorize('Patient'), async
 // Get dentist's appointments
 router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async (req, res) => {
   try {
+    // Auto-cancel pending appointments that have passed
+    const now = new Date();
+    await prisma.appointment.updateMany({
+      where: {
+        dentistId: req.user.id,
+        status: 'PENDING',
+        endTime: {
+          lt: now
+        }
+      },
+      data: {
+        status: 'CANCELLED'
+      }
+    });
+
     const appointments = await prisma.appointment.findMany({
       where: { dentistId: req.user.id },
       include: {
@@ -109,6 +139,21 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
 // Get clinic's appointments
 router.get('/clinic/my-appointments', authenticate, authorize('Clinic'), async (req, res) => {
   try {
+    // Auto-cancel pending appointments that have passed
+    const now = new Date();
+    await prisma.appointment.updateMany({
+      where: {
+        clinicId: req.user.id,
+        status: 'PENDING',
+        endTime: {
+          lt: now
+        }
+      },
+      data: {
+        status: 'CANCELLED'
+      }
+    });
+
     const appointments = await prisma.appointment.findMany({
       where: { clinicId: req.user.id },
       include: {
@@ -568,6 +613,45 @@ router.put('/:id', authenticate, async (req, res) => {
         }
       }
     });
+
+    // If status is being changed to CONFIRMED, cancel any other pending appointments in the same time slot
+    if (status === 'CONFIRMED') {
+      const appointmentStartTime = appointment.startTime;
+      const appointmentEndTime = appointment.endTime;
+      const appointmentDate = appointment.appointmentDate;
+
+      await prisma.appointment.updateMany({
+        where: {
+          dentistId: appointment.dentistId,
+          appointmentDate: appointmentDate,
+          status: 'PENDING',
+          id: { not: parseInt(id) },
+          OR: [
+            {
+              AND: [
+                { startTime: { lte: appointmentStartTime } },
+                { endTime: { gt: appointmentStartTime } }
+              ]
+            },
+            {
+              AND: [
+                { startTime: { lt: appointmentEndTime } },
+                { endTime: { gte: appointmentEndTime } }
+              ]
+            },
+            {
+              AND: [
+                { startTime: { gte: appointmentStartTime } },
+                { endTime: { lte: appointmentEndTime } }
+              ]
+            }
+          ]
+        },
+        data: {
+          status: 'CANCELLED'
+        }
+      });
+    }
 
     res.json({ 
       message: 'Appointment updated successfully',

@@ -127,12 +127,29 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         response.appointmentDuration || 30
       )
       
-      // Mark booked slots
-      const booked = response.appointments.map(apt => {
-        const startTime = new Date(apt.startTime)
-        const timeString = startTime.toTimeString().substring(0, 5) // Format: HH:MM
-        console.log(`Booked slot: ${timeString}`)
-        return timeString
+      // Mark booked slots - check for overlaps with existing appointments
+      const booked = []
+      const duration = response.appointmentDuration || 30
+      
+      slots.forEach(slot => {
+        const [slotHour, slotMinute] = slot.split(':').map(Number)
+        const slotStart = new Date(date)
+        slotStart.setHours(slotHour, slotMinute, 0, 0)
+        const slotEnd = new Date(slotStart.getTime() + duration * 60000)
+        
+        // Check if this slot overlaps with any existing appointment
+        const hasOverlap = response.appointments.some(apt => {
+          const aptStart = new Date(apt.startTime)
+          const aptEnd = new Date(apt.endTime)
+          
+          // Check for overlap: slot overlaps if it starts before apt ends AND ends after apt starts
+          return slotStart < aptEnd && slotEnd > aptStart
+        })
+        
+        if (hasOverlap) {
+          booked.push(slot)
+          console.log(`Booked slot (overlap detected): ${slot}`)
+        }
       })
       
       console.log('Generated slots:', slots)
@@ -159,6 +176,9 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     const [startHour, startMinute] = workingHours.start.split(':').map(Number)
     const [endHour, endMinute] = workingHours.end.split(':').map(Number)
     
+    // Convert end time to minutes for easier comparison
+    const endTimeInMinutes = endHour * 60 + endMinute
+    
     let currentHour = startHour
     let currentMinute = startMinute
 
@@ -168,8 +188,19 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     ) {
       const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
       
+      // Calculate appointment end time
+      const slotStartInMinutes = currentHour * 60 + currentMinute
+      const slotEndInMinutes = slotStartInMinutes + duration
+      
+      // Check if appointment fits within working hours
+      if (slotEndInMinutes > endTimeInMinutes) {
+        // Appointment would extend beyond working hours, stop generating slots
+        break
+      }
+      
       // Check if this slot is during a break
       let isDuringBreak = false
+      let breakEndTime = null
       if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
         for (const breakPeriod of workingHours.breaks) {
           const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
@@ -179,11 +210,20 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           const breakStartMinutes = breakStartHour * 60 + breakStartMinute
           const breakEndMinutes = breakEndHour * 60 + breakEndMinute
           
+          // Slot is during break if it's >= break start AND < break end
           if (slotMinutes >= breakStartMinutes && slotMinutes < breakEndMinutes) {
             isDuringBreak = true
+            breakEndTime = { hour: breakEndHour, minute: breakEndMinute }
             break
           }
         }
+      }
+      
+      if (isDuringBreak && breakEndTime) {
+        // Skip to the end of the break
+        currentHour = breakEndTime.hour
+        currentMinute = breakEndTime.minute
+        continue
       }
       
       if (!isDuringBreak) {
