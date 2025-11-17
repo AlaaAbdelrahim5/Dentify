@@ -9,8 +9,11 @@ import Button from '../Button'
 const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
   const { isDarkMode } = useTheme()
 
-  const remainingBalance = treatment.totalAmount - treatment.paidAmount
-  const paymentProgress = (treatment.paidAmount / treatment.totalAmount) * 100
+  // Calculate payments correctly accounting for discount
+  const treatmentDiscount = treatment.treatmentDiscount || 0
+  const effectiveTotal = treatment.totalAmount - treatmentDiscount
+  const remainingBalance = effectiveTotal - treatment.paidAmount
+  const paymentProgress = effectiveTotal > 0 ? (treatment.paidAmount / effectiveTotal) * 100 : 0
 
   const getPriorityColor = (priority) => {
     switch (priority) {

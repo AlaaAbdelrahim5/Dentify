@@ -203,13 +203,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                         }`}>
                           {currentUser ? authUtils.getUserName() : 'User'}
                         </span>
-                        {currentUser?.role && (
-                          <span className={`text-xs font-medium ${
-                            isDarkMode ? 'text-teal-400' : 'text-teal-600'
-                          }`}>
-                            {currentUser.role}
-                          </span>
-                        )}
                       </div>
                       {/* Dropdown Indicator */}
                       <FaChevronDown 
@@ -419,13 +412,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                       }`}>
                         {currentUser ? authUtils.getUserName() : 'User'}
                       </span>
-                      {currentUser?.role && (
-                        <span className={`text-sm font-medium ${
-                          isDarkMode ? 'text-teal-400' : 'text-teal-600'
-                        }`}>
-                          {currentUser.role}
-                        </span>
-                      )}
                     </div>
                     {/* Notification Badge */}
                     <div className="relative">

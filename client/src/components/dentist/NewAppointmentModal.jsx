@@ -24,6 +24,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
   const [availableSlots, setAvailableSlots] = useState([])
   const [bookedSlots, setBookedSlots] = useState([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [appointmentDuration, setAppointmentDuration] = useState(30) // Default 30 minutes
 
   // Fetch available slots when date is selected
   useEffect(() => {
@@ -44,15 +45,18 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
 
       const response = await appointmentsAPI.getAvailableSlots(user.id, date)
       
+      // Store the dentist's appointment duration
+      const duration = response.appointmentDuration || 30
+      setAppointmentDuration(duration)
+      
       // Generate time slots based on working hours
       const slots = generateTimeSlotsFromWorkingHours(
         response.workingHours,
-        response.appointmentDuration || 30
+        duration
       )
       
       // Mark booked slots - check for overlaps with existing appointments
       const booked = []
-      const duration = response.appointmentDuration || 30
       
       slots.forEach(slot => {
         const [slotHour, slotMinute] = slot.split(':').map(Number)
@@ -281,7 +285,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
         
         // Construct appointment data
         const startDateTime = new Date(`${formData.date}T${formData.time}`)
-        const endDateTime = new Date(startDateTime.getTime() + 30 * 60000) // 30 minutes duration
+        const endDateTime = new Date(startDateTime.getTime() + appointmentDuration * 60000) // Use dentist's appointment duration
         
         const appointmentData = {
           patientId: preselectedPatient.id,

@@ -26,28 +26,34 @@ export const ThemeProvider = ({ children }) => {
     return false
   })
 
-  // Apply initial theme on mount
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-      document.body.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.body.classList.remove('dark')
-    }
-  }, [])
-
-  useEffect(() => {
-    // Update document class and localStorage
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-      document.body.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.body.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    // Add transition class before theme changes for smooth transition
+    document.documentElement.classList.add('theme-transition')
+    document.body.classList.add('theme-transition')
+    
+    // Use requestAnimationFrame to ensure transition class is applied before theme change
+    requestAnimationFrame(() => {
+      // Update document class, style, and localStorage
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark')
+        document.body.classList.add('dark')
+        document.documentElement.style.backgroundColor = '#1f2937'
+        document.documentElement.style.colorScheme = 'dark'
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+        document.body.classList.remove('dark')
+        document.documentElement.style.backgroundColor = '#ffffff'
+        document.documentElement.style.colorScheme = 'light'
+        localStorage.setItem('theme', 'light')
+      }
+      
+      // Remove transition class after animation completes
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transition')
+        document.body.classList.remove('theme-transition')
+      }, 300)
+    })
   }, [isDarkMode])
 
   const toggleTheme = () => {

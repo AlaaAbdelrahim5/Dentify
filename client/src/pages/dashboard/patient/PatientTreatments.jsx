@@ -448,38 +448,6 @@ const PatientTreatments = () => {
               icon={FaSearch}
               className="w-64"
             />
-
-            {/* View Mode Toggle */}
-            <div className="flex gap-1 border rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${
-                  viewMode === 'grid'
-                    ? isDarkMode
-                      ? 'bg-teal-600 text-white'
-                      : 'bg-teal-500 text-white'
-                    : isDarkMode
-                      ? 'text-gray-400 hover:text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <FaTh />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${
-                  viewMode === 'list'
-                    ? isDarkMode
-                      ? 'bg-teal-600 text-white'
-                      : 'bg-teal-500 text-white'
-                    : isDarkMode
-                      ? 'text-gray-400 hover:text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <FaListAlt />
-              </button>
-            </div>
           </div>
         </div>
       </Card>

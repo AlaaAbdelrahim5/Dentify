@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaUser,
   FaCamera,
@@ -17,56 +17,103 @@ import {
   FaTiktok,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input } from '../../../components'
+import { Card, Button, Input, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { dentistsAPI } from '../../../services/api'
 import DentistSchedule from './DentistSchedule'
 
 const DentistSettings = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
-  // Mock dentist profile data
+  // Dentist profile data
   const [profile, setProfile] = useState({
-    firstName: 'Dr. John',
-    lastName: 'Smith',
-    email: 'dr.john@dentify.com',
-    phone: '+1234567890',
-    licenseNumber: 'DDS12345',
-    specialization: ['General Dentistry', 'Cosmetic Dentistry'],
-    birthDate: '1985-03-15',
-    gender: 'male',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    licenseNumber: '',
+    specialization: [],
+    birthDate: '',
+    gender: '',
     address: {
-      city: 'New York'
+      city: ''
     },
     clinic: {
-      name: 'Smile Dental Center',
-      address: '123 Main St, New York, NY'
+      name: '',
+      address: ''
     },
-    bio: 'Experienced dentist with over 10 years of practice in general and cosmetic dentistry.',
-    workingHours: [
-      { day: 'Monday', startTime: '09:00', endTime: '17:00' },
-      { day: 'Tuesday', startTime: '09:00', endTime: '17:00' },
-      { day: 'Wednesday', startTime: '09:00', endTime: '17:00' },
-      { day: 'Thursday', startTime: '09:00', endTime: '17:00' },
-      { day: 'Friday', startTime: '09:00', endTime: '15:00' }
-    ],
+    bio: '',
+    workingHours: [],
     socialLinks: {
       facebook: '',
       instagram: '',
-      whatsapp: '+1234567890',
+      whatsapp: '',
       tiktok: ''
     }
   })
 
-  const [notifications, setNotifications] = useState({
-    emailAppointments: true,
-    emailReminders: true,
-    smsAppointments: false,
-    smsReminders: true,
-    pushNotifications: true,
-    marketingEmails: false
-  })
+  // Fetch dentist profile on mount
+  useEffect(() => {
+    fetchDentistProfile()
+  }, [])
+
+  const fetchDentistProfile = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await dentistsAPI.getMyProfile()
+      const dentist = response.data?.dentist || response.dentist || response.data
+      
+      if (!dentist) {
+        throw new Error('Dentist profile not found')
+      }
+
+      console.log('Fetched dentist data:', dentist) // Debug log
+
+      // Map the data to profile state
+      // Note: email and phone come from user object
+      setProfile({
+        firstName: dentist.firstName || '',
+        lastName: dentist.lastName || '',
+        email: dentist.user?.email || dentist.email || '',
+        phone: dentist.user?.phone || dentist.phone || '',
+        licenseNumber: dentist.licenseNumber || '',
+        specialization: Array.isArray(dentist.specialization) ? dentist.specialization : [],
+        birthDate: dentist.birthDate ? new Date(dentist.birthDate).toISOString().split('T')[0] : '',
+        gender: dentist.gender || '',
+        address: {
+          city: dentist.city || ''
+        },
+        clinic: {
+          name: dentist.clinic?.clinicName || '',
+          address: dentist.clinic?.location || ''
+        },
+        bio: dentist.bio || '',
+        workingHours: Array.isArray(dentist.workingHours) ? dentist.workingHours : [],
+        socialLinks: typeof dentist.socialLinks === 'object' && dentist.socialLinks !== null ? {
+          facebook: dentist.socialLinks.facebook || '',
+          instagram: dentist.socialLinks.instagram || '',
+          whatsapp: dentist.socialLinks.whatsapp || dentist.user?.phone || dentist.phone || '',
+          tiktok: dentist.socialLinks.tiktok || ''
+        } : {
+          facebook: '',
+          instagram: '',
+          whatsapp: dentist.user?.phone || dentist.phone || '',
+          tiktok: ''
+        }
+      })
+    } catch (err) {
+      console.error('Error fetching dentist profile:', err)
+      setError('Failed to load profile. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const [security, setSecurity] = useState({
     currentPassword: '',
@@ -112,6 +159,47 @@ const DentistSettings = () => {
         ? prev.specialization.filter(s => s !== specialization)
         : [...prev.specialization, specialization]
     }))
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      
+      // Prepare data for API
+      const updateData = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        licenseNumber: profile.licenseNumber,
+        specialization: profile.specialization,
+        birthDate: profile.birthDate,
+        gender: profile.gender,
+        city: profile.address.city,
+        bio: profile.bio,
+        socialLinks: profile.socialLinks
+      }
+
+      await dentistsAPI.updateMyProfile(updateData)
+      setIsEditing(false)
+      alert('Profile updated successfully!')
+      // Refresh profile data
+      await fetchDentistProfile()
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      setError('Failed to save profile. Please try again.')
+      alert('Failed to save profile. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
   const renderProfileTab = () => (
@@ -207,9 +295,14 @@ const DentistSettings = () => {
               type="email"
               value={profile.email}
               onChange={(e) => handleProfileUpdate('email', e.target.value)}
-              disabled={!isEditing}
+              disabled={true}
               icon={FaEnvelope}
             />
+            <p className={`text-xs mt-1 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Email cannot be changed
+            </p>
           </div>
 
           <div>
@@ -257,8 +350,9 @@ const DentistSettings = () => {
                   : 'bg-white border-gray-300 text-gray-900'
               } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
 
@@ -319,13 +413,18 @@ const DentistSettings = () => {
 
         {isEditing && (
           <div className="mt-6 flex gap-4">
-            <Button variant="primary">
+            <Button 
+              variant="primary"
+              onClick={handleSaveProfile}
+              disabled={saving}
+            >
               <FaSave className="w-4 h-4 mr-2" />
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
               variant="outline"
               onClick={() => setIsEditing(false)}
+              disabled={saving}
             >
               Cancel
             </Button>
@@ -442,139 +541,6 @@ const DentistSettings = () => {
     </div>
   )
 
-  const renderNotificationTab = () => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    }`}>
-      <h3 className={`text-lg font-semibold mb-6 ${
-        isDarkMode ? 'text-white' : 'text-gray-800'
-      }`}>
-        Notification Preferences
-      </h3>
-
-      <div className="space-y-6">
-        <div>
-          <h4 className={`text-md font-medium mb-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Email Notifications
-          </h4>
-          <div className="space-y-3">
-            <label className="flex items-center justify-between">
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                New appointment notifications
-              </span>
-              <input
-                type="checkbox"
-                checked={notifications.emailAppointments}
-                onChange={(e) => setNotifications(prev => ({
-                  ...prev,
-                  emailAppointments: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-            </label>
-            <label className="flex items-center justify-between">
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                Appointment reminders
-              </span>
-              <input
-                type="checkbox"
-                checked={notifications.emailReminders}
-                onChange={(e) => setNotifications(prev => ({
-                  ...prev,
-                  emailReminders: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-            </label>
-            <label className="flex items-center justify-between">
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                Marketing emails
-              </span>
-              <input
-                type="checkbox"
-                checked={notifications.marketingEmails}
-                onChange={(e) => setNotifications(prev => ({
-                  ...prev,
-                  marketingEmails: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <h4 className={`text-md font-medium mb-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            SMS Notifications
-          </h4>
-          <div className="space-y-3">
-            <label className="flex items-center justify-between">
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                New appointment notifications
-              </span>
-              <input
-                type="checkbox"
-                checked={notifications.smsAppointments}
-                onChange={(e) => setNotifications(prev => ({
-                  ...prev,
-                  smsAppointments: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-            </label>
-            <label className="flex items-center justify-between">
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                Appointment reminders
-              </span>
-              <input
-                type="checkbox"
-                checked={notifications.smsReminders}
-                onChange={(e) => setNotifications(prev => ({
-                  ...prev,
-                  smsReminders: e.target.checked
-                }))}
-                className="w-5 h-5 text-teal-600 rounded"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <h4 className={`text-md font-medium mb-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Push Notifications
-          </h4>
-          <label className="flex items-center justify-between">
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-              Enable push notifications
-            </span>
-            <input
-              type="checkbox"
-              checked={notifications.pushNotifications}
-              onChange={(e) => setNotifications(prev => ({
-                ...prev,
-                pushNotifications: e.target.checked
-              }))}
-              className="w-5 h-5 text-teal-600 rounded"
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <Button variant="primary">
-          <FaSave className="w-4 h-4 mr-2" />
-          Save Notification Settings
-        </Button>
-      </div>
-    </Card>
-  )
-
   const renderSecurityTab = () => (
     <div className="space-y-6">
       {/* Change Password */}
@@ -683,7 +649,6 @@ const DentistSettings = () => {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FaUser },
     { id: 'schedule', label: 'Schedule', icon: FaClock },
-    { id: 'notifications', label: 'Notifications', icon: FaBell },
     { id: 'security', label: 'Security', icon: FaLock }
   ]
 
@@ -702,6 +667,17 @@ const DentistSettings = () => {
           Manage your profile and account preferences
         </p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className={`p-4 rounded-lg border ${
+          isDarkMode 
+            ? 'bg-red-900/20 border-red-800 text-red-400' 
+            : 'bg-red-50 border-red-200 text-red-600'
+        }`}>
+          <p>{error}</p>
+        </div>
+      )}
 
       {/* Tabs */}
       <Card className={`p-4 ${
@@ -733,7 +709,6 @@ const DentistSettings = () => {
       {/* Tab Content */}
       {activeTab === 'profile' && renderProfileTab()}
       {activeTab === 'schedule' && <DentistSchedule />}
-      {activeTab === 'notifications' && renderNotificationTab()}
       {activeTab === 'security' && renderSecurityTab()}
     </div>
   )

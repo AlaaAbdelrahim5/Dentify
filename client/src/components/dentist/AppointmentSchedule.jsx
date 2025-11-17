@@ -29,28 +29,61 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return filtered
   }, [appointments])
 
-  // Get week dates (Mon-Sat for dental practice)
+  // Get working days from dentist schedule
+  const getWorkingDaysMap = useMemo(() => {
+    const dayMap = {}
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours)) {
+      // Default: Monday-Friday working
+      return {
+        1: true, // Monday
+        2: true, // Tuesday
+        3: true, // Wednesday
+        4: true, // Thursday
+        5: true, // Friday
+      }
+    }
+    
+    dentistData.workingHours.forEach(schedule => {
+      const dayIndex = dayNames.indexOf(schedule.day)
+      if (dayIndex !== -1 && schedule.isWorking !== false) {
+        dayMap[dayIndex] = true
+      }
+    })
+    
+    return dayMap
+  }, [dentistData])
+
+  // Get week dates (only working days, starting from Sunday)
   const getWeekDates = (date) => {
     const current = new Date(date)
     current.setHours(0, 0, 0, 0) // Reset time to start of day
     
     const currentDay = current.getDay()
-    const diff = currentDay === 0 ? -6 : 1 - currentDay // Calculate days to Monday
+    // Calculate days to Sunday (start of week)
+    const diff = -currentDay
     
-    const monday = new Date(current)
-    monday.setDate(current.getDate() + diff)
+    const sunday = new Date(current)
+    sunday.setDate(current.getDate() + diff)
     
     const weekDates = []
-    for (let i = 0; i < 6; i++) { // Mon-Sat (6 days)
-      const day = new Date(monday)
-      day.setDate(monday.getDate() + i)
-      weekDates.push(day)
+    // Check all 7 days of the week starting from Sunday
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(sunday)
+      day.setDate(sunday.getDate() + i)
+      const dayOfWeek = day.getDay()
+      
+      // Only include days that are working days
+      if (getWorkingDaysMap[dayOfWeek]) {
+        weekDates.push(day)
+      }
     }
     
     return weekDates
   }
 
-  const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek])
+  const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek, getWorkingDaysMap])
 
   // Convert 24-hour time to 12-hour format
   const convertTo12Hour = (time24) => {
@@ -217,27 +250,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       <div className={`p-4 border-b ${
         isDarkMode ? 'border-gray-700' : 'border-gray-200'
       }`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <FaCalendarAlt className={`w-5 h-5 ${
-              isDarkMode ? 'text-teal-400' : 'text-teal-600'
-            }`} />
-            <h3 className={`text-lg font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              Weekly Schedule
-            </h3>
-          </div>
-          <Button 
-            variant="primary" 
-            size="sm"
-            onClick={onAddAppointment}
-            className="bg-gradient-to-r from-teal-600 to-cyan-600"
-          >
-            <FaPlus className="w-3 h-3 mr-2" />
-            New Appointment
-          </Button>
-        </div>
 
         {/* Navigation */}
         <div className="flex items-center justify-between">
@@ -268,7 +280,11 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
           <div className={`text-sm font-semibold ${
             isDarkMode ? 'text-gray-300' : 'text-gray-700'
           }`}>
-            {weekDates[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[5]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {weekDates.length > 0 && (
+              <>
+                {weekDates[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[weekDates.length - 1]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -277,9 +293,12 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       <div className="overflow-x-auto">
         <div className="min-w-[900px]">
           {/* Day Headers */}
-          <div className={`grid grid-cols-7 border-b sticky top-0 z-10 ${
-            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-          }`}>
+          <div 
+            className={`grid border-b sticky top-0 z-10 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}
+            style={{ gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
+          >
             <div className={`p-3 text-center text-xs font-semibold ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
@@ -320,10 +339,10 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             {timeSlots.map((time, timeIndex) => (
               <div
                 key={time}
-                className={`grid grid-cols-7 border-b ${
+                className={`grid border-b ${
                   isDarkMode ? 'border-gray-700' : 'border-gray-200'
                 }`}
-                style={{ minHeight: '60px' }}
+                style={{ minHeight: '60px', gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
               >
                 {/* Time Label */}
                 <div className={`p-2 text-xs font-medium text-center border-r ${

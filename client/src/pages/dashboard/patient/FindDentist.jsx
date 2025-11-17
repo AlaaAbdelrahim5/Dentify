@@ -18,7 +18,6 @@ import {
   FilterBar,
   DataTable
 } from '../../../components'
-import DoctorProfileModal from '../../../components/DentistProfileModal'
 import BookAppointmentModal from '../../../components/patient/BookAppointmentModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
@@ -36,7 +35,6 @@ const FindDoctor = () => {
   
   // Modal states
   const [selectedDoctor, setSelectedDoctor] = useState(null)
-  const [showProfileModal, setShowProfileModal] = useState(false)
   const [showBookingModal, setShowBookingModal] = useState(false)
 
   // Fetch doctors on component mount
@@ -190,14 +188,6 @@ const FindDoctor = () => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => handleViewProfile(doctor)}
-            title="View Profile"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
             onClick={() => handleBookAppointment(doctor)}
             title="Book Appointment"
             className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/20"
@@ -208,11 +198,6 @@ const FindDoctor = () => {
       </td>
     </tr>
   )
-
-  const handleViewProfile = (doctor) => {
-    setSelectedDoctor(doctor)
-    setShowProfileModal(true)
-  }
 
   const handleBookAppointment = (doctor) => {
     setSelectedDoctor(doctor)
@@ -307,13 +292,6 @@ const FindDoctor = () => {
       />
 
       {/* Modals */}
-      <DoctorProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        doctor={selectedDoctor}
-        onBookAppointment={handleBookAppointment}
-      />
-
       <BookAppointmentModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}

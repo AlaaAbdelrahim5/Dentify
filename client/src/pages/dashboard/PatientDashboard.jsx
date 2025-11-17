@@ -240,33 +240,6 @@ const PatientDashboard = () => {
     }
   ]
 
-  const stats = [
-    { 
-      label: "Upcoming Appointments", 
-      value: upcomingAppointments.length, 
-      icon: FaCalendarAlt, 
-      gradient: "from-blue-600 to-blue-400"
-    },
-    { 
-      label: "Total Visits", 
-      value: "12", 
-      icon: FaTooth, 
-      gradient: "from-teal-600 to-cyan-600"
-    },
-    { 
-      label: "X-ray Results", 
-      value: xrayResults.length, 
-      icon: FaXRay, 
-      gradient: "from-purple-600 to-pink-600"
-    },
-    { 
-      label: "Active Treatments", 
-      value: "2", 
-      icon: FaUserMd, 
-      gradient: "from-green-600 to-emerald-600"
-    }
-  ]
-
   const getStatusBadge = (status) => {
     const statusMap = {
       confirmed: { label: 'Confirmed', color: 'green' },
@@ -289,10 +262,6 @@ const PatientDashboard = () => {
             }`}>
               Welcome back, {getUserFirstName()}!
             </h1>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              {getUserFullName()}
-              {currentUser?.email && <span> • {currentUser.email}</span>}
-            </p>
             {patientProfile?.city && (
               <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 📍 {patientProfile.city}
@@ -308,9 +277,6 @@ const PatientDashboard = () => {
           </div>
         </div>
       </Card>
-
-      {/* Stats Grid */}
-      <StatsOverview stats={stats} />
 
       {/* Upcoming Appointments Preview */}
       {upcomingAppointments.length > 0 && (

@@ -235,7 +235,7 @@ const DentistDashboard = () => {
             <p className={`mt-2 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              {dentistData?.specialization?.join(', ') || 'General Practice'} • {dentistData?.clinic?.clinicName || 'Clinic'}
+              {dentistData?.clinic?.clinicName || 'Clinic'}
             </p>
           </div>
           <div className={`p-4 rounded-full ${
@@ -244,73 +244,6 @@ const DentistDashboard = () => {
             <FaStethoscope className="w-8 h-8 text-teal-600" />
           </div>
         </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className={`p-6 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Today's Appointments</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.todayAppointments}</p>
-            </div>
-            <FaCalendarAlt className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Total Patients</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.totalPatients}</p>
-            </div>
-            <FaUsers className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Pending Treatments</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.pendingTreatments}</p>
-            </div>
-            <FaStethoscope className="w-8 h-8 text-orange-500" />
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Completed Today</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{stats.completedToday}</p>
-            </div>
-            <FaFileAlt className="w-8 h-8 text-purple-500" />
-          </div>
-        </Card>
       </div>
 
       {/* Today's Schedule */}

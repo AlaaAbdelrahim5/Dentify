@@ -15,7 +15,6 @@ import {
 import { Card, Button, LoadingSpinner } from '../index'
 import { useTheme } from '../../contexts/ThemeContext'
 import { dentistsAPI } from '../../services/api'
-import DentistProfileModal from '../DentistProfileModal'
 
 const ClinicDetailsModal = ({ 
   isOpen, 
@@ -27,7 +26,6 @@ const ClinicDetailsModal = ({
   const [dentists, setDentists] = useState([])
   const [isLoadingDentists, setIsLoadingDentists] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
-  const [showDentistModal, setShowDentistModal] = useState(false)
 
   useEffect(() => {
     if (isOpen && clinic) {
@@ -98,11 +96,6 @@ const ClinicDetailsModal = ({
         </div>
       </div>
     )
-  }
-
-  const handleViewDentist = (dentist) => {
-    setSelectedDentist(dentist)
-    setShowDentistModal(true)
   }
 
   const handleBookAppointmentWithDentist = (dentist) => {
@@ -350,16 +343,6 @@ const ClinicDetailsModal = ({
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDentist(dentist)}
-                            title="View Profile"
-                            className="whitespace-nowrap"
-                          >
-                            <FaEye className="w-4 h-4 mr-2" />
-                            View Profile
-                          </Button>
                           {onBookAppointment && (
                             <Button
                               variant="outline"
@@ -382,14 +365,6 @@ const ClinicDetailsModal = ({
           </div>
         </div>
       </div>
-
-      {/* Dentist Profile Modal */}
-      <DentistProfileModal
-        isOpen={showDentistModal}
-        onClose={() => setShowDentistModal(false)}
-        doctor={selectedDentist}
-        onBookAppointment={handleBookAppointmentWithDentist}
-      />
     </>
   )
 }

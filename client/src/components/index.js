@@ -19,7 +19,6 @@ export { default as StatusBadge } from './StatusBadge'
 export { default as ActionButtons } from './ActionButtons'
 export { default as PageHeader } from './PageHeader'
 export { default as DoctorCard } from './DentistCard'
-export { default as DoctorProfileModal } from './DentistProfileModal'
 
 // Specific Modals & Sidebars
 export { default as ClinicModal } from './admin/ClinicModal'
