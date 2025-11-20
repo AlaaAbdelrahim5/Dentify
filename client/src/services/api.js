@@ -356,7 +356,10 @@ export const radiologyAPI = {
   getStats: () => ApiService.get('/radiology/stats'),
   
   // Get all radiology centers
-  getAll: () => ApiService.get('/radiology'),
+  getAll: (queryParams = '') => {
+    const query = queryParams ? `?${queryParams}` : '';
+    return ApiService.get(`/radiology${query}`);
+  },
   
   // Get radiology center by ID
   getById: (id) => ApiService.get(`/radiology/${id}`),

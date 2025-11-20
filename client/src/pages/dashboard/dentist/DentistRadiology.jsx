@@ -55,12 +55,16 @@ const DentistRadiology = () => {
       const [requestsRes, patientsRes, radiologyRes, treatmentsRes] = await Promise.all([
         radiologyRequestsAPI.getDentistRequests(),
         patientsAPI.getAll(),
-        radiologyAPI.getAll(),
+        radiologyAPI.getAll('limit=100&isActive=true'), // Get up to 100 active centers
         treatmentsAPI.getDentistTreatments()
       ])
+      console.log('Radiology API Response:', radiologyRes)
       setRadiologyRequests(requestsRes.radiologyRequests || [])
       setPatients(patientsRes.patients || [])
-      setRadiologyCenters(radiologyRes.radiology || [])
+      // Handle paginated response - data is in 'data' property
+      const centers = radiologyRes.data || radiologyRes.radiology || []
+      console.log('Radiology Centers:', centers)
+      setRadiologyCenters(centers)
       setTreatments(treatmentsRes.treatments || [])
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -94,18 +98,22 @@ const DentistRadiology = () => {
     name: `${p.firstName} ${p.lastName}`
   }))
 
-  // Transform radiology centers for modal
-  const mockRadiologyCenters = radiologyCenters.map(r => ({
-    id: r.userId,
-    name: r.centerName
-  }))
+  // Transform radiology centers for modal - only include ACTIVE centers
+  const mockRadiologyCenters = radiologyCenters
+    .filter(r => r.user && r.user.status === 'ACTIVE')
+    .map(r => ({
+      id: r.userId,
+      name: r.centerName,
+      supportedTypes: r.supportedTypes || []
+    }))
 
   // Transform treatments for modal
   const mockTreatments = treatments.map(t => ({
     id: t.id,
     treatmentType: t.treatmentType,
     patientName: `${t.patient.firstName} ${t.patient.lastName}`,
-    patientId: t.patientId
+    patientId: t.patientId,
+    date: t.createdAt
   }))
 
   const getStatusIcon = (status) => {
@@ -187,17 +195,31 @@ const DentistRadiology = () => {
 
   const handleSaveRequest = async (requestData) => {
     try {
+      // Prepare data for backend - remove requestDate as it's set by backend
+      const apiData = {
+        patientId: parseInt(requestData.patientId),
+        radiologyCenterId: parseInt(requestData.radiologyCenterId),
+        treatmentId: requestData.treatmentId ? parseInt(requestData.treatmentId) : null,
+        imagingType: requestData.imagingType,
+        notes: requestData.notes || ''
+      }
+
       if (selectedRequest) {
-        await radiologyRequestsAPI.update(selectedRequest.id, requestData)
+        // For updates, include status if changed
+        if (requestData.status) {
+          apiData.status = requestData.status
+        }
+        await radiologyRequestsAPI.update(selectedRequest.id, apiData)
       } else {
-        await radiologyRequestsAPI.create(requestData)
+        // For new requests, backend will set requestDate automatically
+        await radiologyRequestsAPI.create(apiData)
       }
       await fetchAllData()
       setIsRequestModalOpen(false)
       setSelectedRequest(null)
     } catch (error) {
       console.error('Error saving radiology request:', error)
-      alert('Failed to save radiology request. Please try again.')
+      alert(error.response?.data?.error || 'Failed to save radiology request. Please try again.')
     }
   }
 

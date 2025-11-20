@@ -92,7 +92,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         treatmentsAPI.getDentistTreatments(),
         patientsAPI.getAll(),
         appointmentsAPI.getDentistAppointments(),
-        radiologyAPI.getAll()
+        radiologyAPI.getAll('limit=100&isActive=true')
       ])
       console.log('Treatments response:', treatmentsRes)
       console.log('Patients response:', patientsRes)
@@ -102,7 +102,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       setTreatments(treatmentsRes.treatments || [])
       setPatients(patientsRes.patients || [])
       setAppointments(appointmentsRes.appointments || [])
-      setRadiologyCenters(radiologyRes.radiology || [])
+      setRadiologyCenters(radiologyRes)
       
       console.log('Patients state set to:', patientsRes.patients || [])
     } catch (err) {
@@ -204,10 +204,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   // Transform radiology centers for modal - MEMOIZED
   const mockRadiologyCenters = useMemo(() => {
-    return radiologyCenters.map(r => ({
-      id: r.userId,
-      name: r.centerName
-    }))
+    const centers = radiologyCenters.data || radiologyCenters.radiology || radiologyCenters || []
+    return centers
+      .filter(r => r.user && r.user.status === 'ACTIVE')
+      .map(r => ({
+        id: r.userId,
+        name: r.centerName,
+        supportedTypes: r.supportedTypes || []
+      }))
   }, [radiologyCenters])
 
   // Filter treatments - MEMOIZED to avoid filtering on every render
@@ -458,20 +462,34 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   }
 
   const handleRequestRadiology = (treatment) => {
-    setSelectedTreatment(treatment)
+    // Don't change selectedTreatment if it's already set (e.g., from view page)
+    // Just open the modal with the current treatment
+    if (!selectedTreatment) {
+      setSelectedTreatment(treatment)
+    }
     setIsRadiologyModalOpen(true)
   }
 
   const handleCloseRadiologyModal = () => {
     setIsRadiologyModalOpen(false)
-    setSelectedTreatment(null)
+    // Don't clear selectedTreatment - let the page state handle it
   }
 
   const handleSaveRadiologyRequest = async (requestData) => {
     try {
       console.log('Creating radiology request:', requestData)
+      
+      // Prepare data for backend - remove requestDate as it's set by backend
+      const apiData = {
+        patientId: parseInt(requestData.patientId),
+        radiologyCenterId: parseInt(requestData.radiologyCenterId),
+        treatmentId: requestData.treatmentId ? parseInt(requestData.treatmentId) : null,
+        imagingType: requestData.imagingType,
+        notes: requestData.notes || ''
+      }
+      
       const { radiologyRequestsAPI } = await import('../../../services/api')
-      const response = await radiologyRequestsAPI.create(requestData)
+      const response = await radiologyRequestsAPI.create(apiData)
       console.log('Radiology request created:', response)
       alert('Radiology request created successfully!')
       setIsRadiologyModalOpen(false)
@@ -1016,9 +1034,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         onSave={handleSaveRadiologyRequest}
         patients={mockPatients}
         radiologyCenters={mockRadiologyCenters}
+        treatments={displayTreatments}
         patientInfo={selectedTreatment ? {
           id: selectedTreatment.patientId,
           name: selectedTreatment.patientName
+        } : null}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentType: selectedTreatment.treatmentType
         } : null}
       />
 

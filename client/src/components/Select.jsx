@@ -35,7 +35,7 @@ const Select = forwardRef(({
           value={value}
           onChange={onChange}
           className={`
-            block w-full rounded-lg border py-3 text-sm shadow-sm transition-all duration-200 appearance-none cursor-pointer
+            block w-full rounded-lg border py-2 text-sm shadow-sm transition-all duration-200 appearance-none cursor-pointer
             focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20
             ${isDarkMode 
               ? 'border-gray-600 bg-gray-700 hover:border-gray-500'

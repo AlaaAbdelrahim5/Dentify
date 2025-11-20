@@ -21,13 +21,13 @@ const RadiologyRequestModal = ({
     patientId: '',
     radiologyCenterId: '',
     treatmentId: '',
-    requestDate: new Date().toISOString().split('T')[0],
-    imagingType: 'X-ray',
+    imagingType: '',
     status: 'Requested',
     notes: ''
   })
   const [errors, setErrors] = useState({})
   const [filteredTreatments, setFilteredTreatments] = useState([])
+  const [availableImagingTypes, setAvailableImagingTypes] = useState([])
 
   useEffect(() => {
     if (isOpen) {
@@ -37,8 +37,7 @@ const RadiologyRequestModal = ({
           patientId: initialData.patientId || '',
           radiologyCenterId: initialData.radiologyCenterId || '',
           treatmentId: initialData.treatmentId || '',
-          requestDate: initialData.requestDate || new Date().toISOString().split('T')[0],
-          imagingType: initialData.imagingType || 'X-ray',
+          imagingType: initialData.imagingType || '',
           status: initialData.status || 'Requested',
           notes: initialData.notes || ''
         })
@@ -46,14 +45,18 @@ const RadiologyRequestModal = ({
         if (initialData.patientId && treatments) {
           setFilteredTreatments(treatments.filter(t => t.patientId.toString() === initialData.patientId.toString()))
         }
+        // Filter imaging types for selected radiology center
+        if (initialData.radiologyCenterId && radiologyCenters) {
+          const selectedCenter = radiologyCenters.find(rc => rc.id.toString() === initialData.radiologyCenterId.toString())
+          setAvailableImagingTypes(selectedCenter?.supportedTypes || [])
+        }
       } else {
         // New request mode
         setFormData({
           patientId: patientInfo?.id || '',
           radiologyCenterId: '',
           treatmentId: treatmentInfo?.id || '',
-          requestDate: new Date().toISOString().split('T')[0],
-          imagingType: 'X-ray',
+          imagingType: '',
           status: 'Requested',
           notes: ''
         })
@@ -64,7 +67,7 @@ const RadiologyRequestModal = ({
       }
       setErrors({})
     }
-  }, [isOpen, initialData, patientInfo, treatmentInfo, treatments])
+  }, [isOpen, initialData, patientInfo, treatmentInfo, treatments, radiologyCenters])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -87,6 +90,21 @@ const RadiologyRequestModal = ({
       }
     }
     
+    // If radiology center changes, filter imaging types and reset imaging type selection
+    if (name === 'radiologyCenterId') {
+      setFormData(prev => ({
+        ...prev,
+        imagingType: '' // Reset imaging type when center changes
+      }))
+      
+      if (value && radiologyCenters) {
+        const selectedCenter = radiologyCenters.find(rc => rc.id.toString() === value.toString())
+        setAvailableImagingTypes(selectedCenter?.supportedTypes || [])
+      } else {
+        setAvailableImagingTypes([])
+      }
+    }
+    
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -104,10 +122,6 @@ const RadiologyRequestModal = ({
 
     if (!formData.radiologyCenterId) {
       newErrors.radiologyCenterId = 'Please select a radiology center'
-    }
-
-    if (!formData.requestDate) {
-      newErrors.requestDate = 'Request date is required'
     }
 
     if (!formData.imagingType) {
@@ -132,27 +146,22 @@ const RadiologyRequestModal = ({
       patientId: '',
       radiologyCenterId: '',
       treatmentId: '',
-      requestDate: new Date().toISOString().split('T')[0],
-      imagingType: 'X-ray',
+      imagingType: '',
       status: 'Requested',
       notes: ''
     })
     setErrors({})
+    setFilteredTreatments([])
+    setAvailableImagingTypes([])
     onClose()
   }
 
   if (!isOpen) return null
 
-  const imagingTypes = [
-    { value: 'X-ray', label: 'X-ray' },
-    { value: 'Panoramic X-ray', label: 'Panoramic X-ray' },
-    { value: 'CBCT', label: 'CBCT (Cone Beam CT)' },
-    { value: 'CT Scan', label: 'CT Scan' },
-    { value: '3D Imaging', label: '3D Imaging' },
-    { value: 'Cephalometric', label: 'Cephalometric' },
-    { value: 'Periapical', label: 'Periapical' },
-    { value: 'Bitewing', label: 'Bitewing' }
-  ]
+  // Build imaging types options based on selected radiology center
+  const imagingTypesOptions = availableImagingTypes.length > 0
+    ? availableImagingTypes.map(type => ({ value: type, label: type }))
+    : []
 
   const statusOptions = [
     { value: 'Requested', label: 'Requested' },
@@ -166,13 +175,13 @@ const RadiologyRequestModal = ({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col ${
+          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
             isDarkMode
               ? "bg-gray-800 border border-gray-700"
               : "bg-white border border-gray-200"
@@ -180,25 +189,25 @@ const RadiologyRequestModal = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+          <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
             isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
           }`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-lg ${
+          <div className="flex items-center gap-2">
+            <div className={`p-2 rounded-lg ${
               isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'
             }`}>
-              <FaXRay className="w-6 h-6 text-purple-600" />
+              <FaXRay className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h2 className={`text-2xl font-bold ${
+              <h2 className={`text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>
                 {initialData ? 'Edit Radiology Request' : 'New Radiology Request'}
               </h2>
-              <p className={`text-sm ${
+              <p className={`text-xs ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                Request diagnostic imaging for patient
+                Request diagnostic imaging
               </p>
             </div>
           </div>
@@ -217,10 +226,10 @@ const RadiologyRequestModal = ({
         {/* Scrollable Form Content */}
         <div className="flex-1 overflow-y-auto">
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Patient Selection */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
+            <label className={`block text-xs font-medium mb-1.5 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               Patient <span className="text-red-500">*</span>
@@ -236,7 +245,7 @@ const RadiologyRequestModal = ({
               ]}
             />
             {errors.patientId && (
-              <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
+              <p className="text-red-500 text-xs mt-1">{errors.patientId}</p>
             )}
             {patientInfo && (
               <p className={`text-xs mt-1 ${
@@ -249,7 +258,7 @@ const RadiologyRequestModal = ({
 
           {/* Radiology Center */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
+            <label className={`block text-xs font-medium mb-1.5 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               Radiology Center <span className="text-red-500">*</span>
@@ -264,19 +273,19 @@ const RadiologyRequestModal = ({
               ]}
             />
             {errors.radiologyCenterId && (
-              <p className="text-red-500 text-sm mt-1">{errors.radiologyCenterId}</p>
+              <p className="text-red-500 text-xs mt-1">{errors.radiologyCenterId}</p>
             )}
           </div>
 
           {/* Treatment (Optional) */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
+            <label className={`block text-xs font-medium mb-1.5 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               Related Treatment (Optional)
             </label>
             <div className="relative">
-              <FaStethoscope className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+              <FaStethoscope className={`absolute left-2.5 top-1/2 transform -translate-y-1/2 text-sm ${
                 isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`} />
               <select
@@ -284,7 +293,7 @@ const RadiologyRequestModal = ({
                 value={formData.treatmentId}
                 onChange={handleChange}
                 disabled={!!treatmentInfo || !formData.patientId}
-                className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
+                className={`w-full pl-8 pr-3 py-2 text-sm border rounded-lg ${
                   isDarkMode
                     ? 'bg-gray-700 border-gray-600 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
@@ -320,49 +329,42 @@ const RadiologyRequestModal = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Imaging Type */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Imaging Type <span className="text-red-500">*</span>
-              </label>
-              <Select
-                name="imagingType"
-                value={formData.imagingType}
-                onChange={handleChange}
-                options={imagingTypes}
-              />
-              {errors.imagingType && (
-                <p className="text-red-500 text-sm mt-1">{errors.imagingType}</p>
-              )}
-            </div>
-
-            {/* Request Date */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Request Date <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="date"
-                name="requestDate"
-                value={formData.requestDate}
-                onChange={handleChange}
-                icon={FaCalendarAlt}
-              />
-              {errors.requestDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.requestDate}</p>
-              )}
-            </div>
+          {/* Imaging Type */}
+          <div>
+            <label className={`block text-xs font-medium mb-1.5 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Imaging Type <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="imagingType"
+              value={formData.imagingType}
+              onChange={handleChange}
+              disabled={!formData.radiologyCenterId}
+              options={[
+                { value: '', label: formData.radiologyCenterId ? 'Select imaging type' : 'Select a radiology center first' },
+                ...imagingTypesOptions
+              ]}
+            />
+            {errors.imagingType && (
+              <p className="text-red-500 text-xs mt-1">{errors.imagingType}</p>
+            )}
+            {!formData.radiologyCenterId && (
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Select a radiology center to see available types
+              </p>
+            )}
+            {formData.radiologyCenterId && availableImagingTypes.length === 0 && (
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                No imaging types available for this center
+              </p>
+            )}
           </div>
 
           {/* Status (only show for edit mode) */}
           {initialData && (
             <div>
-              <label className={`block text-sm font-medium mb-2 ${
+              <label className={`block text-xs font-medium mb-1.5 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
                 Status
@@ -374,14 +376,14 @@ const RadiologyRequestModal = ({
                 options={statusOptions}
               />
               <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Note: Available Date and Report File can only be set by Radiology Center
+                Note: Available Date and Report can only be set by Radiology Center
               </p>
             </div>
           )}
 
           {/* Notes */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
+            <label className={`block text-xs font-medium mb-1.5 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               Notes (Optional)
@@ -390,9 +392,9 @@ const RadiologyRequestModal = ({
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              rows="4"
+              rows="3"
               placeholder="Add any additional notes or special instructions..."
-              className={`w-full px-4 py-2 rounded-lg border transition-colors ${
+              className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors ${
                 isDarkMode
                   ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500'
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500'
@@ -401,7 +403,7 @@ const RadiologyRequestModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
