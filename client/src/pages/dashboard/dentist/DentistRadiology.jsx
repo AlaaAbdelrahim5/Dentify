@@ -75,22 +75,32 @@ const DentistRadiology = () => {
   }
 
   // Transform radiology requests from API
-  const mockRadiologyRequests = radiologyRequests.map(r => ({
-    id: r.id,
-    patientId: r.patientId,
-    patientName: `${r.patient.firstName} ${r.patient.lastName}`,
-    dentistId: r.dentistId,
-    radiologyCenterId: r.radiologyCenterId,
-    radiologyCenterName: r.radiologyCenter.centerName,
-    treatmentId: r.treatmentId,
-    treatmentType: r.treatment?.treatmentType || null,
-    requestDate: r.requestDate,
-    availableDate: r.availableDate,
-    imagingType: r.imagingType,
-    reportFile: r.reportFile,
-    status: r.status.replace('_', ' '),
-    notes: r.notes || ''
-  }))
+  const mockRadiologyRequests = radiologyRequests.map(r => {
+    // Convert status from REQUESTED, IN_PROGRESS, etc. to "Requested", "In Progress", etc.
+    const statusMap = {
+      'REQUESTED': 'Requested',
+      'IN_PROGRESS': 'In Progress',
+      'COMPLETED': 'Completed',
+      'CANCELLED': 'Cancelled'
+    }
+    
+    return {
+      id: r.id,
+      patientId: r.patientId,
+      patientName: `${r.patient.firstName} ${r.patient.lastName}`,
+      dentistId: r.dentistId,
+      radiologyCenterId: r.radiologyCenterId,
+      radiologyCenterName: r.radiologyCenter.centerName,
+      treatmentId: r.treatmentId,
+      treatmentType: r.treatment?.treatmentType || null,
+      requestDate: r.requestDate,
+      availableDate: r.availableDate,
+      imagingType: r.imagingType,
+      reportFile: r.reportFile,
+      status: statusMap[r.status] || r.status,
+      notes: r.notes || ''
+    }
+  })
 
   // Transform patients for modal
   const mockPatients = patients.map(p => ({
@@ -162,7 +172,9 @@ const DentistRadiology = () => {
                          request.radiologyCenterName.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
-    const matchesImagingType = selectedImagingType === 'all' || request.imagingType === selectedImagingType
+    // Trim and compare imaging types to handle any whitespace issues
+    const matchesImagingType = selectedImagingType === 'all' || 
+                               request.imagingType?.trim() === selectedImagingType.trim()
     
     return matchesSearch && matchesStatus && matchesImagingType
   })
@@ -433,10 +445,10 @@ const DentistRadiology = () => {
                   onChange: (e) => setSelectedImagingType(e.target.value),
                   options: [
                     { value: 'all', label: 'All Types' },
-                    { value: 'X-ray', label: 'X-ray' },
-                    { value: 'Panoramic X-ray', label: 'Panoramic X-ray' },
+                    { value: 'X-Ray', label: 'X-Ray' },
+                    { value: 'Panoramic X-Ray', label: 'Panoramic X-Ray' },
                     { value: 'CBCT', label: 'CBCT' },
-                    { value: 'CT Scan', label: 'CT Scan' },
+                    { value: 'CT', label: 'CT' },
                     { value: '3D Imaging', label: '3D Imaging' },
                     { value: 'Periapical', label: 'Periapical' },
                     { value: 'Bitewing', label: 'Bitewing' }

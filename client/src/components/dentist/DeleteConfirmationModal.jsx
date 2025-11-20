@@ -8,7 +8,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, appointmentData }
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 p-4">
       <div className={`w-full max-w-md rounded-xl shadow-2xl ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
@@ -21,7 +21,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, appointmentData }
             <h2 className={`text-xl font-bold ${
               isDarkMode ? 'text-white' : 'text-gray-800'
             }`}>
-              Delete Appointment
+              Confirm Delete
             </h2>
           </div>
           <button
@@ -41,7 +41,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, appointmentData }
           <p className={`mb-4 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Are you sure you want to delete this appointment? This action cannot be undone.
+            Are you sure you want to delete this? This action cannot be undone.
           </p>
           
           {appointmentData && (
