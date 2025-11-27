@@ -1,91 +1,25 @@
-﻿import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { 
   FaHospital,
   FaUsers,
-  FaCalendarAlt,
-  FaBell,
   FaSearch,
-  FaFilter,
-  FaSignOutAlt,
-  FaPlus,
-  FaChartBar,
-  FaCog,
-  FaUserMd,
   FaXRay
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Navbar, Card, Button, Input, ThemeToggle } from '../../components'
-import { authUtils } from '../../utils/auth'
-import { useTheme } from '../../contexts/ThemeContext'
-import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../services/api'
-import ClinicsManagement from './admin/ClinicsManagement'
-import RadiologyManagement from './admin/RadiologyManagement'
-import DentistsManagement from './admin/DentistsManagement'
-import AdminsManagement from './admin/AdminsManagement'
-import AdminSidebar from '../../components/admin/AdminSidebar'
+import { Card, Button } from '../../../components'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../../services/api'
 
-const AdminDashboard = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
+const AdminOverview = ({ stats, setStats, refreshData }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview')
-  const [currentUser, setCurrentUser] = useState(null)
-  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [statsError, setStatsError] = useState(null)
-  const [stats, setStats] = useState({
-    totalClinics: 0,
-    pendingDentists: 0,
-    radiologyCenters: 0,
-    totalPatients: 0
-  })
 
-  // Check authentication and get user data
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuthenticated = await authUtils.isAuthenticated()
-      
-      if (!isAuthenticated) {
-        navigate('/login', { replace: true })
-        return
-      }
-      
-      const user = authUtils.getCurrentUser()
-      
-      // Check if user is admin
-      if (!user || user.role !== 'Admin') {
-        navigate('/dashboard', { replace: true })
-        return
-      }
-      
-      setCurrentUser(user)
-    }
-
-    checkAuth()
-  }, [navigate, location.state])
-
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      console.log('AdminDashboard: Starting logout process')
-      await authUtils.logout()
-      console.log('AdminDashboard: Logout completed, navigating to home page')
-      console.log('AdminDashboard: Current location before navigate:', window.location.pathname)
-      navigate('/', { replace: true })
-      console.log('AdminDashboard: Navigate to home page called')
-    } catch (error) {
-      console.error('AdminDashboard: Error during logout:', error)
-      navigate('/', { replace: true })
-    }
-  }
-
-  // Fetch dashboard statistics
   const fetchStats = async () => {
     setIsLoadingStats(true)
     setStatsError(null)
     
     try {
-      // Fetch all stats in parallel
       const [dentistStatsRes, clinicStatsRes, radiologyStatsRes, patientStatsRes] = await Promise.allSettled([
         dentistsAPI.getStats(),
         clinicsAPI.getStats(),
@@ -93,7 +27,6 @@ const AdminDashboard = () => {
         patientsAPI.getStats()
       ])
 
-      // Extract data or use defaults
       const dentistStats = dentistStatsRes.status === 'fulfilled' ? dentistStatsRes.value.data : { pending: 0, total: 0 }
       const clinicStats = clinicStatsRes.status === 'fulfilled' ? clinicStatsRes.value.data : { total: 0 }
       const radiologyStats = radiologyStatsRes.status === 'fulfilled' ? radiologyStatsRes.value.data : { total: 0 }
@@ -112,7 +45,6 @@ const AdminDashboard = () => {
       setStatsError('Failed to load dashboard statistics')
       setIsLoadingStats(false)
       
-      // Use fallback data
       setStats({
         totalClinics: 0,
         pendingDentists: 0,
@@ -122,12 +54,12 @@ const AdminDashboard = () => {
     }
   }
 
-  // Initial load
+  // Initial load - fetch stats on mount
   useEffect(() => {
     fetchStats()
   }, [])
 
-  const renderOverview = () => (
+  return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>System Overview</h2>
@@ -165,7 +97,7 @@ const AdminDashboard = () => {
               {isLoadingStats ? (
                 <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
               ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.totalClinics}</p>
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.totalClinics || 0}</p>
               )}
             </div>
             <FaHospital className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
@@ -181,7 +113,7 @@ const AdminDashboard = () => {
               {isLoadingStats ? (
                 <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
               ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{stats.pendingDentists}</p>
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{stats.pendingDentists || 0}</p>
               )}
             </div>
             <MdPendingActions className={`w-8 h-8 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
@@ -197,7 +129,7 @@ const AdminDashboard = () => {
               {isLoadingStats ? (
                 <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
               ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.radiologyCenters}</p>
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.radiologyCenters || 0}</p>
               )}
             </div>
             <FaXRay className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
@@ -213,7 +145,7 @@ const AdminDashboard = () => {
               {isLoadingStats ? (
                 <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
               ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{stats.totalPatients}</p>
+                <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{stats.totalPatients || 0}</p>
               )}
             </div>
             <FaUsers className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
@@ -250,69 +182,6 @@ const AdminDashboard = () => {
       </Card>
     </div>
   )
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return renderOverview()
-      case 'clinics':
-        return <ClinicsManagement />
-      case 'dentists':
-        return <DentistsManagement />
-      case 'radiology':
-        return <RadiologyManagement />
-      case 'admins':
-        return <AdminsManagement />
-      case 'analytics':
-        return (
-          <div className="text-center py-12">
-            <FaChartBar className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Analytics & Reports</h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>This section will be implemented next</p>
-            <Button variant="primary">Coming Soon</Button>
-          </div>
-        )
-      default:
-        return renderOverview()
-    }
-  }
-
-  if (!currentUser) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        isDarkMode 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-          : 'bg-gradient-to-br from-teal-50 to-blue-50'
-      }`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-      </div>
-    )
-  }
-
-  return (
-    <div className={`min-h-screen ${
-      isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gradient-to-br from-teal-50 to-blue-50'
-    }`}>
-      {/* Unified Header */}
-      <Navbar showDashboardInfo={true} dashboardTitle="Admin Dashboard" />
-
-      {/* Fixed Sidebar */}
-      <AdminSidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        stats={stats} 
-      />
-
-      {/* Main Content with left margin to account for fixed sidebar */}
-      <div className="ml-80 pt-20">
-        <div className="p-8">
-          {renderTabContent()}
-        </div>
-      </div>
-    </div>
-  )
 }
 
-export default AdminDashboard
+export default AdminOverview

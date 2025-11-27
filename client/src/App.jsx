@@ -3,11 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Home from './pages/Home'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
-import PatientDashboard from './pages/dashboard/PatientDashboard'
-import AdminDashboard from './pages/dashboard/AdminDashboard'
-import ClinicDashboard from './pages/dashboard/ClinicDashboard'
-import DentistDashboard from './pages/dashboard/DentistDashboard'
-import RadiologyDashboard from './pages/dashboard/RadiologyDashboard'
+import Dashboard from './pages/dashboard/Dashboard'
 import NotFound from './pages/NotFound'
 import LoadingSpinner from './components/LoadingSpinner'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
@@ -111,12 +107,12 @@ const AuthRouter = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/dashboard" element={<PatientDashboard />} />
-        <Route path="/patient/dashboard" element={<PatientDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
-        <Route path="/dentist/dashboard" element={<DentistDashboard />} />
-        <Route path="/radiology/dashboard" element={<RadiologyDashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patient/dashboard" element={<Dashboard />} />
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/clinic/dashboard" element={<Dashboard />} />
+        <Route path="/dentist/dashboard" element={<Dashboard />} />
+        <Route path="/radiology/dashboard" element={<Dashboard />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />
       </Routes>

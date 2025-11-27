@@ -19,12 +19,11 @@ export { default as StatusBadge } from './StatusBadge'
 export { default as ActionButtons } from './ActionButtons'
 export { default as PageHeader } from './PageHeader'
 export { default as DoctorCard } from './DentistCard'
+export { default as Sidebar } from './Sidebar'
 
-// Specific Modals & Sidebars
+// Specific Modals
 export { default as ClinicModal } from './admin/ClinicModal'
 export { default as RadiologyModal } from './admin/RadiologyModal'
-export { default as AdminSidebar } from './admin/AdminSidebar'
-export { default as ClinicSidebar } from './clinic/ClinicSidebar'
 export { default as SecretaryModal } from './clinic/SecretaryModal'
 export { default as NewAppointmentModal } from './dentist/NewAppointmentModal'
 export { default as EditAppointmentModal } from './dentist/EditAppointmentModal'
