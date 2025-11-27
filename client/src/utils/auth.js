@@ -455,9 +455,11 @@ export const authUtils = {
       case 'Clinic':
         return '/clinic/dashboard';
       case 'Dentist':
-        return '/dentist/dashboard'; // For future implementation
+        return '/dentist/dashboard';
       case 'Secretary':
         return '/secretary/dashboard'; // For future implementation
+      case 'RadiologyCenter':
+        return '/radiology/dashboard';
       default:
         return '/dashboard';
     }

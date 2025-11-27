@@ -3,38 +3,82 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
 
-// Get radiology request statistics for dentist
-router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
+// Get radiology request statistics for dentist or radiology center
+router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), async (req, res) => {
   try {
-    const dentistId = req.user.id;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let whereClause = {};
+    
+    if (userRole === 'Dentist') {
+      whereClause.dentistId = userId;
+    } else if (userRole === 'RadiologyCenter') {
+      whereClause.radiologyCenterId = userId;
+    }
 
     const total = await prisma.radiologyRequest.count({
-      where: { dentistId }
+      where: whereClause
     });
 
     const requested = await prisma.radiologyRequest.count({
       where: { 
-        dentistId,
+        ...whereClause,
         status: 'REQUESTED'
       }
     });
 
     const inProgress = await prisma.radiologyRequest.count({
       where: { 
-        dentistId,
+        ...whereClause,
         status: 'IN_PROGRESS'
       }
     });
 
     const completed = await prisma.radiologyRequest.count({
       where: { 
-        dentistId,
+        ...whereClause,
         status: 'COMPLETED'
       }
     });
 
+    // For radiology center, also get completed today and this month
+    let completedToday = 0;
+    let completedThisMonth = 0;
+
+    if (userRole === 'RadiologyCenter') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      completedToday = await prisma.radiologyRequest.count({
+        where: {
+          ...whereClause,
+          status: 'COMPLETED',
+          availableDate: {
+            gte: today
+          }
+        }
+      });
+
+      completedThisMonth = await prisma.radiologyRequest.count({
+        where: {
+          ...whereClause,
+          status: 'COMPLETED',
+          availableDate: {
+            gte: startOfMonth
+          }
+        }
+      });
+    }
+
     res.json({ 
       data: {
+        totalRequests: total,
+        pendingRequests: requested,
+        completedToday,
+        completedThisMonth,
         total,
         requested,
         inProgress,
@@ -455,7 +499,92 @@ router.patch('/:id/status', authenticate, authorize('RadiologyCenter', 'Dentist'
   }
 });
 
-// Update radiology request
+// Upload result for radiology request (convenience endpoint for radiology centers)
+router.patch('/:id/upload-result', authenticate, authorize('RadiologyCenter'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { reportFile, availableDate, status, notes } = req.body;
+
+    if (!reportFile) {
+      return res.status(400).json({ error: 'Report file URL is required' });
+    }
+
+    // Check if request exists and belongs to this radiology center
+    const existingRequest = await prisma.radiologyRequest.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingRequest) {
+      return res.status(404).json({ error: 'Radiology request not found' });
+    }
+
+    if (existingRequest.radiologyCenterId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const updateData = {
+      reportFile,
+      availableDate: availableDate ? new Date(availableDate) : new Date(),
+      status: status || 'COMPLETED'
+    };
+
+    if (notes !== undefined) {
+      updateData.notes = notes;
+    }
+
+    const radiologyRequest = await prisma.radiologyRequest.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: {
+        patient: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true
+              }
+            }
+          }
+        },
+        dentist: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true
+              }
+            }
+          }
+        },
+        radiologyCenter: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      success: true,
+      message: 'Result uploaded successfully', 
+      data: radiologyRequest 
+    });
+  } catch (error) {
+    console.error('Error uploading result:', error);
+    res.status(500).json({ error: 'Failed to upload result' });
+  }
+});
+
+// Update radiology request (full update)
 router.put('/:id', authenticate, authorize('Dentist', 'RadiologyCenter', 'Admin'), async (req, res) => {
   try {
     const { id } = req.params;

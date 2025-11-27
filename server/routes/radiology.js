@@ -50,6 +50,115 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
   }
 });
 
+// Get current radiology center profile
+router.get('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
+  console.log('=== GET /api/radiology-centers/me called ===');
+  console.log('User:', req.user);
+  
+  try {
+    const userId = req.user.id;
+
+    const radiologyCenter = await prisma.radiologyCenter.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            role: true,
+            status: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (!radiologyCenter) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Radiology center profile not found' 
+      });
+    }
+
+    console.log('Radiology center found:', radiologyCenter);
+
+    res.json({ 
+      success: true,
+      data: radiologyCenter
+    });
+  } catch (error) {
+    console.error('Error fetching radiology center profile:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch radiology center profile' 
+    });
+  }
+});
+
+// Update current radiology center profile
+router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
+  console.log('=== PUT /api/radiology-centers/me called ===');
+  console.log('User:', req.user);
+  console.log('Body:', req.body);
+  
+  try {
+    const userId = req.user.id;
+    const { 
+      centerName,
+      registrationNumber,
+      website,
+      city,
+      location,
+      coordinates,
+      description,
+      supportedTypes,
+      workingHours
+    } = req.body;
+
+    // Update radiology center
+    const updatedCenter = await prisma.radiologyCenter.update({
+      where: { userId },
+      data: {
+        ...(centerName && { centerName }),
+        ...(registrationNumber && { registrationNumber }),
+        ...(website !== undefined && { website }),
+        ...(city && { city }),
+        ...(location !== undefined && { location }),
+        ...(coordinates !== undefined && { coordinates }),
+        ...(description !== undefined && { description }),
+        ...(supportedTypes && { supportedTypes }),
+        ...(workingHours && { workingHours })
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            role: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    console.log('Radiology center updated:', updatedCenter);
+
+    res.json({ 
+      success: true,
+      data: updatedCenter,
+      message: 'Radiology center profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating radiology center profile:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to update radiology center profile' 
+    });
+  }
+});
+
 // Get all radiology centers with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
   console.log('=== GET /api/radiology-centers called ===');
