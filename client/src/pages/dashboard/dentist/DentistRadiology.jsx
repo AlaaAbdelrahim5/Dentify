@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaXRay,
@@ -41,42 +41,54 @@ const DentistRadiology = () => {
   const [radiologyCenters, setRadiologyCenters] = useState([])
   const [treatments, setTreatments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [modalLoading, setModalLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Fetch data on mount
+  // Fetch only requests on mount - fetch other data when modal opens
   useEffect(() => {
-    fetchAllData()
+    fetchRadiologyRequests()
   }, [])
 
-  const fetchAllData = async () => {
+  const fetchRadiologyRequests = async () => {
     try {
       setLoading(true)
       setError(null)
-      const [requestsRes, patientsRes, radiologyRes, treatmentsRes] = await Promise.all([
-        radiologyRequestsAPI.getDentistRequests(),
-        patientsAPI.getAll(),
-        radiologyAPI.getAll('limit=100&isActive=true'), // Get up to 100 active centers
-        treatmentsAPI.getDentistTreatments()
-      ])
-      console.log('Radiology API Response:', radiologyRes)
+      const requestsRes = await radiologyRequestsAPI.getDentistRequests()
+      console.log('Radiology Requests Response:', requestsRes)
+      console.log('Requests Array:', requestsRes.radiologyRequests)
       setRadiologyRequests(requestsRes.radiologyRequests || [])
-      setPatients(patientsRes.patients || [])
-      // Handle paginated response - data is in 'data' property
-      const centers = radiologyRes.data || radiologyRes.radiology || []
-      console.log('Radiology Centers:', centers)
-      setRadiologyCenters(centers)
-      setTreatments(treatmentsRes.treatments || [])
     } catch (err) {
-      console.error('Error fetching data:', err)
-      setError('Failed to load data. Please try again.')
+      console.error('Error fetching radiology requests:', err)
+      setError('Failed to load radiology requests. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  // Transform radiology requests from API
-  const mockRadiologyRequests = radiologyRequests.map(r => {
-    // Convert status from REQUESTED, IN_PROGRESS, etc. to "Requested", "In Progress", etc.
+  // Fetch modal data only when opening modal
+  const fetchModalData = async () => {
+    if (patients.length > 0) return // Already fetched
+    
+    try {
+      setModalLoading(true)
+      const [patientsRes, radiologyRes, treatmentsRes] = await Promise.all([
+        patientsAPI.getAll(),
+        radiologyAPI.getAll('limit=100&isActive=true'),
+        treatmentsAPI.getDentistTreatments()
+      ])
+      setPatients(patientsRes.patients || [])
+      const centers = radiologyRes.data || radiologyRes.radiology || []
+      setRadiologyCenters(centers)
+      setTreatments(treatmentsRes.treatments || [])
+    } catch (err) {
+      console.error('Error fetching modal data:', err)
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  // Transform radiology requests from API - use useMemo for performance
+  const transformedRequests = useMemo(() => {
     const statusMap = {
       'REQUESTED': 'Requested',
       'IN_PROGRESS': 'In Progress',
@@ -84,7 +96,7 @@ const DentistRadiology = () => {
       'CANCELLED': 'Cancelled'
     }
     
-    return {
+    return radiologyRequests.map(r => ({
       id: r.id,
       patientId: r.patientId,
       patientName: `${r.patient.firstName} ${r.patient.lastName}`,
@@ -99,32 +111,38 @@ const DentistRadiology = () => {
       reportFile: r.reportFile,
       status: statusMap[r.status] || r.status,
       notes: r.notes || ''
-    }
-  })
-
-  // Transform patients for modal
-  const mockPatients = patients.map(p => ({
-    id: p.userId,
-    name: `${p.firstName} ${p.lastName}`
-  }))
-
-  // Transform radiology centers for modal - only include ACTIVE centers
-  const mockRadiologyCenters = radiologyCenters
-    .filter(r => r.user && r.user.status === 'ACTIVE')
-    .map(r => ({
-      id: r.userId,
-      name: r.centerName,
-      supportedTypes: r.supportedTypes || []
     }))
+  }, [radiologyRequests])
 
-  // Transform treatments for modal
-  const mockTreatments = treatments.map(t => ({
-    id: t.id,
-    treatmentType: t.treatmentType,
-    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
-    patientId: t.patientId,
-    date: t.createdAt
-  }))
+  // Transform patients for modal - use useMemo
+  const transformedPatients = useMemo(() => 
+    patients.map(p => ({
+      id: p.userId,
+      name: `${p.firstName} ${p.lastName}`
+    }))
+  , [patients])
+
+  // Transform radiology centers for modal - use useMemo
+  const transformedRadiologyCenters = useMemo(() => 
+    radiologyCenters
+      .filter(r => r.user && r.user.status === 'ACTIVE')
+      .map(r => ({
+        id: r.userId,
+        name: r.centerName,
+        supportedTypes: r.supportedTypes || []
+      }))
+  , [radiologyCenters])
+
+  // Transform treatments for modal - use useMemo
+  const transformedTreatments = useMemo(() => 
+    treatments.map(t => ({
+      id: t.id,
+      treatmentType: t.treatmentType,
+      patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+      patientId: t.patientId,
+      date: t.createdAt
+    }))
+  , [treatments])
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -166,38 +184,41 @@ const DentistRadiology = () => {
     }
   }
 
-  const filteredRequests = mockRadiologyRequests.filter(request => {
-    const matchesSearch = request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.imagingType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.radiologyCenterName.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
-    // Trim and compare imaging types to handle any whitespace issues
-    const matchesImagingType = selectedImagingType === 'all' || 
-                               request.imagingType?.trim() === selectedImagingType.trim()
-    
-    return matchesSearch && matchesStatus && matchesImagingType
-  })
+  // Filter requests - use useMemo for performance
+  const filteredRequests = useMemo(() => {
+    return transformedRequests.filter(request => {
+      const matchesSearch = request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           request.imagingType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           request.radiologyCenterName.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
+      const matchesImagingType = selectedImagingType === 'all' || 
+                                 request.imagingType?.trim() === selectedImagingType.trim()
+      
+      return matchesSearch && matchesStatus && matchesImagingType
+    })
+  }, [transformedRequests, searchTerm, selectedStatus, selectedImagingType])
 
-  const getStats = () => {
-    const total = mockRadiologyRequests.length
-    const requested = mockRadiologyRequests.filter(r => r.status === 'Requested').length
-    const inProgress = mockRadiologyRequests.filter(r => r.status === 'In Progress').length
-    const completed = mockRadiologyRequests.filter(r => r.status === 'Completed').length
+  // Calculate stats - use useMemo for performance
+  const stats = useMemo(() => {
+    const total = transformedRequests.length
+    const requested = transformedRequests.filter(r => r.status === 'Requested').length
+    const inProgress = transformedRequests.filter(r => r.status === 'In Progress').length
+    const completed = transformedRequests.filter(r => r.status === 'Completed').length
     
     return { total, requested, inProgress, completed }
-  }
+  }, [transformedRequests])
 
-  const stats = getStats()
-
-  const handleNewRequest = () => {
+  const handleNewRequest = async () => {
     setSelectedRequest(null)
     setIsRequestModalOpen(true)
+    await fetchModalData()
   }
 
-  const handleEditRequest = (request) => {
+  const handleEditRequest = async (request) => {
     setSelectedRequest(request)
     setIsRequestModalOpen(true)
+    await fetchModalData()
   }
 
   const handleCloseRequestModal = () => {
@@ -207,7 +228,6 @@ const DentistRadiology = () => {
 
   const handleSaveRequest = async (requestData) => {
     try {
-      // Prepare data for backend - remove requestDate as it's set by backend
       const apiData = {
         patientId: parseInt(requestData.patientId),
         radiologyCenterId: parseInt(requestData.radiologyCenterId),
@@ -217,16 +237,14 @@ const DentistRadiology = () => {
       }
 
       if (selectedRequest) {
-        // For updates, include status if changed
         if (requestData.status) {
           apiData.status = requestData.status
         }
         await radiologyRequestsAPI.update(selectedRequest.id, apiData)
       } else {
-        // For new requests, backend will set requestDate automatically
         await radiologyRequestsAPI.create(apiData)
       }
-      await fetchAllData()
+      await fetchRadiologyRequests() // Only refresh requests
       setIsRequestModalOpen(false)
       setSelectedRequest(null)
     } catch (error) {
@@ -243,7 +261,7 @@ const DentistRadiology = () => {
   const handleConfirmDelete = async () => {
     try {
       await radiologyRequestsAPI.delete(selectedRequest.id)
-      await fetchAllData()
+      await fetchRadiologyRequests() // Only refresh requests
       setIsDeleteModalOpen(false)
       setSelectedRequest(null)
     } catch (error) {
@@ -395,25 +413,25 @@ const DentistRadiology = () => {
       <StatsOverview stats={[
         { 
           label: 'Total Requests', 
-          value: stats.total, 
+          value: loading ? '-' : stats.total, 
           icon: FaXRay, 
           gradient: 'from-purple-600 to-purple-700' 
         },
         { 
           label: 'Requested', 
-          value: stats.requested, 
+          value: loading ? '-' : stats.requested, 
           icon: FaClock, 
           gradient: 'from-yellow-600 to-yellow-700' 
         },
         { 
           label: 'In Progress', 
-          value: stats.inProgress, 
+          value: loading ? '-' : stats.inProgress, 
           icon: FaExclamationCircle, 
           gradient: 'from-blue-600 to-blue-700' 
         },
         { 
           label: 'Completed', 
-          value: stats.completed, 
+          value: loading ? '-' : stats.completed, 
           icon: FaCheck, 
           gradient: 'from-green-600 to-green-700' 
         }
@@ -487,7 +505,20 @@ const DentistRadiology = () => {
       </Card>
 
       {/* Requests - Table or Grid View */}
-      {filteredRequests.length === 0 ? (
+      {loading ? (
+        <Card className={`p-8 text-center ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          </div>
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Loading radiology requests...
+          </p>
+        </Card>
+      ) : filteredRequests.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
@@ -497,13 +528,25 @@ const DentistRadiology = () => {
           <h3 className={`text-lg font-semibold mb-2 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            No radiology requests found
+            {transformedRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
           </h3>
-          <p className={`${
+          <p className={`mb-4 ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            No requests match your current filters
+            {transformedRequests.length === 0 
+              ? 'Create your first radiology request to get started'
+              : 'Try adjusting your search or filter criteria'}
           </p>
+          {transformedRequests.length === 0 && (
+            <Button 
+              variant="primary" 
+              onClick={handleNewRequest}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <FaPlus className="w-4 h-4 mr-2" />
+              Create First Request
+            </Button>
+          )}
         </Card>
       ) : (
         <>
@@ -614,10 +657,11 @@ const DentistRadiology = () => {
         isOpen={isRequestModalOpen}
         onClose={handleCloseRequestModal}
         onSave={handleSaveRequest}
-        patients={mockPatients}
-        radiologyCenters={mockRadiologyCenters}
-        treatments={mockTreatments}
+        patients={transformedPatients}
+        radiologyCenters={transformedRadiologyCenters}
+        treatments={transformedTreatments}
         initialData={selectedRequest}
+        loading={modalLoading}
       />
 
       <DeleteConfirmationModal

@@ -18,6 +18,7 @@ import {
   Button, 
   Input, 
   Select, 
+  Card,
   PageHeader, 
   StatusBadge,
   StatsOverview,
@@ -329,35 +330,35 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
   const stats = useMemo(() => [
     {
       label: 'Today',
-      value: todayAppointments.length,
+      value: loading ? '-' : todayAppointments.length,
       icon: FaCalendarAlt,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Pending',
-      value: pendingAppointments.length,
+      value: loading ? '-' : pendingAppointments.length,
       icon: FaHourglassHalf,
       gradient: 'from-yellow-600 to-orange-600'
     },
     {
       label: 'Upcoming',
-      value: upcomingAppointments.length,
+      value: loading ? '-' : upcomingAppointments.length,
       icon: FaClock,
       gradient: 'from-emerald-600 to-teal-600'
     },
     {
       label: 'Past',
-      value: pastAppointments.length,
+      value: loading ? '-' : pastAppointments.length,
       icon: FaCheckCircle,
       gradient: 'from-blue-600 to-indigo-600'
     },
     {
       label: 'All',
-      value: allAppointments.length,
+      value: loading ? '-' : allAppointments.length,
       icon: FaCheckCircle,
       gradient: 'from-purple-600 to-purple-700'
     }
-  ], [todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
+  ], [loading, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
 
   // Filtered appointments using useMemo
   const filteredAppointments = useMemo(() => {
@@ -543,48 +544,6 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
   )
   }
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Appointments"
-          description="Manage and track your daily appointment schedule"
-        />
-        <div className="flex justify-center items-center h-96">
-          <LoadingSpinner />
-        </div>
-      </div>
-    )
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Appointments"
-          description="Manage and track your daily appointment schedule"
-        />
-        <Card className={`p-12 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-red-900/20' : 'bg-red-100'
-          }`}>
-            <FaTimes className={`w-10 h-10 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
-          </div>
-          <h3 className={`text-xl font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </h3>
-          <Button onClick={fetchAppointments} className="mt-4">
-            Try Again
-          </Button>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -647,35 +606,63 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
       />
 
       {/* Appointments Table */}
-      <DataTable
-        columns={tableColumns}
-        data={filteredAppointments}
-        renderRow={renderTableRow}
-        emptyMessage={
-          activeView === 'today' 
-            ? "No confirmed appointments scheduled for today." 
-            : activeView === 'upcoming'
-            ? "No upcoming appointments found."
-            : activeView === 'pending'
-            ? "No pending appointments found."
-            : activeView === 'past'
-            ? "No past appointments found."
-            : "No appointments found."
-        }
-        emptyIcon={FaCalendarAlt}
-        emptyTitle={
-          activeView === 'today' 
-            ? "No Today's Appointments" 
-            : activeView === 'upcoming'
-            ? "No Upcoming Appointments"
-            : activeView === 'pending'
-            ? "No Pending Appointments"
-            : activeView === 'past'
-            ? "No Past Appointments"
-            : "No Appointments"
-        }
-        hasFilters={searchTerm !== '' || selectedStatus !== 'all'}
-      />
+      {loading ? (
+        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          </div>
+          <p className={`mt-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Loading appointments...
+          </p>
+        </Card>
+      ) : error ? (
+        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <FaCalendarAlt className={`w-12 h-12 mx-auto mb-4 ${
+            isDarkMode ? 'text-red-400' : 'text-red-500'
+          }`} />
+          <h3 className={`text-lg font-semibold mb-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Error Loading Appointments
+          </h3>
+          <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {error}
+          </p>
+          <Button onClick={fetchAppointments}>
+            Try Again
+          </Button>
+        </Card>
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={filteredAppointments}
+          renderRow={renderTableRow}
+          emptyMessage={
+            activeView === 'today' 
+              ? "No confirmed appointments scheduled for today." 
+              : activeView === 'upcoming'
+              ? "No upcoming appointments found."
+              : activeView === 'pending'
+              ? "No pending appointments found."
+              : activeView === 'past'
+              ? "No past appointments found."
+              : "No appointments found."
+          }
+          emptyIcon={FaCalendarAlt}
+          emptyTitle={
+            activeView === 'today' 
+              ? "No Today's Appointments" 
+              : activeView === 'upcoming'
+              ? "No Upcoming Appointments"
+              : activeView === 'pending'
+              ? "No Pending Appointments"
+              : activeView === 'past'
+              ? "No Past Appointments"
+              : "No Appointments"
+          }
+          hasFilters={searchTerm !== '' || selectedStatus !== 'all'}
+        />
+      )}
 
       {/* Modals */}
       <NewAppointmentModal

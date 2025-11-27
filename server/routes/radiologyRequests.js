@@ -109,32 +109,22 @@ router.get('/dentist/my-requests', authenticate, authorize('Dentist'), async (re
       where,
       include: {
         patient: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                phone: true
-              }
-            }
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true
           }
         },
         radiologyCenter: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                phone: true
-              }
-            }
+          select: {
+            userId: true,
+            centerName: true
           }
         },
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
-            description: true
+            treatmentType: true
           }
         }
       },

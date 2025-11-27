@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaMoneyBillWave,
@@ -49,14 +49,15 @@ const DentistPayments = () => {
         paymentsAPI.getDentistPayments(),
         treatmentsAPI.getDentistTreatments()
       ])
+      console.log('Payments loaded:', paymentsRes.payments?.length || 0)
+      console.log('Treatments loaded:', treatmentsRes.treatments?.length || 0)
       setPayments(paymentsRes.payments || [])
       setTreatments(treatmentsRes.treatments || [])
       
-      // Extract unique patients from the dentist's treatments
-      // Only include patients with IN_PROGRESS or COMPLETED treatments
+      // Extract unique patients from treatments - use useMemo below instead
       const patientMap = new Map()
       treatmentsRes.treatments?.forEach(treatment => {
-        const status = treatment.status // This is already "IN_PROGRESS", "COMPLETED", or "CANCELLED" from DB
+        const status = treatment.status
         if (status === 'IN_PROGRESS' || status === 'COMPLETED') {
           const patientId = treatment.patient.userId
           if (!patientMap.has(patientId)) {
@@ -74,39 +75,45 @@ const DentistPayments = () => {
     }
   }
 
-  // Transform patients for display
-  const mockPatients = patients.map(p => ({
-    id: p.userId,
-    name: `${p.firstName} ${p.lastName}`,
-    phone: p.user?.phone || 'N/A'
-  }))
+  // Transform patients for display - use useMemo for performance
+  const mockPatients = useMemo(() => 
+    patients.map(p => ({
+      id: p.userId,
+      name: `${p.firstName} ${p.lastName}`,
+      phone: p.user?.phone || 'N/A'
+    }))
+  , [patients])
 
-  // Transform treatments for display
-  const mockTreatments = treatments.map(t => ({
-    id: t.id,
-    patientId: t.patientId,
-    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
-    treatmentType: t.treatmentType,
-    totalAmount: t.totalAmount,
-    treatmentDiscount: t.treatmentDiscount || 0,
-    paidAmount: t.paidAmount,
-    status: t.status.replace('_', ' '),
-    creationDate: t.createdAt
-  }))
+  // Transform treatments for display - use useMemo for performance
+  const mockTreatments = useMemo(() => 
+    treatments.map(t => ({
+      id: t.id,
+      patientId: t.patientId,
+      patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+      treatmentType: t.treatmentType,
+      totalAmount: t.totalAmount,
+      treatmentDiscount: t.treatmentDiscount || 0,
+      paidAmount: t.paidAmount,
+      status: t.status.replace('_', ' '),
+      creationDate: t.createdAt
+    }))
+  , [treatments])
 
-  // Transform payments for display
-  const mockPayments = payments.map(p => ({
-    id: p.id,
-    treatmentId: p.treatmentId,
-    patientId: p.treatment.patientId,
-    patientName: `${p.treatment.patient.firstName} ${p.treatment.patient.lastName}`,
-    treatmentType: p.treatment.treatmentType,
-    amount: p.amount,
-    discount: p.discount || 0,
-    paymentMethod: p.method, // Keep uppercase: 'CASH' or 'CARD'
-    paymentDate: p.paymentDate,
-    notes: p.notes || ''
-  }))
+  // Transform payments for display - use useMemo for performance
+  const mockPayments = useMemo(() => 
+    payments.map(p => ({
+      id: p.id,
+      treatmentId: p.treatmentId,
+      patientId: p.treatment.patientId,
+      patientName: `${p.treatment.patient.firstName} ${p.treatment.patient.lastName}`,
+      treatmentType: p.treatment.treatmentType,
+      amount: p.amount,
+      discount: p.discount || 0,
+      paymentMethod: p.method,
+      paymentDate: p.paymentDate,
+      notes: p.notes || ''
+    }))
+  , [payments])
 
   // Get patient summary (all treatments and total balance)
   const getPatientSummary = (patientId) => {
@@ -132,41 +139,69 @@ const DentistPayments = () => {
     return mockTreatments.filter(t => t.totalAmount > t.paidAmount)
   }
 
-  const filterPaymentsByDate = (payments) => {
-    if (selectedDateRange === 'all') return payments
+  // Filter payments - use useMemo for performance
+  const filteredPayments = useMemo(() => {
+    let filtered = mockPayments
 
-    const now = new Date()
-    return payments.filter(payment => {
-      const paymentDate = new Date(payment.paymentDate)
+    // Date range filter
+    if (selectedDateRange !== 'all') {
+      const now = new Date()
+      filtered = filtered.filter(payment => {
+        const paymentDate = new Date(payment.paymentDate)
+        
+        switch (selectedDateRange) {
+          case 'today':
+            return paymentDate.toDateString() === now.toDateString()
+          case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            return paymentDate >= weekAgo
+          case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            return paymentDate >= monthAgo
+          default:
+            return true
+        }
+      })
+    }
+
+    // Other filters
+    return filtered.filter(payment => {
+      const matchesSearch = payment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           payment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase())
       
-      switch (selectedDateRange) {
-        case 'today':
-          return paymentDate.toDateString() === now.toDateString()
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          return paymentDate >= weekAgo
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-          return paymentDate >= monthAgo
-        default:
-          return true
-      }
+      const matchesPaymentMethod = selectedPaymentMethod === 'all' || payment.paymentMethod === selectedPaymentMethod
+      
+      const matchesPatient = selectedPatient === 'all' || payment.patientId === parseInt(selectedPatient)
+      
+      return matchesSearch && matchesPaymentMethod && matchesPatient
     })
-  }
+  }, [mockPayments, selectedDateRange, searchTerm, selectedPaymentMethod, selectedPatient])
 
-  const filteredPayments = filterPaymentsByDate(mockPayments).filter(payment => {
-    const matchesSearch = payment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase())
+  // Calculate stats - use useMemo for performance
+  const stats = useMemo(() => {
+    // Apply date filter for stats
+    let dateFilteredPayments = mockPayments
     
-    const matchesPaymentMethod = selectedPaymentMethod === 'all' || payment.paymentMethod === selectedPaymentMethod
-    
-    const matchesPatient = selectedPatient === 'all' || payment.patientId === parseInt(selectedPatient)
-    
-    return matchesSearch && matchesPaymentMethod && matchesPatient
-  })
+    if (selectedDateRange !== 'all') {
+      const now = new Date()
+      dateFilteredPayments = mockPayments.filter(payment => {
+        const paymentDate = new Date(payment.paymentDate)
+        
+        switch (selectedDateRange) {
+          case 'today':
+            return paymentDate.toDateString() === now.toDateString()
+          case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            return paymentDate >= weekAgo
+          case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            return paymentDate >= monthAgo
+          default:
+            return true
+        }
+      })
+    }
 
-  const getStats = () => {
-    const dateFilteredPayments = filterPaymentsByDate(mockPayments)
     const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
     const totalDiscount = dateFilteredPayments.reduce((sum, p) => sum + p.discount, 0)
     const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
@@ -174,9 +209,7 @@ const DentistPayments = () => {
     const count = dateFilteredPayments.length
     
     return { total, totalDiscount, cashPayments, cardPayments, count }
-  }
-
-  const stats = getStats()
+  }, [mockPayments, selectedDateRange])
 
   const handleAddPayment = (treatment = null) => {
     setSelectedTreatment(treatment)
@@ -370,31 +403,31 @@ const DentistPayments = () => {
           label: `${selectedDateRange === 'all' ? 'Total' : 
                    selectedDateRange === 'today' ? 'Today' :
                    selectedDateRange === 'week' ? 'This Week' : 'This Month'} Revenue`,
-          value: `$${stats.total.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.total.toFixed(2)}`,
           icon: FaDollarSign,
           gradient: 'from-green-600 to-green-700'
         },
         {
           label: 'Total Discounts',
-          value: `$${stats.totalDiscount.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.totalDiscount.toFixed(2)}`,
           icon: FaFileInvoiceDollar,
           gradient: 'from-orange-600 to-orange-700'
         },
         {
           label: 'Cash Payments',
-          value: `$${stats.cashPayments.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.cashPayments.toFixed(2)}`,
           icon: FaMoneyBillWave,
           gradient: 'from-emerald-600 to-emerald-700'
         },
         {
           label: 'Card Payments',
-          value: `$${stats.cardPayments.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.cardPayments.toFixed(2)}`,
           icon: FaCreditCard,
           gradient: 'from-blue-600 to-blue-700'
         },
         {
           label: 'Transactions',
-          value: stats.count,
+          value: loading ? '-' : stats.count,
           icon: FaChartLine,
           gradient: 'from-purple-600 to-purple-700'
         }
@@ -598,7 +631,18 @@ const DentistPayments = () => {
 
       {/* Payments Table */}
       <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        {filteredPayments.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            </div>
+            <p className={`mt-4 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Loading payments...
+            </p>
+          </div>
+        ) : filteredPayments.length === 0 ? (
           <div className="p-8 text-center">
             <FaMoneyBillWave className={`w-12 h-12 mx-auto mb-4 ${
               isDarkMode ? 'text-gray-500' : 'text-gray-400'
@@ -606,13 +650,25 @@ const DentistPayments = () => {
             <h3 className={`text-lg font-semibold mb-2 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              No payments found
+              {mockPayments.length === 0 ? 'No payments recorded yet' : 'No payments match your filters'}
             </h3>
-            <p className={`${
+            <p className={`mb-4 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              No payments match your current filters
+              {mockPayments.length === 0 
+                ? 'Record your first payment to get started'
+                : 'Try adjusting your search or filter criteria'}
             </p>
+            {mockPayments.length === 0 && (
+              <Button 
+                variant="primary" 
+                onClick={() => handleAddPayment()}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <FaPlus className="w-4 h-4 mr-2" />
+                Record First Payment
+              </Button>
+            )}
           </div>
         ) : (
           <DataTable

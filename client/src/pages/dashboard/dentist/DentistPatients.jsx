@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { 
   FaUser,
   FaPhone,
@@ -140,13 +140,20 @@ const DentistPatients = () => {
     })
   }
 
-  // Use transformed patients
-  const displayPatients = transformPatients(patients).filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.phone.includes(searchTerm)
-    return matchesSearch
-  })
+  // Use transformed patients - memoized for performance
+  const transformedPatients = useMemo(() => {
+    return transformPatients(patients)
+  }, [patients])
+
+  // Filter patients - memoized for performance
+  const displayPatients = useMemo(() => {
+    return transformedPatients.filter(patient => {
+      const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           patient.phone.includes(searchTerm)
+      return matchesSearch
+    })
+  }, [transformedPatients, searchTerm])
 
   const handleViewPatient = async (patient) => {
     setSelectedPatient(patient)
@@ -404,25 +411,25 @@ const DentistPatients = () => {
       <StatsOverview stats={[
         {
           label: 'Total Patients',
-          value: stats.totalPatients,
+          value: loading ? '-' : stats.totalPatients,
           icon: FaUsers,
           gradient: 'from-blue-600 to-blue-700'
         },
         {
           label: 'Active Treatments',
-          value: stats.activeTreatments,
+          value: loading ? '-' : stats.activeTreatments,
           icon: FaTooth,
           gradient: 'from-green-600 to-green-700'
         },
         {
           label: 'Total Revenue',
-          value: `$${stats.totalRevenue.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.totalRevenue.toFixed(2)}`,
           icon: FaDollarSign,
           gradient: 'from-teal-600 to-teal-700'
         },
         {
           label: 'Pending Payments',
-          value: `$${stats.pendingPayments.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.pendingPayments.toFixed(2)}`,
           icon: FaExclamationCircle,
           gradient: 'from-orange-600 to-orange-700'
         }
