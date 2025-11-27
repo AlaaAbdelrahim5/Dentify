@@ -68,27 +68,13 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
     const condition = getToothCondition(toothNumber)
     const isSelected = selectedTeeth.includes(toothNumber)
     
-    if (condition) {
-      switch (condition.status) {
-        case 'healthy':
-          return isDarkMode ? 'bg-green-900/30 text-green-400 border-green-600' : 'bg-green-100 text-green-700 border-green-400'
-        case 'cavity':
-          return isDarkMode ? 'bg-orange-900/30 text-orange-400 border-orange-600' : 'bg-orange-100 text-orange-700 border-orange-400'
-        case 'root-canal':
-          return isDarkMode ? 'bg-red-900/30 text-red-400 border-red-600' : 'bg-red-100 text-red-700 border-red-400'
-        case 'crown':
-          return isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'bg-blue-100 text-blue-700 border-blue-400'
-        case 'extracted':
-          return isDarkMode ? 'bg-gray-900/30 text-gray-500 border-gray-600 line-through' : 'bg-gray-100 text-gray-500 border-gray-400 line-through'
-        case 'implant':
-          return isDarkMode ? 'bg-purple-900/30 text-purple-400 border-purple-600' : 'bg-purple-100 text-purple-700 border-purple-400'
-        default:
-          return isSelected 
-            ? 'bg-teal-600 text-white border-teal-600 shadow-lg' 
-            : isDarkMode 
-              ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700 hover:border-teal-500' 
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-teal-50 hover:border-teal-400'
-      }
+    // If tooth has history (dentist worked on it), show in teal/purple color
+    if (condition && condition.hasHistory) {
+      return isSelected 
+        ? 'bg-teal-600 text-white border-teal-600 shadow-lg' 
+        : isDarkMode 
+          ? 'bg-purple-900/30 text-purple-400 border-purple-600 hover:bg-purple-800/40' 
+          : 'bg-purple-100 text-purple-700 border-purple-400 hover:bg-purple-200'
     }
     
     return isSelected 
@@ -144,20 +130,9 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
           <FaTooth className="text-2xl mb-1.5" />
           <span className="text-sm font-bold tracking-wide">{tooth.number}</span>
           
-          {condition && (
-            <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-gray-800 rounded-full p-1">
-              {condition.status === 'cavity' && (
-                <FaExclamationTriangle className="w-3.5 h-3.5 text-orange-500" />
-              )}
-              {condition.status === 'root-canal' && (
-                <FaExclamationTriangle className="w-3.5 h-3.5 text-red-500" />
-              )}
-              {condition.status === 'crown' && (
-                <FaCheck className="w-3.5 h-3.5 text-blue-500" />
-              )}
-              {condition.status === 'healthy' && (
-                <FaCheck className="w-3.5 h-3.5 text-green-500" />
-              )}
+          {condition && condition.conditionCount && (
+            <div className="absolute -top-1.5 -right-1.5 bg-teal-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-lg">
+              {condition.conditionCount}
             </div>
           )}
         </button>
@@ -166,24 +141,44 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
         {isHovered && (
           <div className={`
             absolute z-50 bottom-full mb-3 left-1/2 transform -translate-x-1/2
-            px-4 py-3 rounded-xl shadow-2xl whitespace-nowrap text-sm pointer-events-none
+            px-4 py-3 rounded-xl shadow-2xl text-sm pointer-events-none max-w-xs
             ${isDarkMode ? 'bg-gray-900 text-white border-2 border-gray-700' : 'bg-white text-gray-900 border-2 border-gray-200'}
           `}>
             <div className="font-bold text-base mb-1">Tooth #{tooth.number}</div>
-            <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{tooth.name}</div>
-            {condition && (
+            <div className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{tooth.name}</div>
+            {condition && condition.allConditions && condition.allConditions.length > 0 && (
               <>
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent my-2"></div>
-                <div className="text-sm font-semibold capitalize flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    condition.status === 'healthy' ? 'bg-green-500' :
-                    condition.status === 'cavity' ? 'bg-orange-500' :
-                    condition.status === 'root-canal' ? 'bg-red-500' :
-                    condition.status === 'crown' ? 'bg-blue-500' :
-                    condition.status === 'implant' ? 'bg-purple-500' :
-                    'bg-gray-500'
-                  }`}></div>
-                  <span className="text-teal-500">{condition.status.replace('-', ' ')}</span>
+                <div className={`text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {condition.conditionCount} {condition.conditionCount === 1 ? 'Condition' : 'Conditions'} Recorded:
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {condition.allConditions.map((cond, index) => (
+                    <div key={index} className={`flex items-start gap-2 p-2 rounded-lg ${
+                      isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                        cond.status === 'healthy' ? 'bg-green-500' :
+                        cond.status === 'cavity' ? 'bg-orange-500' :
+                        cond.status.includes('root') ? 'bg-red-500' :
+                        cond.status === 'crown' ? 'bg-blue-500' :
+                        cond.status === 'implant' ? 'bg-purple-500' :
+                        cond.status === 'bridge' ? 'bg-indigo-500' :
+                        cond.status === 'extraction' || cond.status === 'extracted' ? 'bg-gray-500' :
+                        'bg-yellow-500'
+                      }`}></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold capitalize text-teal-500">
+                          {cond.status.replace('-', ' ')}
+                        </div>
+                        {cond.treatment && (
+                          <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {cond.treatment}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
@@ -226,34 +221,31 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
           <span className={`text-sm font-semibold ${
             isDarkMode ? 'text-gray-300' : 'text-gray-700'
           }`}>
-            Condition Legend
+            Tooth Status Legend
           </span>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Healthy</span>
+            <div className={`w-4 h-4 rounded-full shadow-sm ${
+              isDarkMode ? 'bg-purple-900/50 border-2 border-purple-600' : 'bg-purple-100 border-2 border-purple-400'
+            }`}></div>
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Worked On (Has History)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Cavity</span>
+            <div className={`w-4 h-4 rounded-full shadow-sm bg-teal-600`}></div>
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Selected</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Root Canal</span>
+            <div className={`w-4 h-4 rounded-full shadow-sm ${
+              isDarkMode ? 'bg-gray-800 border-2 border-gray-600' : 'bg-white border-2 border-gray-300'
+            }`}></div>
+            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>No History</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Crown</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-purple-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Implant</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-500 rounded-full shadow-sm"></div>
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Extracted</span>
-          </div>
+        </div>
+        <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <strong>Note:</strong> Purple/colored teeth indicate you have worked on them. Hover to see all conditions. Number badge shows condition count.
+          </p>
         </div>
       </div>
 

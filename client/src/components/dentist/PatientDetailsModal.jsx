@@ -30,6 +30,8 @@ import {
 } from 'react-icons/fa'
 import { Button, StatusBadge, Card } from '../index'
 import { useTheme } from '../../contexts/ThemeContext'
+import TeethHistoryTab from './TeethHistoryTab'
+import AppointmentsHistoryTab from './AppointmentsHistoryTab'
 
 const PatientDetailsModal = ({ 
   isOpen, 
@@ -82,7 +84,9 @@ const PatientDetailsModal = ({
 
   const tabs = [
     { id: 'information', label: 'Information', icon: FaUser },
-    { id: 'treatments', label: 'Treatments', icon: FaStethoscope }
+    { id: 'treatments', label: 'Treatments', icon: FaStethoscope },
+    { id: 'teethHistory', label: 'Teeth History', icon: FaTooth },
+    { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt }
   ]
 
   const getStatusIcon = (status) => {
@@ -459,10 +463,12 @@ const PatientDetailsModal = ({
     switch (activeTab) {
       case 'information':
         return renderInformation()
-      case 'appointments':
-        return renderAppointments()
       case 'treatments':
         return renderTreatments()
+      case 'teethHistory':
+        return <TeethHistoryTab treatments={treatments} />
+      case 'appointments':
+        return <AppointmentsHistoryTab appointments={appointments} />
       default:
         return renderInformation()
     }

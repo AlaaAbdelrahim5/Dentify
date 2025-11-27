@@ -15,7 +15,7 @@ import {
 import { Card, Input, Button, StatsOverview } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
-import { patientsAPI, treatmentsAPI, paymentsAPI } from '../../../services/api'
+import { patientsAPI, treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
@@ -191,9 +191,30 @@ const DentistPatients = () => {
       
       setPatientTreatments(transformedTreatments)
       
-      // TODO: Fetch appointments and payments when those endpoints are ready
-      setPatientAppointments([])
-      setPatientPayments([])
+      // Fetch appointments
+      try {
+        const appointmentsResponse = await appointmentsAPI.getDentistAppointments()
+        const patientAppointmentsData = (appointmentsResponse.appointments || []).filter(
+          apt => apt.patientId === patient.id
+        )
+        setPatientAppointments(patientAppointmentsData)
+      } catch (aptError) {
+        console.error('Error fetching appointments:', aptError)
+        setPatientAppointments([])
+      }
+      
+      // Fetch payments
+      try {
+        const paymentsResponse = await paymentsAPI.getDentistPayments()
+        const patientPaymentsData = (paymentsResponse.payments || []).filter(payment => {
+          // Check if payment is for one of this patient's treatments
+          return patientTreatmentsData.some(t => t.id === payment.treatmentId)
+        })
+        setPatientPayments(patientPaymentsData)
+      } catch (payError) {
+        console.error('Error fetching payments:', payError)
+        setPatientPayments([])
+      }
       
     } catch (error) {
       console.error('Error fetching patient data:', error)
