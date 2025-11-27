@@ -33,7 +33,7 @@ import SessionCostModal from '../../../components/dentist/SessionCostModal'
 import ToothChartModal from '../../../components/dentist/ToothChartModal'
 import { appointmentsAPI } from '../../../services/api'
 
-const DentistAppointments = ({ onNavigateToTreatments }) => {
+const DentistAppointments = ({ onTabChange }) => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('today') // today, pending, past, all
   const [searchTerm, setSearchTerm] = useState('')
@@ -297,16 +297,28 @@ const DentistAppointments = ({ onNavigateToTreatments }) => {
       setSelectedAppointment(appointment)
       setIsToothChartModalOpen(true)
     } else {
-      // If not linked, call parent callback to navigate to treatments
-      if (onNavigateToTreatments) {
-        onNavigateToTreatments({
-          id: appointment.id,
-          patientId: appointment.rawData?.patientId,
-          patientName: appointment.patient.name,
-          appointmentDate: appointment.appointmentDate,
-          treatmentType: appointment.treatment,
-          notes: appointment.notes
-        })
+      // Store appointment data for the treatments page to use
+      const appointmentContext = {
+        appointmentId: appointment.id,
+        patientId: appointment.rawData?.patientId,
+        patientName: appointment.patient.name,
+        patientPhone: appointment.patient.phone,
+        patientEmail: appointment.patient.email,
+        appointmentDate: appointment.appointmentDate,
+        appointmentTime: appointment.time,
+        treatmentType: appointment.treatment,
+        notes: appointment.notes,
+        fromAppointment: true
+      }
+      
+      // Store in sessionStorage so treatments page can access it
+      sessionStorage.setItem('createTreatmentFromAppointment', JSON.stringify(appointmentContext))
+      
+      // Navigate to treatments tab
+      if (onTabChange) {
+        onTabChange('treatments')
+      } else {
+        alert('Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + appointment.patient.name)
       }
     }
   }

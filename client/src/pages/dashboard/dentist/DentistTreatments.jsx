@@ -72,16 +72,36 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Check if coming from appointment (via props)
+  // Check if coming from appointment (via props or sessionStorage)
   useEffect(() => {
-    if (propsAppointmentData && !appointmentDataState) {
+    // Check sessionStorage for appointment context from appointments page
+    const storedContext = sessionStorage.getItem('createTreatmentFromAppointment')
+    if (storedContext) {
+      try {
+        const appointmentContext = JSON.parse(storedContext)
+        console.log('Found appointment context in sessionStorage:', appointmentContext)
+        setAppointmentDataState(appointmentContext)
+        setCurrentPage('new')
+        // Clear from sessionStorage after using it
+        sessionStorage.removeItem('createTreatmentFromAppointment')
+      } catch (err) {
+        console.error('Error parsing appointment context:', err)
+      }
+    } else if (propsAppointmentData && !appointmentDataState) {
       setAppointmentDataState(propsAppointmentData)
       setCurrentPage('new')
-    } else if (!propsAppointmentData && appointmentDataState) {
-      // Clear appointment data when prop is cleared
+    } else if (!propsAppointmentData && appointmentDataState && !storedContext) {
+      // Clear appointment data when prop is cleared and no sessionStorage data
       setAppointmentDataState(null)
     }
   }, [propsAppointmentData])
+  
+  // Clear appointment context when leaving the new treatment page
+  useEffect(() => {
+    if (currentPage !== 'new' && appointmentDataState?.fromAppointment) {
+      setAppointmentDataState(null)
+    }
+  }, [currentPage])
 
   const fetchAllData = async () => {
     try {

@@ -399,6 +399,13 @@ const NewTreatmentModal = ({
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
                       Select Patient <span className="text-red-500">*</span>
+                      {appointmentData && (
+                        <span className={`ml-2 text-xs font-normal ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          (From appointment - cannot be changed)
+                        </span>
+                      )}
                     </label>
                     <Select
                       name="patientId"
@@ -407,9 +414,25 @@ const NewTreatmentModal = ({
                       options={[
                         ...patients.map(p => ({ value: p.id, label: p.name }))
                       ]}
+                      disabled={!!appointmentData}
                     />
                     {errors.patientId && (
                       <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
+                    )}
+                    {appointmentData && formData.patientId && (
+                      <div className={`mt-2 p-2 rounded-lg text-xs ${
+                        isDarkMode ? 'bg-teal-900/20 text-teal-300' : 'bg-teal-50 text-teal-700'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <FaUser className="w-3 h-3" />
+                          <span>Patient: {appointmentData.patientName}</span>
+                        </div>
+                        {appointmentData.patientPhone && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span>📞 {appointmentData.patientPhone}</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </Card.Content>
