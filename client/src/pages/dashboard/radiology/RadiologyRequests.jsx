@@ -12,7 +12,19 @@ import {
   FaFilter
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Card, Button, StatsOverview, DataTable, StatusBadge, Select, Input, FilterBar, Pagination } from '../../../components'
+import { 
+  Card, 
+  Button, 
+  StatsOverview, 
+  DataTable, 
+  StatusBadge, 
+  Select, 
+  Input, 
+  FilterBar, 
+  Pagination,
+  PageHeader,
+  LoadingSpinner
+} from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import RequestDetailsModal from '../../../components/radiology/RequestDetailsModal'
@@ -25,6 +37,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [activeView, setActiveView] = useState('all') // all, requested, in-progress, completed
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
@@ -49,9 +62,13 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   useEffect(() => {
     let filtered = requests
 
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(req => req.status === statusFilter)
+    // Filter by view/status
+    if (activeView === 'requested') {
+      filtered = filtered.filter(req => req.status === 'REQUESTED')
+    } else if (activeView === 'in-progress') {
+      filtered = filtered.filter(req => req.status === 'IN_PROGRESS')
+    } else if (activeView === 'completed') {
+      filtered = filtered.filter(req => req.status === 'COMPLETED')
     }
 
     // Filter by search term
@@ -67,7 +84,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
 
     setFilteredRequests(filtered)
     setCurrentPage(1)
-  }, [requests, statusFilter, searchTerm])
+  }, [requests, activeView, searchTerm])
 
   const fetchRequests = async () => {
     try {
@@ -169,8 +186,14 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Imaging Requests"
+          description="Manage and process radiology imaging requests"
+        />
+        <div className="flex justify-center items-center h-96">
+          <LoadingSpinner />
+        </div>
       </div>
     )
   }
@@ -186,13 +209,13 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     {
       label: 'Requested',
       value: requests.filter(r => r.status === 'REQUESTED').length,
-      icon: FaClock,
+      icon: MdPendingActions,
       gradient: 'from-yellow-600 to-orange-600'
     },
     {
       label: 'In Progress',
       value: requests.filter(r => r.status === 'IN_PROGRESS').length,
-      icon: FaFileUpload,
+      icon: FaClock,
       gradient: 'from-blue-600 to-indigo-600'
     },
     {
@@ -203,37 +226,65 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     }
   ]
 
-  const filterOptions = [
-    {
-      label: 'Status',
-      value: statusFilter,
-      onChange: (e) => setStatusFilter(e.target.value),
-      options: [
-        { value: 'all', label: 'All Status' },
-        { value: 'REQUESTED', label: 'Requested' },
-        { value: 'IN_PROGRESS', label: 'In Progress' },
-        { value: 'COMPLETED', label: 'Completed' },
-        { value: 'CANCELLED', label: 'Cancelled' }
-      ]
-    }
-  ]
+  const requestedRequests = requests.filter(r => r.status === 'REQUESTED')
+  const inProgressRequests = requests.filter(r => r.status === 'IN_PROGRESS')
+  const completedRequests = requests.filter(r => r.status === 'COMPLETED')
 
   const handleClearFilters = () => {
     setSearchTerm('')
-    setStatusFilter('all')
   }
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Imaging Requests"
+        description="Manage and process radiology imaging requests"
+      />
+
       {/* Statistics Summary */}
       <StatsOverview stats={statsData} />
+
+      {/* View Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={activeView === 'all' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('all')}
+            className={activeView === 'all' ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : ''}
+          >
+            All Requests ({requests.length})
+          </Button>
+          <Button
+            variant={activeView === 'requested' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('requested')}
+            className={activeView === 'requested' ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : ''}
+          >
+            Requested ({requestedRequests.length})
+          </Button>
+          <Button
+            variant={activeView === 'in-progress' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('in-progress')}
+            className={activeView === 'in-progress' ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : ''}
+          >
+            In Progress ({inProgressRequests.length})
+          </Button>
+          <Button
+            variant={activeView === 'completed' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('completed')}
+            className={activeView === 'completed' ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : ''}
+          >
+            Completed ({completedRequests.length})
+          </Button>
+        </div>
+      </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search by patient name, dentist, or imaging type..."
-        filters={filterOptions}
+        filters={[]}
         onClearFilters={handleClearFilters}
       />
 
@@ -252,14 +303,22 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         renderRow={(request) => (
           <tr key={request.id} className={isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
             <td className="px-6 py-4 whitespace-nowrap">
-              <span className={`font-mono text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>#{request.id}</span>
+              <span className={`font-mono text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                #{request.id}
+              </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center gap-2">
-                <FaUser className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-900'}>
-                  {request.patient?.firstName} {request.patient?.lastName}
-                </span>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  isDarkMode ? 'bg-blue-900' : 'bg-blue-100'
+                }`}>
+                  <FaUser className={isDarkMode ? 'text-blue-400' : 'text-blue-600'} />
+                </div>
+                <div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {request.patient?.firstName} {request.patient?.lastName}
+                  </div>
+                </div>
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
@@ -270,45 +329,58 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
             <td className="px-6 py-4 whitespace-nowrap">
               <div className="flex items-center gap-2">
                 <FaXRay className={isDarkMode ? 'text-blue-400' : 'text-blue-600'} />
-                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-900'}>{request.imagingType}</span>
+                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {request.imagingType}
+                </span>
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <div className="flex items-center gap-2">
                 <FaCalendarAlt className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-900'}>{formatDate(request.requestDate)}</span>
+                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-900'}>
+                  {formatDate(request.requestDate)}
+                </span>
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               {getStatusBadge(request.status)}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center gap-2">
-                <button
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleViewDetails(request)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                   title="View Details"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 >
-                  <FaEye />
-                </button>
+                  <FaEye className="w-4 h-4" />
+                </Button>
                 {request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleUploadResult(request)}
-                    className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                     title="Upload Result"
+                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                   >
-                    <FaFileUpload />
-                  </button>
+                    <FaFileUpload className="w-4 h-4" />
+                  </Button>
                 )}
                 {request.reportFile && (
                   <a
                     href={request.reportFile}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
                     title="Download Report"
                   >
-                    <FaDownload />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                    >
+                      <FaDownload className="w-4 h-4" />
+                    </Button>
                   </a>
                 )}
               </div>

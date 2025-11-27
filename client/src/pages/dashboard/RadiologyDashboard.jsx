@@ -274,41 +274,31 @@ const RadiologyDashboard = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-teal-50 to-blue-50'
+    }`}>
+      {/* Unified Header */}
       <Navbar 
         showDashboardInfo={true} 
         dashboardTitle="Radiology Center Dashboard"
         userRole="RadiologyCenter"
       />
       
-      <div className="flex">
-        <RadiologySidebar 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onLogout={handleLogout}
-          radiologyData={radiologyData}
-        />
-        
-        <main className="flex-1 p-6 ml-64">
-          <div className="max-w-7xl mx-auto">
-            {/* Page Header */}
-            <div className="mb-6">
-              <h1 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'requests' && 'Radiology Requests'}
-                {activeTab === 'settings' && 'Center Settings'}
-              </h1>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {activeTab === 'overview' && 'Welcome to your radiology center dashboard'}
-                {activeTab === 'requests' && 'Manage all radiology imaging requests'}
-                {activeTab === 'settings' && 'Configure your center information and preferences'}
-              </p>
-            </div>
-
-            {/* Content */}
-            {renderContent()}
-          </div>
-        </main>
+      {/* Fixed Sidebar */}
+      <RadiologySidebar 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onLogout={handleLogout}
+        radiologyData={radiologyData}
+      />
+      
+      {/* Main Content with left margin to account for fixed sidebar */}
+      <div className="ml-72 pt-20">
+        <div className="p-8">
+          {renderContent()}
+        </div>
       </div>
     </div>
   )

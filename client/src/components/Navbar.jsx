@@ -133,19 +133,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                 // Unauthenticated user navigation
                 <>
                   <Link 
-                    to="/" 
-                    className={`px-4 py-2 text-sm font-semibold transition-all duration-200 relative group rounded-lg ${
-                      isDarkMode 
-                        ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50' 
-                        : 'text-gray-700 hover:text-teal-600 hover:bg-gray-100/50'
-                    }`}
-                  >
-                    Home
-                    <span className={`absolute bottom-1 left-4 right-4 h-0.5 w-0 transition-all duration-300 group-hover:w-[calc(100%-2rem)] ${
-                      isDarkMode ? 'bg-teal-400' : 'bg-teal-600'
-                    }`}></span>
-                  </Link>
-                  <Link 
                     to="/login" 
                     className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border ${
                       isDarkMode 
@@ -239,32 +226,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
 
                         {/* Menu Items */}
                         <div className="py-2">
-                          <Link
-                            to={getDashboardRoute()}
-                            onClick={() => setIsProfileDropdownOpen(false)}
-                            className={`flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
-                              isDarkMode 
-                                ? 'hover:bg-gray-700 text-gray-300' 
-                                : 'hover:bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            <MdDashboard className="w-5 h-5" />
-                            <span className="text-sm font-medium">Dashboard</span>
-                          </Link>
-
-                          <Link
-                            to="/"
-                            onClick={() => setIsProfileDropdownOpen(false)}
-                            className={`flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
-                              isDarkMode 
-                                ? 'hover:bg-gray-700 text-gray-300' 
-                                : 'hover:bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            <FaHome className="w-5 h-5" />
-                            <span className="text-sm font-medium">Home</span>
-                          </Link>
-
                           <button
                             onClick={() => {
                               setIsProfileDropdownOpen(false)
@@ -351,17 +312,6 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
               {!isAuthenticated ? (
                 // Unauthenticated mobile menu
                 <>
-                  <Link 
-                    to="/" 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-base font-semibold transition-all duration-200 ${
-                      isDarkMode 
-                        ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/70' 
-                        : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
-                    }`}
-                  >
-                    Home
-                  </Link>
                   <Link 
                     to="/login" 
                     onClick={() => setIsMobileMenuOpen(false)}
