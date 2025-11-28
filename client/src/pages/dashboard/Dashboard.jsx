@@ -439,9 +439,6 @@ const UnifiedDashboard = () => {
       }`}>
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className={`mt-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Loading dashboard...
-          </p>
         </div>
       </div>
     )

@@ -545,7 +545,6 @@ const SignUp = () => {
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <LoadingSpinner size="sm" />
-                        Creating Account...
                       </div>
                     ) : (
                       "Create Account"

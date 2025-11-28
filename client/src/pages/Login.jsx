@@ -321,7 +321,6 @@ const Login = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <LoadingSpinner size="sm" />
-                    Signing In...
                   </div>
                 ) : (
                   "Sign In"

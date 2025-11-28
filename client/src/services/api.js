@@ -24,7 +24,8 @@ class ApiService {
       const response = await fetch(url, config);
       
       // Handle 401 responses (token expired/invalid)
-      if (response.status === 401) {
+      // Skip redirect for login/register endpoints - let the page handle the error
+      if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
         // Try to refresh token if we have a refresh token
         const refreshToken = authUtils.getRefreshToken();
         if (refreshToken && !endpoint.includes('/auth/refresh')) {
