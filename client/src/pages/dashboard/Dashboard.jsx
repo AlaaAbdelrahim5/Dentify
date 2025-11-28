@@ -10,6 +10,7 @@ import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
 import DentistsManagement from './admin/DentistsManagement'
 import AdminsManagement from './admin/AdminsManagement'
+import AdminSettings from './admin/AdminSettings'
 
 // Import clinic components
 import ClinicOverview from './clinic/ClinicOverview'
@@ -34,18 +35,27 @@ import FindClinic from './patient/FindClinic'
 import FindDentist from './patient/FindDentist'
 import PatientTreatments from './patient/PatientTreatments'
 import PatientPayments from './patient/PatientPayments'
+import PatientSettings from './patient/PatientSettings'
 
 // Import radiology components
 import RadiologyOverview from './radiology/RadiologyOverview'
 import RadiologyRequests from './radiology/RadiologyRequests'
 import RadiologySettings from './radiology/RadiologySettings'
 
+// Import secretary components
+import SecretaryOverview from './secretary/SecretaryOverview'
+import SecretaryAppointments from './secretary/SecretaryAppointments'
+import SecretaryPatients from './secretary/SecretaryPatients'
+import SecretaryDentists from './secretary/SecretaryDentists'
+import SecretarySettings from './secretary/SecretarySettings'
+
 // Import icons
 import { 
   FaChartBar, 
   FaFileAlt,
   FaCalendarAlt,
-  FaUsers
+  FaUsers,
+  FaUserMd
 } from 'react-icons/fa'
 import { Button, Card } from '../../components'
 
@@ -73,7 +83,8 @@ const UnifiedDashboard = () => {
           dentists: { component: DentistsManagement, label: 'Dentists' },
           radiology: { component: RadiologyManagement, label: 'Radiology' },
           admins: { component: AdminsManagement, label: 'Admins' },
-          analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar }
+          analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
+          settings: { component: AdminSettings, label: 'Settings' }
         }
       },
       Clinic: {
@@ -115,7 +126,7 @@ const UnifiedDashboard = () => {
           payments: { component: PatientPayments, label: 'Payments' },
           xrays: { component: ComingSoon, label: 'X-ray Results', icon: FaFileAlt },
           history: { component: PatientTreatments, label: 'Treatment History' },
-          settings: { component: ComingSoon, label: 'Settings' }
+          settings: { component: PatientSettings, label: 'Settings' }
         }
       },
       RadiologyCenter: {
@@ -125,6 +136,18 @@ const UnifiedDashboard = () => {
           overview: { component: RadiologyOverview, label: 'Overview' },
           requests: { component: RadiologyRequests, label: 'Requests' },
           settings: { component: RadiologySettings, label: 'Settings' }
+        }
+      },
+      Secretary: {
+        title: 'Secretary Dashboard',
+        userType: 'secretary',
+        tabs: {
+          overview: { component: SecretaryOverview, label: 'Overview' },
+          appointments: { component: SecretaryAppointments, label: 'Appointments' },
+          patients: { component: SecretaryPatients, label: 'Patients' },
+          dentists: { component: SecretaryDentists, label: 'Dentists' },
+          reports: { component: ComingSoon, label: 'Reports', icon: FaFileAlt },
+          settings: { component: SecretarySettings, label: 'Settings' }
         }
       }
     }
@@ -207,6 +230,9 @@ const UnifiedDashboard = () => {
         case 'RadiologyCenter':
           endpoint = 'http://localhost:5000/api/radiology-centers/me'
           break
+        case 'Secretary':
+          endpoint = 'http://localhost:5000/api/secretaries/me'
+          break
       }
       
       if (endpoint) {
@@ -258,6 +284,14 @@ const UnifiedDashboard = () => {
             todayAppointments: 12,
             totalPatients: 156,
             pendingAppointments: 8
+          })
+          return
+        case 'Secretary':
+          // Secretary stats - same as clinic for now
+          setStats({
+            totalDentists: 5,
+            todayAppointments: 12,
+            totalPatients: 156
           })
           return
         case 'Patient':

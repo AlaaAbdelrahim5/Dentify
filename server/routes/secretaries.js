@@ -5,6 +5,76 @@ const prisma = require('../utils/prisma');
 const bcrypt = require('bcrypt');
 const { successResponse, errorResponse, notFoundResponse } = require('../utils/responseHelper');
 
+// Get current secretary's info (for Secretary role)
+router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
+  try {
+    const userId = req.user.id; // The authenticated secretary's user ID
+    
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        },
+        clinic: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                phone: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!secretary) {
+      return notFoundResponse(res, 'Secretary');
+    }
+
+    // Transform data to match frontend expectations
+    const transformedSecretary = {
+      _id: secretary.userId,
+      firstName: secretary.firstName,
+      lastName: secretary.lastName,
+      birthDate: secretary.birthDate,
+      gender: secretary.gender,
+      city: secretary.city,
+      clinic: {
+        id: secretary.clinic.userId,
+        clinicName: secretary.clinic.clinicName,
+        registrationNumber: secretary.clinic.registrationNumber,
+        city: secretary.clinic.city,
+        contactNumber: secretary.clinic.user.phone
+      },
+      userId: {
+        id: secretary.user.id,
+        email: secretary.user.email,
+        phone: secretary.user.phone,
+        status: secretary.user.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: secretary.user.profileImage
+      },
+      createdAt: secretary.user.createdAt,
+      updatedAt: secretary.user.updatedAt
+    };
+
+    return successResponse(res, transformedSecretary, 'Secretary profile fetched successfully');
+  } catch (error) {
+    console.error('Error fetching secretary profile:', error);
+    return errorResponse(res, 'Failed to fetch secretary profile', 500);
+  }
+});
+
 // Get secretaries for the authenticated clinic
 router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
   try {

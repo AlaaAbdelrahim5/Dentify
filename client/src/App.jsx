@@ -112,6 +112,7 @@ const AuthRouter = () => {
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/clinic/dashboard" element={<Dashboard />} />
         <Route path="/dentist/dashboard" element={<Dashboard />} />
+        <Route path="/secretary/dashboard" element={<Dashboard />} />
         <Route path="/radiology/dashboard" element={<Dashboard />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />

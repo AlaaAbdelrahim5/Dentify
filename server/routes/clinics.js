@@ -4,6 +4,74 @@ const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
 const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
 
+// Get current clinic profile
+router.get('/me', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const clinic = await prisma.clinic.findUnique({
+      where: { userId: req.user.id },
+      include: {
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!clinic) {
+      return notFoundResponse(res, 'Clinic not found');
+    }
+
+    res.json({ 
+      success: true,
+      data: clinic
+    });
+  } catch (error) {
+    console.error('Error fetching clinic profile:', error);
+    errorResponse(res, 'Failed to fetch clinic profile');
+  }
+});
+
+// Update current clinic profile
+router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const { clinicName, registrationNumber, city, location, website, description, workingHours } = req.body;
+
+    const updateData = {};
+    if (clinicName !== undefined) updateData.clinicName = clinicName;
+    if (city !== undefined) updateData.city = city;
+    if (location !== undefined) updateData.location = location;
+    if (website !== undefined) updateData.website = website;
+    if (description !== undefined) updateData.description = description;
+    if (workingHours !== undefined) updateData.workingHours = workingHours;
+
+    const clinic = await prisma.clinic.update({
+      where: { userId: req.user.id },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      success: true,
+      message: 'Clinic profile updated successfully',
+      data: clinic
+    });
+  } catch (error) {
+    console.error('Error updating clinic profile:', error);
+    errorResponse(res, 'Failed to update clinic profile');
+  }
+});
+
 // Get clinics statistics
 router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
   console.log('=== GET /api/clinics/stats called ===');

@@ -51,7 +51,10 @@ router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
       return res.status(404).json({ error: 'Patient profile not found' });
     }
 
-    res.json({ patient });
+    res.json({ 
+      success: true,
+      data: patient
+    });
   } catch (error) {
     console.error('Get patient profile error:', error);
     res.status(500).json({ error: 'Failed to fetch patient profile' });
@@ -185,7 +188,7 @@ router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (r
 router.put('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, city, birthDate } = req.body;
+    const { firstName, lastName, gender, city, birthDate } = req.body;
 
     // Check if user can update (must be own profile or dentist/clinic/admin)
     const allowedRoles = ['Patient', 'Dentist', 'Clinic', 'Admin'];
@@ -193,12 +196,34 @@ router.put('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (gender) updateData.gender = gender;
+    if (city) updateData.city = city;
+    if (birthDate) updateData.birthDate = new Date(birthDate);
+
     const patient = await prisma.patient.update({
-      where: { userId: id },
-      data: { firstName, lastName, city, birthDate: new Date(birthDate) }
+      where: { userId: parseInt(id) },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true
+          }
+        }
+      }
     });
 
-    res.json({ message: 'Patient updated successfully', patient });
+    res.json({ 
+      success: true,
+      data: patient,
+      message: 'Patient updated successfully'
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update patient' });
   }

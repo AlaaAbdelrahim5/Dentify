@@ -39,26 +39,19 @@ const ClinicSettings = () => {
   })
 
   const [workingHours, setWorkingHours] = useState({
+    sunday: { start: '10:00', end: '14:00', isOpen: false },
     monday: { start: '09:00', end: '17:00', isOpen: true },
     tuesday: { start: '09:00', end: '17:00', isOpen: true },
     wednesday: { start: '09:00', end: '17:00', isOpen: true },
     thursday: { start: '09:00', end: '17:00', isOpen: true },
     friday: { start: '09:00', end: '17:00', isOpen: true },
-    saturday: { start: '09:00', end: '14:00', isOpen: true },
-    sunday: { start: '10:00', end: '14:00', isOpen: false }
+    saturday: { start: '09:00', end: '14:00', isOpen: true }
   })
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
-  })
-
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    appointmentReminders: true,
-    systemUpdates: false,
-    marketingEmails: false
   })
 
   useEffect(() => {
@@ -74,7 +67,7 @@ const ClinicSettings = () => {
   const loadClinicData = async (clinicId) => {
     try {
       setLoading(true)
-      const response = await api.get(`/clinics/${clinicId}`)
+      const response = await api.get(`/clinics/me`)
       console.log('Full API response:', response)
       console.log('Response data:', response.data)
       
@@ -85,8 +78,8 @@ const ClinicSettings = () => {
       setClinicInfo(prev => ({
         ...prev,
         name: clinic.clinicName || prev.name,
-        email: clinic.userId?.email || clinic.email || prev.email,
-        phone: clinic.userId?.phone || clinic.phone || prev.phone,
+        email: clinic.user?.email || clinic.email || prev.email,
+        phone: clinic.user?.phone || clinic.phone || prev.phone,
         address: clinic.location || clinic.address || prev.address,
         city: clinic.city || prev.city,
         country: clinic.country || prev.country,
@@ -124,21 +117,21 @@ const ClinicSettings = () => {
     }
     
     const result = {
+      sunday: { start: '10:00', end: '14:00', isOpen: false },
       monday: { start: '09:00', end: '17:00', isOpen: false },
       tuesday: { start: '09:00', end: '17:00', isOpen: false },
       wednesday: { start: '09:00', end: '17:00', isOpen: false },
       thursday: { start: '09:00', end: '17:00', isOpen: false },
       friday: { start: '09:00', end: '17:00', isOpen: false },
-      saturday: { start: '09:00', end: '14:00', isOpen: false },
-      sunday: { start: '10:00', end: '14:00', isOpen: false }
+      saturday: { start: '09:00', end: '14:00', isOpen: false }
     }
     
-    // Fill in the actual working hours
-    workingHoursArray.forEach(({ day, startTime, endTime }) => {
+    // Fill in the actual working hours with isOpen status from database
+    workingHoursArray.forEach(({ day, startTime, endTime, isOpen }) => {
       const dayKey = daysMap[day]
       if (dayKey) {
         result[dayKey] = {
-          isOpen: true,
+          isOpen: isOpen !== undefined ? isOpen : true,
           start: startTime,
           end: endTime
         }
@@ -154,19 +147,14 @@ const ClinicSettings = () => {
       
       // Prepare data in the format expected by the backend
       const updateData = {
-        clinicData: {
-          clinicName: clinicInfo.name,
-          location: clinicInfo.address,
-          city: clinicInfo.city,
-          website: clinicInfo.website,
-          description: clinicInfo.description
-        },
-        userData: {
-          phone: clinicInfo.phone
-        }
+        clinicName: clinicInfo.name,
+        location: clinicInfo.address,
+        city: clinicInfo.city,
+        website: clinicInfo.website,
+        description: clinicInfo.description
       }
       
-      await api.put(`/clinics/${currentUser.id}`, updateData)
+      await api.put(`/clinics/me`, updateData)
       setIsEditing(false)
       alert('Clinic information updated successfully!')
     } catch (error) {
@@ -180,7 +168,16 @@ const ClinicSettings = () => {
   const handleSaveWorkingHours = async () => {
     try {
       setLoading(true)
-      await api.put(`/clinics/${currentUser.id}/working-hours`, { workingHours })
+      
+      // Convert working hours object to array format expected by backend
+      const workingHoursArray = Object.entries(workingHours).map(([day, hours]) => ({
+        day: day.charAt(0).toUpperCase() + day.slice(1),
+        startTime: hours.start,
+        endTime: hours.end,
+        isOpen: hours.isOpen
+      }))
+      
+      await api.put(`/clinics/me`, { workingHours: workingHoursArray })
       alert('Working hours updated successfully!')
     } catch (error) {
       console.error('Error updating working hours:', error)
@@ -196,9 +193,14 @@ const ClinicSettings = () => {
       return
     }
 
+    if (passwordData.newPassword.length < 6) {
+      alert('Password must be at least 6 characters long!')
+      return
+    }
+
     try {
       setLoading(true)
-      await api.put('/auth/change-password', {
+      await api.post('/auth/change-password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       })
@@ -206,7 +208,7 @@ const ClinicSettings = () => {
       alert('Password changed successfully!')
     } catch (error) {
       console.error('Error changing password:', error)
-      alert('Error changing password')
+      alert(error.response?.data?.error || 'Error changing password')
     } finally {
       setLoading(false)
     }
@@ -215,12 +217,13 @@ const ClinicSettings = () => {
   const settingSections = [
     { id: 'general', label: 'General Information', icon: FaBuilding },
     { id: 'hours', label: 'Working Hours', icon: FaClock },
-    { id: 'security', label: 'Security', icon: FaLock },
-    { id: 'notifications', label: 'Notifications', icon: FaBell }
+    { id: 'security', label: 'Security', icon: FaLock }
   ]
 
   const renderGeneralSettings = () => (
-    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+    <Card className={`p-6 ${
+      isDarkMode ? 'bg-gray-800' : 'bg-white'
+    }`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           General Information
@@ -333,7 +336,9 @@ const ClinicSettings = () => {
   )
 
   const renderWorkingHours = () => (
-    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+    <Card className={`p-6 ${
+      isDarkMode ? 'bg-gray-800' : 'bg-white'
+    }`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           Working Hours
@@ -415,97 +420,79 @@ const ClinicSettings = () => {
   )
 
   const renderSecuritySettings = () => (
-    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
-      <h3 className={`text-xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-        Security Settings
-      </h3>
+    <div className="space-y-6">
+      {/* Change Password */}
+      <Card className={`p-6 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <h3 className={`text-lg font-semibold mb-6 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          Change Password
+        </h3>
 
-      <div className="space-y-6">
-        <div>
-          <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            Change Password
-          </h4>
-          <div className="grid grid-cols-1 gap-4 max-w-md">
-            <Input
-              label="Current Password"
-              type="password"
-              icon={FaLock}
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-            />
-            <Input
-              label="New Password"
-              type="password"
-              icon={FaLock}
-              value={passwordData.newPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-            />
-            <Input
-              label="Confirm New Password"
-              type="password"
-              icon={FaLock}
-              value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-            />
-            <Button
-              variant="primary"
-              onClick={handleChangePassword}
-              disabled={loading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-            >
-              <FaKey className="w-4 h-4 mr-2" />
-              {loading ? 'Changing...' : 'Change Password'}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Card>
-  )
-
-  const renderNotificationSettings = () => (
-    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
-      <h3 className={`text-xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-        Notification Preferences
-      </h3>
-
-      <div className="space-y-4">
-        {Object.entries(notifications).map(([key, value]) => (
-          <div key={key} className={`flex items-center justify-between p-4 rounded-lg border ${
-            isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
-          }`}>
-            <div>
-              <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-              </span>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {key === 'emailNotifications' && 'Receive general email notifications'}
-                {key === 'appointmentReminders' && 'Get reminders about upcoming appointments'}
-                {key === 'systemUpdates' && 'Receive system updates and maintenance notifications'}
-                {key === 'marketingEmails' && 'Receive promotional emails and updates'}
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={value}
-                onChange={(e) => setNotifications({ ...notifications, [key]: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
+        <div className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Current Password
             </label>
+            <Input
+              type="password"
+              value={passwordData.currentPassword}
+              onChange={(e) => setPasswordData(prev => ({
+                ...prev,
+                currentPassword: e.target.value
+              }))}
+              icon={FaLock}
+            />
           </div>
-        ))}
-      </div>
 
-      <div className="flex justify-end mt-6">
-        <Button
-          variant="primary"
-          onClick={() => alert('Notification preferences saved!')}
-        >
-          <FaSave className="w-4 h-4 mr-2" />
-          Save Preferences
-        </Button>
-      </div>
-    </Card>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              New Password
+            </label>
+            <Input
+              type="password"
+              value={passwordData.newPassword}
+              onChange={(e) => setPasswordData(prev => ({
+                ...prev,
+                newPassword: e.target.value
+              }))}
+              icon={FaLock}
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Confirm New Password
+            </label>
+            <Input
+              type="password"
+              value={passwordData.confirmPassword}
+              onChange={(e) => setPasswordData(prev => ({
+                ...prev,
+                confirmPassword: e.target.value
+              }))}
+              icon={FaLock}
+            />
+          </div>
+
+          <Button 
+            variant="primary"
+            onClick={handleChangePassword}
+            disabled={loading}
+          >
+            {loading ? 'Updating...' : 'Update Password'}
+          </Button>
+        </div>
+      </Card>
+    </div>
   )
 
   const renderContent = () => {
@@ -516,8 +503,6 @@ const ClinicSettings = () => {
         return renderWorkingHours()
       case 'security':
         return renderSecuritySettings()
-      case 'notifications':
-        return renderNotificationSettings()
       default:
         return renderGeneralSettings()
     }
@@ -525,30 +510,48 @@ const ClinicSettings = () => {
 
   return (
     <div className="space-y-6">
-      {/* Section Navigation */}
-      <div className="flex flex-wrap gap-2">
-        {settingSections.map((section) => {
-          const Icon = section.icon
-          return (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeSection === section.id
-                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                  : isDarkMode 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {section.label}
-            </button>
-          )
-        })}
+      {/* Header */}
+      <div>
+        <h1 className={`text-2xl font-bold ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          Profile Settings
+        </h1>
+        <p className={`mt-1 ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        }`}>
+          Manage your profile and account preferences
+        </p>
       </div>
 
-      {/* Content */}
+      {/* Tabs */}
+      <Card className={`p-4 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <div className="flex space-x-4">
+          {settingSections.map((section) => {
+            const Icon = section.icon
+            return (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeSection === section.id
+                    ? 'bg-teal-600 text-white'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {section.label}
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
+      {/* Tab Content */}
       {renderContent()}
     </div>
   )

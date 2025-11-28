@@ -112,36 +112,6 @@ const RadiologyOverview = ({ currentUser, userData, stats, onTabChange }) => {
           </div>
         </Card>
       )}
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button
-            onClick={() => onTabChange?.('requests')}
-            className="flex items-center justify-center gap-2"
-          >
-            <FaFileImage />
-            View All Requests
-          </Button>
-          <Button
-            onClick={() => onTabChange?.('requests')}
-            variant="secondary"
-            className="flex items-center justify-center gap-2"
-          >
-            <FaClock />
-            Pending Requests
-          </Button>
-          <Button
-            onClick={() => onTabChange?.('settings')}
-            variant="secondary"
-            className="flex items-center justify-center gap-2"
-          >
-            <FaCog />
-            Center Settings
-          </Button>
-        </div>
-      </Card>
     </div>
   )
 }

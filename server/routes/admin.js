@@ -5,6 +5,36 @@ const prisma = require('../utils/prisma');
 const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
 const bcrypt = require('bcryptjs');
 
+// Get current admin profile
+router.get('/me', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const admin = await prisma.admin.findUnique({
+      where: { userId: req.user.id },
+      include: {
+        user: {
+          select: {
+            email: true,
+            phone: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!admin) {
+      return notFoundResponse(res, 'Admin not found');
+    }
+
+    res.json({ 
+      success: true,
+      data: admin
+    });
+  } catch (error) {
+    console.error('Error fetching admin profile:', error);
+    errorResponse(res, 'Failed to fetch admin profile');
+  }
+});
+
 // Get admin statistics
 router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
   try {

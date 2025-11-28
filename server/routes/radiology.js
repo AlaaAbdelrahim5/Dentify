@@ -106,29 +106,27 @@ router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) =
     const userId = req.user.id;
     const { 
       centerName,
-      registrationNumber,
       website,
       city,
       location,
       coordinates,
       description,
-      supportedTypes,
-      workingHours
+      workingHours,
+      supportedTypes
     } = req.body;
 
-    // Update radiology center
+    // Update radiology center (registrationNumber is read-only)
     const updatedCenter = await prisma.radiologyCenter.update({
       where: { userId },
       data: {
         ...(centerName && { centerName }),
-        ...(registrationNumber && { registrationNumber }),
         ...(website !== undefined && { website }),
         ...(city && { city }),
         ...(location !== undefined && { location }),
         ...(coordinates !== undefined && { coordinates }),
         ...(description !== undefined && { description }),
-        ...(supportedTypes && { supportedTypes }),
-        ...(workingHours && { workingHours })
+        ...(workingHours !== undefined && { workingHours }),
+        ...(supportedTypes !== undefined && { supportedTypes })
       },
       include: {
         user: {

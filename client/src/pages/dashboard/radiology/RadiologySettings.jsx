@@ -10,13 +10,14 @@ import {
   FaEnvelope,
   FaPhone,
   FaUser,
-  FaIdCard
+  FaIdCard,
+  FaClock
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
-const RadiologySettings = ({ radiologyData, onUpdate }) => {
+const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
@@ -29,11 +30,19 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
     website: '',
     city: '',
     location: '',
-    description: '',
     supportedTypes: [],
     email: ''
   })
   const [newType, setNewType] = useState('')
+  const [workingHours, setWorkingHours] = useState({
+    sunday: { start: '10:00', end: '14:00', isOpen: false },
+    monday: { start: '09:00', end: '17:00', isOpen: true },
+    tuesday: { start: '09:00', end: '17:00', isOpen: true },
+    wednesday: { start: '09:00', end: '17:00', isOpen: true },
+    thursday: { start: '09:00', end: '17:00', isOpen: true },
+    friday: { start: '09:00', end: '17:00', isOpen: true },
+    saturday: { start: '09:00', end: '14:00', isOpen: true }
+  })
   const [security, setSecurity] = useState({
     currentPassword: '',
     newPassword: '',
@@ -41,20 +50,63 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
   })
 
   useEffect(() => {
-    if (radiologyData) {
+    if (userData) {
       const user = authUtils.getCurrentUser()
       setFormData({
-        centerName: radiologyData.centerName || '',
-        registrationNumber: radiologyData.registrationNumber || '',
-        website: radiologyData.website || '',
-        city: radiologyData.city || '',
-        location: radiologyData.location || '',
-        description: radiologyData.description || '',
-        supportedTypes: radiologyData.supportedTypes || [],
+        centerName: userData.centerName || '',
+        registrationNumber: userData.registrationNumber || '',
+        website: userData.website || '',
+        city: userData.city || '',
+        location: userData.location || '',
+        supportedTypes: userData.supportedTypes || [],
         email: user?.email || ''
       })
+      
+      // Load working hours if they exist
+      if (userData.workingHours && userData.workingHours.length > 0) {
+        const hoursObject = Array.isArray(userData.workingHours) 
+          ? convertWorkingHoursArrayToObject(userData.workingHours)
+          : userData.workingHours
+        setWorkingHours(hoursObject)
+      }
     }
-  }, [radiologyData])
+  }, [userData])
+
+  const convertWorkingHoursArrayToObject = (workingHoursArray) => {
+    const daysMap = {
+      'Sunday': 'sunday',
+      'Monday': 'monday', 
+      'Tuesday': 'tuesday',
+      'Wednesday': 'wednesday',
+      'Thursday': 'thursday',
+      'Friday': 'friday',
+      'Saturday': 'saturday'
+    }
+    
+    const result = {
+      sunday: { start: '10:00', end: '14:00', isOpen: false },
+      monday: { start: '09:00', end: '17:00', isOpen: false },
+      tuesday: { start: '09:00', end: '17:00', isOpen: false },
+      wednesday: { start: '09:00', end: '17:00', isOpen: false },
+      thursday: { start: '09:00', end: '17:00', isOpen: false },
+      friday: { start: '09:00', end: '17:00', isOpen: false },
+      saturday: { start: '09:00', end: '14:00', isOpen: false }
+    }
+    
+    // Fill in the actual working hours with isOpen status from database
+    workingHoursArray.forEach(({ day, startTime, endTime, isOpen }) => {
+      const dayKey = daysMap[day]
+      if (dayKey) {
+        result[dayKey] = {
+          isOpen: isOpen !== undefined ? isOpen : true,
+          start: startTime,
+          end: endTime
+        }
+      }
+    })
+    
+    return result
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -102,6 +154,9 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
       if (response.ok) {
         setSuccess('Settings updated successfully')
         setIsEditing(false)
+        if (refreshData) {
+          await refreshData()
+        }
         if (onUpdate) {
           onUpdate()
         }
@@ -117,8 +172,100 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
     }
   }
 
+  const handleSaveWorkingHours = async () => {
+    try {
+      setIsSaving(true)
+      setError('')
+      setSuccess('')
+      
+      // Convert working hours object to array format expected by backend
+      const workingHoursArray = Object.entries(workingHours).map(([day, hours]) => ({
+        day: day.charAt(0).toUpperCase() + day.slice(1),
+        startTime: hours.start,
+        endTime: hours.end,
+        isOpen: hours.isOpen
+      }))
+      
+      const token = authUtils.getAccessToken()
+      
+      const response = await fetch('http://localhost:5000/api/radiology-centers/me', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ workingHours: workingHoursArray })
+      })
+
+      if (response.ok) {
+        setSuccess('Working hours updated successfully')
+        if (refreshData) {
+          await refreshData()
+        }
+        if (onUpdate) {
+          onUpdate()
+        }
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to update working hours')
+      }
+    } catch (error) {
+      console.error('Error updating working hours:', error)
+      setError('An error occurred while updating working hours')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (security.newPassword !== security.confirmPassword) {
+      alert('New passwords do not match!')
+      return
+    }
+
+    if (security.newPassword.length < 6) {
+      alert('Password must be at least 6 characters long!')
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      const token = authUtils.getAccessToken()
+
+      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: security.currentPassword,
+          newPassword: security.newPassword
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to change password')
+      }
+
+      alert('Password changed successfully!')
+      setSecurity({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+    } catch (err) {
+      console.error('Error changing password:', err)
+      alert(err.message || 'Failed to change password. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FaUser },
+    { id: 'hours', label: 'Working Hours', icon: FaClock },
     { id: 'security', label: 'Security', icon: FaLock }
   ]
 
@@ -285,28 +432,6 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
             </div>
           </div>
 
-          {/* Description */}
-          <div className="mt-6">
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              disabled={!isEditing}
-              rows="4"
-              placeholder="Describe your radiology center..."
-              className={`w-full px-3 py-2 border rounded-lg resize-none ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            />
-          </div>
-
           {isEditing && (
             <div className="mt-6 flex gap-4">
               <Button 
@@ -325,16 +450,16 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
                   setError('')
                   setSuccess('')
                   // Reset form data
-                  if (radiologyData) {
+                  if (userData) {
                     const user = authUtils.getCurrentUser()
                     setFormData({
-                      centerName: radiologyData.centerName || '',
-                      registrationNumber: radiologyData.registrationNumber || '',
-                      website: radiologyData.website || '',
-                      city: radiologyData.city || '',
-                      location: radiologyData.location || '',
-                      description: radiologyData.description || '',
-                      supportedTypes: radiologyData.supportedTypes || [],
+                      centerName: userData.centerName || '',
+                      registrationNumber: userData.registrationNumber || '',
+                      website: userData.website || '',
+                      city: userData.city || '',
+                      location: userData.location || '',
+                      description: userData.description || '',
+                      supportedTypes: userData.supportedTypes || [],
                       email: user?.email || ''
                     })
                   }
@@ -411,6 +536,88 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
     </div>
   )
 
+  const renderWorkingHoursTab = () => (
+    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+          Working Hours
+        </h3>
+      </div>
+
+      <div className="space-y-4">
+        {Object.entries(workingHours).map(([day, hours]) => (
+          <div key={day} className={`flex items-center justify-between p-4 rounded-lg border ${
+            isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'
+          }`}>
+            <div className="flex items-center space-x-4">
+              <input
+                type="checkbox"
+                checked={hours.isOpen}
+                onChange={(e) => setWorkingHours({
+                  ...workingHours,
+                  [day]: { ...hours, isOpen: e.target.checked }
+                })}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className={`font-medium capitalize min-w-[100px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {day}
+              </span>
+            </div>
+            
+            {hours.isOpen && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="time"
+                  value={hours.start}
+                  onChange={(e) => setWorkingHours({
+                    ...workingHours,
+                    [day]: { ...hours, start: e.target.value }
+                  })}
+                  className={`px-3 py-1 border rounded ${
+                    isDarkMode 
+                      ? 'bg-gray-600 border-gray-500 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>to</span>
+                <input
+                  type="time"
+                  value={hours.end}
+                  onChange={(e) => setWorkingHours({
+                    ...workingHours,
+                    [day]: { ...hours, end: e.target.value }
+                  })}
+                  className={`px-3 py-1 border rounded ${
+                    isDarkMode 
+                      ? 'bg-gray-600 border-gray-500 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                />
+              </div>
+            )}
+            
+            {!hours.isOpen && (
+              <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Closed
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <Button
+          variant="primary"
+          onClick={handleSaveWorkingHours}
+          disabled={isSaving}
+        >
+          <FaSave className="w-4 h-4 mr-2" />
+          {isSaving ? 'Saving...' : 'Save Working Hours'}
+        </Button>
+      </div>
+    </Card>
+  )
+
   const renderSecurityTab = () => (
     <div className="space-y-6">
       {/* Change Password */}
@@ -473,8 +680,12 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
             />
           </div>
 
-          <Button variant="primary">
-            Update Password
+          <Button 
+            variant="primary"
+            onClick={handleChangePassword}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Updating...' : 'Update Password'}
           </Button>
         </div>
       </Card>
@@ -497,28 +708,10 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
         </p>
       </div>
 
-      {/* Messages */}
-      {error && (
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode 
-            ? 'bg-red-900/20 border-red-800 text-red-400' 
-            : 'bg-red-50 border-red-200 text-red-600'
-        }`}>
-          <p>{error}</p>
-        </div>
-      )}
-      {success && (
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode 
-            ? 'bg-green-900/20 border-green-800 text-green-400' 
-            : 'bg-green-50 border-green-200 text-green-600'
-        }`}>
-          <p>{success}</p>
-        </div>
-      )}
-
       {/* Tabs */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <Card className={`p-4 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
         <div className="flex space-x-4">
           {tabs.map((tab) => {
             const Icon = tab.icon
@@ -544,7 +737,28 @@ const RadiologySettings = ({ radiologyData, onUpdate }) => {
 
       {/* Tab Content */}
       {activeTab === 'profile' && renderProfileTab()}
+      {activeTab === 'hours' && renderWorkingHoursTab()}
       {activeTab === 'security' && renderSecurityTab()}
+
+      {/* Messages */}
+      {error && (
+        <div className={`p-4 rounded-lg border ${
+          isDarkMode 
+            ? 'bg-red-900/20 border-red-800 text-red-400' 
+            : 'bg-red-50 border-red-200 text-red-600'
+        }`}>
+          <p>{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className={`p-4 rounded-lg border ${
+          isDarkMode 
+            ? 'bg-green-900/20 border-green-800 text-green-400' 
+            : 'bg-green-50 border-green-200 text-green-600'
+        }`}>
+          <p>{success}</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -63,6 +63,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {} }) => {
         label: 'Analytics', 
         icon: FaChartBar,
         description: 'System analytics and reports'
+      },
+      { 
+        id: 'settings', 
+        label: 'Settings', 
+        icon: FaCog,
+        description: 'Profile and account settings'
       }
     ],
     clinic: [
@@ -227,6 +233,47 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {} }) => {
         id: 'settings', 
         label: 'Settings', 
         icon: FaCog
+      }
+    ],
+    secretary: [
+      { 
+        id: 'overview', 
+        label: 'Overview', 
+        icon: MdDashboard,
+        description: 'Dashboard overview'
+      },
+      { 
+        id: 'appointments', 
+        label: 'Appointments', 
+        icon: FaCalendarAlt,
+        description: 'Manage clinic appointments',
+        badge: stats.todayAppointments > 0 ? stats.todayAppointments : null
+      },
+      { 
+        id: 'patients', 
+        label: 'Patients', 
+        icon: FaUsers,
+        description: 'View patient records',
+        badge: stats.totalPatients > 0 ? stats.totalPatients : null
+      },
+      { 
+        id: 'dentists', 
+        label: 'Dentists', 
+        icon: FaUserMd,
+        description: 'View dentists directory',
+        badge: stats.totalDentists > 0 ? stats.totalDentists : null
+      },
+      { 
+        id: 'reports', 
+        label: 'Reports', 
+        icon: FaFileAlt,
+        description: 'Clinic reports and statistics'
+      },
+      { 
+        id: 'settings', 
+        label: 'Settings', 
+        icon: FaCog,
+        description: 'Profile and account settings'
       }
     ]
   }

@@ -6,8 +6,6 @@ import {
   FaEdit,
   FaLock,
   FaBell,
-  FaGlobe,
-  FaStethoscope,
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
@@ -15,14 +13,14 @@ import {
   FaInstagram,
   FaWhatsapp,
   FaTiktok,
-  FaClock
+  FaBirthdayCake,
+  FaVenusMars
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { dentistsAPI } from '../../../services/api'
-import DentistSchedule from './DentistSchedule'
+import { authUtils } from '../../../utils/auth'
 
-const DentistSettings = () => {
+const SecretarySettings = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
@@ -30,88 +28,21 @@ const DentistSettings = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  // Dentist profile data
+  // Secretary profile data
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    licenseNumber: '',
-    specialization: [],
     birthDate: '',
     gender: '',
-    address: {
-      city: ''
-    },
+    city: '',
     clinic: {
       name: '',
-      address: ''
-    },
-    workingHours: [],
-    socialLinks: {
-      facebook: '',
-      instagram: '',
-      whatsapp: '',
-      tiktok: ''
+      city: '',
+      registrationNumber: ''
     }
   })
-
-  // Fetch dentist profile on mount
-  useEffect(() => {
-    fetchDentistProfile()
-  }, [])
-
-  const fetchDentistProfile = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const response = await dentistsAPI.getMyProfile()
-      const dentist = response.data?.dentist || response.dentist || response.data
-      
-      if (!dentist) {
-        throw new Error('Dentist profile not found')
-      }
-
-      console.log('Fetched dentist data:', dentist) // Debug log
-
-      // Map the data to profile state
-      // Note: email and phone come from user object
-      setProfile({
-        firstName: dentist.firstName || '',
-        lastName: dentist.lastName || '',
-        email: dentist.user?.email || dentist.email || '',
-        phone: dentist.user?.phone || dentist.phone || '',
-        licenseNumber: dentist.licenseNumber || '',
-        specialization: Array.isArray(dentist.specialization) ? dentist.specialization : [],
-        birthDate: dentist.birthDate ? new Date(dentist.birthDate).toISOString().split('T')[0] : '',
-        gender: dentist.gender || '',
-        address: {
-          city: dentist.city || ''
-        },
-        clinic: {
-          name: dentist.clinic?.clinicName || '',
-          address: dentist.clinic?.location || ''
-        },
-        workingHours: Array.isArray(dentist.workingHours) ? dentist.workingHours : [],
-        socialLinks: typeof dentist.socialLinks === 'object' && dentist.socialLinks !== null ? {
-          facebook: dentist.socialLinks.facebook || '',
-          instagram: dentist.socialLinks.instagram || '',
-          whatsapp: dentist.socialLinks.whatsapp || dentist.user?.phone || dentist.phone || '',
-          tiktok: dentist.socialLinks.tiktok || ''
-        } : {
-          facebook: '',
-          instagram: '',
-          whatsapp: dentist.user?.phone || dentist.phone || '',
-          tiktok: ''
-        }
-      })
-    } catch (err) {
-      console.error('Error fetching dentist profile:', err)
-      setError('Failed to load profile. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const [security, setSecurity] = useState({
     currentPassword: '',
@@ -120,18 +51,54 @@ const DentistSettings = () => {
     twoFactorEnabled: false
   })
 
-  const specializations = [
-    'General Dentistry',
-    'Orthodontics',
-    'Endodontics',
-    'Periodontics',
-    'Oral Surgery',
-    'Prosthodontics',
-    'Pediatric Dentistry',
-    'Oral Pathology',
-    'Cosmetic Dentistry',
-    'Implantology'
-  ]
+  // Fetch secretary profile on mount
+  useEffect(() => {
+    fetchSecretaryProfile()
+  }, [])
+
+  const fetchSecretaryProfile = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const token = authUtils.getAccessToken()
+      
+      const response = await fetch('http://localhost:5000/api/secretaries/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile')
+      }
+
+      const data = await response.json()
+      const secretary = data.data || data
+
+      console.log('Fetched secretary data:', secretary)
+
+      setProfile({
+        firstName: secretary.firstName || '',
+        lastName: secretary.lastName || '',
+        email: secretary.userId?.email || secretary.email || '',
+        phone: secretary.userId?.phone || secretary.phone || '',
+        birthDate: secretary.birthDate ? new Date(secretary.birthDate).toISOString().split('T')[0] : '',
+        gender: secretary.gender || '',
+        city: secretary.city || '',
+        clinic: {
+          name: secretary.clinic?.clinicName || '',
+          city: secretary.clinic?.city || '',
+          registrationNumber: secretary.clinic?.registrationNumber || ''
+        }
+      })
+    } catch (err) {
+      console.error('Error fetching secretary profile:', err)
+      setError('Failed to load profile. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleProfileUpdate = (field, value) => {
     setProfile(prev => ({
@@ -150,42 +117,58 @@ const DentistSettings = () => {
     }))
   }
 
-  const handleSpecializationChange = (specialization) => {
-    setProfile(prev => ({
-      ...prev,
-      specialization: prev.specialization.includes(specialization)
-        ? prev.specialization.filter(s => s !== specialization)
-        : [...prev.specialization, specialization]
-    }))
-  }
-
   const handleSaveProfile = async () => {
     try {
       setSaving(true)
       setError(null)
       
-      // Prepare data for API
-      const updateData = {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        phone: profile.phone,
-        licenseNumber: profile.licenseNumber,
-        specialization: profile.specialization,
-        birthDate: profile.birthDate,
-        gender: profile.gender,
-        city: profile.address.city,
-        socialLinks: profile.socialLinks
+      const token = authUtils.getAccessToken()
+      
+      // Get the current user to extract the secretary ID
+      const currentUser = authUtils.getCurrentUser()
+      const secretaryId = currentUser?.id
+      
+      if (!secretaryId) {
+        throw new Error('Secretary ID not found')
       }
 
-      await dentistsAPI.updateMyProfile(updateData)
+      const updateData = {
+        userData: {
+          email: profile.email,
+          phone: profile.phone
+        },
+        secretaryData: {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          birthDate: profile.birthDate,
+          gender: profile.gender,
+          address: {
+            city: profile.city
+          }
+        }
+      }
+
+      const response = await fetch(`http://localhost:5000/api/secretaries/${secretaryId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update profile')
+      }
+
       setIsEditing(false)
       alert('Profile updated successfully!')
-      // Refresh profile data
-      await fetchDentistProfile()
+      await fetchSecretaryProfile()
     } catch (err) {
       console.error('Error saving profile:', err)
-      setError('Failed to save profile. Please try again.')
-      alert('Failed to save profile. Please try again.')
+      setError(err.message || 'Failed to save profile. Please try again.')
+      alert(err.message || 'Failed to save profile. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -249,9 +232,7 @@ const DentistSettings = () => {
   const renderProfileTab = () => (
     <div className="space-y-6">
       {/* Profile Picture */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
+      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex items-center gap-6">
           <div className="relative">
             <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
@@ -270,21 +251,17 @@ const DentistSettings = () => {
               {profile.firstName} {profile.lastName}
             </h3>
             <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              {profile.specialization.join(', ')}
+              Secretary at {profile.clinic.name}
             </p>
-            <p className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              License: {profile.licenseNumber}
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {profile.clinic.city}
             </p>
           </div>
         </div>
       </Card>
 
       {/* Basic Information */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
+      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex justify-between items-center mb-6">
           <h3 className={`text-lg font-semibold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
@@ -368,20 +345,6 @@ const DentistSettings = () => {
             <label className={`block text-sm font-medium mb-2 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
-              License Number
-            </label>
-            <Input
-              type="text"
-              value={profile.licenseNumber}
-              onChange={(e) => handleProfileUpdate('licenseNumber', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
               Gender
             </label>
             <select
@@ -427,132 +390,83 @@ const DentistSettings = () => {
             </label>
             <Input
               type="text"
-              value={profile.address.city}
-              onChange={(e) => handleNestedUpdate('address', 'city', e.target.value)}
+              value={profile.city}
+              onChange={(e) => handleProfileUpdate('city', e.target.value)}
               disabled={!isEditing}
               icon={FaMapMarkerAlt}
             />
           </div>
         </div>
 
-        <div className="mt-6">
-          <h3 className={`text-lg font-semibold mb-4 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Specializations
-          </h3>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {specializations.map((spec) => (
-              <label key={spec} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={profile.specialization.includes(spec)}
-                  onChange={() => handleSpecializationChange(spec)}
-                  disabled={!isEditing}
-                  className="w-4 h-4 text-teal-600 rounded"
-                />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {spec}
-                </span>
-              </label>
-            ))}
+        {isEditing && (
+          <div className="mt-6 flex gap-4">
+            <Button 
+              variant="primary"
+              onClick={handleSaveProfile}
+              disabled={saving}
+            >
+              <FaSave className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
           </div>
-        </div>
+        )}
+      </Card>
 
-        <div className="mt-6">
-          <h3 className={`text-lg font-semibold mb-4 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Social Media Links
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Facebook
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.facebook}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'facebook', e.target.value)}
-                disabled={!isEditing}
-                icon={FaFacebook}
-                placeholder="https://facebook.com/..."
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Instagram
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.instagram}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'instagram', e.target.value)}
-                disabled={!isEditing}
-                icon={FaInstagram}
-                placeholder="https://instagram.com/..."
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                WhatsApp
-              </label>
-              <Input
-                type="tel"
-                value={profile.socialLinks.whatsapp}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'whatsapp', e.target.value)}
-                disabled={!isEditing}
-                icon={FaWhatsapp}
-                placeholder="+1234567890"
-              />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                TikTok
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.tiktok}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'tiktok', e.target.value)}
-                disabled={!isEditing}
-                icon={FaTiktok}
-                placeholder="https://tiktok.com/@..."
-              />
-            </div>
+      {/* Clinic Information */}
+      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          Clinic Information
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Clinic Name
+            </label>
+            <Input
+              type="text"
+              value={profile.clinic.name}
+              disabled={true}
+            />
           </div>
 
-          {isEditing && (
-            <div className="mt-8 flex gap-4">
-              <Button 
-                variant="primary"
-                onClick={handleSaveProfile}
-                disabled={saving}
-              >
-                <FaSave className="w-4 h-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(false)}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Registration Number
+            </label>
+            <Input
+              type="text"
+              value={profile.clinic.registrationNumber}
+              disabled={true}
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Clinic City
+            </label>
+            <Input
+              type="text"
+              value={profile.clinic.city}
+              disabled={true}
+              icon={FaMapMarkerAlt}
+            />
+          </div>
         </div>
       </Card>
     </div>
@@ -561,9 +475,7 @@ const DentistSettings = () => {
   const renderSecurityTab = () => (
     <div className="space-y-6">
       {/* Change Password */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
+      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <h3 className={`text-lg font-semibold mb-6 ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>
@@ -623,11 +535,40 @@ const DentistSettings = () => {
           </div>
 
           <Button 
-            variant="primary"
+            variant="primary" 
             onClick={handleChangePassword}
             disabled={saving}
           >
             {saving ? 'Updating...' : 'Update Password'}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Two-Factor Authentication */}
+      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className={`text-lg font-semibold mb-4 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          Two-Factor Authentication
+        </h3>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+              Add an extra layer of security to your account
+            </p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {security.twoFactorEnabled ? 'Two-factor authentication is enabled' : 'Two-factor authentication is disabled'}
+            </p>
+          </div>
+          <Button
+            variant={security.twoFactorEnabled ? "outline" : "primary"}
+            onClick={() => setSecurity(prev => ({
+              ...prev,
+              twoFactorEnabled: !prev.twoFactorEnabled
+            }))}
+          >
+            {security.twoFactorEnabled ? 'Disable' : 'Enable'}
           </Button>
         </div>
       </Card>
@@ -636,7 +577,6 @@ const DentistSettings = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FaUser },
-    { id: 'schedule', label: 'Schedule', icon: FaClock },
     { id: 'security', label: 'Security', icon: FaLock }
   ]
 
@@ -696,10 +636,9 @@ const DentistSettings = () => {
 
       {/* Tab Content */}
       {activeTab === 'profile' && renderProfileTab()}
-      {activeTab === 'schedule' && <DentistSchedule />}
       {activeTab === 'security' && renderSecurityTab()}
     </div>
   )
 }
 
-export default DentistSettings
+export default SecretarySettings
