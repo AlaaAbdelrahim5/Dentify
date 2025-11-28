@@ -279,6 +279,12 @@ export const patientsAPI = {
   // Update current patient profile
   updateMyProfile: (data) => ApiService.put('/patients/me', data),
   
+  // Get current patient's radiology requests
+  getMyRadiologyRequests: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/patients/my-radiology-requests${queryString ? `?${queryString}` : ''}`);
+  },
+  
   // Search patients
   search: (params) => {
     const queryString = new URLSearchParams(params).toString();

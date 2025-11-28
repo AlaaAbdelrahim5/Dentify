@@ -61,6 +61,62 @@ router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
   }
 });
 
+// Get current patient's radiology requests
+router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const patientId = req.user.id;
+    const { status, imagingType } = req.query;
+
+    const where = { patientId };
+    if (status && status !== 'all') {
+      where.status = status.toUpperCase().replace(' ', '_');
+    }
+    if (imagingType && imagingType !== 'all') {
+      where.imagingType = imagingType;
+    }
+
+    const radiologyRequests = await prisma.radiologyRequest.findMany({
+      where,
+      include: {
+        dentist: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            specialization: true
+          }
+        },
+        radiologyCenter: {
+          select: {
+            userId: true,
+            centerName: true,
+            city: true,
+            location: true
+          }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            description: true
+          }
+        }
+      },
+      orderBy: {
+        requestDate: 'desc'
+      }
+    });
+
+    res.json({ 
+      success: true,
+      data: radiologyRequests 
+    });
+  } catch (error) {
+    console.error('Error fetching patient radiology requests:', error);
+    res.status(500).json({ error: 'Failed to fetch radiology requests' });
+  }
+});
+
 // Get all patients
 router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (req, res) => {
   try {
