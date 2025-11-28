@@ -27,34 +27,31 @@ export const ThemeProvider = ({ children }) => {
   })
 
   useEffect(() => {
-    // Add transition class before theme changes for smooth transition
-    document.documentElement.classList.add('theme-transition')
-    document.body.classList.add('theme-transition')
-    
-    // Use requestAnimationFrame to ensure transition class is applied before theme change
-    requestAnimationFrame(() => {
-      // Update document class, style, and localStorage
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark')
-        document.body.classList.add('dark')
-        document.documentElement.style.backgroundColor = '#1f2937'
-        document.documentElement.style.colorScheme = 'dark'
-        localStorage.setItem('theme', 'dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-        document.body.classList.remove('dark')
-        document.documentElement.style.backgroundColor = '#ffffff'
-        document.documentElement.style.colorScheme = 'light'
-        localStorage.setItem('theme', 'light')
-      }
-      
-      // Remove transition class after animation completes
-      setTimeout(() => {
-        document.documentElement.classList.remove('theme-transition')
-        document.body.classList.remove('theme-transition')
-      }, 300)
-    })
-  }, [isDarkMode])
+  // Add transition class before theme changes for smooth transition
+  document.documentElement.classList.add('theme-transition');
+  document.body.classList.add('theme-transition');
+
+  // Change theme immediately
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+    document.documentElement.style.backgroundColor = '#1f2937';
+    document.documentElement.style.colorScheme = 'dark';
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.body.classList.remove('dark');
+    document.documentElement.style.backgroundColor = '#ffffff';
+    document.documentElement.style.colorScheme = 'light';
+    localStorage.setItem('theme', 'light');
+  }
+
+  // Remove transition class after animation completes
+  setTimeout(() => {
+    document.documentElement.classList.remove('theme-transition');
+    document.body.classList.remove('theme-transition');
+  }, 300);
+}, [isDarkMode]);
 
   const toggleTheme = () => {
     setIsDarkMode(prev => !prev)
