@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaTooth, FaHome, FaArrowLeft } from 'react-icons/fa'
 import { Button, Card } from '../components'
 import { useTheme } from '../contexts/ThemeContext'
 
 const NotFound = () => {
   const { isDarkMode } = useTheme()
+  const navigate = useNavigate()
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
       isDarkMode 
@@ -38,18 +39,15 @@ const NotFound = () => {
             </p>
 
             <div className="space-y-4">
-              <Button className="w-full" size="lg">
-                <Link to="/" className="flex items-center justify-center gap-2">
-                  <FaHome />
-                  Back to Home
-                </Link>
-              </Button>
-              
-              <Button variant="outline" className="w-full" size="lg">
-                <Link to="/login" className="flex items-center justify-center gap-2">
-                  <FaTooth />
-                  Go to Login
-                </Link>
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={() => navigate(-1)}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <FaArrowLeft />
+                  Go Back
+                </div>
               </Button>
             </div>
           </Card.Content>
