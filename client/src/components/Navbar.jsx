@@ -106,14 +106,14 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
               </button>
             )}
             {!isAuthenticated && (
-              <Link to="/" className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
+              <div className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
                 <Logo size="text-2xl" />
-              </Link>
+              </div>
             )}
             {isAuthenticated && (
-              <Link to="/" className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
+              <div className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
                 <Logo size="text-xl" />
-              </Link>
+              </div>
             )}
           </div>
 
