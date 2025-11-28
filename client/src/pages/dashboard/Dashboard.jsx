@@ -84,6 +84,7 @@ const UnifiedDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [appointments, setAppointments] = useState([])
   const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Dashboard configuration based on user role
   const getDashboardConfig = (role) => {
@@ -376,6 +377,15 @@ const UnifiedDashboard = () => {
     }
   }, [currentUser])
 
+  // Sidebar toggle handler
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false)
+  }
+
   // Appointment handlers for dentist
   const handleAppointmentClick = (appointment) => {
     setSelectedAppointment(appointment)
@@ -470,6 +480,7 @@ const UnifiedDashboard = () => {
         showDashboardInfo={true} 
         dashboardTitle={dashboardConfig.title}
         userRole={currentUser.role}
+        onToggleSidebar={toggleSidebar}
       />
 
       {/* Fixed Sidebar */}
@@ -478,11 +489,14 @@ const UnifiedDashboard = () => {
         setActiveTab={setActiveTab}
         userType={dashboardConfig.userType}
         stats={stats}
+        dashboardTitle={dashboardConfig.title}
+        isSidebarOpen={isSidebarOpen}
+        onClose={closeSidebar}
       />
 
       {/* Main Content with left margin to account for fixed sidebar */}
-      <div className="ml-80 pt-20">
-        <div className="p-8">
+      <div className="lg:ml-72 pt-20">
+        <div className="p-4 md:p-8">
           {renderTabContent()}
         </div>
       </div>

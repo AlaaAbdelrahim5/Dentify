@@ -20,8 +20,9 @@ import {
   FaFileImage
 } from 'react-icons/fa'
 import { MdDashboard, MdPendingActions } from 'react-icons/md'
+import ThemeToggle from './ThemeToggle'
 
-const Sidebar = ({ activeTab, setActiveTab, userType, stats = {} }) => {
+const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle = '', isSidebarOpen = false, onClose = null }) => {
   const { isDarkMode } = useTheme()
 
   // Define menu items for each user type
@@ -282,14 +283,26 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {} }) => {
   const menuItems = menuConfig[userType] || []
 
   return (
-    <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 border-r transition-colors duration-300 z-30 ${
-      isDarkMode 
-        ? 'bg-gray-800 border-gray-700' 
-        : 'bg-white border-gray-200'
-    }`}>
-      <div className="h-full overflow-y-auto my-2">
+    <>
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 border-r transition-all duration-300 z-50 ${
+        isDarkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      } ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+      <div className="h-full overflow-y-auto my-2 flex flex-col">
         {/* Navigation Menu */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
@@ -323,8 +336,37 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {} }) => {
             )
           })}
         </nav>
+
+        {/* Dashboard Title at Bottom */}
+        {dashboardTitle && (
+          <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-teal-700/50' 
+                : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200'
+            }`}>
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${
+                  isDarkMode ? 'bg-teal-500/20' : 'bg-teal-100'
+                }`}>
+                  <MdDashboard className={`text-xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
+                </div>
+                <div className="flex flex-col">
+                  <span className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Dashboard</span>
+                  <span className={`text-sm font-bold ${
+                    isDarkMode ? 'text-gray-100' : 'text-gray-800'
+                  }`}>{dashboardTitle.replace(' Dashboard', '')}</span>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
+          </div>
+        )}
       </div>
     </aside>
+    </>
   )
 }
 

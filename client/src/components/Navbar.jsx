@@ -8,7 +8,7 @@ import Button from './Button'
 import { useTheme } from '../contexts/ThemeContext'
 import { authUtils } from '../utils/auth'
 
-const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
+const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
@@ -89,8 +89,22 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
     }`}>
       <div className={`${showDashboardInfo ? 'w-full' : 'max-w-7xl mx-auto'} px-6 lg:px-8`}>
         <div className="flex justify-between items-center h-16">
-          {/* Logo and Dashboard Info */}
+          {/* Logo and Sidebar Toggle */}
           <div className="flex items-center space-x-4">
+            {/* Sidebar Toggle Button (only show on dashboard pages) */}
+            {showDashboardInfo && onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className={`lg:hidden p-2 rounded-lg transition-all duration-200 ${
+                  isDarkMode 
+                    ? 'hover:bg-gray-800 text-gray-300 hover:text-teal-400' 
+                    : 'hover:bg-gray-100 text-gray-700 hover:text-teal-600'
+                }`}
+                aria-label="Toggle sidebar"
+              >
+                <FaBars className="w-5 h-5" />
+              </button>
+            )}
             {!isAuthenticated && (
               <Link to="/" className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
                 <Logo size="text-2xl" />
@@ -101,40 +115,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                 <Logo size="text-xl" />
               </Link>
             )}
-            {isAuthenticated && showDashboardInfo && dashboardTitle && (
-              <div className={`hidden md:flex items-center space-x-3 px-4 py-2 rounded-xl border ${
-                isDarkMode 
-                  ? 'bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-teal-700/50' 
-                  : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200'
-              }`}>
-                <div className={`p-2 rounded-lg ${
-                  isDarkMode ? 'bg-teal-500/20' : 'bg-teal-100'
-                }`}>
-                  <MdDashboard className={`text-xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
-                </div>
-                <div className="flex flex-col">
-                  <span className={`text-xs font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>Dashboard</span>
-                  <span className={`text-sm font-bold ${
-                    isDarkMode ? 'text-gray-100' : 'text-gray-800'
-                  }`}>{dashboardTitle.replace(' Dashboard', '')}</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
+          {/* Navigation Links - Desktop and Mobile */}
+          <div className="flex items-center space-x-2 md:space-x-4">
               
               {!isAuthenticated ? (
                 // Unauthenticated user navigation
                 <>
                   <Link 
                     to="/login" 
-                    className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border ${
+                    className={`hidden md:block px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border ${
                       isDarkMode 
                         ? 'text-gray-300 border-gray-700 hover:text-teal-400 hover:border-teal-400 hover:bg-gray-800/50' 
                         : 'text-gray-700 border-gray-300 hover:text-teal-600 hover:border-teal-600 hover:bg-gray-50'
@@ -144,7 +135,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                   </Link>
                   <Link 
                     to="/signup" 
-                    className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 hover:from-teal-500 hover:to-cyan-500"
+                    className="hidden md:block bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 hover:from-teal-500 hover:to-cyan-500"
                   >
                     Sign Up
                   </Link>
@@ -154,14 +145,14 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                 <>
                   {/* Notifications */}
                   <div className="relative group">
-                    <button className={`p-2.5 rounded-lg transition-all duration-200 ${
+                    <button className={`p-2 md:p-2.5 rounded-lg transition-all duration-200 ${
                       isDarkMode 
                         ? 'hover:bg-gray-800 text-gray-400 hover:text-teal-400' 
                         : 'hover:bg-gray-100 text-gray-500 hover:text-teal-600'
                     }`}>
-                      <FaBell className="w-5 h-5" />
+                      <FaBell className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
-                    <span className="absolute top-1.5 right-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg animate-pulse">
+                    <span className="absolute top-1 right-1 md:top-1.5 md:right-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center font-semibold shadow-lg animate-pulse">
                       2
                     </span>
                   </div>
@@ -170,21 +161,21 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={toggleProfileDropdown}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      className={`flex items-center space-x-2 md:space-x-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-all duration-200 ${
                         isDarkMode 
                           ? 'hover:bg-gray-800/50' 
                           : 'hover:bg-gray-100/50'
                       } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/50') : ''}`}
                     >
                       <div className="relative">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500">
-                          <span className="text-white text-sm font-bold">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500">
+                          <span className="text-white text-xs md:text-sm font-bold">
                             {currentUser ? authUtils.getUserInitials() : 'U'}
                           </span>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="hidden md:flex flex-col">
                         <span className={`text-sm font-semibold ${
                           isDarkMode ? 'text-gray-200' : 'text-gray-800'
                         }`}>
@@ -193,7 +184,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                       </div>
                       {/* Dropdown Indicator */}
                       <FaChevronDown 
-                        className={`w-4 h-4 transition-transform duration-200 ${
+                        className={`w-3 h-3 md:w-4 md:h-4 transition-transform duration-200 ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         } ${isProfileDropdownOpen ? 'rotate-180' : ''}`}
                       />
@@ -279,26 +270,26 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "" }) => {
                 </>
               )}
             </div>
-          </div>
 
-          {/* Mobile Menu Button and Theme Toggle */}
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
-            <button 
-              onClick={toggleMobileMenu}
-              className={`p-2 transition-colors duration-200 ${
-                isDarkMode 
-                  ? 'text-gray-300 hover:text-teal-400' 
-                  : 'text-gray-700 hover:text-teal-600'
-              }`}
-            >
-              {isMobileMenuOpen ? (
-                <FaTimes className="w-6 h-6" />
-              ) : (
-                <FaBars className="w-6 h-6" />
-              )}
-            </button>
-          </div>
+          {/* Mobile Menu Button (only when not showing dashboard) */}
+          {!showDashboardInfo && (
+            <div className="md:hidden flex items-center space-x-2">
+              <button 
+                onClick={toggleMobileMenu}
+                className={`p-2 transition-colors duration-200 ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:text-teal-400' 
+                    : 'text-gray-700 hover:text-teal-600'
+                }`}
+              >
+                {isMobileMenuOpen ? (
+                  <FaTimes className="w-6 h-6" />
+                ) : (
+                  <FaBars className="w-6 h-6" />
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu */}

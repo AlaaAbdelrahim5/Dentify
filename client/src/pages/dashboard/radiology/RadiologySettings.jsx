@@ -431,6 +431,67 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
               />
             </div>
           </div>
+        </form>
+
+        <div className="mt-6">
+          <h3 className={`text-lg font-semibold mb-4 ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>
+            Supported Imaging Types
+          </h3>
+          
+          <div className="space-y-3">
+            {/* Display existing types */}
+            <div className="flex flex-wrap gap-2">
+              {formData.supportedTypes.map((type, index) => (
+                <span
+                  key={index}
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                    isDarkMode
+                      ? 'bg-blue-900 text-blue-200'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {type}
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveType(type)}
+                      className="hover:text-red-500"
+                    >
+                      ×
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {/* Add new type */}
+            {isEditing && (
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  placeholder="e.g., X-ray, CT, MRI, 3D Imaging"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddType()
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddType}
+                  variant="secondary"
+                >
+                  Add
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
 
           {isEditing && (
             <div className="mt-6 flex gap-4">
@@ -465,73 +526,11 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                   }
                 }}
                 disabled={isSaving}
-              >
+              > 
                 Cancel
               </Button>
             </div>
           )}
-        </form>
-      </Card>
-
-      {/* Supported Imaging Types */}
-      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <h3 className={`text-lg font-semibold mb-4 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          Supported Imaging Types
-        </h3>
-        
-        <div className="space-y-3">
-          {/* Display existing types */}
-          <div className="flex flex-wrap gap-2">
-            {formData.supportedTypes.map((type, index) => (
-              <span
-                key={index}
-                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  isDarkMode
-                    ? 'bg-blue-900 text-blue-200'
-                    : 'bg-blue-100 text-blue-800'
-                }`}
-              >
-                {type}
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveType(type)}
-                    className="hover:text-red-500"
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
-
-          {/* Add new type */}
-          {isEditing && (
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                placeholder="e.g., X-ray, CT, MRI, 3D Imaging"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleAddType()
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={handleAddType}
-                variant="secondary"
-              >
-                Add
-              </Button>
-            </div>
-          )}
-        </div>
       </Card>
     </div>
   )
