@@ -125,12 +125,22 @@ process.on('SIGINT', async () => {
 
 app.listen(PORT, async () => {
   try {
-    // Test database connection on startup
+    console.log(`🚀 Server starting on port ${PORT}...`);
+    
+    // Test database connection on startup with timeout
+    const connectionTimeout = setTimeout(() => {
+      console.error('❌ Database connection timeout (10s)');
+      process.exit(1);
+    }, 10000);
+    
     await prisma.$connect();
+    clearTimeout(connectionTimeout);
     console.log(`✅ Database connected successfully`);
     
-    // Sync database sequences to prevent ID conflicts
-    await syncUserSequence(prisma);
+    // Sync database sequences to prevent ID conflicts (non-blocking)
+    syncUserSequence(prisma).catch(err => {
+      console.warn('⚠️ Sequence sync failed (non-critical):', err.message);
+    });
     
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);

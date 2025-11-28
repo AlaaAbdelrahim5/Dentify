@@ -13,11 +13,19 @@ const { PrismaClient } = require('@prisma/client');
  */
 async function syncUserSequence(prisma) {
   try {
-    // Get the current maximum ID
-    const maxUser = await prisma.user.findFirst({
+    console.log('🔄 Syncing User sequence...');
+    
+    // Get the current maximum ID with timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Query timeout')), 5000)
+    );
+    
+    const queryPromise = prisma.user.findFirst({
       orderBy: { id: 'desc' },
       select: { id: true }
     });
+    
+    const maxUser = await Promise.race([queryPromise, timeoutPromise]);
 
     if (maxUser && maxUser.id) {
       const nextId = maxUser.id + 1;
@@ -27,6 +35,8 @@ async function syncUserSequence(prisma) {
         nextId
       );
       console.log(`✅ User sequence synced to ${nextId}`);
+    } else {
+      console.log('✅ User sequence sync skipped (no users found)');
     }
   } catch (error) {
     console.error('❌ Error syncing User sequence:', error.message);

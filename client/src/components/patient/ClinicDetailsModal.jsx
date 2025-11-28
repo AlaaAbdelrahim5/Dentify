@@ -31,7 +31,7 @@ const ClinicDetailsModal = ({
     if (isOpen && clinic) {
       fetchDentists()
     }
-  }, [isOpen, clinic?.userId, clinic?.id])
+  }, [isOpen, clinic?.userId])
 
   const fetchDentists = async () => {
     try {

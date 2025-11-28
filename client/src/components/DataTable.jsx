@@ -1,3 +1,4 @@
+import React from 'react'
 import { Card, LoadingSpinner } from './'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -98,21 +99,23 @@ const DataTable = ({
               isDarkMode ? 'divide-y divide-gray-700' : 'divide-y divide-gray-200'
             } ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               {data.map((item, index) => {
-                // If renderRow function is provided, use it
+                // If renderRow function is provided, use it (it should return a <tr> with its own key)
                 if (renderRow) {
-                  return renderRow(item, index)
+                  // Extract the key from item.id or use index as fallback
+                  const rowKey = item.id || item._id || index
+                  return <React.Fragment key={rowKey}>{renderRow(item, index)}</React.Fragment>
                 }
                 
                 // Otherwise, render using columns config
                 return (
-                  <tr key={index} className={isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
+                  <tr key={item.id || item._id || index} className={isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}>
                     {columns.map((column, colIndex) => {
                       const value = column.accessor ? item[column.accessor] : null
                       const cellContent = column.render ? column.render(value, item, index) : value
                       
                       return (
                         <td
-                          key={colIndex}
+                          key={column.key || column.accessor || colIndex}
                           className={`px-6 py-4 whitespace-nowrap text-sm ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-900'
                           } ${column.className || ''}`}

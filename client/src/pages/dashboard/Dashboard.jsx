@@ -59,6 +59,20 @@ import {
 } from 'react-icons/fa'
 import { Button, Card } from '../../components'
 
+// Coming soon placeholder component (moved outside to avoid hooks issues)
+const ComingSoon = ({ label, icon: Icon = FaChartBar, isDarkMode }) => (
+  <div className="text-center py-12">
+    <Icon className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+    <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+      {label || 'Coming Soon'}
+    </h3>
+    <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+      This section will be implemented next
+    </p>
+    <Button variant="primary">Coming Soon</Button>
+  </div>
+)
+
 const UnifiedDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -191,7 +205,7 @@ const UnifiedDashboard = () => {
   // Fetch appointments for dentist
   const fetchAppointments = async (token) => {
     try {
-      const response = await fetch('http://localhost:5000/api/appointments/dentist', {
+      const response = await fetch('http://localhost:5000/api/appointments/dentist/my-appointments', {
         headers: {
           'Authorization': `Bearer ${token || authUtils.getAccessToken()}`,
           'Content-Type': 'application/json'
@@ -201,7 +215,10 @@ const UnifiedDashboard = () => {
       if (response.ok) {
         const data = await response.json()
         console.log('📅 UnifiedDashboard: Fetched appointments:', data.appointments?.length || 0)
+        console.log('📅 First appointment sample:', data.appointments?.[0])
         setAppointments(data.appointments || [])
+      } else {
+        console.error('Failed to fetch appointments:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -392,25 +409,12 @@ const UnifiedDashboard = () => {
       // Dentist-specific props
       appointments,
       onAppointmentClick: handleAppointmentClick,
-      onAddAppointment: handleAddAppointment
+      onAddAppointment: handleAddAppointment,
+      isDarkMode
     }
     
     return <Component {...componentProps} />
   }
-
-  // Coming soon placeholder
-  const ComingSoon = ({ label, icon: Icon = FaChartBar }) => (
-    <div className="text-center py-12">
-      <Icon className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-      <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-        {label || 'Coming Soon'}
-      </h3>
-      <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        This section will be implemented next
-      </p>
-      <Button variant="primary">Coming Soon</Button>
-    </div>
-  )
 
   // Not found placeholder
   const renderNotFound = () => (

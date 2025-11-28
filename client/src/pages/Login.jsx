@@ -34,6 +34,16 @@ const Login = () => {
     authUtils.clearLogoutFlag();
   }, []);
 
+  // Check for success message from signup
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      if (location.state?.email) {
+        setFormData((prev) => ({ ...prev, email: location.state.email }));
+      }
+    }
+  }, [location.state]);
+
   // Check if user is already authenticated (quick check without async)
   const isAlreadyAuthenticated = () => {
     // Don't redirect if user just logged out
@@ -45,21 +55,11 @@ const Login = () => {
     return !!(token && user);
   };
 
-  // If already authenticated, redirect immediately
+  // If already authenticated, redirect immediately (AFTER all hooks)
   if (isAlreadyAuthenticated()) {
     const dashboardRoute = authUtils.getDashboardRoute();
     return <Navigate to={dashboardRoute} replace />;
   }
-
-  // Check for success message from signup
-  useEffect(() => {
-    if (location.state?.message) {
-      setSuccessMessage(location.state.message);
-      if (location.state?.email) {
-        setFormData((prev) => ({ ...prev, email: location.state.email }));
-      }
-    }
-  }, [location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -48,18 +48,15 @@ export const authUtils = {
       // Check localStorage first (remember me)
       let token = localStorage.getItem(authUtils.ACCESS_TOKEN_KEY);
       if (token) {
-        console.log('Access token found in localStorage');
         return token;
       }
 
       // Check sessionStorage (session only)
       token = sessionStorage.getItem(authUtils.ACCESS_TOKEN_KEY);
       if (token) {
-        console.log('Access token found in sessionStorage');
         return token;
       }
       
-      console.log('No access token found');
       return null;
     } catch (error) {
       console.error('Error getting access token:', error);

@@ -15,15 +15,16 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     )
     
     // Debug: Log appointment data to help troubleshoot
+    console.log('📅 Total appointments received:', appointments.length)
+    console.log('📅 Filtered appointments (non-pending/cancelled):', filtered.length)
     if (filtered.length > 0) {
-      console.log('📅 Appointments for calendar:', filtered.map(apt => ({
-        id: apt.id,
-        patient: apt.patient?.firstName || apt.patient?.name,
-        date: new Date(apt.appointmentDate).toLocaleDateString(),
-        startTime: new Date(apt.startTime).toLocaleTimeString(),
-        endTime: apt.endTime ? new Date(apt.endTime).toLocaleTimeString() : 'No end time',
-        status: apt.status
-      })))
+      console.log('📅 Sample appointment:', {
+        id: filtered[0].id,
+        patient: filtered[0].patient?.firstName || filtered[0].patient?.name,
+        startTime: filtered[0].startTime,
+        startTimeFormatted: new Date(filtered[0].startTime).toLocaleString(),
+        status: filtered[0].status
+      })
     }
     
     return filtered
@@ -83,7 +84,11 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return weekDates
   }
 
-  const weekDates = useMemo(() => getWeekDates(currentWeek), [currentWeek, getWorkingDaysMap])
+  const weekDates = useMemo(() => {
+    const dates = getWeekDates(currentWeek)
+    console.log('📅 Week dates:', dates.map(d => d.toDateString()))
+    return dates
+  }, [currentWeek, getWorkingDaysMap])
 
   // Convert 24-hour time to 12-hour format
   const convertTo12Hour = (time24) => {
@@ -94,15 +99,23 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return `${hour12}:${minutes} ${period}`
   }
 
-  // Generate time slots based on dentist working hours
+  // Generate time slots based on dentist working hours and appointment duration
   const timeSlots = useMemo(() => {
+    // Get appointment duration in minutes (default 30)
+    const appointmentDuration = dentistData?.appointmentDuration || 30
+    
     if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours) || dentistData.workingHours.length === 0) {
       // Default: 8 AM - 8 PM
       const slots = []
-      for (let hour = 8; hour <= 20; hour++) {
-        slots.push(`${hour.toString().padStart(2, '0')}:00`)
-        if (hour < 20) {
-          slots.push(`${hour.toString().padStart(2, '0')}:30`)
+      const startHour = 8
+      const endHour = 20
+      const totalMinutes = (endHour - startHour) * 60
+      
+      for (let minute = 0; minute < totalMinutes; minute += appointmentDuration) {
+        const hour = Math.floor(minute / 60) + startHour
+        const min = minute % 60
+        if (hour <= endHour) {
+          slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
         }
       }
       return slots
@@ -129,12 +142,15 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       latestHour = 20
     }
 
-    // Generate slots for working hours range
+    // Generate slots based on appointment duration
     const slots = []
-    for (let hour = earliestHour; hour <= latestHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`)
-      if (hour < latestHour) {
-        slots.push(`${hour.toString().padStart(2, '0')}:30`)
+    const totalMinutes = (latestHour - earliestHour) * 60
+    
+    for (let minute = 0; minute < totalMinutes; minute += appointmentDuration) {
+      const hour = Math.floor(minute / 60) + earliestHour
+      const min = minute % 60
+      if (hour <= latestHour) {
+        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
       }
     }
     return slots
@@ -144,7 +160,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
   const appointmentsByDate = useMemo(() => {
     const grouped = {}
     filteredAppointments.forEach(apt => {
-      const aptDate = new Date(apt.appointmentDate)
+      // Use startTime to determine the date (since it includes the actual appointment date/time)
+      const aptDate = new Date(apt.startTime || apt.appointmentDate)
       aptDate.setHours(0, 0, 0, 0) // Reset time for consistent comparison
       const dateKey = aptDate.toDateString()
       
@@ -153,6 +170,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       }
       grouped[dateKey].push(apt)
     })
+    
+    console.log('📅 Grouped appointments by date:', grouped)
     return grouped
   }, [filteredAppointments])
 
@@ -163,31 +182,37 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     const dateStr = dateObj.toDateString()
     const dayAppointments = appointmentsByDate[dateStr] || []
     
-    return dayAppointments.filter(apt => {
+    // Get appointment duration for slot calculation
+    const appointmentDuration = dentistData?.appointmentDuration || 30
+    
+    // Parse the time slot
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+    const slotStartMinutes = slotHour * 60 + slotMinute
+    const slotEndMinutes = slotStartMinutes + appointmentDuration
+    
+    const matchedApts = dayAppointments.filter(apt => {
       if (!apt.startTime) return false
       
       const startTime = new Date(apt.startTime)
       const hours = startTime.getHours()
       const minutes = startTime.getMinutes()
+      const aptStartMinutes = hours * 60 + minutes
       
-      // Parse the time slot
-      const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
-      
-      // Calculate slot boundaries (30-minute slots)
-      // An appointment shows in the slot where it starts
-      // Round down to nearest 30-minute slot
-      const aptSlotMinute = minutes >= 30 ? 30 : 0
-      
-      return hours === slotHour && aptSlotMinute === slotMinute
+      // Show appointment if it starts within this time slot
+      return aptStartMinutes >= slotStartMinutes && aptStartMinutes < slotEndMinutes
     })
+    
+    return matchedApts
   }
 
-  // Calculate appointment height based on duration (minimum 1 slot = 60px)
+  // Calculate appointment height based on duration (60px per slot, dynamic slot size)
   const getAppointmentHeight = (apt) => {
+    const slotDuration = dentistData?.appointmentDuration || 30
+    
     if (!apt.endTime || !apt.startTime) {
-      // If no end time, use default appointment duration or 30 minutes
+      // If no end time, use default appointment duration
       const duration = dentistData?.appointmentDuration || 30
-      return (duration / 30) * 60 // 60px per 30-minute slot
+      return (duration / slotDuration) * 60 // 60px per slot
     }
     
     const start = new Date(apt.startTime)
@@ -195,10 +220,9 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     const duration = (end - start) / (1000 * 60) // minutes
     
     // Ensure minimum height of one slot even for very short appointments
-    const minDuration = 30
-    const actualDuration = Math.max(duration, minDuration)
+    const actualDuration = Math.max(duration, slotDuration)
     
-    const slots = actualDuration / 30 // each slot is 30 min
+    const slots = actualDuration / slotDuration // each slot is based on appointment duration
     return Math.ceil(slots) * 60 // 60px per slot, rounded up to nearest slot
   }
 
