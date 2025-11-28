@@ -1,56 +1,73 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { 
-  FaCalendarAlt, 
-  FaPlus, 
-  FaSearch,
-  FaFilter,
-  FaClock,
+  FaCalendarAlt,
   FaUser,
   FaUserMd,
-  FaEdit,
-  FaTrash,
+  FaCheck,
   FaCheckCircle,
-  FaTimesCircle
+  FaTimesCircle,
+  FaHourglassHalf,
+  FaClock,
+  FaStethoscope,
+  FaPlus,
+  FaEdit
 } from 'react-icons/fa'
-import { Card, Button, Input, Select, LoadingSpinner, StatusBadge, Pagination } from '../../../components'
+import { 
+  Button, 
+  Card,
+  PageHeader, 
+  StatusBadge,
+  StatsOverview,
+  FilterBar,
+  DataTable,
+  ConfirmationModal
+} from '../../../components'
+import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
+import SessionCostModal from '../../../components/dentist/SessionCostModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
+import { appointmentsAPI } from '../../../services/api'
 
 const SecretaryAppointments = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()
+  const [activeView, setActiveView] = useState('today') // today, pending, past, all
   const [appointments, setAppointments] = useState([])
   const [dentists, setDentists] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [filterDentist, setFilterDentist] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
-  const itemsPerPage = 10
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedDentist, setSelectedDentist] = useState('all')
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+  const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false)
+  const [isSessionCostModalOpen, setIsSessionCostModalOpen] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
 
   useEffect(() => {
     fetchAppointments()
     fetchDentists()
   }, [])
 
+  // Reset status filter when changing views
+  useEffect(() => {
+    setSelectedStatus('all')
+  }, [activeView])
+
   const fetchAppointments = async () => {
     try {
       setLoading(true)
-      const token = authUtils.getAccessToken()
+      setError(null)
       
-      const response = await fetch('http://localhost:5000/api/appointments/clinic', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      console.log('Secretary: Fetching clinic appointments...')
       
-      if (response.ok) {
-        const data = await response.json()
-        setAppointments(data.appointments || [])
-      }
+      const response = await appointmentsAPI.getClinicAppointments()
+      console.log('Secretary: Received response:', response)
+      console.log('Secretary: Appointments count:', response.appointments?.length || 0)
+      
+      setAppointments(response.appointments || [])
     } catch (error) {
-      console.error('Error fetching appointments:', error)
+      console.error('Secretary: Error fetching appointments:', error)
+      setError(error.message || 'Failed to load appointments. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -76,346 +93,575 @@ const SecretaryAppointments = ({ userData, onTabChange }) => {
     }
   }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-  }
+  // Transform API data to match UI expectations
+  const transformAppointment = (apt) => {
+    const startTime = apt.startTime ? new Date(apt.startTime) : new Date(apt.date)
+    const endTime = apt.endTime ? new Date(apt.endTime) : new Date(apt.date)
+    const duration = Math.round((endTime - startTime) / 60000) // Convert ms to minutes
 
-  const formatTime = (timeString) => {
-    if (!timeString) return 'N/A'
-    try {
-      const [hours, minutes] = timeString.split(':')
-      const hour = parseInt(hours)
-      const ampm = hour >= 12 ? 'PM' : 'AM'
-      const displayHour = hour % 12 || 12
-      return `${displayHour}:${minutes} ${ampm}`
-    } catch (error) {
-      return timeString
+    return {
+      id: apt.id,
+      time: startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      duration: duration,
+      appointmentDate: apt.date || apt.appointmentDate,
+      startTime: apt.startTime || apt.date,
+      endTime: apt.endTime || apt.date,
+      patient: {
+        name: `${apt.patient?.firstName || ''} ${apt.patient?.lastName || ''}`,
+        phone: apt.patient?.user?.phone || apt.patient?.phone || 'N/A',
+        email: apt.patient?.user?.email || 'N/A'
+      },
+      dentist: {
+        name: `Dr. ${apt.dentist?.firstName || ''} ${apt.dentist?.lastName || ''}`,
+        id: apt.dentistId
+      },
+      treatment: apt.reason || apt.treatment?.treatmentType || 'General Consultation',
+      status: apt.status?.toUpperCase() || 'PENDING',
+      notes: apt.sessionNotes || apt.patientNotes || apt.notes || '',
+      rawData: apt
     }
   }
 
-  const getStatusColor = (status) => {
-    const colors = {
-      scheduled: 'yellow',
-      confirmed: 'blue',
-      completed: 'green',
-      cancelled: 'red'
-    }
-    return colors[status] || 'gray'
-  }
+  // Transform appointments for display
+  const displayAppointments = useMemo(() => {
+    return appointments.map(transformAppointment)
+  }, [appointments])
 
-  const handleUpdateStatus = async (appointmentId, newStatus) => {
-    try {
-      const token = authUtils.getAccessToken()
-      
-      const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
+  // Separate appointments into different categories
+  const todayAppointments = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    return displayAppointments
+      .filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= today && aptDate < tomorrow && (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED')
       })
-      
-      if (response.ok) {
-        fetchAppointments()
-      }
-    } catch (error) {
-      console.error('Error updating appointment status:', error)
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+  }, [displayAppointments])
+
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date()
+    return displayAppointments
+      .filter(apt => {
+        const aptDate = new Date(apt.appointmentDate)
+        return aptDate >= now && (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED')
+      })
+      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+  }, [displayAppointments])
+
+  const pendingAppointments = useMemo(() => {
+    return displayAppointments
+      .filter(apt => apt.status === 'PENDING')
+      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+  }, [displayAppointments])
+
+  const pastAppointments = useMemo(() => {
+    const now = new Date()
+    return displayAppointments
+      .filter(apt => {
+        const aptEndTime = new Date(apt.endTime)
+        return aptEndTime < now
+      })
+      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+  }, [displayAppointments])
+
+  const allAppointments = useMemo(() => {
+    return displayAppointments
+      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+  }, [displayAppointments])
+
+  const currentAppointments = useMemo(() => {
+    switch (activeView) {
+      case 'today':
+        return todayAppointments
+      case 'upcoming':
+        return upcomingAppointments
+      case 'pending':
+        return pendingAppointments
+      case 'past':
+        return pastAppointments
+      case 'all':
+        return allAppointments
+      default:
+        return todayAppointments
+    }
+  }, [activeView, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
+
+  const getStatusIcon = (status) => {
+    switch (status.toUpperCase()) {
+      case 'CONFIRMED':
+      case 'SCHEDULED':
+        return FaCheckCircle
+      case 'PENDING':
+        return FaHourglassHalf
+      case 'COMPLETED':
+        return FaCheckCircle
+      case 'CANCELLED':
+        return FaTimesCircle
+      default:
+        return FaHourglassHalf
     }
   }
 
-  // Filter and search appointments
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = 
-      appointment.patient?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.patient?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.dentist?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.dentist?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus
-    const matchesDentist = filterDentist === 'all' || appointment.dentistId === parseInt(filterDentist)
-    
-    return matchesSearch && matchesStatus && matchesDentist
-  })
-
-  // Sort appointments by date and time
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    const dateA = new Date(a.date)
-    const dateB = new Date(b.date)
-    if (dateA.getTime() !== dateB.getTime()) {
-      return dateA - dateB
+  const handleConfirmAppointment = async (appointmentId) => {
+    try {
+      await appointmentsAPI.update(appointmentId, { status: 'CONFIRMED' })
+      await fetchAppointments()
+    } catch (err) {
+      console.error('Error confirming appointment:', err)
+      alert('Failed to confirm appointment. Please try again.')
     }
-    return a.time?.localeCompare(b.time || '') || 0
-  })
+  }
 
-  // Pagination
-  const totalPages = Math.ceil(sortedAppointments.length / itemsPerPage)
-  const paginatedAppointments = sortedAppointments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
+  const handleCancelAppointment = (appointment) => {
+    setSelectedAppointment(appointment)
+    setIsCancelModalOpen(true)
+  }
+
+  const handleConfirmCancel = async () => {
+    try {
+      await appointmentsAPI.cancel(selectedAppointment.id)
+      await fetchAppointments()
+      setIsCancelModalOpen(false)
+      setSelectedAppointment(null)
+    } catch (err) {
+      console.error('Error cancelling appointment:', err)
+      alert('Failed to cancel appointment. Please try again.')
+    }
+  }
+
+  const handleNewAppointment = () => {
+    setIsNewAppointmentModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsNewAppointmentModalOpen(false)
+    setSelectedAppointment(null)
+  }
+
+  const handleSaveAppointment = async (appointmentData) => {
+    try {
+      await appointmentsAPI.create(appointmentData)
+      await fetchAppointments()
+      setIsNewAppointmentModalOpen(false)
+    } catch (err) {
+      console.error('Error creating appointment:', err)
+      throw err // Re-throw so modal can handle the error
+    }
+  }
+
+  const handleCompleteAppointment = (appointment) => {
+    // Check if appointment is linked to a treatment
+    if (!appointment.rawData?.treatmentId) {
+      alert('This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.')
+      return
+    }
+    setSelectedAppointment(appointment)
+    setIsSessionCostModalOpen(true)
+  }
+
+  const handleSaveSessionCost = async (sessionCost) => {
+    try {
+      await appointmentsAPI.complete(selectedAppointment.id, { sessionCost })
+      await fetchAppointments()
+      setIsSessionCostModalOpen(false)
+      setSelectedAppointment(null)
+    } catch (err) {
+      console.error('Error completing appointment:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to complete appointment. Please try again.'
+      throw new Error(errorMessage)
+    }
+  }
+
+  // Computed stats using useMemo
+  const stats = useMemo(() => [
+    {
+      label: 'Today',
+      value: loading ? '-' : todayAppointments.length,
+      icon: FaCalendarAlt,
+      gradient: 'from-teal-600 to-cyan-600'
+    },
+    {
+      label: 'Pending',
+      value: loading ? '-' : pendingAppointments.length,
+      icon: FaHourglassHalf,
+      gradient: 'from-yellow-600 to-orange-600'
+    },
+    {
+      label: 'Upcoming',
+      value: loading ? '-' : upcomingAppointments.length,
+      icon: FaClock,
+      gradient: 'from-emerald-600 to-teal-600'
+    },
+    {
+      label: 'Past',
+      value: loading ? '-' : pastAppointments.length,
+      icon: FaCheckCircle,
+      gradient: 'from-blue-600 to-indigo-600'
+    },
+    {
+      label: 'All',
+      value: loading ? '-' : allAppointments.length,
+      icon: FaCheckCircle,
+      gradient: 'from-purple-600 to-purple-700'
+    }
+  ], [loading, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
+
+  // Filtered appointments using useMemo
+  const filteredAppointments = useMemo(() => {
+    let filtered = currentAppointments
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(appointment => 
+        appointment.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.dentist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.treatment.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filter by status
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(appointment => appointment.status === selectedStatus)
+    }
+
+    // Filter by dentist
+    if (selectedDentist !== 'all') {
+      filtered = filtered.filter(appointment => appointment.dentist.id === parseInt(selectedDentist))
+    }
+
+    return filtered
+  }, [currentAppointments, searchTerm, selectedStatus, selectedDentist])
+
+  // Filter configuration for FilterBar
+  const filters = [
+    {
+      value: selectedStatus,
+      onChange: (e) => setSelectedStatus(e.target.value),
+      options: [
+        { value: 'all', label: 'All Status' },
+        { value: 'CONFIRMED', label: 'Confirmed' },
+        { value: 'SCHEDULED', label: 'Scheduled' },
+        { value: 'PENDING', label: 'Pending' },
+        { value: 'COMPLETED', label: 'Completed' },
+        { value: 'CANCELLED', label: 'Cancelled' }
+      ],
+      placeholder: 'Filter by Status'
+    },
+    {
+      value: selectedDentist,
+      onChange: (e) => setSelectedDentist(e.target.value),
+      options: [
+        { value: 'all', label: 'All Dentists' },
+        ...dentists.map(dentist => ({
+          value: (dentist._id || dentist.userId).toString(),
+          label: `Dr. ${dentist.firstName} ${dentist.lastName}`
+        }))
+      ],
+      placeholder: 'Filter by Dentist'
+    }
+  ]
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedStatus('all')
+    setSelectedDentist('all')
+  }
+
+  // Table columns configuration
+  const tableColumns = [
+    { key: 'date', label: 'Date & Time' },
+    { key: 'patient', label: 'Patient' },
+    { key: 'dentist', label: 'Dentist' },
+    { key: 'treatment', label: 'Treatment/Reason' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions', className: 'text-right' }
+  ]
+
+  // Table row renderer
+  const renderTableRow = (appointment, index) => {
+    const aptDate = new Date(appointment.appointmentDate)
+    const startTime = new Date(appointment.startTime)
+    const endTime = new Date(appointment.endTime)
+    
+    return (
+      <tr 
+        key={appointment.id}
+        className={`
+          transition-colors
+          ${isDarkMode 
+            ? 'hover:bg-gray-700/50' 
+            : 'hover:bg-gray-50'
+          }
+        `}
+      >
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-teal-500" />
+            <div>
+              <div className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {aptDate.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </div>
+              <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+              <FaUser className="text-white text-sm" />
+            </div>
+            <div>
+              <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {appointment.patient.name}
+              </div>
+              <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {appointment.patient.phone}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <FaUserMd className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              {appointment.dentist.name}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <FaStethoscope className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              {appointment.treatment}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <StatusBadge 
+            status={appointment.status.toLowerCase()}
+            icon={getStatusIcon(appointment.status)}
+            label={appointment.status.charAt(0) + appointment.status.slice(1).toLowerCase()}
+          />
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-right">
+          <div className="flex justify-end gap-2">
+            {(appointment.status === 'PENDING' || appointment.status === 'SCHEDULED') && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleConfirmAppointment(appointment.id)}
+                  title="Confirm appointment"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                >
+                  <FaCheck className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCancelAppointment(appointment)}
+                  title="Cancel appointment"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <FaTimesCircle className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+            {appointment.status === 'CONFIRMED' && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCompleteAppointment(appointment)}
+                  title="Mark as completed"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  <FaCheckCircle className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCancelAppointment(appointment)}
+                  title="Cancel appointment"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <FaTimesCircle className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-            Appointments Management
-          </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            View and manage all clinic appointments
-          </p>
-        </div>
+        <PageHeader
+          title="Appointments"
+          description="View and manage all clinic appointments"
+        />
         <Button
-          variant="primary"
-          className="flex items-center gap-2"
-          onClick={() => setShowNewAppointmentModal(true)}
+          onClick={handleNewAppointment}
+          className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
         >
-          <FaPlus className="w-4 h-4" />
+          <FaPlus className="w-4 h-4 mr-2" />
           New Appointment
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <Input
-              type="text"
-              placeholder="Search by patient or dentist name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <Select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </Select>
+      {/* Stats Overview */}
+      <StatsOverview stats={stats} />
 
-          <Select
-            value={filterDentist}
-            onChange={(e) => setFilterDentist(e.target.value)}
+      {/* View Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={activeView === 'today' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('today')}
+            className={activeView === 'today' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            <option value="all">All Dentists</option>
-            {dentists.map((dentist) => (
-              <option key={dentist._id || dentist.userId} value={dentist._id || dentist.userId}>
-                Dr. {dentist.firstName} {dentist.lastName}
-              </option>
-            ))}
-          </Select>
+            Today ({todayAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'pending' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('pending')}
+            className={activeView === 'pending' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            Pending ({pendingAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'upcoming' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('upcoming')}
+            className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            Upcoming ({upcomingAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'past' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('past')}
+            className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            Past ({pastAppointments.length})
+          </Button>
+          <Button
+            variant={activeView === 'all' ? 'primary' : 'outline'}
+            onClick={() => setActiveView('all')}
+            className={activeView === 'all' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+          >
+            All Status ({allAppointments.length})
+          </Button>
         </div>
-      </Card>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className={`p-4 border ${isDarkMode 
-          ? 'bg-gray-800/50 border-gray-700' 
-          : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-              <FaCalendarAlt className={`w-5 h-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            </div>
-            <div>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total</p>
-              <p className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                {filteredAppointments.length}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-4 border ${isDarkMode 
-          ? 'bg-gray-800/50 border-gray-700' 
-          : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-yellow-900/30' : 'bg-yellow-100'}`}>
-              <FaClock className={`w-5 h-5 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-            </div>
-            <div>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Scheduled</p>
-              <p className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                {filteredAppointments.filter(a => a.status === 'scheduled').length}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-4 border ${isDarkMode 
-          ? 'bg-gray-800/50 border-gray-700' 
-          : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`}>
-              <FaCheckCircle className={`w-5 h-5 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-            </div>
-            <div>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Confirmed</p>
-              <p className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                {filteredAppointments.filter(a => a.status === 'confirmed').length}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-4 border ${isDarkMode 
-          ? 'bg-gray-800/50 border-gray-700' 
-          : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}>
-              <FaTimesCircle className={`w-5 h-5 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
-            </div>
-            <div>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Cancelled</p>
-              <p className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                {filteredAppointments.filter(a => a.status === 'cancelled').length}
-              </p>
-            </div>
-          </div>
-        </Card>
       </div>
 
-      {/* Appointments List */}
-      <Card className="overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : paginatedAppointments.length === 0 ? (
-          <div className="text-center py-12">
-            <FaCalendarAlt className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-            <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              No appointments found
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className={isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}>
-                  <tr>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Patient
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Dentist
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Date & Time
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Reason
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Status
-                    </th>
-                    <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} uppercase tracking-wider`}>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                  {paginatedAppointments.map((appointment) => (
-                    <tr key={appointment.id} className={`${isDarkMode ? 'hover:bg-gray-800/50' : 'hover:bg-gray-50'} transition-colors`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-                          }`}>
-                            <FaUser className={`w-4 h-4 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
-                          </div>
-                          <div className="ml-3">
-                            <p className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                              {appointment.patient?.firstName} {appointment.patient?.lastName}
-                            </p>
-                            {appointment.patient?.user?.phone && (
-                              <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                                {appointment.patient.user.phone}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FaUserMd className={`w-4 h-4 mr-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                            Dr. {appointment.dentist?.firstName} {appointment.dentist?.lastName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                            {formatDate(appointment.date)}
-                          </p>
-                          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {formatTime(appointment.time)}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                          {appointment.reason || 'General checkup'}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={appointment.status} variant={getStatusColor(appointment.status)} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
-                          {appointment.status === 'scheduled' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateStatus(appointment.id, 'confirmed')}
-                              title="Confirm appointment"
-                            >
-                              <FaCheckCircle className="w-4 h-4 text-green-600" />
-                            </Button>
-                          )}
-                          {(appointment.status === 'scheduled' || appointment.status === 'confirmed') && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateStatus(appointment.id, 'cancelled')}
-                              title="Cancel appointment"
-                            >
-                              <FaTimesCircle className="w-4 h-4 text-red-600" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {/* Filters */}
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        searchPlaceholder="Search patients, dentists or treatments..."
+        filters={filters}
+        onClearFilters={handleClearFilters}
+      />
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </Card>
+      {/* Appointments Table */}
+      {loading ? (
+        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          </div>
+          <p className={`mt-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Loading appointments...
+          </p>
+        </Card>
+      ) : error ? (
+        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <FaCalendarAlt className={`w-12 h-12 mx-auto mb-4 ${
+            isDarkMode ? 'text-red-400' : 'text-red-500'
+          }`} />
+          <h3 className={`text-lg font-semibold mb-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Error Loading Appointments
+          </h3>
+          <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {error}
+          </p>
+          <Button onClick={fetchAppointments}>
+            Try Again
+          </Button>
+        </Card>
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={filteredAppointments}
+          renderRow={renderTableRow}
+          emptyMessage={
+            activeView === 'today' 
+              ? "No appointments scheduled for today." 
+              : activeView === 'upcoming'
+              ? "No upcoming appointments found."
+              : activeView === 'pending'
+              ? "No pending appointments found."
+              : activeView === 'past'
+              ? "No past appointments found."
+              : "No appointments found."
+          }
+          emptyIcon={FaCalendarAlt}
+          emptyTitle={
+            activeView === 'today' 
+              ? "No Today's Appointments" 
+              : activeView === 'upcoming'
+              ? "No Upcoming Appointments"
+              : activeView === 'pending'
+              ? "No Pending Appointments"
+              : activeView === 'past'
+              ? "No Past Appointments"
+              : "No Appointments"
+          }
+          hasFilters={searchTerm !== '' || selectedStatus !== 'all' || selectedDentist !== 'all'}
+        />
+      )}
+
+      {/* Modals */}
+      <NewAppointmentModal
+        isOpen={isNewAppointmentModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveAppointment}
+      />
+
+      {/* Cancel Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleConfirmCancel}
+        item={selectedAppointment}
+        action="cancel"
+        itemName={selectedAppointment ? `appointment with ${selectedAppointment.patient.name} on ${new Date(selectedAppointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+        itemType="Appointment"
+      />
+
+      {/* Session Cost Modal */}
+      <SessionCostModal
+        isOpen={isSessionCostModalOpen}
+        onClose={() => { setIsSessionCostModalOpen(false); setSelectedAppointment(null) }}
+        onSave={handleSaveSessionCost}
+        appointmentInfo={selectedAppointment ? {
+          patientName: selectedAppointment.patient.name,
+          treatment: selectedAppointment.treatment
+        } : null}
+      />
     </div>
   )
 }

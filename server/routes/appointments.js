@@ -137,13 +137,32 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
 });
 
 // Get clinic's appointments
-router.get('/clinic/my-appointments', authenticate, authorize('Clinic'), async (req, res) => {
+router.get('/clinic/my-appointments', authenticate, authorize('Clinic', 'Secretary'), async (req, res) => {
   try {
+    let clinicId;
+
+    // If user is a secretary, get their clinic ID
+    if (req.user.role === 'Secretary') {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id },
+        select: { clinicId: true }
+      });
+
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+
+      clinicId = secretary.clinicId;
+    } else {
+      // User is a clinic owner
+      clinicId = req.user.id;
+    }
+
     // Auto-cancel pending appointments that have passed
     const now = new Date();
     await prisma.appointment.updateMany({
       where: {
-        clinicId: req.user.id,
+        clinicId: clinicId,
         status: 'PENDING',
         endTime: {
           lt: now
@@ -155,7 +174,7 @@ router.get('/clinic/my-appointments', authenticate, authorize('Clinic'), async (
     });
 
     const appointments = await prisma.appointment.findMany({
-      where: { clinicId: req.user.id },
+      where: { clinicId: clinicId },
       include: {
         patient: {
           include: {
@@ -325,7 +344,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // Create new appointment
-router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist'), async (req, res) => {
+router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secretary'), async (req, res) => {
   try {
     const { 
       patientId, 
@@ -480,11 +499,22 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     // Check authorization
-    const isAuthorized = 
+    let isAuthorized = 
       req.user.role === 'Admin' ||
       (req.user.role === 'Patient' && existingAppointment.patientId === req.user.id) ||
       (req.user.role === 'Dentist' && existingAppointment.dentistId === req.user.id) ||
       (req.user.role === 'Clinic' && existingAppointment.clinicId === req.user.id);
+
+    // Check if Secretary and belongs to the same clinic
+    if (req.user.role === 'Secretary' && !isAuthorized) {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id }
+      });
+      
+      if (secretary && secretary.clinicId === existingAppointment.clinicId) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
       return res.status(403).json({ error: 'Not authorized to update this appointment' });
@@ -678,11 +708,22 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
     }
 
     // Check authorization
-    const isAuthorized = 
+    let isAuthorized = 
       req.user.role === 'Admin' ||
       existingAppointment.patientId === req.user.id ||
       existingAppointment.dentistId === req.user.id ||
       existingAppointment.clinicId === req.user.id;
+
+    // Check if Secretary and belongs to the same clinic
+    if (req.user.role === 'Secretary' && !isAuthorized) {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id }
+      });
+      
+      if (secretary && secretary.clinicId === existingAppointment.clinicId) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
       return res.status(403).json({ error: 'Not authorized to cancel this appointment' });
@@ -735,8 +776,8 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
   }
 });
 
-// Complete appointment (Dentist only)
-router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, res) => {
+// Complete appointment (Dentist and Secretary)
+router.patch('/:id/complete', authenticate, authorize('Dentist', 'Secretary'), async (req, res) => {
   try {
     const { id } = req.params;
     const { sessionCost } = req.body;
@@ -750,8 +791,20 @@ router.patch('/:id/complete', authenticate, authorize('Dentist'), async (req, re
       return res.status(404).json({ error: 'Appointment not found' });
     }
 
-    // Check if dentist owns this appointment
-    if (existingAppointment.dentistId !== req.user.id) {
+    // Check if dentist owns this appointment or secretary belongs to the same clinic
+    let isAuthorized = existingAppointment.dentistId === req.user.id;
+    
+    if (req.user.role === 'Secretary' && !isAuthorized) {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id }
+      });
+      
+      if (secretary && secretary.clinicId === existingAppointment.clinicId) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       return res.status(403).json({ error: 'Not authorized to complete this appointment' });
     }
 
