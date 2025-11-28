@@ -279,16 +279,26 @@ const SignUp = () => {
   const passwordInfo = passwordStrength();
 
   return (
-    <div className={`min-h-screen py-8 px-4 transition-colors duration-300 ${
+    <div className={`min-h-screen py-8 px-4 transition-colors duration-300 relative overflow-hidden ${
       isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
         : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
-      <div className="max-w-4xl mx-auto">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
+          isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
+        }`}></div>
+        <div className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+          isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
+        }`}></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Logo */}
         <div className="text-center mb-6">
-          <Logo className="justify-center" size="text-3xl" />
-          <p className={`mt-3 text-sm ${
+          <Logo className="justify-center" size="text-4xl" />
+          <p className={`mt-3 text-lg ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             Create your patient account to get started
@@ -297,12 +307,12 @@ const SignUp = () => {
 
         {/* Signup Form */}
         <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
-          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-blue-500'}>
-            <h2 className="text-2xl font-bold text-center text-white">
+          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
+            <h2 className="text-3xl font-bold text-center text-white">
               Patient Registration
             </h2>
-            <p className="text-sm text-center mt-1 text-white text-opacity-90">
-              Join our dental care community
+            <p className="text-sm text-center mt-2 text-white text-opacity-90">
+              Join our dental care community today
             </p>
           </Card.Header>
 

@@ -158,33 +158,39 @@ const Login = () => {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden ${
       isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
         : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
-      <div className="w-full max-w-md">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
+          isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
+        }`}></div>
+        <div className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+          isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
+        }`}></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Logo className="justify-center" size="text-3xl" />
-          <p className={`mt-4 ${
+          <Logo className="justify-center" size="text-4xl" />
+          <p className={`mt-4 text-lg ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Welcome to Dentify! Please sign in to continue.
+            Welcome back! Please sign in to continue.
           </p>
         </div>
 
         {/* Login Form */}
-        <Card className="shadow-2xl">
-          <Card.Header>
-            <h2 className={`text-2xl font-bold text-center ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+        <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
+          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
+            <h2 className="text-3xl font-bold text-center text-white">
               Sign In
             </h2>
-            <p className={`text-sm text-center mt-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
+            <p className="text-sm text-center mt-2 text-white text-opacity-90">
               Access your Dentify account
             </p>
           </Card.Header>
@@ -315,7 +321,7 @@ const Login = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full"
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -331,7 +337,7 @@ const Login = () => {
 
           {/* Sign Up Link */}
           <Card.Footer className={`text-center ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-gradient-to-r from-gray-50 to-gray-100'
           }`}>
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -339,7 +345,7 @@ const Login = () => {
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="font-medium text-teal-600 hover:text-teal-500"
+                className="font-semibold text-teal-600 hover:text-teal-500 transition-colors"
               >
                 Sign up here
               </Link>
@@ -349,16 +355,16 @@ const Login = () => {
 
         {/* Additional Info */}
         <div className="mt-8 text-center">
-          <div className={`flex items-center justify-center space-x-4 text-xs ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            <Link to="/" className="hover:text-teal-600">
-              Home
+          <div className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
+            isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
+          } shadow-md`}>
+            <Link to="/" className="hover:text-teal-600 transition-colors flex items-center gap-1">
+              🏠 Home
             </Link>
             <span>•</span>
-            <span>Secure Login</span>
+            <span className="flex items-center gap-1">🔒 Secure Login</span>
             <span>•</span>
-            <span>24/7 Support</span>
+            <span className="flex items-center gap-1">💬 24/7 Support</span>
           </div>
         </div>
       </div>

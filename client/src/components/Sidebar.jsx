@@ -311,23 +311,25 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
                   isActive
                     ? isDarkMode
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                      : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-md'
+                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-teal-500/30'
+                      : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
                     : isDarkMode
-                      ? 'text-gray-300 hover:bg-gray-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white'
+                      : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <Icon className={`w-5 h-5 transition-transform duration-200 ${
+                  isActive ? '' : 'group-hover:scale-110'
+                }`} />
+                <span className="font-semibold flex-1 text-left">{item.label}</span>
                 {item.badge && (
-                  <span className={`ml-auto text-white text-xs px-2 py-1 rounded-full ${
+                  <span className={`text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md ${
                     userType === 'admin' && item.id === 'dentists'
-                      ? 'bg-red-500'
-                      : 'bg-teal-500'
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500'
+                      : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                   }`}>
                     {item.badge}
                   </span>
@@ -339,20 +341,20 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
 
         {/* Dashboard Title at Bottom */}
         {dashboardTitle && (
-          <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
+          <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'}`}>
+            <div className={`flex items-center justify-between px-4 py-3.5 rounded-xl border shadow-lg ${
               isDarkMode 
-                ? 'bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-teal-700/50' 
-                : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200'
+                ? 'bg-gradient-to-r from-teal-900/40 to-cyan-900/40 border-teal-700/50 shadow-teal-900/30' 
+                : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200/50 shadow-teal-500/10'
             }`}>
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${
-                  isDarkMode ? 'bg-teal-500/20' : 'bg-teal-100'
+                <div className={`p-2.5 rounded-xl shadow-md ${
+                  isDarkMode ? 'bg-gradient-to-br from-teal-500/30 to-cyan-500/30' : 'bg-gradient-to-br from-teal-100 to-cyan-100'
                 }`}>
                   <MdDashboard className={`text-xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-xs font-medium ${
+                  <span className={`text-xs font-semibold ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                   }`}>Dashboard</span>
                   <span className={`text-sm font-bold ${

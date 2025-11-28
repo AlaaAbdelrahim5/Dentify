@@ -82,7 +82,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-lg transition-all duration-300 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-xl transition-all duration-300 ${
       isDarkMode 
         ? 'bg-gray-900/95 border-b border-gray-700/50' 
         : 'bg-white/95 border-b border-gray-200/50'
@@ -125,7 +125,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                 <>
                   <Link 
                     to="/login" 
-                    className={`hidden md:block px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border ${
+                    className={`hidden md:block px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 border ${
                       isDarkMode 
                         ? 'text-gray-300 border-gray-700 hover:text-teal-400 hover:border-teal-400 hover:bg-gray-800/50' 
                         : 'text-gray-700 border-gray-300 hover:text-teal-600 hover:border-teal-600 hover:bg-gray-50'
@@ -135,7 +135,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   </Link>
                   <Link 
                     to="/signup" 
-                    className="hidden md:block bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 hover:from-teal-500 hover:to-cyan-500"
+                    className="hidden md:block bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 hover:from-teal-600 hover:to-cyan-600"
                   >
                     Sign Up
                   </Link>
@@ -161,19 +161,19 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={toggleProfileDropdown}
-                      className={`flex items-center space-x-2 md:space-x-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-all duration-200 ${
+                      className={`flex items-center space-x-2 md:space-x-3 px-2 md:px-3 py-1.5 md:py-2 rounded-xl transition-all duration-200 ${
                         isDarkMode 
                           ? 'hover:bg-gray-800/50' 
                           : 'hover:bg-gray-100/50'
-                      } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/50') : ''}`}
+                      } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/70' : 'bg-gray-100/70') : ''}`}
                     >
                       <div className="relative">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500 hover:shadow-xl">
                           <span className="text-white text-xs md:text-sm font-bold">
                             {currentUser ? authUtils.getUserInitials() : 'U'}
                           </span>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
                       </div>
                       <div className="hidden md:flex flex-col">
                         <span className={`text-sm font-semibold ${
