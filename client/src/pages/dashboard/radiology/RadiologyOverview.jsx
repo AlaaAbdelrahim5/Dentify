@@ -13,28 +13,36 @@ import { useTheme } from '../../../contexts/ThemeContext'
 const RadiologyOverview = ({ currentUser, userData, stats, onTabChange }) => {
   const { isDarkMode } = useTheme()
 
+  // Ensure stats has default values
+  const safeStats = {
+    totalRequests: stats?.totalRequests || 0,
+    pendingRequests: stats?.pendingRequests || 0,
+    completedToday: stats?.completedToday || 0,
+    completedThisMonth: stats?.completedThisMonth || 0
+  }
+
   const statsData = [
     {
       label: 'Total Requests',
-      value: stats.totalRequests || 0,
+      value: safeStats.totalRequests,
       icon: FaFileImage,
       gradient: 'from-blue-600 to-cyan-600'
     },
     {
       label: 'Pending Requests',
-      value: stats.pendingRequests || 0,
+      value: safeStats.pendingRequests,
       icon: MdPendingActions,
       gradient: 'from-yellow-600 to-orange-600'
     },
     {
       label: 'Completed Today',
-      value: stats.completedToday || 0,
+      value: safeStats.completedToday,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-teal-600'
     },
     {
       label: 'This Month',
-      value: stats.completedThisMonth || 0,
+      value: safeStats.completedThisMonth,
       icon: FaChartBar,
       gradient: 'from-purple-600 to-pink-600'
     }

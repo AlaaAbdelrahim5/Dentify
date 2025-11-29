@@ -44,8 +44,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'dentists', 
         label: 'Dentist Approvals', 
         icon: FaUserMd,
-        description: 'Review and approve dentist registrations',
-        badge: stats.pendingDentists > 0 ? stats.pendingDentists : null
+        description: 'Review and approve dentist registrations'
       },
       { 
         id: 'radiology', 
@@ -83,22 +82,19 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'secretaries', 
         label: 'Secretaries', 
         icon: FaUserTie,
-        description: 'Manage clinic secretaries',
-        badge: stats.totalSecretaries > 0 ? stats.totalSecretaries : null
+        description: 'Manage clinic secretaries'
       },
       { 
         id: 'dentists', 
         label: 'Dentists', 
         icon: FaUserMd,
-        description: 'Manage clinic dentists',
-        badge: stats.totalDentists > 0 ? stats.totalDentists : null
+        description: 'Manage clinic dentists'
       },
       { 
         id: 'appointments', 
         label: 'Appointments', 
         icon: FaCalendarAlt,
-        description: 'Manage appointments',
-        badge: stats.pendingAppointments > 0 ? stats.pendingAppointments : null
+        description: 'Manage appointments'
       },
       { 
         id: 'patients', 
@@ -130,15 +126,13 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'appointments', 
         label: 'Appointments', 
         icon: FaCalendarAlt,
-        description: 'Manage appointments',
-        badge: stats.todayAppointments > 0 ? stats.todayAppointments : null
+        description: 'Manage appointments'
       },
       { 
         id: 'patients', 
         label: 'My Patients', 
         icon: FaUsers,
-        description: 'Manage patient records',
-        badge: stats.totalPatients > 0 ? stats.totalPatients : null
+        description: 'Manage patient records'
       },
       { 
         id: 'treatments', 
@@ -247,22 +241,19 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'appointments', 
         label: 'Appointments', 
         icon: FaCalendarAlt,
-        description: 'Manage clinic appointments',
-        badge: stats.todayAppointments > 0 ? stats.todayAppointments : null
+        description: 'Manage clinic appointments'
       },
       { 
         id: 'patients', 
         label: 'Patients', 
         icon: FaUsers,
-        description: 'View patient records',
-        badge: stats.totalPatients > 0 ? stats.totalPatients : null
+        description: 'View patient records'
       },
       { 
         id: 'dentists', 
         label: 'Dentists', 
         icon: FaUserMd,
-        description: 'View dentists directory',
-        badge: stats.totalDentists > 0 ? stats.totalDentists : null
+        description: 'View dentists directory'
       },
       { 
         id: 'reports', 
@@ -325,15 +316,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
                   isActive ? '' : 'group-hover:scale-110'
                 }`} />
                 <span className="font-semibold flex-1 text-left">{item.label}</span>
-                {item.badge && (
-                  <span className={`text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md ${
-                    userType === 'admin' && item.id === 'dentists'
-                      ? 'bg-gradient-to-r from-red-500 to-pink-500'
-                      : 'bg-gradient-to-r from-blue-500 to-indigo-500'
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
               </button>
             )
           })}

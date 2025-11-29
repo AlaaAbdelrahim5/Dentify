@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   FaUserTie,
   FaUserMd,
@@ -8,11 +8,84 @@ import {
   FaFilter,
   FaPlus
 } from 'react-icons/fa'
-import { Card, Button } from '../../../components'
+import { Card, Button, StatsOverview } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { secretariesAPI, dentistsAPI, appointmentsAPI, patientsAPI } from '../../../services/api'
 
-const ClinicOverview = ({ userData, stats }) => {
+const ClinicOverview = ({ userData, stats: propStats }) => {
   const { isDarkMode } = useTheme()
+  const [stats, setStats] = useState(propStats || {})
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true)
+        const [secretariesRes, dentistsRes, appointmentsRes, patientsRes] = await Promise.allSettled([
+          secretariesAPI.getForClinic(),
+          dentistsAPI.getForClinic(),
+          appointmentsAPI.getClinicAppointments(),
+          patientsAPI.getAll()
+        ])
+
+        // Parse responses correctly based on backend structure
+        // Parse secretaries - backend returns { success: true, data: [...] }
+        let secretaries = []
+        if (secretariesRes.status === 'fulfilled') {
+          secretaries = secretariesRes.value?.data || []
+        }
+
+        // Parse dentists - backend returns { success: true, data: [...] }
+        let dentists = []
+        if (dentistsRes.status === 'fulfilled') {
+          dentists = dentistsRes.value?.data || []
+        }
+
+        // Parse appointments - backend returns { appointments: [...] }
+        let appointments = []
+        if (appointmentsRes.status === 'fulfilled') {
+          appointments = appointmentsRes.value?.appointments || []
+        }
+
+        // Parse patients - backend returns { patients: [...] }
+        let patients = []
+        if (patientsRes.status === 'fulfilled') {
+          patients = patientsRes.value?.patients || []
+        }
+
+        console.log('Clinic Stats Debug:', {
+          secretaries: secretaries.length,
+          dentists: dentists.length,
+          appointments: appointments.length,
+          patients: patients.length
+        })
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todayAppointments = appointments.filter(apt => {
+          const aptDate = new Date(apt.appointmentDate)
+          aptDate.setHours(0, 0, 0, 0)
+          return aptDate.getTime() === today.getTime()
+        })
+
+        const pendingAppointments = todayAppointments.filter(apt => apt.status === 'PENDING' || apt.status === 'SCHEDULED')
+
+        setStats({
+          totalSecretaries: secretaries.length || 0,
+          totalDentists: dentists.length || 0,
+          todayAppointments: todayAppointments.length || 0,
+          totalPatients: patients.length || 0,
+          pendingAppointments: pendingAppointments.length || 0
+        })
+      } catch (error) {
+        console.error('Error fetching clinic stats:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
 
   // Ensure default stats values
   const clinicStats = {
@@ -25,7 +98,10 @@ const ClinicOverview = ({ userData, stats }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Welcome Section */}
+      <div className={`p-6 rounded-xl ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      } shadow-lg`}>
         <div>
           <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             Welcome to {userData?.clinicName || 'Your Clinic'}
@@ -34,86 +110,57 @@ const ClinicOverview = ({ userData, stats }) => {
             {userData?.city} • Registration: {userData?.registrationNumber}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FaFilter className="w-4 h-4" />
-            Filter
-          </Button>
-          <Button
-            variant="primary"
-            className="flex items-center gap-2"
-          >
-            <FaPlus className="w-4 h-4" />
-            Quick Add
-          </Button>
-        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700/30' 
-          : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Secretaries</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{clinicStats.totalSecretaries}</p>
-            </div>
-            <FaUserTie className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700/30' 
-          : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Dentists</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{clinicStats.totalDentists}</p>
-            </div>
-            <FaUserMd className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/20 border-yellow-700/30' 
-          : 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Today's Appointments</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{clinicStats.todayAppointments}</p>
-            </div>
-            <FaCalendarAlt className={`w-8 h-8 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-purple-900/20 to-purple-800/20 border-purple-700/30' 
-          : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Total Patients</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{clinicStats.totalPatients}</p>
-            </div>
-            <FaUsers className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-red-900/20 to-red-800/20 border-red-700/30' 
-          : 'bg-gradient-to-br from-red-50 to-red-100 border-red-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Pending</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-red-300' : 'text-red-800'}`}>{clinicStats.pendingAppointments}</p>
-            </div>
-            <FaClock className={`w-8 h-8 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
-          </div>
-        </Card>
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-4 w-24 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-16 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                </div>
+                <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <StatsOverview stats={[
+        {
+          label: 'Secretaries',
+          value: clinicStats.totalSecretaries,
+          icon: FaUserTie,
+          gradient: 'from-blue-600 to-cyan-600'
+        },
+        {
+          label: 'Dentists',
+          value: clinicStats.totalDentists,
+          icon: FaUserMd,
+          gradient: 'from-green-600 to-teal-600'
+        },
+        {
+          label: 'Today\'s Appointments',
+          value: clinicStats.todayAppointments,
+          icon: FaCalendarAlt,
+          gradient: 'from-yellow-600 to-orange-600'
+        },
+        {
+          label: 'Total Patients',
+          value: clinicStats.totalPatients,
+          icon: FaUsers,
+          gradient: 'from-purple-600 to-pink-600'
+        },
+        {
+          label: 'Pending',
+          value: clinicStats.pendingAppointments,
+          icon: FaClock,
+          gradient: 'from-red-600 to-rose-600'
+        }
+      ]} />
+      )}
 
       {/* Recent Activities */}
       <Card className="p-6">

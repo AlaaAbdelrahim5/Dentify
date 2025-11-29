@@ -10,50 +10,91 @@ import {
   FaPhone,
   FaEnvelope
 } from 'react-icons/fa'
-import { Card, Button } from '../../../components'
+import { Card, Button, StatsOverview } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { authUtils } from '../../../utils/auth'
+import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'
 
-const SecretaryOverview = ({ userData, stats, onTabChange }) => {
+const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
   const { isDarkMode } = useTheme()
   const [todayAppointments, setTodayAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    totalDentists: 0
+  })
 
-  // Fetch today's appointments
+  // Fetch all data
   useEffect(() => {
-    fetchTodayAppointments()
+    fetchAllData()
   }, [])
 
-  const fetchTodayAppointments = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true)
-      const token = authUtils.getAccessToken()
       
       // Get today's date range
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      const response = await fetch('http://localhost:5000/api/appointments/clinic', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      // Fetch appointments and dentists using API methods
+      const [appointmentsRes, dentistsRes] = await Promise.allSettled([
+        appointmentsAPI.getClinicAppointments(),
+        dentistsAPI.getForClinic()
+      ])
+
+      // Parse appointments - backend returns { appointments: [...] }
+      let appointments = []
+      if (appointmentsRes.status === 'fulfilled') {
+        appointments = appointmentsRes.value?.appointments || []
+      }
+      
+      // Filter today's appointments using startTime
+      const todayAppts = appointments.filter(apt => {
+        const aptDate = new Date(apt.startTime)
+        aptDate.setHours(0, 0, 0, 0)
+        return aptDate.getTime() === today.getTime()
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        const appointments = data.appointments || []
-        
-        // Filter today's appointments
-        const todayAppts = appointments.filter(apt => {
-          const aptDate = new Date(apt.date)
-          return aptDate.toDateString() === today.toDateString()
-        })
-        
-        setTodayAppointments(todayAppts)
+      setTodayAppointments(todayAppts)
+
+      // Calculate unique patients from appointments (clinic-specific)
+      const uniquePatientIds = new Set()
+      appointments.forEach(apt => {
+        if (apt.patientId) {
+          uniquePatientIds.add(apt.patientId)
+        }
+      })
+      const patientsCount = uniquePatientIds.size
+
+      // Parse dentists - backend returns { success: true, data: [...] }
+      let dentistsCount = 0
+      if (dentistsRes.status === 'fulfilled') {
+        const dentists = dentistsRes.value?.data || []
+        dentistsCount = dentists.length
       }
+
+      setStats({
+        totalPatients: patientsCount,
+        totalDentists: dentistsCount
+      })
+      
+      console.log('Secretary Stats Debug:', {
+        todayAppointments: todayAppts.length,
+        totalAppointments: appointments.length,
+        uniquePatients: patientsCount,
+        dentists: dentistsCount,
+        todayApptDetails: todayAppts.map(a => ({
+          id: a.id,
+          status: a.status,
+          startTime: a.startTime,
+          patient: `${a.patient?.firstName} ${a.patient?.lastName}`
+        })),
+        pendingCount: todayAppts.filter(a => a.status === 'PENDING').length,
+        confirmedCount: todayAppts.filter(a => a.status === 'CONFIRMED').length,
+        completedCount: todayAppts.filter(a => a.status === 'COMPLETED').length
+      })
     } catch (error) {
-      console.error('Error fetching today appointments:', error)
+      console.error('Error fetching secretary data:', error)
     } finally {
       setLoading(false)
     }
@@ -62,10 +103,10 @@ const SecretaryOverview = ({ userData, stats, onTabChange }) => {
   // Get stats with defaults
   const secretaryStats = {
     todayAppointments: todayAppointments.length || 0,
-    pendingAppointments: todayAppointments.filter(a => a.status === 'scheduled').length || 0,
-    confirmedAppointments: todayAppointments.filter(a => a.status === 'confirmed').length || 0,
-    totalPatients: stats?.totalPatients || 0,
-    totalDentists: stats?.totalDentists || 0
+    pendingAppointments: todayAppointments.filter(a => a.status === 'PENDING' || a.status === 'SCHEDULED').length || 0,
+    confirmedAppointments: todayAppointments.filter(a => a.status === 'CONFIRMED').length || 0,
+    totalPatients: stats.totalPatients || 0,
+    totalDentists: stats.totalDentists || 0
   }
 
   const formatTime = (timeString) => {
@@ -82,27 +123,33 @@ const SecretaryOverview = ({ userData, stats, onTabChange }) => {
   }
 
   const getStatusBadge = (status) => {
+    const statusLower = status?.toLowerCase() || 'pending'
+    // Match StatusBadge component colors: confirmed = green, completed = blue, pending = yellow, cancelled = red
     const styles = {
-      scheduled: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
-      completed: 'bg-green-100 text-green-800 border-green-200',
+      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      scheduled: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      confirmed: 'bg-green-100 text-green-800 border-green-200',
+      completed: 'bg-blue-100 text-blue-800 border-blue-200',
       cancelled: 'bg-red-100 text-red-800 border-red-200'
     }
     
     const darkStyles = {
-      scheduled: 'bg-yellow-900/30 text-yellow-400 border-yellow-700/30',
-      confirmed: 'bg-blue-900/30 text-blue-400 border-blue-700/30',
-      completed: 'bg-green-900/30 text-green-400 border-green-700/30',
-      cancelled: 'bg-red-900/30 text-red-400 border-red-700/30'
+      pending: 'bg-yellow-900/20 text-yellow-400 border-yellow-800',
+      scheduled: 'bg-yellow-900/20 text-yellow-400 border-yellow-800',
+      confirmed: 'bg-green-900/20 text-green-400 border-green-800',
+      completed: 'bg-blue-900/20 text-blue-400 border-blue-800',
+      cancelled: 'bg-red-900/20 text-red-400 border-red-800'
     }
 
-    return isDarkMode ? darkStyles[status] || darkStyles.scheduled : styles[status] || styles.scheduled
+    return isDarkMode ? darkStyles[statusLower] || darkStyles.pending : styles[statusLower] || styles.pending
   }
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="flex justify-between items-center">
+      {/* Welcome Section */}
+      <div className={`p-6 rounded-xl ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      } shadow-lg`}>
         <div>
           <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
             Welcome, {userData?.firstName || 'Secretary'}!
@@ -111,88 +158,41 @@ const SecretaryOverview = ({ userData, stats, onTabChange }) => {
             {userData?.clinic?.clinicName || 'Clinic'} • {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => onTabChange?.('appointments')}
-          >
-            <FaFilter className="w-4 h-4" />
-            View All
-          </Button>
-          <Button
-            variant="primary"
-            className="flex items-center gap-2"
-            onClick={() => onTabChange?.('appointments')}
-          >
-            <FaPlus className="w-4 h-4" />
-            New Appointment
-          </Button>
-        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700/30' 
-          : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Today's Appointments</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{secretaryStats.todayAppointments}</p>
-            </div>
-            <FaCalendarAlt className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/20 border-yellow-700/30' 
-          : 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Pending</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{secretaryStats.pendingAppointments}</p>
-            </div>
-            <FaClock className={`w-8 h-8 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700/30' 
-          : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Confirmed</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{secretaryStats.confirmedAppointments}</p>
-            </div>
-            <FaCheckCircle className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-purple-900/20 to-purple-800/20 border-purple-700/30' 
-          : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Total Patients</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{secretaryStats.totalPatients}</p>
-            </div>
-            <FaUsers className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-teal-900/20 to-teal-800/20 border-teal-700/30' 
-          : 'bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>Dentists</p>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-teal-300' : 'text-teal-800'}`}>{secretaryStats.totalDentists}</p>
-            </div>
-            <FaUserMd className={`w-8 h-8 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
-          </div>
-        </Card>
-      </div>
+      <StatsOverview stats={[
+        {
+          label: 'Today\'s Appointments',
+          value: secretaryStats.todayAppointments,
+          icon: FaCalendarAlt,
+          gradient: 'from-blue-600 to-cyan-600'
+        },
+        {
+          label: 'Pending',
+          value: secretaryStats.pendingAppointments,
+          icon: FaClock,
+          gradient: 'from-yellow-600 to-orange-600'
+        },
+        {
+          label: 'Confirmed',
+          value: secretaryStats.confirmedAppointments,
+          icon: FaCheckCircle,
+          gradient: 'from-green-600 to-teal-600'
+        },
+        {
+          label: 'Total Patients',
+          value: secretaryStats.totalPatients,
+          icon: FaUsers,
+          gradient: 'from-purple-600 to-pink-600'
+        },
+        {
+          label: 'Dentists',
+          value: secretaryStats.totalDentists,
+          icon: FaUserMd,
+          gradient: 'from-teal-600 to-cyan-600'
+        }
+      ]} />
 
       {/* Today's Schedule */}
       <Card className="p-6">
@@ -262,7 +262,7 @@ const SecretaryOverview = ({ userData, stats, onTabChange }) => {
                   </div>
                   <div className="text-right">
                     <p className={`text-lg font-bold ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>
-                      {formatTime(appointment.time)}
+                      {new Date(appointment.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </p>
                     {appointment.reason && (
                       <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>

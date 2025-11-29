@@ -6,7 +6,7 @@ import {
   FaXRay
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Card, Button } from '../../../components'
+import { Card, Button, StatsOverview } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../../services/api'
 
@@ -27,10 +27,29 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
         patientsAPI.getStats()
       ])
 
-      const dentistStats = dentistStatsRes.status === 'fulfilled' ? dentistStatsRes.value.data : { pending: 0, total: 0 }
-      const clinicStats = clinicStatsRes.status === 'fulfilled' ? clinicStatsRes.value.data : { total: 0 }
-      const radiologyStats = radiologyStatsRes.status === 'fulfilled' ? radiologyStatsRes.value.data : { total: 0 }
-      const patientStats = patientStatsRes.status === 'fulfilled' ? patientStatsRes.value.data : { total: 0 }
+      // Backend returns { data: { total, pending, active } }
+      const dentistStats = dentistStatsRes.status === 'fulfilled' && dentistStatsRes.value?.data 
+        ? dentistStatsRes.value.data 
+        : { pending: 0, total: 0 }
+      
+      const clinicStats = clinicStatsRes.status === 'fulfilled' && clinicStatsRes.value?.data 
+        ? clinicStatsRes.value.data 
+        : { total: 0 }
+      
+      const radiologyStats = radiologyStatsRes.status === 'fulfilled' && radiologyStatsRes.value?.data 
+        ? radiologyStatsRes.value.data 
+        : { total: 0 }
+      
+      const patientStats = patientStatsRes.status === 'fulfilled' && patientStatsRes.value?.data 
+        ? patientStatsRes.value.data 
+        : { total: 0 }
+
+      console.log('Admin Stats Debug:', {
+        dentistStats,
+        clinicStats,
+        radiologyStats,
+        patientStats
+      })
 
       setStats({
         totalClinics: clinicStats.total || 0,
@@ -61,23 +80,11 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Welcome Section */}
+      <div className={`p-6 rounded-xl ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      } shadow-lg`}>
         <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>System Overview</h2>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={fetchStats}
-            disabled={isLoadingStats}
-          >
-            {isLoadingStats ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-            ) : (
-              <FaSearch className="w-4 h-4" />
-            )}
-            {isLoadingStats ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
       </div>
       
       {statsError && (
@@ -87,71 +94,48 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-blue-900/20 to-blue-800/20 border-blue-700/30' 
-          : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Total Clinics</p>
-              {isLoadingStats ? (
-                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
-              ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{stats.totalClinics || 0}</p>
-              )}
-            </div>
-            <FaHospital className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-yellow-900/20 to-yellow-800/20 border-yellow-700/30' 
-          : 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Pending Dentists</p>
-              {isLoadingStats ? (
-                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
-              ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{stats.pendingDentists || 0}</p>
-              )}
-            </div>
-            <MdPendingActions className={`w-8 h-8 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-green-900/20 to-green-800/20 border-green-700/30' 
-          : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Radiology Centers</p>
-              {isLoadingStats ? (
-                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
-              ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>{stats.radiologyCenters || 0}</p>
-              )}
-            </div>
-            <FaXRay className={`w-8 h-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-          </div>
-        </Card>
-
-        <Card className={`p-6 border ${isDarkMode 
-          ? 'bg-gradient-to-br from-purple-900/20 to-purple-800/20 border-purple-700/30' 
-          : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Total Patients</p>
-              {isLoadingStats ? (
-                <div className="h-9 w-16 bg-current opacity-20 rounded animate-pulse mt-1"></div>
-              ) : (
-                <p className={`text-3xl font-bold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>{stats.totalPatients || 0}</p>
-              )}
-            </div>
-            <FaUsers className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-          </div>
-        </Card>
-      </div>
+      {isLoadingStats ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-4 w-24 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-16 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                </div>
+                <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <StatsOverview stats={[
+          {
+            label: 'Total Clinics',
+            value: stats.totalClinics || 0,
+            icon: FaHospital,
+            gradient: 'from-blue-600 to-cyan-600'
+          },
+          {
+            label: 'Pending Dentists',
+            value: stats.pendingDentists || 0,
+            icon: MdPendingActions,
+            gradient: 'from-yellow-600 to-orange-600'
+          },
+          {
+            label: 'Radiology Centers',
+            value: stats.radiologyCenters || 0,
+            icon: FaXRay,
+            gradient: 'from-green-600 to-teal-600'
+          },
+          {
+            label: 'Total Patients',
+            value: stats.totalPatients || 0,
+            icon: FaUsers,
+            gradient: 'from-purple-600 to-pink-600'
+          }
+        ]} />
+      )}
 
       {/* Recent Activities */}
       <Card className="p-6">

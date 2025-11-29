@@ -136,8 +136,9 @@ const SecretaryAppointments = ({ userData, onTabChange }) => {
     
     return displayAppointments
       .filter(apt => {
-        const aptDate = new Date(apt.appointmentDate)
-        return aptDate >= today && aptDate < tomorrow && (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED')
+        const aptDate = new Date(apt.startTime)
+        aptDate.setHours(0, 0, 0, 0)
+        return aptDate.getTime() >= today.getTime() && aptDate.getTime() < tomorrow.getTime()
       })
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
   }, [displayAppointments])
@@ -146,16 +147,16 @@ const SecretaryAppointments = ({ userData, onTabChange }) => {
     const now = new Date()
     return displayAppointments
       .filter(apt => {
-        const aptDate = new Date(apt.appointmentDate)
+        const aptDate = new Date(apt.startTime)
         return aptDate >= now && (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED')
       })
-      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
   }, [displayAppointments])
 
   const pendingAppointments = useMemo(() => {
     return displayAppointments
       .filter(apt => apt.status === 'PENDING')
-      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
   }, [displayAppointments])
 
   const pastAppointments = useMemo(() => {
@@ -163,14 +164,14 @@ const SecretaryAppointments = ({ userData, onTabChange }) => {
     return displayAppointments
       .filter(apt => {
         const aptEndTime = new Date(apt.endTime)
-        return aptEndTime < now
+        return aptEndTime < now || apt.status === 'COMPLETED'
       })
-      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
   }, [displayAppointments])
 
   const allAppointments = useMemo(() => {
     return displayAppointments
-      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
   }, [displayAppointments])
 
   const currentAppointments = useMemo(() => {
@@ -508,60 +509,51 @@ const SecretaryAppointments = ({ userData, onTabChange }) => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <PageHeader
-          title="Appointments"
-          description="View and manage all clinic appointments"
-        />
-        <Button
-          onClick={handleNewAppointment}
-          className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
-        >
-          <FaPlus className="w-4 h-4 mr-2" />
-          New Appointment
-        </Button>
-      </div>
+      <PageHeader
+        title="Appointments"
+        description="View and manage all clinic appointments"
+      />
 
       {/* Stats Overview */}
       <StatsOverview stats={stats} />
 
       {/* View Toggle */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={activeView === 'today' ? 'primary' : 'outline'}
             onClick={() => setActiveView('today')}
             className={activeView === 'today' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            Today ({todayAppointments.length})
+            Today ({loading ? '-' : todayAppointments.length})
           </Button>
           <Button
             variant={activeView === 'pending' ? 'primary' : 'outline'}
             onClick={() => setActiveView('pending')}
             className={activeView === 'pending' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            Pending ({pendingAppointments.length})
+            Pending ({loading ? '-' : pendingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'upcoming' ? 'primary' : 'outline'}
             onClick={() => setActiveView('upcoming')}
             className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            Upcoming ({upcomingAppointments.length})
+            Upcoming ({loading ? '-' : upcomingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'past' ? 'primary' : 'outline'}
             onClick={() => setActiveView('past')}
             className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            Past ({pastAppointments.length})
+            Past ({loading ? '-' : pastAppointments.length})
           </Button>
           <Button
             variant={activeView === 'all' ? 'primary' : 'outline'}
             onClick={() => setActiveView('all')}
             className={activeView === 'all' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
-            All Status ({allAppointments.length})
+            All Status ({loading ? '-' : allAppointments.length})
           </Button>
         </div>
       </div>
