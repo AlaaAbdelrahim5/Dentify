@@ -628,6 +628,10 @@ const DentistsManagement = () => {
                       {dentist.birthDate ? formatDate(dentist.birthDate) : 'N/A'}
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
+                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city || 'N/A'}</span>
+                  </div>
                 </div>
               </Card>
 
@@ -677,12 +681,6 @@ const DentistsManagement = () => {
                     <div className="flex justify-between">
                       <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Address:</span>
                       <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.address}</span>
-                    </div>
-                  )}
-                  {dentist.city && (
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Dentist City:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city}</span>
                     </div>
                   )}
                 </div>
