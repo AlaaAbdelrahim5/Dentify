@@ -48,6 +48,7 @@ import SecretaryOverview from './secretary/SecretaryOverview'
 import SecretaryAppointments from './secretary/SecretaryAppointments'
 import SecretaryPatients from './secretary/SecretaryPatients'
 import SecretaryDentists from './secretary/SecretaryDentists'
+import SecretaryTreatments from './secretary/SecretaryTreatments'
 import SecretarySettings from './secretary/SecretarySettings'
 
 // Import icons
@@ -162,6 +163,7 @@ const UnifiedDashboard = () => {
           appointments: { component: SecretaryAppointments, label: 'Appointments' },
           patients: { component: SecretaryPatients, label: 'Patients' },
           dentists: { component: SecretaryDentists, label: 'Dentists' },
+          treatments: { component: SecretaryTreatments, label: 'Treatments' },
           reports: { component: ComingSoon, label: 'Reports', icon: FaFileAlt },
           settings: { component: SecretarySettings, label: 'Settings' }
         }

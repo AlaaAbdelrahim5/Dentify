@@ -11,7 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../services/api'
 import { authUtils } from '../../utils/auth'
 
-const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = null }) => {
+const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = null, preselectedDentist = null }) => {
   const { isDarkMode } = useTheme()
   const [formData, setFormData] = useState({
     date: '',
@@ -38,12 +38,15 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
       setLoadingSlots(true)
       const user = authUtils.getCurrentUser()
       
-      if (!user || !user.id) {
-        console.error('User not authenticated')
+      // Use preselected dentist if available (for secretary), otherwise use current user (for dentist)
+      const dentistId = preselectedDentist?.id || user?.id
+      
+      if (!dentistId) {
+        console.error('Dentist ID not available')
         return
       }
 
-      const response = await appointmentsAPI.getAvailableSlots(user.id, date)
+      const response = await appointmentsAPI.getAvailableSlots(dentistId, date)
       
       // Store the dentist's appointment duration
       const duration = response.appointmentDuration || 30
@@ -274,8 +277,8 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
           return
         }
 
-        // Get clinicId from user's dentist profile
-        const clinicId = user.dentist?.clinicId || user.clinicId
+        // Get clinicId from preselected dentist (for secretary) or user's dentist profile
+        const clinicId = preselectedDentist?.clinicId || user.dentist?.clinicId || user.clinicId
         
         if (!clinicId) {
           setErrors({ general: 'Clinic information is missing. Please contact support.' })
@@ -287,9 +290,12 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
         const startDateTime = new Date(`${formData.date}T${formData.time}`)
         const endDateTime = new Date(startDateTime.getTime() + appointmentDuration * 60000) // Use dentist's appointment duration
         
+        // Use preselected dentist if available (for secretary), otherwise use current user (for dentist)
+        const dentistId = preselectedDentist?.id || user.id
+        
         const appointmentData = {
           patientId: preselectedPatient.id,
-          dentistId: user.id,
+          dentistId: dentistId,
           clinicId: clinicId,
           appointmentDate: formData.date,
           startTime: startDateTime.toISOString(),
@@ -356,6 +362,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
                   isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   for {preselectedPatient.name}
+                  {preselectedDentist && ` with ${preselectedDentist.name}`}
                 </p>
               )}
             </div>

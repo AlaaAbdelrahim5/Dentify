@@ -139,10 +139,35 @@ router.get('/patient/my-treatments', authenticate, authorize('Patient'), async (
   }
 });
 
-// Get all treatments (for admins and clinics)
-router.get('/', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
+// Get all treatments (for admins, clinics, and secretaries)
+router.get('/', authenticate, authorize('Admin', 'Clinic', 'Secretary'), async (req, res) => {
   try {
+    let whereClause = {};
+    
+    // For Secretary, filter treatments by their clinic's dentists
+    if (req.user.role === 'Secretary') {
+      // Get secretary's clinic
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id },
+        select: { clinicId: true }
+      });
+      
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+      
+      // Get all dentists in the clinic
+      const dentistsInClinic = await prisma.dentist.findMany({
+        where: { clinicId: secretary.clinicId },
+        select: { userId: true }
+      });
+      
+      const dentistIds = dentistsInClinic.map(d => d.userId);
+      whereClause = { dentistId: { in: dentistIds } };
+    }
+    
     const treatments = await prisma.treatment.findMany({
+      where: whereClause,
       include: {
         patient: {
           include: {

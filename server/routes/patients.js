@@ -118,9 +118,43 @@ router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (
 });
 
 // Get all patients
-router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (req, res) => {
+router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
   try {
+    // For Secretary, filter patients by their clinic
+    let whereClause = {};
+    
+    if (req.user.role === 'Secretary') {
+      // Get secretary's clinic
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id },
+        select: { clinicId: true }
+      });
+      
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+      
+      // Get all dentists in the clinic
+      const dentistsInClinic = await prisma.dentist.findMany({
+        where: { clinicId: secretary.clinicId },
+        select: { userId: true }
+      });
+      
+      const dentistIds = dentistsInClinic.map(d => d.userId);
+      
+      // Get all patients who have treatments with these dentists
+      const treatments = await prisma.treatment.findMany({
+        where: { dentistId: { in: dentistIds } },
+        select: { patientId: true },
+        distinct: ['patientId']
+      });
+      
+      const patientIds = treatments.map(t => t.patientId);
+      whereClause = { userId: { in: patientIds } };
+    }
+    
     const patients = await prisma.patient.findMany({
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -135,6 +169,7 @@ router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (re
     });
     res.json({ patients });
   } catch (error) {
+    console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Failed to fetch patients' });
   }
 });

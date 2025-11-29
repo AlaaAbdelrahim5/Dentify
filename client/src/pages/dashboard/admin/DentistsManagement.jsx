@@ -628,10 +628,6 @@ const DentistsManagement = () => {
                       {dentist.birthDate ? formatDate(dentist.birthDate) : 'N/A'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city || 'N/A'}</span>
-                  </div>
                 </div>
               </Card>
 
@@ -659,14 +655,6 @@ const DentistsManagement = () => {
                       {dentist.specialization || 'N/A'}
                     </span>
                   </div>
-                  <div>
-                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Years of Experience
-                    </span>
-                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {dentist.yearsOfExperience || 'N/A'} years
-                    </span>
-                  </div>
                 </div>
               </Card>
             </div>
@@ -685,10 +673,16 @@ const DentistsManagement = () => {
                     <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Clinic Name:</span>
                     <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.clinicName}</span>
                   </div>
-                  {dentist.clinic.city && (
+                  {dentist.clinic.address && (
                     <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Location:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.city}</span>
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Address:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.address}</span>
+                    </div>
+                  )}
+                  {dentist.city && (
+                    <div className="flex justify-between">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Dentist City:</span>
+                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city}</span>
                     </div>
                   )}
                 </div>

@@ -256,6 +256,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'View dentists directory'
       },
       { 
+        id: 'treatments', 
+        label: 'Treatments', 
+        icon: FaStethoscope,
+        description: 'View treatment plans'
+      },
+      { 
         id: 'reports', 
         label: 'Reports', 
         icon: FaFileAlt,

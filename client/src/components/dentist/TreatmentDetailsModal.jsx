@@ -21,7 +21,8 @@ const TreatmentDetailsModal = ({
   onRequestRadiology,
   onRefresh, // New prop to refresh data
   payments = [],
-  asFullPage = false // New prop to render as full page instead of modal
+  asFullPage = false, // New prop to render as full page instead of modal
+  readOnly = false // New prop to disable edit actions (for Secretary view)
 }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('overview') // overview, payments, appointments
@@ -174,7 +175,7 @@ const TreatmentDetailsModal = ({
             <StatusIcon className="w-3 h-3" />
             {statusDisplay.label}
           </span>
-          {!asFullPage && (
+          {!asFullPage && !readOnly && (
             <>
               <Button
                 variant="outline"
@@ -336,8 +337,8 @@ const TreatmentDetailsModal = ({
                   <Card.Content>
                     <TreatmentTeethStatus 
                       teethStatus={treatmentData.teethStatus} 
-                      editable={true}
-                      onMarkComplete={handleMarkToothComplete}
+                      editable={!readOnly}
+                      onMarkComplete={!readOnly ? handleMarkToothComplete : undefined}
                     />
                   </Card.Content>
                 </Card>
@@ -364,49 +365,51 @@ const TreatmentDetailsModal = ({
                 </Card>
               )}
 
-              {/* Quick Actions */}
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-lg ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    Quick Actions
-                  </h3>
-                </Card.Header>
-                <Card.Content>
-                  <div className="flex flex-wrap gap-3">
-                    {treatmentData.treatmentStatus === 'In Progress' && (
-                      <Button
-                        variant="primary"
-                        onClick={() => onUpdateStatus(treatmentData.id, 'Completed')}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <FaCheckCircle className="w-4 h-4 mr-2" />
-                        Mark as Completed
-                      </Button>
-                    )}
-                    {onRequestRadiology && (
-                      <Button
-                        variant="outline"
-                        onClick={() => onRequestRadiology(treatmentData)}
-                        className="text-purple-600 border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                      >
-                        <FaXRay className="w-4 h-4 mr-2" />
-                        Request Radiology
-                      </Button>
-                    )}
-                    {treatmentData.treatmentStatus !== 'Cancelled' && treatmentData.treatmentStatus !== 'Completed' && (
-                      <Button
-                        variant="outline"
-                        onClick={() => onUpdateStatus(treatmentData.id, 'Cancelled')}
-                        className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        Cancel Treatment
-                      </Button>
-                    )}
-                  </div>
-                </Card.Content>
-              </Card>
+              {/* Quick Actions - Hidden in read-only mode */}
+              {!readOnly && (
+                <Card>
+                  <Card.Header>
+                    <h3 className={`font-semibold text-lg ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>
+                      Quick Actions
+                    </h3>
+                  </Card.Header>
+                  <Card.Content>
+                    <div className="flex flex-wrap gap-3">
+                      {treatmentData.treatmentStatus === 'In Progress' && (
+                        <Button
+                          variant="primary"
+                          onClick={() => onUpdateStatus(treatmentData.id, 'Completed')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <FaCheckCircle className="w-4 h-4 mr-2" />
+                          Mark as Completed
+                        </Button>
+                      )}
+                      {onRequestRadiology && (
+                        <Button
+                          variant="outline"
+                          onClick={() => onRequestRadiology(treatmentData)}
+                          className="text-purple-600 border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                        >
+                          <FaXRay className="w-4 h-4 mr-2" />
+                          Request Radiology
+                        </Button>
+                      )}
+                      {treatmentData.treatmentStatus !== 'Cancelled' && treatmentData.treatmentStatus !== 'Completed' && (
+                        <Button
+                          variant="outline"
+                          onClick={() => onUpdateStatus(treatmentData.id, 'Cancelled')}
+                          className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          Cancel Treatment
+                        </Button>
+                      )}
+                    </div>
+                  </Card.Content>
+                </Card>
+              )}
             </div>
           )}
 

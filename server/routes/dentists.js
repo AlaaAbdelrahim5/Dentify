@@ -35,9 +35,26 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
 });
 
 // Get dentists for logged-in clinic (MUST BE BEFORE /:id route)
-router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
+router.get('/clinic', authenticate, authorize('Clinic', 'Secretary'), async (req, res) => {
   try {
-    const clinicUserId = req.user.id;
+    let clinicUserId;
+    
+    // If user is a secretary, get their clinic ID
+    if (req.user.role === 'Secretary') {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId: req.user.id },
+        select: { clinicId: true }
+      });
+      
+      if (!secretary) {
+        return errorResponse(res, 'Secretary profile not found', 404);
+      }
+      
+      clinicUserId = secretary.clinicId;
+    } else {
+      // User is clinic
+      clinicUserId = req.user.id;
+    }
 
     // Get all dentists belonging to this clinic
     const dentists = await prisma.dentist.findMany({
