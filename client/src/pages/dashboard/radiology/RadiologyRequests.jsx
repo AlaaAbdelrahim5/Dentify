@@ -30,12 +30,12 @@ import {
   FilterBar, 
   Pagination,
   PageHeader,
-  LoadingSpinner
+  LoadingSpinner,
+  RequestDetailsModal,
+  UploadResultModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
-import RequestDetailsModal from '../../../components/radiology/RequestDetailsModal'
-import UploadResultModal from '../../../components/radiology/UploadResultModal'
 
 const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const { isDarkMode } = useTheme()

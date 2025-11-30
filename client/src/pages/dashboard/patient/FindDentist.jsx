@@ -18,9 +18,9 @@ import {
   Button, 
   LoadingSpinner,
   FilterBar,
-  DataTable
+  DataTable,
+  BookAppointmentModal
 } from '../../../components'
-import BookAppointmentModal from '../../../components/patient/BookAppointmentModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
 

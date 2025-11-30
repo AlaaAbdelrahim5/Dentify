@@ -20,9 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, StatsOverview } from '../../../components'
-import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
-import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
+import { Card, Button, Input, DataTable, FilterBar, StatsOverview, RadiologyRequestModal, DeleteConfirmationModal } from '../../../components'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {

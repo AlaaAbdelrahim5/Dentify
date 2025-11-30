@@ -20,10 +20,10 @@ import {
   StatsOverview,
   FilterBar,
   DataTable,
-  ConfirmationModal
+  ConfirmationModal,
+  NewAppointmentModal,
+  SessionCostModal
 } from '../../../components'
-import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
-import SessionCostModal from '../../../components/dentist/SessionCostModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { appointmentsAPI } from '../../../services/api'

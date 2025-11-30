@@ -12,9 +12,8 @@ import {
   FaDollarSign,
   FaExclamationCircle
 } from 'react-icons/fa'
-import { Card, Input, Button, StatsOverview } from '../../../components'
+import { Card, Input, Button, StatsOverview, PatientDetailsModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
 import { patientsAPI, treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 
 const DentistPatients = () => {

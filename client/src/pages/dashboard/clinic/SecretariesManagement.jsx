@@ -28,11 +28,11 @@ import {
   DataTable,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  SecretaryModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
-import SecretaryModal from '../../../components/clinic/SecretaryModal'
 
 const SecretariesManagement = () => {
   const { isDarkMode } = useTheme()

@@ -13,10 +13,10 @@ import {
   Button, 
   LoadingSpinner,
   FilterBar,
-  DataTable
+  DataTable,
+  ClinicDetailsModal,
+  BookAppointmentModal
 } from '../../../components'
-import ClinicDetailsModal from '../../../components/patient/ClinicDetailsModal'
-import BookAppointmentModal from '../../../components/patient/BookAppointmentModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
 

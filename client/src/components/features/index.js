@@ -1,0 +1,45 @@
+// Feature-specific Components - Appointment
+export { default as AppointmentDetailsModal } from './appointment/AppointmentDetailsModal'
+export { default as AppointmentSchedule } from './appointment/AppointmentSchedule'
+export { default as AppointmentsHistoryTab } from './appointment/AppointmentsHistoryTab'
+export { default as BookAppointmentModal } from './appointment/BookAppointmentModal'
+export { default as DentistAppointmentHistory } from './appointment/DentistAppointmentHistory'
+export { default as EditAppointmentModal } from './appointment/EditAppointmentModal'
+export { default as NewAppointmentModal } from './appointment/NewAppointmentModal'
+
+// Feature-specific Components - Clinic
+export { default as ClinicDetailsModal } from './clinic/ClinicDetailsModal'
+export { default as ClinicModal } from './clinic/ClinicModal'
+
+// Feature-specific Components - Dentist
+export { default as DentistCard } from './dentist/DentistCard'
+export { default as DentistDetailsModal } from './dentist/DentistDetailsModal'
+export { default as DentistModal } from './dentist/DentistModal'
+
+// Feature-specific Components - Patient
+export { default as EditPatientModal } from './patient/EditPatientModal'
+export { default as NewPatientModal } from './patient/NewPatientModal'
+export { default as PatientDetailsModal } from './patient/PatientDetailsModal'
+
+// Feature-specific Components - Payment
+export { default as PaymentModal } from './payment/PaymentModal'
+export { default as SessionCostModal } from './payment/SessionCostModal'
+
+// Feature-specific Components - Radiology
+export { default as RadiologyModal } from './radiology/RadiologyModal'
+export { default as RadiologyRequestModal } from './radiology/RadiologyRequestModal'
+export { default as RequestDetailsModal } from './radiology/RequestDetailsModal'
+export { default as UploadResultModal } from './radiology/UploadResultModal'
+
+// Feature-specific Components - Secretary
+export { default as SecretaryModal } from './secretary/SecretaryModal'
+
+// Feature-specific Components - Treatment
+export { default as NewTreatmentModal } from './treatment/NewTreatmentModal'
+export { default as TeethHistoryTab } from './treatment/TeethHistoryTab'
+export { default as ToothChart } from './treatment/ToothChart'
+export { default as ToothChartModal } from './treatment/ToothChartModal'
+export { default as TreatmentDetailsModal } from './treatment/TreatmentDetailsModal'
+export { default as TreatmentPlanCard } from './treatment/TreatmentPlanCard'
+export { default as TreatmentSteps } from './treatment/TreatmentSteps'
+export { default as TreatmentTeethStatus } from './treatment/TreatmentTeethStatus'

@@ -24,11 +24,11 @@ import {
   DataTable,
   FilterBar,
   StatusBadge,
-  LoadingSpinner
+  LoadingSpinner,
+  BookAppointmentModal,
+  ConfirmationModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import BookAppointmentModal from '../../../components/patient/BookAppointmentModal'
-import ConfirmationModal from '../../../components/ConfirmationModal'
 import { appointmentsAPI } from '../../../services/api'
 
 const PatientAppointments = () => {

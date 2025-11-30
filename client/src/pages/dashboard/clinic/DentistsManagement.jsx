@@ -32,9 +32,9 @@ import {
   DataTable,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  DentistModal
 } from '../../../components'
-import DentistModal from '../../../components/clinic/DentistModal'
 import { dentistsAPI } from '../../../services/api'
 
 const DentistsManagement = () => {

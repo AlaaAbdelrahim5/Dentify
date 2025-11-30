@@ -11,9 +11,7 @@ import {
   FaUserMd,
   FaExclamationTriangle
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, PageHeader } from '../../../components'
-import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
-import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
+import { Card, Button, Input, LoadingSpinner, PageHeader, TreatmentTeethStatus, TreatmentPlanCard } from '../../../components'
 import { treatmentsAPI } from '../../../services/api'
 
 const PatientTreatments = () => {

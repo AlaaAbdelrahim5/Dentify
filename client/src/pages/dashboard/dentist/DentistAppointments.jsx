@@ -25,12 +25,12 @@ import {
   FilterBar,
   DataTable,
   LoadingSpinner,
-  ConfirmationModal
+  ConfirmationModal,
+  NewAppointmentModal,
+  SessionCostModal,
+  ToothChartModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
-import SessionCostModal from '../../../components/dentist/SessionCostModal'
-import ToothChartModal from '../../../components/dentist/ToothChartModal'
 import { appointmentsAPI } from '../../../services/api'
 
 const DentistAppointments = ({ onTabChange }) => {

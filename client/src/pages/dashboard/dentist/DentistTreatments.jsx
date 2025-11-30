@@ -19,15 +19,7 @@ import {
   FaArrowLeft,
   FaSave
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
-import NewTreatmentModal from '../../../components/dentist/NewTreatmentModal'
-import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsModal'
-import PaymentModal from '../../../components/dentist/PaymentModal'
-import RadiologyRequestModal from '../../../components/dentist/RadiologyRequestModal'
-import DeleteConfirmationModal from '../../../components/dentist/DeleteConfirmationModal'
-import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
-import TreatmentTeethStatus from '../../../components/dentist/TreatmentTeethStatus'
-import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
+import { Card, Button, Input, LoadingSpinner, NewTreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, DeleteConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard } from '../../../components'
 import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 
 const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {

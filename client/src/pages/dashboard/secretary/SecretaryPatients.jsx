@@ -12,10 +12,9 @@ import {
   FaBirthdayCake,
   FaArrowLeft
 } from 'react-icons/fa'
-import { Card, Button, Input, StatsOverview } from '../../../components'
+import { Card, Button, Input, StatsOverview, PatientDetailsModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, appointmentsAPI } from '../../../services/api'
-import PatientDetailsModal from '../../../components/dentist/PatientDetailsModal'
 
 const SecretaryPatients = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()

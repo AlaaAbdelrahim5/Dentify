@@ -14,12 +14,9 @@ import {
   FaArrowLeft,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
-import TreatmentDetailsModal from '../../../components/dentist/TreatmentDetailsModal'
-import TreatmentPlanCard from '../../../components/dentist/TreatmentPlanCard'
-import NewAppointmentModal from '../../../components/dentist/NewAppointmentModal'
 
 const SecretaryTreatments = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()

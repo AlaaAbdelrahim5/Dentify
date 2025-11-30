@@ -14,8 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader } from '../../../components'
-import PaymentModal from '../../../components/dentist/PaymentModal'
+import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 
 const DentistPayments = () => {

@@ -1,6 +1,6 @@
 import { FaStethoscope } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
-import AppointmentSchedule from '../../../components/dentist/AppointmentSchedule'
+import { AppointmentSchedule } from '../../../components'
 
 const DentistOverview = ({ userData, onTabChange, appointments = [], onAppointmentClick, onAddAppointment }) => {
   const { isDarkMode } = useTheme()
