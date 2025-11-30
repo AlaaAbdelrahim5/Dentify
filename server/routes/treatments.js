@@ -88,6 +88,22 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
               }
             }
           }
+        },
+        dentist: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            specialization: true,
+            clinic: {
+              select: {
+                userId: true,
+                clinicName: true,
+                city: true,
+                location: true
+              }
+            }
+          }
         }
         // Removed nested appointments and payments - they are rarely needed in list view
         // and can be fetched separately when viewing treatment details
@@ -193,7 +209,15 @@ router.get('/clinic/my-treatments', authenticate, authorize('Secretary'), async 
             userId: true,
             firstName: true,
             lastName: true,
-            specialization: true
+            specialization: true,
+            clinic: {
+              select: {
+                userId: true,
+                clinicName: true,
+                city: true,
+                location: true
+              }
+            }
           }
         }
       },
@@ -257,6 +281,14 @@ router.get('/', authenticate, authorize('Admin', 'Clinic', 'Secretary'), async (
                 id: true,
                 email: true,
                 phone: true
+              }
+            },
+            clinic: {
+              select: {
+                userId: true,
+                clinicName: true,
+                city: true,
+                location: true
               }
             }
           }

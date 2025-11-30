@@ -102,6 +102,26 @@ const TreatmentDetailsModal = ({
 
   const handlePrintComprehensiveReceipt = () => {
     // Generate comprehensive receipt with all payments
+    // Handle both dentist and secretary data structures
+    const rawTreatment = treatmentData.rawData || treatmentData
+    const dentistInfo = rawTreatment.dentist || treatmentData.dentist
+    const clinicInfo = dentistInfo?.clinic
+    const statusValue = treatmentData.treatmentStatus || treatmentData.status || 'N/A'
+    
+    // Debug logging
+    console.log('=== RECEIPT DEBUG ===')
+    console.log('treatmentData:', treatmentData)
+    console.log('rawTreatment:', rawTreatment)
+    console.log('dentistInfo:', dentistInfo)
+    console.log('clinicInfo:', clinicInfo)
+    console.log('clinicName options:', {
+      fromClinicInfo: clinicInfo?.clinicName,
+      fromTreatmentData: treatmentData.clinicName,
+      direct: treatmentData.dentist?.clinic?.clinicName,
+      rawData: treatmentData.rawData?.dentist?.clinic?.clinicName
+    })
+    console.log('==================')
+    
     const printWindow = window.open('', '_blank')
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -156,7 +176,7 @@ const TreatmentDetailsModal = ({
               </div>
               <div class="info-row">
                 <span class="info-label">Status:</span>
-                <span class="info-value">${treatmentData.status}</span>
+                <span class="info-value">${statusValue}</span>
               </div>
             </div>
             
@@ -164,15 +184,15 @@ const TreatmentDetailsModal = ({
               <h3>Provider Information</h3>
               <div class="info-row">
                 <span class="info-label">Dentist:</span>
-                <span class="info-value">${treatmentData.dentistName || 'N/A'}</span>
+                <span class="info-value">${dentistInfo ? `Dr. ${dentistInfo.firstName} ${dentistInfo.lastName}` : treatmentData.dentistName || 'N/A'}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Clinic:</span>
-                <span class="info-value">${treatmentData.clinicName || 'N/A'}</span>
+                <span class="info-value">${clinicInfo?.clinicName || treatmentData.clinicName || 'N/A'}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">Created:</span>
-                <span class="info-value">${new Date(treatmentData.creationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span class="info-label">Printed:</span>
+                <span class="info-value">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
             </div>
           </div>

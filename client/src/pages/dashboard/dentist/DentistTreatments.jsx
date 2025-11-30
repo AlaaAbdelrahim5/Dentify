@@ -155,6 +155,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         dentistId: treatment.dentistId,
         treatmentType: treatment.treatmentType,
         description: treatment.description || '',
+        status: treatment.status, // Keep original status for receipt
         treatmentStatus: statusMap[treatment.status] || treatment.status,
         creationDate: treatment.createdAt,
         totalAmount: treatment.totalAmount || 0,
@@ -162,7 +163,9 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         paidAmount: treatment.paidAmount || 0,
         notes: treatment.notes || '',
         priority: 'Medium', // TODO: Add priority field to schema
-        teethStatus: teethStatus
+        teethStatus: teethStatus,
+        dentist: treatment.dentist, // Include dentist object with nested clinic
+        patient: treatment.patient // Include full patient object
       }
     })
   }, [treatments]) // Only recalculate when treatments data changes

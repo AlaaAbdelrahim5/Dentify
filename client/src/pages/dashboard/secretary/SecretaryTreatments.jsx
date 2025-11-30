@@ -76,6 +76,15 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
         : 0
       const teethProgress = totalTeeth > 0 ? (completedTeeth / totalTeeth) * 100 : 0
 
+      // Debug logging
+      console.log('Secretary Treatment Transform:', {
+        id: treatment.id,
+        hasDentist: !!treatment.dentist,
+        hasClinic: !!treatment.dentist?.clinic,
+        clinicName: treatment.dentist?.clinic?.clinicName,
+        dentistData: treatment.dentist
+      })
+
       return {
         id: treatment.id,
         patientId: treatment.patientId,
@@ -83,11 +92,14 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
         clinicId: treatment.dentist?.clinicId || treatment.clinicId,
         patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
         dentistName: `Dr. ${treatment.dentist.firstName} ${treatment.dentist.lastName}`,
+        clinicName: treatment.dentist?.clinic?.clinicName,
         treatmentType: treatment.treatmentType,
         treatmentStatus: treatment.status === 'COMPLETED' ? 'Completed' : 
                         treatment.status === 'IN_PROGRESS' ? 'In Progress' : 'Cancelled',
+        status: treatment.status,
         description: treatment.description || '',
         startDate: treatment.createdAt,
+        creationDate: treatment.createdAt,
         totalAmount: treatment.totalAmount || 0,
         treatmentDiscount: treatment.treatmentDiscount || 0,
         paidAmount: treatment.paidAmount || 0,
@@ -96,6 +108,8 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
         totalTeeth,
         completedTeeth,
         teethProgress,
+        dentist: treatment.dentist,
+        patient: treatment.patient,
         rawData: treatment
       }
     })
