@@ -9,7 +9,7 @@ import {
   FaEnvelope,
   FaUserShield
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -26,7 +26,8 @@ const AdminSettings = () => {
     firstName: '',
     lastName: '',
     email: '',
-    gender: ''
+    gender: '',
+    profileImage: ''
   })
 
   const [security, setSecurity] = useState({
@@ -65,7 +66,8 @@ const AdminSettings = () => {
         firstName: admin.firstName || '',
         lastName: admin.lastName || '',
         email: admin.user?.email || admin.email || '',
-        gender: admin.gender || ''
+        gender: admin.gender || '',
+        profileImage: admin.profileImage || ''
       })
     } catch (err) {
       console.error('Error fetching admin profile:', err)
@@ -180,27 +182,17 @@ const AdminSettings = () => {
       <Card className={`p-6 ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-purple-900' : 'bg-purple-100'
-            }`}>
-              <FaUserShield className="w-10 h-10 text-purple-600" />
-            </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white hover:bg-purple-700">
-              <FaCamera className="w-4 h-4" />
-            </button>
-          </div>
-          <div>
-            <h3 className={`text-xl font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {profile.firstName} {profile.lastName}
-            </h3>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              System Administrator
-            </p>
-          </div>
+        <ProfileImageUpload 
+          currentImage={profile.profileImage}
+          onImageUpdate={(imageUrl) => {
+            setProfile(prev => ({ ...prev, profileImage: imageUrl }))
+          }}
+          userName={`${profile.firstName} ${profile.lastName}`}
+        />
+        <div className="mt-4">
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+            System Administrator
+          </p>
         </div>
       </Card>
 

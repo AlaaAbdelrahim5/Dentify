@@ -10,7 +10,7 @@ import {
   FaBirthdayCake,
   FaMapMarkerAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -29,7 +29,8 @@ const PatientSettings = () => {
     email: '',
     gender: '',
     birthDate: '',
-    city: ''
+    city: '',
+    profileImage: ''
   })
 
   const [security, setSecurity] = useState({
@@ -69,7 +70,8 @@ const PatientSettings = () => {
         email: patient.user?.email || patient.email || '',
         gender: patient.gender || '',
         birthDate: patient.birthDate ? patient.birthDate.split('T')[0] : '',
-        city: patient.city || ''
+        city: patient.city || '',
+        profileImage: patient.user?.profileImage || patient.profileImage || ''
       })
     } catch (err) {
       console.error('Error fetching patient profile:', err)
@@ -195,36 +197,22 @@ const PatientSettings = () => {
     <div className="space-y-6">
       {/* Profile Picture */}
       <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold ${
-              profile.gender === 'Male'
-                ? 'bg-blue-100 text-blue-600'
-                : profile.gender === 'Female'
-                ? 'bg-pink-100 text-pink-600'
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {profile.firstName?.[0]}{profile.lastName?.[0]}
-            </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700">
-              <FaCamera className="w-4 h-4" />
-            </button>
-          </div>
-          <div>
-            <h3 className={`text-xl font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {profile.firstName} {profile.lastName}
-            </h3>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              Patient
+        <ProfileImageUpload 
+          currentImage={profile.profileImage}
+          onImageUpdate={(imageUrl) => {
+            setProfile(prev => ({ ...prev, profileImage: imageUrl }))
+          }}
+          userName={`${profile.firstName} ${profile.lastName}`}
+        />
+        <div className="mt-4">
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+            Patient
+          </p>
+          {profile.birthDate && (
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Age: {calculateAge(profile.birthDate)} years
             </p>
-            {profile.birthDate && (
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Age: {calculateAge(profile.birthDate)} years
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </Card>
 

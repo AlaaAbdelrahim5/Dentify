@@ -164,6 +164,20 @@ export const authUtils = {
     }
   },
 
+  // Update specific user fields (like profileImage)
+  updateUser: (updates) => {
+    try {
+      const user = authUtils.getCurrentUser();
+      if (!user) return;
+      
+      const updatedUser = { ...user, ...updates };
+      const remember = authUtils.shouldRemember();
+      authUtils.setUser(updatedUser, remember);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  },
+
   // Clear user data from storage
   clearUser: () => {
     try {

@@ -13,7 +13,7 @@ import {
   FaIdCard,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -31,7 +31,8 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     city: '',
     location: '',
     supportedTypes: [],
-    email: ''
+    email: '',
+    profileImage: ''
   })
   const [newType, setNewType] = useState('')
   const [workingHours, setWorkingHours] = useState({
@@ -273,32 +274,22 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     <div className="space-y-6">
       {/* Profile Picture */}
       <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-blue-900' : 'bg-blue-100'
-            }`}>
-              <FaHospital className="w-10 h-10 text-blue-600" />
-            </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700">
-              <FaCamera className="w-4 h-4" />
-            </button>
-          </div>
-          <div>
-            <h3 className={`text-xl font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {formData.centerName}
-            </h3>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              {formData.city}
-            </p>
-            <p className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              Registration: {formData.registrationNumber}
-            </p>
-          </div>
+        <ProfileImageUpload 
+          currentImage={formData.profileImage}
+          onImageUpdate={(imageUrl) => {
+            setFormData(prev => ({ ...prev, profileImage: imageUrl }))
+          }}
+          userName={formData.centerName}
+        />
+        <div className="mt-4">
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+            {formData.city}
+          </p>
+          <p className={`text-sm ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Registration: {formData.registrationNumber}
+          </p>
         </div>
       </Card>
 

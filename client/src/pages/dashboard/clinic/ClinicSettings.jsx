@@ -14,7 +14,7 @@ import {
   FaPalette,
   FaGlobe
 } from 'react-icons/fa'
-import { Card, Button, Input } from '../../../components'
+import { Card, Button, Input, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import api from '../../../services/api'
@@ -35,7 +35,8 @@ const ClinicSettings = () => {
     country: 'Palestine',
     postalCode: '12345',
     website: 'https://smile-dental.com',
-    description: 'A modern dental clinic providing comprehensive dental care services.'
+    description: 'A modern dental clinic providing comprehensive dental care services.',
+    profileImage: ''
   })
 
   const [workingHours, setWorkingHours] = useState({
@@ -221,24 +222,39 @@ const ClinicSettings = () => {
   ]
 
   const renderGeneralSettings = () => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    }`}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-          General Information
-        </h3>
-        <Button
-          variant={isEditing ? "secondary" : "primary"}
-          onClick={() => setIsEditing(!isEditing)}
-          disabled={loading}
-        >
-          <FaEdit className="w-4 h-4 mr-2" />
-          {isEditing ? 'Cancel' : 'Edit'}
-        </Button>
-      </div>
+    <>
+      {/* Profile Picture Card */}
+      <Card className={`p-6 mb-6 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <ProfileImageUpload 
+          currentImage={clinicInfo.profileImage}
+          onImageUpdate={(imageUrl) => {
+            setClinicInfo(prev => ({ ...prev, profileImage: imageUrl }))
+          }}
+          userName={clinicInfo.name}
+        />
+      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* General Information Card */}
+      <Card className={`p-6 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            General Information
+          </h3>
+          <Button
+            variant={isEditing ? "secondary" : "primary"}
+            onClick={() => setIsEditing(!isEditing)}
+            disabled={loading}
+          >
+            <FaEdit className="w-4 h-4 mr-2" />
+            {isEditing ? 'Cancel' : 'Edit'}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="Clinic Name"
           icon={FaBuilding}
@@ -332,7 +348,8 @@ const ClinicSettings = () => {
           </Button>
         </div>
       )}
-    </Card>
+      </Card>
+    </>
   )
 
   const renderWorkingHours = () => (

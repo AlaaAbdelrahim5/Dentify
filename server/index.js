@@ -11,6 +11,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
+// Attach Prisma client to request
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+});
+
 // Test route
 app.get('/', (req, res) => {
   res.json({ 
@@ -46,6 +55,10 @@ app.use('/api/auth', authRoutes);
 // User routes
 const userRoutes = require('./routes/users');
 app.use('/api/users', userRoutes);
+
+// Upload routes
+const uploadRoutes = require('./routes/upload');
+app.use('/api/upload', uploadRoutes);
 
 // Admin routes
 const adminRoutes = require('./routes/admin');

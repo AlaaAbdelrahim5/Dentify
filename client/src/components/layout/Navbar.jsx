@@ -28,6 +28,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
     }
     
     checkAuth()
+
+    // Listen for profile image updates
+    const handleProfileImageUpdate = () => {
+      const user = authUtils.getCurrentUser()
+      setCurrentUser(user)
+    }
+
+    window.addEventListener('profileImageUpdated', handleProfileImageUpdate)
+
+    return () => {
+      window.removeEventListener('profileImageUpdated', handleProfileImageUpdate)
+    }
   }, [])
 
   // Close dropdown when clicking outside
@@ -193,7 +205,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                       } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/70 shadow-lg' : 'bg-gray-100 shadow-md') : ''}`}
                     >
                       <div className="relative">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20">
+                        {currentUser?.profileImage ? (
+                          <img 
+                            src={`http://localhost:5000${currentUser.profileImage}`}
+                            alt={authUtils.getUserName()}
+                            className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextElementSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20 ${currentUser?.profileImage ? 'hidden' : ''}`}>
                           <span className="text-white text-xs md:text-sm font-bold">
                             {currentUser ? authUtils.getUserInitials() : 'U'}
                           </span>
@@ -232,7 +255,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                           isDarkMode ? 'border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50' : 'border-gray-200/50 bg-gradient-to-r from-gray-50 to-white'
                         }`}>
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30">
+                            {currentUser?.profileImage ? (
+                              <img 
+                                src={`http://localhost:5000${currentUser.profileImage}`}
+                                alt={authUtils.getUserName()}
+                                className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-teal-400/30"
+                                onError={(e) => {
+                                  e.target.style.display = 'none'
+                                  e.target.nextElementSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 ${currentUser?.profileImage ? 'hidden' : ''}`}>
                               <span className="text-white text-base font-bold">
                                 {currentUser ? authUtils.getUserInitials() : 'U'}
                               </span>
@@ -372,7 +406,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                     isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/70'
                   }`}>
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                      {currentUser?.profileImage ? (
+                        <img 
+                          src={`http://localhost:5000${currentUser.profileImage}`}
+                          alt={authUtils.getUserName()}
+                          className="w-12 h-12 rounded-full object-cover shadow-lg"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.nextElementSibling.style.display = 'flex'
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ${currentUser?.profileImage ? 'hidden' : ''}`}>
                         <span className="text-white text-base font-bold">
                           {currentUser ? authUtils.getUserInitials() : 'U'}
                         </span>
