@@ -540,13 +540,14 @@ const TreatmentDetailsModal = ({
                     <div className="space-y-4">
                       {/* Table Header */}
                       <div className={`
-                        grid grid-cols-6 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
+                        grid grid-cols-7 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
                         ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-700'}
                       `}>
                         <div>DATE</div>
                         <div>PATIENT</div>
                         <div>TREATMENT</div>
                         <div>AMOUNT</div>
+                        <div>DISCOUNT</div>
                         <div>METHOD</div>
                         <div>NOTES</div>
                       </div>
@@ -557,7 +558,7 @@ const TreatmentDetailsModal = ({
                           <div
                             key={index}
                             className={`
-                              grid grid-cols-6 gap-4 p-3 rounded-lg border items-center
+                              grid grid-cols-7 gap-4 p-3 rounded-lg border items-center
                               ${isDarkMode 
                                 ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' 
                                 : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -605,6 +606,17 @@ const TreatmentDetailsModal = ({
                             <div>
                               <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                                 ${payment.amount.toFixed(2)}
+                              </span>
+                            </div>
+
+                            {/* Discount */}
+                            <div>
+                              <span className={`text-sm font-semibold ${
+                                (payment.discount || 0) > 0 
+                                  ? 'text-orange-600 dark:text-orange-400' 
+                                  : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                              }`}>
+                                ${(payment.discount || 0).toFixed(2)}
                               </span>
                             </div>
 
