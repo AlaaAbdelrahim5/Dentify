@@ -9,6 +9,7 @@ import AdminOverview from './admin/AdminOverview'
 import ClinicsManagement from './admin/ClinicsManagement'
 import RadiologyManagement from './admin/RadiologyManagement'
 import DentistsManagement from './admin/DentistsManagement'
+import PatientsManagement from './admin/PatientsManagement'
 import AdminsManagement from './admin/AdminsManagement'
 import AdminSettings from './admin/AdminSettings'
 
@@ -107,6 +108,7 @@ const UnifiedDashboard = () => {
           overview: { component: AdminOverview, label: 'Overview' },
           clinics: { component: ClinicsManagement, label: 'Clinics' },
           dentists: { component: DentistsManagement, label: 'Dentists' },
+          patients: { component: PatientsManagement, label: 'Patients' },
           radiology: { component: RadiologyManagement, label: 'Radiology' },
           admins: { component: AdminsManagement, label: 'Admins' },
           analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },

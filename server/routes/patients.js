@@ -180,7 +180,8 @@ router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true
           }
         }
       }
@@ -205,7 +206,8 @@ router.get('/:id', authenticate, async (req, res) => {
             email: true,
             phone: true,
             status: true,
-            profileImage: true
+            profileImage: true,
+            createdAt: true
           }
         }
       }

@@ -417,6 +417,16 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         const startDateTime = new Date(`${formData.date}T${formData.time}`)
         const endDateTime = new Date(startDateTime.getTime() + appointmentDuration * 60000) // Use dentist's appointment duration
         
+        // Construct patient notes only if there's content
+        let patientNotes = ''
+        if (formData.treatment && formData.notes) {
+          patientNotes = `${formData.treatment}: ${formData.notes}`
+        } else if (formData.treatment) {
+          patientNotes = formData.treatment
+        } else if (formData.notes) {
+          patientNotes = formData.notes
+        }
+        
         const appointmentData = {
           patientId: user.id,
           dentistId: parseInt(formData.dentistId),
@@ -424,7 +434,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           appointmentDate: formData.date,
           startTime: startDateTime.toISOString(),
           endTime: endDateTime.toISOString(),
-          patientNotes: `${formData.treatment}${formData.notes ? ': ' + formData.notes : ''}`,
+          patientNotes: patientNotes || null,
           treatmentId: null
         }
 

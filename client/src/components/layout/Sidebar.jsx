@@ -47,6 +47,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Review and approve dentist registrations'
       },
       { 
+        id: 'patients', 
+        label: 'Patients', 
+        icon: FaUsers,
+        description: 'View and manage patient records'
+      },
+      { 
         id: 'radiology', 
         label: 'Radiology Centers', 
         icon: FaXRay,
