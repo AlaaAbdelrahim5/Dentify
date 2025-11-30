@@ -193,6 +193,11 @@ const UnifiedDashboard = () => {
         
         setCurrentUser(user)
         
+        // Check if navigating to settings via state
+        if (location.state?.activeTab) {
+          setActiveTab(location.state.activeTab)
+        }
+        
         // Fetch user-specific data based on role
         await fetchUserData(user)
       } catch (error) {
@@ -205,6 +210,15 @@ const UnifiedDashboard = () => {
 
     initializeDashboard()
   }, [navigate])
+
+  // Handle location state changes for tab navigation
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab)
+      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state])
 
   // Fetch appointments for dentist
   const fetchAppointments = async (token) => {

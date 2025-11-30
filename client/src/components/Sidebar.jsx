@@ -63,12 +63,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Analytics', 
         icon: FaChartBar,
         description: 'System analytics and reports'
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog,
-        description: 'Profile and account settings'
       }
     ],
     clinic: [
@@ -107,12 +101,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Analytics', 
         icon: FaChartBar,
         description: 'Clinic analytics and reports'
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog,
-        description: 'Clinic settings and configuration'
       }
     ],
     dentist: [
@@ -163,12 +151,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Analytics', 
         icon: FaChartBar,
         description: 'Performance analytics and insights'
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog,
-        description: 'Profile and preferences'
       }
     ],
     patient: [
@@ -206,11 +188,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'history', 
         label: 'Treatment History', 
         icon: FaTooth
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog
       }
     ],
     radiology: [
@@ -223,11 +200,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'requests', 
         label: 'Imaging Requests', 
         icon: FaFileImage
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog
       }
     ],
     secretary: [
@@ -266,12 +238,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Reports', 
         icon: FaFileAlt,
         description: 'Clinic reports and statistics'
-      },
-      { 
-        id: 'settings', 
-        label: 'Settings', 
-        icon: FaCog,
-        description: 'Profile and account settings'
       }
     ]
   }

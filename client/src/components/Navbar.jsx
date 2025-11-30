@@ -74,11 +74,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
       'clinic': '/clinic/dashboard',
       'dentist': '/dentist/dashboard',
       'patient': '/patient/dashboard',
-      'secretary': '/clinic/dashboard',
+      'secretary': '/secretary/dashboard',
       'radiology': '/radiology/dashboard'
     }
     
     return roleRoutes[currentUser.role.toLowerCase()] || '/'
+  }
+
+  const handleSettingsClick = () => {
+    setIsProfileDropdownOpen(false)
+    const dashboardPath = getDashboardRoute()
+    navigate(dashboardPath, { state: { activeTab: 'settings' } })
   }
 
   return (
@@ -218,25 +224,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                         {/* Menu Items */}
                         <div className="py-2">
                           <button
-                            onClick={() => {
-                              setIsProfileDropdownOpen(false)
-                              // You can add profile page navigation here
-                            }}
-                            className={`w-full flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
-                              isDarkMode 
-                                ? 'hover:bg-gray-700 text-gray-300' 
-                                : 'hover:bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            <FaUser className="w-5 h-5" />
-                            <span className="text-sm font-medium">Profile</span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setIsProfileDropdownOpen(false)
-                              // You can add settings page navigation here
-                            }}
+                            onClick={handleSettingsClick}
                             className={`w-full flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
                               isDarkMode 
                                 ? 'hover:bg-gray-700 text-gray-300' 
