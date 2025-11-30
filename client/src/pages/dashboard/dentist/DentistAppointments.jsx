@@ -299,6 +299,7 @@ const DentistAppointments = ({ onTabChange }) => {
     } else {
       // Store appointment data for the treatments page to use
       const appointmentContext = {
+        id: appointment.id,
         appointmentId: appointment.id,
         patientId: appointment.rawData?.patientId,
         patientName: appointment.patient.name,
@@ -323,11 +324,46 @@ const DentistAppointments = ({ onTabChange }) => {
     }
   }
 
-  const handleCreateTreatmentFromTooth = (toothNumber) => {
+  const handleCreateTreatmentFromTooth = (toothData) => {
     // Navigate to treatments page to create treatment for specific tooth
-    console.log('Creating treatment for tooth:', toothNumber)
+    console.log('Creating treatment for tooth:', toothData)
+    
+    if (!selectedAppointment) {
+      alert('No appointment selected')
+      return
+    }
+    
+    const appointmentContext = {
+      id: selectedAppointment.id,
+      appointmentId: selectedAppointment.id,
+      patientId: selectedAppointment.patient.id || selectedAppointment.rawData?.patientId,
+      patientName: selectedAppointment.patient.name,
+      patientPhone: selectedAppointment.patient.phone,
+      patientEmail: selectedAppointment.patient.email,
+      appointmentDate: selectedAppointment.appointmentDate,
+      appointmentTime: selectedAppointment.time,
+      treatmentType: selectedAppointment.treatment,
+      notes: selectedAppointment.notes,
+      fromAppointment: true,
+      toothNumber: toothData?.toothNumber, // Add the tooth number
+      toothCondition: toothData?.condition, // Add the tooth condition
+      toothNotes: toothData?.notes // Add tooth-specific notes
+    }
+    
+    console.log('Storing appointment context with ID:', appointmentContext.id)
+    console.log('Full appointment context:', appointmentContext)
+    
+    // Store in sessionStorage so treatments page can access it
+    sessionStorage.setItem('createTreatmentFromAppointment', JSON.stringify(appointmentContext))
+    
     setIsToothChartModalOpen(false)
-    // You could navigate to the treatments page or open a treatment modal
+    
+    // Navigate to treatments tab
+    if (onTabChange) {
+      onTabChange('treatments')
+    } else {
+      alert('Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + selectedAppointment.patient.name)
+    }
   }
 
   const handleScheduleAppointmentFromTooth = (toothNumber) => {

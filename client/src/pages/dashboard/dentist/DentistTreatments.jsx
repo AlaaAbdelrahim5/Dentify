@@ -290,6 +290,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       console.log('========================================')
       console.log('handleSaveNewTreatment CALLED!')
       console.log('Raw treatment data received:', treatmentData)
+      console.log('appointmentId in treatmentData:', treatmentData.appointmentId)
       console.log('========================================')
       
       // Prepare data for API (convert string IDs to integers)
@@ -306,18 +307,28 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       console.log('Sending to treatmentsAPI.create...')
       const response = await treatmentsAPI.create(apiData)
       console.log('Create response:', response)
+      console.log('Treatment ID created:', response.treatment?.id)
       
       // If this treatment is linked to an appointment, update the appointment
       if (treatmentData.appointmentId && response.treatment?.id) {
         try {
-          await appointmentsAPI.update(treatmentData.appointmentId, {
+          const appointmentId = parseInt(treatmentData.appointmentId)
+          console.log('Updating appointment ID:', appointmentId)
+          console.log('Linking treatment ID:', response.treatment.id)
+          
+          const updateResponse = await appointmentsAPI.update(appointmentId, {
             treatmentId: response.treatment.id
           })
-          console.log('Appointment linked to treatment successfully')
+          console.log('Appointment update response:', updateResponse)
+          console.log('Appointment linked to treatment successfully!')
         } catch (linkError) {
           console.error('Error linking appointment to treatment:', linkError)
+          console.error('Link error details:', linkError.response?.data)
           // Don't fail the whole operation if linking fails
+          alert('Treatment created but failed to link with appointment. Please link manually if needed.')
         }
+      } else {
+        console.log('No appointment linking needed. appointmentId:', treatmentData.appointmentId, 'treatment.id:', response.treatment?.id)
       }
       
       alert('Treatment created successfully!')

@@ -84,14 +84,35 @@ const NewTreatmentModal = ({
   // Handle appointment data pre-filling
   useEffect(() => {
     if (appointmentData && isOpen) {
+      const apptId = appointmentData.appointmentId || appointmentData.id
+      console.log('NewTreatmentModal: appointmentData received:', appointmentData)
+      console.log('NewTreatmentModal: Setting appointmentId to:', apptId)
+      
       setFormData(prev => ({
         ...prev,
         patientId: appointmentData.patientId?.toString() || '',
         treatmentType: appointmentData.treatmentType || '',
         description: '',
-        notes: '',
-        appointmentId: appointmentData.id
+        notes: appointmentData.toothNotes || '', // Pre-fill notes from tooth chart
+        appointmentId: apptId
       }))
+      
+      // If tooth number is provided, pre-select it
+      if (appointmentData.toothNumber) {
+        const toothNumber = appointmentData.toothNumber
+        setSelectedTeeth([toothNumber])
+        setToothConditions({
+          [toothNumber]: {
+            status: appointmentData.toothCondition || 'cavity',
+            priority: 'Medium',
+            diagnosedDate: new Date().toISOString().split('T')[0],
+            notes: appointmentData.toothNotes || '',
+            toothStatus: 'In Progress'
+          }
+        })
+        // Automatically switch to teeth tab when tooth is pre-selected
+        setActiveTab('teeth')
+      }
     }
   }, [appointmentData, isOpen])
 
@@ -215,10 +236,12 @@ const NewTreatmentModal = ({
         priority: formData.priority || null,
         totalAmount: parseFloat(formData.totalAmount),
         paidAmount: parseFloat(formData.paidAmount),
-        teethStatus
+        teethStatus,
+        appointmentId: formData.appointmentId || null // Explicitly include appointmentId
       }
       
       console.log('Treatment Data to Save:', treatmentData)
+      console.log('appointmentId being passed:', treatmentData.appointmentId)
       console.log('Calling onSave...')
       onSave(treatmentData)
       console.log('Calling onClose...')
