@@ -242,10 +242,93 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Create new payment
-router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
+// Get all payments for clinic (Secretary access)
+router.get('/clinic/my-payments', authenticate, authorize('Secretary'), async (req, res) => {
   try {
-    const dentistId = req.user.id;
+    const userId = req.user.id;
+    const { patientId, method, startDate, endDate } = req.query;
+
+    // Get secretary's clinic
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId },
+      select: { clinicId: true }
+    });
+
+    if (!secretary) {
+      return res.status(404).json({ error: 'Secretary profile not found' });
+    }
+
+    // Get all dentists in the clinic
+    const dentistsInClinic = await prisma.dentist.findMany({
+      where: { clinicId: secretary.clinicId },
+      select: { userId: true }
+    });
+
+    const dentistIds = dentistsInClinic.map(d => d.userId);
+
+    const where = {
+      treatment: {
+        dentistId: { in: dentistIds }
+      }
+    };
+
+    if (patientId && patientId !== 'all') {
+      where.treatment.patientId = parseInt(patientId);
+    }
+
+    if (method && method !== 'all') {
+      where.method = method.toUpperCase();
+    }
+
+    if (startDate && endDate) {
+      where.paymentDate = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      };
+    }
+
+    const payments = await prisma.payment.findMany({
+      where,
+      include: {
+        treatment: {
+          select: {
+            id: true,
+            treatmentType: true,
+            patientId: true,
+            patient: {
+              select: {
+                userId: true,
+                firstName: true,
+                lastName: true
+              }
+            },
+            dentist: {
+              select: {
+                userId: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        paymentDate: 'desc'
+      }
+    });
+
+    res.json({ payments });
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+// Create new payment
+router.post('/', authenticate, authorize('Dentist', 'Secretary'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
     const { treatmentId, amount, discount = 0, method, notes } = req.body;
 
     // Validate required fields
@@ -253,17 +336,41 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       return res.status(400).json({ error: 'Treatment ID, amount, and payment method are required' });
     }
 
-    // Check if treatment exists and belongs to dentist
+    // Check if treatment exists
     const treatment = await prisma.treatment.findUnique({
-      where: { id: parseInt(treatmentId) }
+      where: { id: parseInt(treatmentId) },
+      include: {
+        dentist: {
+          select: {
+            clinicId: true
+          }
+        }
+      }
     });
 
     if (!treatment) {
       return res.status(404).json({ error: 'Treatment not found' });
     }
 
-    if (treatment.dentistId !== dentistId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Authorization check based on role
+    if (userRole === 'Dentist') {
+      if (treatment.dentistId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    } else if (userRole === 'Secretary') {
+      // Check if secretary belongs to the same clinic as the dentist
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId },
+        select: { clinicId: true }
+      });
+
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+
+      if (treatment.dentist.clinicId !== secretary.clinicId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     // Validate payment amount
@@ -348,7 +455,7 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
 });
 
 // Update payment
-router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res) => {
+router.put('/:id', authenticate, authorize('Dentist', 'Admin', 'Secretary'), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -368,8 +475,35 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res)
     }
 
     // Check authorization
-    if (userRole !== 'Admin' && existingPayment.treatment.dentistId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    if (userRole === 'Admin') {
+      // Admin has full access
+    } else if (userRole === 'Dentist') {
+      if (existingPayment.treatment.dentistId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    } else if (userRole === 'Secretary') {
+      // Check if secretary belongs to the same clinic as the dentist
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId },
+        select: { clinicId: true }
+      });
+
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+
+      const treatmentWithDentist = await prisma.treatment.findUnique({
+        where: { id: existingPayment.treatmentId },
+        include: {
+          dentist: {
+            select: { clinicId: true }
+          }
+        }
+      });
+
+      if (treatmentWithDentist.dentist.clinicId !== secretary.clinicId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     // If amount or discount is being changed, adjust the treatment's paidAmount and treatmentDiscount
@@ -436,7 +570,7 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res)
 });
 
 // Delete payment
-router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('Dentist', 'Admin', 'Secretary'), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -455,8 +589,35 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, r
     }
 
     // Check authorization
-    if (userRole !== 'Admin' && payment.treatment.dentistId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    if (userRole === 'Admin') {
+      // Admin has full access
+    } else if (userRole === 'Dentist') {
+      if (payment.treatment.dentistId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    } else if (userRole === 'Secretary') {
+      // Check if secretary belongs to the same clinic as the dentist
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId },
+        select: { clinicId: true }
+      });
+
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+
+      const treatmentWithDentist = await prisma.treatment.findUnique({
+        where: { id: payment.treatmentId },
+        include: {
+          dentist: {
+            select: { clinicId: true }
+          }
+        }
+      });
+
+      if (treatmentWithDentist.dentist.clinicId !== secretary.clinicId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     // Update treatment paidAmount and treatmentDiscount before deleting payment

@@ -453,6 +453,12 @@ export const treatmentsAPI = {
     return ApiService.get(`/treatments/patient/my-treatments${params}`);
   },
   
+  // Get clinic's treatments (Secretary access)
+  getClinicTreatments: (status = null) => {
+    const params = status && status !== 'all' ? `?status=${status}` : '';
+    return ApiService.get(`/treatments/clinic/my-treatments${params}`);
+  },
+  
   // Get all treatments (Admin/Clinic only)
   getAll: () => ApiService.get('/treatments'),
   
@@ -484,6 +490,12 @@ export const paymentsAPI = {
   getPatientPayments: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/payments/patient/my-payments${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Get clinic's payments (Secretary access)
+  getClinicPayments: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiService.get(`/payments/clinic/my-payments${queryString ? `?${queryString}` : ''}`);
   },
   
   // Get payments for a specific treatment

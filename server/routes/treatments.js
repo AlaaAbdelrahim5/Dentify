@@ -139,6 +139,76 @@ router.get('/patient/my-treatments', authenticate, authorize('Patient'), async (
   }
 });
 
+// Get all treatments for clinic (Secretary access)
+router.get('/clinic/my-treatments', authenticate, authorize('Secretary'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status } = req.query;
+
+    // Get secretary's clinic
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId },
+      select: { clinicId: true }
+    });
+
+    if (!secretary) {
+      return res.status(404).json({ error: 'Secretary profile not found' });
+    }
+
+    // Get all dentists in the clinic
+    const dentistsInClinic = await prisma.dentist.findMany({
+      where: { clinicId: secretary.clinicId },
+      select: { userId: true }
+    });
+
+    const dentistIds = dentistsInClinic.map(d => d.userId);
+
+    const where = { dentistId: { in: dentistIds } };
+    if (status && status !== 'all') {
+      where.status = status.toUpperCase().replace(' ', '_');
+    }
+
+    const treatments = await prisma.treatment.findMany({
+      where,
+      include: {
+        patient: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            birthDate: true,
+            gender: true,
+            city: true,
+            user: {
+              select: {
+                email: true,
+                phone: true,
+                status: true
+              }
+            }
+          }
+        },
+        dentist: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            specialization: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json({ treatments });
+  } catch (error) {
+    console.error('Error fetching treatments:', error);
+    res.status(500).json({ error: 'Failed to fetch treatments' });
+  }
+});
+
 // Get all treatments (for admins, clinics, and secretaries)
 router.get('/', authenticate, authorize('Admin', 'Clinic', 'Secretary'), async (req, res) => {
   try {
