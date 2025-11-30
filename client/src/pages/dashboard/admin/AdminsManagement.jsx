@@ -804,14 +804,6 @@ const AdminsManagement = () => {
     )
   }
 
-  if (loading && isFirstLoad) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -833,7 +825,13 @@ const AdminsManagement = () => {
       <FilterBar {...filterProps} />
 
       {/* Admins Table */}
-      <DataTable {...tableProps} />
+      {loading && isFirstLoad ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        <DataTable {...tableProps} />
+      )}
 
       {/* Pagination */}
       <Pagination

@@ -151,15 +151,6 @@ const PatientTreatments = () => {
 
 
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
   // Error state
   if (error) {
     return (
@@ -197,6 +188,12 @@ const PatientTreatments = () => {
       />
 
       {/* Stats Overview */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        <>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
@@ -345,6 +342,8 @@ const PatientTreatments = () => {
             />
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   )

@@ -432,27 +432,7 @@ const PatientAppointments = () => {
     </div>
   )
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner />
-      </div>
-    )
-  }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className={`text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-          <p className="text-lg font-semibold mb-2">Error Loading Appointments</p>
-          <p>{error}</p>
-        </div>
-        <Button onClick={fetchAppointments} className="bg-gradient-to-r from-teal-600 to-cyan-600">
-          Try Again
-        </Button>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -501,23 +481,39 @@ const PatientAppointments = () => {
       />
 
       {/* Appointments Table */}
-      <DataTable
-        columns={tableColumns}
-        data={filteredAppointments}
-        renderRow={renderTableRow}
-        emptyMessage={
-          activeView === 'upcoming' 
-            ? "No upcoming appointments. Book your next dental visit!" 
-            : "No past appointments found"
-        }
-        emptyIcon={FaCalendarAlt}
-        emptyTitle={
-          activeView === 'upcoming' 
-            ? "No Upcoming Appointments" 
-            : "No Past Appointments"
-        }
-        hasFilters={searchTerm !== '' || selectedStatus !== 'all'}
-      />
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className={`text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className="text-lg font-semibold mb-2">Error Loading Appointments</p>
+            <p>{error}</p>
+          </div>
+          <Button onClick={fetchAppointments} className="bg-gradient-to-r from-teal-600 to-cyan-600">
+            Try Again
+          </Button>
+        </div>
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={filteredAppointments}
+          renderRow={renderTableRow}
+          emptyMessage={
+            activeView === 'upcoming' 
+              ? "No upcoming appointments. Book your next dental visit!" 
+              : "No past appointments found"
+          }
+          emptyIcon={FaCalendarAlt}
+          emptyTitle={
+            activeView === 'upcoming' 
+              ? "No Upcoming Appointments" 
+              : "No Past Appointments"
+          }
+          hasFilters={searchTerm !== '' || selectedStatus !== 'all'}
+        />
+      )}
 
       {/* Modals */}
       <BookAppointmentModal

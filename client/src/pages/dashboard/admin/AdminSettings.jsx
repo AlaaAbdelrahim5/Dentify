@@ -174,14 +174,6 @@ const AdminSettings = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
   const renderProfileTab = () => (
     <div className="space-y-6">
       {/* Profile Picture */}
@@ -461,8 +453,16 @@ const AdminSettings = () => {
       </Card>
 
       {/* Tab Content */}
-      {activeTab === 'profile' && renderProfileTab()}
-      {activeTab === 'security' && renderSecurityTab()}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        <>
+          {activeTab === 'profile' && renderProfileTab()}
+          {activeTab === 'security' && renderSecurityTab()}
+        </>
+      )}
     </div>
   )
 }

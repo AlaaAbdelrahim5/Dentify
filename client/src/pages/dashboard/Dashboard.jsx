@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
 import { authUtils } from '../../utils/auth'
@@ -429,8 +429,8 @@ const UnifiedDashboard = () => {
     setActiveTab('appointments')
   }
 
-  // Render tab content based on active tab and user role
-  const renderTabContent = () => {
+  // Render tab content based on active tab and user role - memoized to prevent unnecessary re-renders
+  const renderTabContent = useMemo(() => {
     if (!currentUser) return null
     
     const config = getDashboardConfig(currentUser.role)
@@ -458,7 +458,7 @@ const UnifiedDashboard = () => {
     }
     
     return <Component {...componentProps} />
-  }
+  }, [activeTab, currentUser, userData, stats, appointments, isDarkMode])
 
   // Not found placeholder
   const renderNotFound = () => (
@@ -531,7 +531,7 @@ const UnifiedDashboard = () => {
       {/* Main Content with left margin to account for fixed sidebar */}
       <div className="lg:ml-72 pt-20">
         <div className="p-4 md:p-8">
-          {renderTabContent()}
+          {renderTabContent}
         </div>
       </div>
     </div>

@@ -265,14 +265,6 @@ const DentistSchedule = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Error Message */}
@@ -307,6 +299,12 @@ const DentistSchedule = () => {
       </div>
 
       {/* Schedule Overview */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+        </div>
+      ) : (
+        <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className={`p-6 ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -582,6 +580,8 @@ const DentistSchedule = () => {
           </div>
         </div>
       </Card>
+      </>
+      )}
     </div>
   )
 }
