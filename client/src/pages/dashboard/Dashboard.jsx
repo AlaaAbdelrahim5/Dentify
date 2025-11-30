@@ -79,7 +79,11 @@ const UnifiedDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(() => {
+    // Get saved tab from localStorage on initial render
+    const savedTab = localStorage.getItem('dashboardActiveTab')
+    return savedTab || 'overview'
+  })
   const [currentUser, setCurrentUser] = useState(null)
   const [userData, setUserData] = useState(null)
   const [stats, setStats] = useState({})
@@ -219,6 +223,11 @@ const UnifiedDashboard = () => {
       window.history.replaceState({}, document.title)
     }
   }, [location.state])
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('dashboardActiveTab', activeTab)
+  }, [activeTab])
 
   // Fetch appointments for dentist
   const fetchAppointments = async (token) => {

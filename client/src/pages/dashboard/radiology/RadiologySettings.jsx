@@ -19,7 +19,11 @@ import { authUtils } from '../../../utils/auth'
 
 const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState(() => {
+    // Get saved tab from localStorage on initial render
+    const savedTab = localStorage.getItem('radiologySettingsActiveTab')
+    return savedTab || 'profile'
+  })
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -71,6 +75,11 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       }
     }
   }, [userData])
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('radiologySettingsActiveTab', activeTab)
+  }, [activeTab])
 
   const convertWorkingHoursArrayToObject = (workingHoursArray) => {
     const daysMap = {
