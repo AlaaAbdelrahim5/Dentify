@@ -405,29 +405,6 @@ const TeethHistoryTab = ({ treatments = [] }) => {
                 )
               },
               {
-                label: 'Payment',
-                accessor: 'paidAmount',
-                render: (value, item) => (
-                  <div>
-                    <p className={`text-sm font-semibold ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      ${value?.toFixed(2) || '0.00'} / ${item.totalAmount?.toFixed(2) || '0.00'}
-                    </p>
-                    {item.totalAmount && value !== undefined && (
-                      <div className={`mt-1 h-1.5 rounded-full ${
-                        isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
-                      }`}>
-                        <div 
-                          className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
-                          style={{ width: `${Math.min((value / item.totalAmount) * 100, 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )
-              },
-              {
                 label: 'Notes',
                 accessor: 'notes',
                 render: (value) => (

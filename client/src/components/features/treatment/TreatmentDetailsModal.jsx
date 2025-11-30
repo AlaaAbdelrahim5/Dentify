@@ -4,9 +4,10 @@ import {
   FaTimes, FaEdit, FaCalendarAlt, FaDollarSign, FaStethoscope, 
   FaUser, FaStickyNote, FaTooth, FaPlus, FaXRay, FaMoneyBillWave,
   FaExclamationTriangle, FaClock, FaCheckCircle, FaEye, FaPhone,
-  FaTimesCircle
+  FaTimesCircle, FaFileInvoiceDollar
 } from 'react-icons/fa'
 import { Button, Card, LoadingSpinner } from '../../common'
+import generatePaymentReceipt from '../payment/PaymentReceipt'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { appointmentsAPI, treatmentsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
@@ -98,6 +99,150 @@ const TreatmentDetailsModal = ({
   const remainingBalance = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0) - treatmentData.paidAmount
   const effectiveTotal = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0)
   const paymentProgress = effectiveTotal > 0 ? (treatmentData.paidAmount / effectiveTotal) * 100 : 0
+
+  const handlePrintComprehensiveReceipt = () => {
+    // Generate comprehensive receipt with all payments
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Treatment Receipt #${treatmentData.id}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; line-height: 1.6; color: #333; }
+          .container { max-width: 800px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #0d9488; }
+          .header h1 { font-size: 32px; color: #0d9488; margin-bottom: 8px; }
+          .header p { color: #64748b; font-size: 14px; }
+          .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+          .info-box { background: #f8fafc; padding: 20px; border-radius: 8px; }
+          .info-box h3 { font-size: 12px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; letter-spacing: 0.5px; }
+          .info-row { margin-bottom: 8px; }
+          .info-label { font-size: 14px; color: #64748b; display: inline-block; width: 140px; }
+          .info-value { font-size: 14px; color: #1e293b; font-weight: 500; }
+          .summary-section { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 30px 0; }
+          .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+          .summary-row:last-child { border-bottom: none; font-weight: bold; font-size: 18px; color: #0d9488; padding-top: 12px; }
+          .invoice-table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+          .invoice-table thead { background: #0d9488; color: white; }
+          .invoice-table th { padding: 12px; text-align: left; font-weight: 600; font-size: 14px; }
+          .invoice-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+          .invoice-table tbody tr:last-child td { border-bottom: none; }
+          .discount-row { color: #f97316; font-style: italic; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #64748b; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+          button { margin-top: 30px; padding: 12px 24px; background: #0d9488; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.3s; }
+          button:hover { background: #0f766e; }
+          @media print { button { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>TREATMENT RECEIPT</h1>
+            <p>Treatment ID: #${treatmentData.id}</p>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-box">
+              <h3>Patient Information</h3>
+              <div class="info-row">
+                <span class="info-label">Patient Name:</span>
+                <span class="info-value">${treatmentData.patientName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Treatment:</span>
+                <span class="info-value">${treatmentData.treatmentType}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value">${treatmentData.status}</span>
+              </div>
+            </div>
+            
+            <div class="info-box">
+              <h3>Provider Information</h3>
+              <div class="info-row">
+                <span class="info-label">Dentist:</span>
+                <span class="info-value">${treatmentData.dentistName || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Clinic:</span>
+                <span class="info-value">${treatmentData.clinicName || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Created:</span>
+                <span class="info-value">${new Date(treatmentData.creationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <h3 style="font-size: 16px; color: #0d9488; margin-bottom: 15px;">Payment Summary</h3>
+            <div class="summary-row">
+              <span>Treatment Cost:</span>
+              <span>$${treatmentData.totalAmount.toFixed(2)}</span>
+            </div>
+            ${(treatmentData.treatmentDiscount || 0) > 0 ? `
+            <div class="summary-row" style="color: #f97316;">
+              <span>Total Discount Applied:</span>
+              <span>-$${(treatmentData.treatmentDiscount || 0).toFixed(2)}</span>
+            </div>
+            ` : ''}
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <span>$${effectiveTotal.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+              <span>Amount Paid:</span>
+              <span style="color: #10b981;">$${treatmentData.paidAmount.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+              <span>Balance Due:</span>
+              <span style="color: ${remainingBalance > 0 ? '#ef4444' : '#10b981'};">$${remainingBalance.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          ${payments && payments.length > 0 ? `
+          <h3 style="font-size: 18px; color: #1e293b; margin: 30px 0 15px 0;">Payment History</h3>
+          <table class="invoice-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Discount</th>
+                <th>Method</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${payments.map(payment => `
+              <tr>
+                <td>${new Date(payment.paymentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                <td style="color: #10b981; font-weight: 600;">$${payment.amount.toFixed(2)}</td>
+                <td style="color: ${(payment.discount || 0) > 0 ? '#f97316' : '#6b7280'}; font-weight: ${(payment.discount || 0) > 0 ? '600' : 'normal'};">$${(payment.discount || 0).toFixed(2)}</td>
+                <td>${payment.method === 'CASH' ? 'Cash' : 'Card'}</td>
+                <td style="color: #6b7280;">${payment.notes || '-'}</td>
+              </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ` : ''}
+          
+          <div class="footer">
+            <p>This is an official treatment receipt. Please retain for your records.</p>
+            <p>Thank you for choosing our services.</p>
+          </div>
+          
+          <center>
+            <button onclick="window.print()">Print Receipt</button>
+          </center>
+        </div>
+      </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
 
   const getStatusDisplay = (status) => {
     switch (status) {
@@ -539,11 +684,24 @@ const TreatmentDetailsModal = ({
               {/* Payment History */}
               <Card>
                 <Card.Header>
-                  <h3 className={`font-semibold text-lg ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    Payment History
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className={`font-semibold text-lg ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>
+                      Payment History
+                    </h3>
+                    {payments && payments.length > 0 && (
+                      <Button
+                        onClick={handlePrintComprehensiveReceipt}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <FaFileInvoiceDollar className="w-4 h-4" />
+                        Print Full Receipt
+                      </Button>
+                    )}
+                  </div>
                 </Card.Header>
                 <Card.Content>
                   {payments && payments.length > 0 ? (

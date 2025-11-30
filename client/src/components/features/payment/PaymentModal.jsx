@@ -349,7 +349,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               value={formData.amount}
               onChange={handleChange}
               placeholder="Enter amount"
-              step="0.01"
+              step="any"
               min="0.01"
               icon={FaDollarSign}
             />
@@ -389,7 +389,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               value={formData.discount}
               onChange={handleChange}
               placeholder="Enter discount amount"
-              step="0.01"
+              step="any"
               min="0"
               icon={FaDollarSign}
             />

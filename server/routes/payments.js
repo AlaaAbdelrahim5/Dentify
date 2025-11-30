@@ -102,6 +102,20 @@ router.get('/dentist/my-payments', authenticate, authorize('Dentist'), async (re
                 firstName: true,
                 lastName: true
               }
+            },
+            dentist: {
+              select: {
+                userId: true,
+                firstName: true,
+                lastName: true,
+                clinic: {
+                  select: {
+                    clinicName: true,
+                    city: true,
+                    location: true
+                  }
+                }
+              }
             }
           }
         }
@@ -151,6 +165,13 @@ router.get('/patient/my-payments', authenticate, authorize('Patient'), async (re
                     id: true,
                     email: true,
                     phone: true
+                  }
+                },
+                clinic: {
+                  select: {
+                    clinicName: true,
+                    city: true,
+                    location: true
                   }
                 }
               }
@@ -306,7 +327,14 @@ router.get('/clinic/my-payments', authenticate, authorize('Secretary'), async (r
               select: {
                 userId: true,
                 firstName: true,
-                lastName: true
+                lastName: true,
+                clinic: {
+                  select: {
+                    clinicName: true,
+                    city: true,
+                    location: true
+                  }
+                }
               }
             }
           }

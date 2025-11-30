@@ -41,6 +41,7 @@ const Input = forwardRef(({
             }
             ${Icon ? 'pl-10 pr-3' : 'px-3'}
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
+            ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}
           `}
           {...props}
         />

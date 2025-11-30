@@ -13,7 +13,7 @@ import {
   FaUserMd,
   FaTooth
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader } from '../../../components'
+import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, generatePaymentReceipt } from '../../../components'
 import { paymentsAPI, treatmentsAPI } from '../../../services/api'
 
 const PatientPayments = () => {
@@ -59,6 +59,8 @@ const PatientPayments = () => {
     treatmentId: p.treatmentId,
     dentistName: `Dr. ${p.treatment.dentist.firstName} ${p.treatment.dentist.lastName}`,
     dentistSpecialization: p.treatment.dentist.specialization,
+    clinicName: p.treatment.dentist.clinic?.clinicName || 'N/A',
+    clinicLocation: p.treatment.dentist.clinic?.location || p.treatment.dentist.clinic?.city || 'N/A',
     treatmentType: p.treatment.treatmentType,
     amount: p.amount,
     paymentMethod: p.method, // 'CASH' or 'CARD'
@@ -141,59 +143,7 @@ const PatientPayments = () => {
   }
 
   const handlePrintInvoice = (payment) => {
-    // Create a printable invoice
-    const printWindow = window.open('', '_blank')
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Payment Invoice #${payment.id}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .invoice-details { margin-bottom: 20px; }
-          .invoice-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-          .invoice-table th { background-color: #f4f4f4; }
-          .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
-          @media print { button { display: none; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Payment Invoice</h1>
-          <p>Invoice #${payment.id}</p>
-        </div>
-        <div class="invoice-details">
-          <p><strong>Dentist:</strong> ${payment.dentistName}</p>
-          <p><strong>Specialization:</strong> ${payment.dentistSpecialization}</p>
-          <p><strong>Date:</strong> ${new Date(payment.paymentDate).toLocaleDateString()}</p>
-          <p><strong>Treatment:</strong> ${payment.treatmentType}</p>
-          <p><strong>Payment Method:</strong> ${payment.paymentMethod === 'CASH' ? 'Cash' : 'Card'}</p>
-        </div>
-        <table class="invoice-table">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${payment.treatmentType} - Payment</td>
-              <td>$${payment.amount.toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="total">
-          Total Paid: $${payment.amount.toFixed(2)}
-        </div>
-        ${payment.notes ? `<p><strong>Notes:</strong> ${payment.notes}</p>` : ''}
-        <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #4F46E5; color: white; border: none; border-radius: 5px; cursor: pointer;">Print Invoice</button>
-      </body>
-      </html>
-    `)
-    printWindow.document.close()
+    generatePaymentReceipt(payment)
   }
 
   const columns = [

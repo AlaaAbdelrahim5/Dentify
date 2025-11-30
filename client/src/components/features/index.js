@@ -24,6 +24,7 @@ export { default as PatientDetailsModal } from './patient/PatientDetailsModal'
 // Feature-specific Components - Payment
 export { default as PaymentModal } from './payment/PaymentModal'
 export { default as SessionCostModal } from './payment/SessionCostModal'
+export { default as generatePaymentReceipt } from './payment/PaymentReceipt'
 
 // Feature-specific Components - Radiology
 export { default as RadiologyModal } from './radiology/RadiologyModal'
