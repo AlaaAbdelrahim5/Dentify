@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { FaTimes, FaBars, FaBell, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown } from 'react-icons/fa'
-import { MdDashboard } from 'react-icons/md'
+import { FaTimes, FaBars, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown, FaEnvelope } from 'react-icons/fa'
+import { MdDashboard, MdNotifications } from 'react-icons/md'
 import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '../common'
@@ -97,60 +97,53 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-xl transition-all duration-300 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
       isDarkMode 
-        ? 'bg-gray-900/95 border-b border-gray-700/50' 
-        : 'bg-white/95 border-b border-gray-200/50'
+        ? 'bg-gradient-to-r from-gray-900/98 via-gray-900/98 to-gray-800/98 border-b border-gray-700/30 shadow-2xl shadow-gray-900/20' 
+        : 'bg-gradient-to-r from-white/98 via-white/98 to-gray-50/98 border-b border-gray-200/40 shadow-xl shadow-gray-200/40'
     }`}>
-      <div className={`${showDashboardInfo ? 'w-full' : 'max-w-7xl mx-auto'} px-6 lg:px-8`}>
+      <div className={`${showDashboardInfo ? 'w-full' : 'max-w-7xl mx-auto'} px-4 lg:px-6`}>
         <div className="flex justify-between items-center h-16">
           {/* Logo and Sidebar Toggle */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {/* Sidebar Toggle Button (only show on dashboard pages) */}
             {showDashboardInfo && onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className={`lg:hidden p-2 rounded-lg transition-all duration-200 ${
+                className={`lg:hidden p-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
                   isDarkMode 
-                    ? 'hover:bg-gray-800 text-gray-300 hover:text-teal-400' 
-                    : 'hover:bg-gray-100 text-gray-700 hover:text-teal-600'
+                    ? 'hover:bg-gray-800/70 text-gray-400 hover:text-teal-400 hover:shadow-lg hover:shadow-teal-500/10' 
+                    : 'hover:bg-gray-100 text-gray-600 hover:text-teal-600 hover:shadow-md'
                 }`}
                 aria-label="Toggle sidebar"
               >
                 <FaBars className="w-5 h-5" />
               </button>
             )}
-            {!isAuthenticated && (
-              <div className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
-                <Logo size="text-2xl" />
-              </div>
-            )}
-            {isAuthenticated && (
-              <div className="flex-shrink-0 transform transition-transform duration-200 hover:scale-105">
-                <Logo size="text-xl" />
-              </div>
-            )}
+            <div className="flex-shrink-0 transform transition-all duration-300 hover:scale-105">
+              <Logo size={isAuthenticated ? "text-xl" : "text-2xl"} />
+            </div>
           </div>
 
           {/* Navigation Links - Desktop and Mobile */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-2">
               
               {!isAuthenticated ? (
                 // Unauthenticated user navigation
                 <>
                   <Link 
                     to="/login" 
-                    className={`hidden md:block px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 border ${
+                    className={`hidden md:block px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 border-2 hover:scale-105 active:scale-95 ${
                       isDarkMode 
-                        ? 'text-gray-300 border-gray-700 hover:text-teal-400 hover:border-teal-400 hover:bg-gray-800/50' 
-                        : 'text-gray-700 border-gray-300 hover:text-teal-600 hover:border-teal-600 hover:bg-gray-50'
+                        ? 'text-gray-300 border-gray-700/50 hover:text-teal-400 hover:border-teal-500/50 hover:bg-gray-800/40 hover:shadow-lg hover:shadow-teal-500/10' 
+                        : 'text-gray-700 border-gray-300 hover:text-teal-600 hover:border-teal-500 hover:bg-teal-50/50 hover:shadow-md'
                     }`}
                   >
                     Login
                   </Link>
                   <Link 
                     to="/signup" 
-                    className="hidden md:block bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 hover:from-teal-600 hover:to-cyan-600"
+                    className="hidden md:block bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 hover:from-teal-600 hover:via-cyan-600 hover:to-blue-600"
                   >
                     Sign Up
                   </Link>
@@ -158,43 +151,65 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
               ) : (
                 // Authenticated user navigation
                 <>
+                  {/* Messages */}
+                  <div className="relative group">
+                    <button className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
+                      isDarkMode 
+                        ? 'hover:bg-gray-800/70 text-gray-400 hover:text-blue-400 hover:shadow-lg hover:shadow-blue-500/10' 
+                        : 'hover:bg-blue-50 text-gray-500 hover:text-blue-600 hover:shadow-md'
+                    }`}>
+                      <FaEnvelope className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                    <span className="absolute top-1 right-1 bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg border-2 border-current">
+                      3
+                    </span>
+                  </div>
+
                   {/* Notifications */}
                   <div className="relative group">
-                    <button className={`p-2 md:p-2.5 rounded-lg transition-all duration-200 ${
+                    <button className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
                       isDarkMode 
-                        ? 'hover:bg-gray-800 text-gray-400 hover:text-teal-400' 
-                        : 'hover:bg-gray-100 text-gray-500 hover:text-teal-600'
+                        ? 'hover:bg-gray-800/70 text-gray-400 hover:text-red-400 hover:shadow-lg hover:shadow-red-500/10' 
+                        : 'hover:bg-red-50 text-gray-500 hover:text-red-600 hover:shadow-md'
                     }`}>
-                      <FaBell className="w-4 h-4 md:w-5 md:h-5" />
+                      <MdNotifications className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
-                    <span className="absolute top-1 right-1 md:top-1.5 md:right-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center font-semibold shadow-lg animate-pulse">
+                    <span className="absolute top-1 right-1 bg-gradient-to-br from-red-500 to-pink-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-current">
                       2
                     </span>
                   </div>
+
+                  {/* Divider */}
+                  <div className={`hidden md:block h-8 w-px mx-1 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-300/50'}`}></div>
 
                   {/* User Profile with Dropdown */}
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={toggleProfileDropdown}
-                      className={`flex items-center space-x-2 md:space-x-3 px-2 md:px-3 py-1.5 md:py-2 rounded-xl transition-all duration-200 ${
+                      className={`flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
                         isDarkMode 
-                          ? 'hover:bg-gray-800/50' 
-                          : 'hover:bg-gray-100/50'
-                      } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/70' : 'bg-gray-100/70') : ''}`}
+                          ? 'hover:bg-gray-800/70 hover:shadow-lg hover:shadow-teal-500/10' 
+                          : 'hover:bg-gray-100 hover:shadow-md'
+                      } ${isProfileDropdownOpen ? (isDarkMode ? 'bg-gray-800/70 shadow-lg' : 'bg-gray-100 shadow-md') : ''}`}
                     >
                       <div className="relative">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-offset-2 ring-offset-transparent transition-all duration-200 hover:ring-teal-500 hover:shadow-xl">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20">
                           <span className="text-white text-xs md:text-sm font-bold">
                             {currentUser ? authUtils.getUserInitials() : 'U'}
                           </span>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white shadow-lg ring-2 ring-green-400/30"></div>
                       </div>
-                      <div className="hidden md:flex flex-col">
+                      <div className="hidden md:flex flex-col items-start">
                         <span className={`text-sm font-semibold ${
                           isDarkMode ? 'text-gray-200' : 'text-gray-800'
                         }`}>
                           {currentUser ? authUtils.getUserName() : 'User'}
+                        </span>
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {currentUser?.role || 'Guest'}
                         </span>
                       </div>
                       {/* Dropdown Indicator */}
@@ -207,59 +222,79 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
                     {/* Dropdown Menu */}
                     {isProfileDropdownOpen && (
-                      <div className={`absolute right-0 mt-2 w-56 rounded-xl shadow-2xl border overflow-hidden transition-all duration-200 ${
+                      <div className={`absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl border backdrop-blur-lg overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-top-2 ${
                         isDarkMode 
-                          ? 'bg-gray-800 border-gray-700' 
-                          : 'bg-white border-gray-200'
+                          ? 'bg-gray-800/95 border-gray-700/50 shadow-gray-900/50' 
+                          : 'bg-white/95 border-gray-200/50 shadow-gray-200/50'
                       }`}>
                         {/* User Info Header */}
-                        <div className={`px-4 py-3 border-b ${
-                          isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
+                        <div className={`px-5 py-4 border-b backdrop-blur-sm ${
+                          isDarkMode ? 'border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50' : 'border-gray-200/50 bg-gradient-to-r from-gray-50 to-white'
                         }`}>
-                          <p className={`text-sm font-semibold truncate ${
-                            isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                          }`}>
-                            {currentUser ? authUtils.getUserName() : 'User'}
-                          </p>
-                          {currentUser?.email && (
-                            <p className={`text-xs truncate ${
-                              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                              {currentUser.email}
-                            </p>
-                          )}
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30">
+                              <span className="text-white text-base font-bold">
+                                {currentUser ? authUtils.getUserInitials() : 'U'}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-bold truncate ${
+                                isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                              }`}>
+                                {currentUser ? authUtils.getUserName() : 'User'}
+                              </p>
+                              {currentUser?.email && (
+                                <p className={`text-xs truncate ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                }`}>
+                                  {currentUser.email}
+                                </p>
+                              )}
+                              <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                                isDarkMode ? 'bg-teal-500/20 text-teal-400' : 'bg-teal-100 text-teal-700'
+                              }`}>
+                                {currentUser?.role || 'Guest'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Menu Items */}
-                        <div className="py-2">
+                        <div className="py-2 px-2">
                           <button
                             onClick={handleSettingsClick}
-                            className={`w-full flex items-center space-x-3 px-4 py-2.5 transition-colors duration-200 ${
+                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                               isDarkMode 
-                                ? 'hover:bg-gray-700 text-gray-300' 
-                                : 'hover:bg-gray-100 text-gray-700'
+                                ? 'hover:bg-gray-700/70 text-gray-300 hover:text-teal-400 hover:shadow-md' 
+                                : 'hover:bg-gray-100 text-gray-700 hover:text-teal-600 hover:shadow-sm'
                             }`}
                           >
-                            <FaCog className="w-5 h-5" />
-                            <span className="text-sm font-medium">Settings</span>
+                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                              <FaCog className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-semibold">Settings</span>
                           </button>
                         </div>
 
                         {/* Logout Section */}
-                        <div className={`border-t ${
-                          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                        <div className={`border-t mt-1 ${
+                          isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'
                         }`}>
-                          <button
-                            onClick={handleLogout}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 transition-colors duration-200 ${
-                              isDarkMode 
-                                ? 'hover:bg-red-900/20 text-red-400' 
-                                : 'hover:bg-red-50 text-red-600'
-                            }`}
-                          >
-                            <FaSignOutAlt className="w-5 h-5" />
-                            <span className="text-sm font-semibold">Logout</span>
-                          </button>
+                          <div className="py-2 px-2">
+                            <button
+                              onClick={handleLogout}
+                              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                                isDarkMode 
+                                  ? 'hover:bg-red-900/30 text-red-400 hover:text-red-300 hover:shadow-md hover:shadow-red-900/20' 
+                                  : 'hover:bg-red-50 text-red-600 hover:text-red-700 hover:shadow-sm'
+                              }`}
+                            >
+                              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
+                                <FaSignOutAlt className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-bold">Logout</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -351,12 +386,20 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                         {currentUser ? authUtils.getUserName() : 'User'}
                       </span>
                     </div>
-                    {/* Notification Badge */}
-                    <div className="relative">
-                      <FaBell className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
-                        2
-                      </span>
+                    {/* Notification Badges */}
+                    <div className="flex items-center space-x-2">
+                      <div className="relative">
+                        <FaEnvelope className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                          3
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <MdNotifications className={`w-6 h-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                          2
+                        </span>
+                      </div>
                     </div>
                   </div>
 
