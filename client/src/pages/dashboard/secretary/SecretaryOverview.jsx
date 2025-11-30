@@ -100,14 +100,21 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
     }
   }
 
-  // Get stats with defaults
+  // Get stats with defaults - count only PENDING appointments (not CONFIRMED, COMPLETED, or CANCELLED)
   const secretaryStats = {
     todayAppointments: todayAppointments.length || 0,
-    pendingAppointments: todayAppointments.filter(a => a.status === 'PENDING' || a.status === 'SCHEDULED').length || 0,
+    pendingAppointments: todayAppointments.filter(a => a.status === 'PENDING').length || 0,
     confirmedAppointments: todayAppointments.filter(a => a.status === 'CONFIRMED').length || 0,
     totalPatients: stats.totalPatients || 0,
     totalDentists: stats.totalDentists || 0
   }
+
+  // Sort today's appointments by time (ascending)
+  const sortedTodayAppointments = [...todayAppointments].sort((a, b) => {
+    const timeA = new Date(a.startTime).getTime()
+    const timeB = new Date(b.startTime).getTime()
+    return timeA - timeB
+  })
 
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A'
@@ -221,7 +228,7 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {todayAppointments.slice(0, 5).map((appointment) => (
+            {sortedTodayAppointments.slice(0, 5).map((appointment) => (
               <div
                 key={appointment.id}
                 className={`p-4 rounded-lg border ${

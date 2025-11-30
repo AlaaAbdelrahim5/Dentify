@@ -73,18 +73,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Clinic overview and statistics'
       },
       { 
-        id: 'secretaries', 
-        label: 'Secretaries', 
-        icon: FaUserTie,
-        description: 'Manage clinic secretaries'
-      },
-      { 
-        id: 'dentists', 
-        label: 'Dentists', 
-        icon: FaUserMd,
-        description: 'Manage clinic dentists'
-      },
-      { 
         id: 'appointments', 
         label: 'Appointments', 
         icon: FaCalendarAlt,
@@ -95,6 +83,18 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Patients', 
         icon: FaUsers,
         description: 'Manage patients'
+      },
+      { 
+        id: 'dentists', 
+        label: 'Dentists', 
+        icon: FaUserMd,
+        description: 'Manage clinic dentists'
+      },
+      { 
+        id: 'secretaries', 
+        label: 'Secretaries', 
+        icon: FaUserTie,
+        description: 'Manage clinic secretaries'
       },
       { 
         id: 'analytics', 
@@ -117,12 +117,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Manage appointments'
       },
       { 
-        id: 'patients', 
-        label: 'My Patients', 
-        icon: FaUsers,
-        description: 'Manage patient records'
-      },
-      { 
         id: 'treatments', 
         label: 'Treatments', 
         icon: FaStethoscope,
@@ -139,6 +133,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Radiology', 
         icon: FaXRay,
         description: 'Diagnostic imaging requests'
+      },
+      { 
+        id: 'patients', 
+        label: 'My Patients', 
+        icon: FaUsers,
+        description: 'Manage patient records'
       },
       { 
         id: 'reports', 
@@ -160,19 +160,14 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         icon: MdDashboard
       },
       { 
-        id: 'find-dentist', 
-        label: 'Find a Dentist', 
-        icon: FaUserMd
-      },
-      { 
-        id: 'find-clinic', 
-        label: 'Find a Clinic', 
-        icon: FaSearch
-      },
-      { 
         id: 'appointments', 
         label: 'Appointments', 
         icon: FaCalendarAlt
+      },
+      { 
+        id: 'history', 
+        label: 'Treatments', 
+        icon: FaTooth
       },
       { 
         id: 'payments', 
@@ -185,9 +180,14 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         icon: FaXRay
       },
       { 
-        id: 'history', 
-        label: 'Treatment History', 
-        icon: FaTooth
+        id: 'find-dentist', 
+        label: 'Find a Dentist', 
+        icon: FaUserMd
+      },
+      { 
+        id: 'find-clinic', 
+        label: 'Find a Clinic', 
+        icon: FaSearch
       }
     ],
     radiology: [
@@ -216,6 +216,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Manage clinic appointments'
       },
       { 
+        id: 'treatments', 
+        label: 'Treatments', 
+        icon: FaStethoscope,
+        description: 'View treatment plans'
+      },
+      { 
         id: 'patients', 
         label: 'Patients', 
         icon: FaUsers,
@@ -226,12 +232,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Dentists', 
         icon: FaUserMd,
         description: 'View dentists directory'
-      },
-      { 
-        id: 'treatments', 
-        label: 'Treatments', 
-        icon: FaStethoscope,
-        description: 'View treatment plans'
       },
       { 
         id: 'reports', 

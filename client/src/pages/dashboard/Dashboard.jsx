@@ -142,7 +142,7 @@ const UnifiedDashboard = () => {
           appointments: { component: PatientAppointments, label: 'Appointments' },
           payments: { component: PatientPayments, label: 'Payments' },
           xrays: { component: PatientXRayResults, label: 'X-ray Results', icon: FaFileAlt },
-          history: { component: PatientTreatments, label: 'Treatment History' },
+          history: { component: PatientTreatments, label: 'Treatments' },
           settings: { component: PatientSettings, label: 'Settings' }
         }
       },

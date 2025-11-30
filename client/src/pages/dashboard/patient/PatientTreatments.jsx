@@ -194,7 +194,7 @@ const PatientTreatments = () => {
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Treatment History"
+        title="Treatments"
         description="View your complete dental treatment timeline"
       />
 
