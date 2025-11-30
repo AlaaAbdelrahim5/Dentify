@@ -79,6 +79,18 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Manage appointments'
       },
       { 
+        id: 'treatments', 
+        label: 'Treatments', 
+        icon: FaTooth,
+        description: 'View treatment plans'
+      },
+      { 
+        id: 'payments', 
+        label: 'Payments', 
+        icon: FaMoneyBillWave,
+        description: 'Track and manage payments'
+      },
+      { 
         id: 'patients', 
         label: 'Patients', 
         icon: FaUsers,

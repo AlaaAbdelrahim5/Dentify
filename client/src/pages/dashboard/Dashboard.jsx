@@ -14,6 +14,10 @@ import AdminSettings from './admin/AdminSettings'
 
 // Import clinic components
 import ClinicOverview from './clinic/ClinicOverview'
+import ClinicAppointments from './clinic/ClinicAppointments'
+import ClinicTreatments from './clinic/ClinicTreatments'
+import ClinicPayments from './clinic/ClinicPayments'
+import ClinicPatients from './clinic/ClinicPatients'
 import SecretariesManagement from './clinic/SecretariesManagement'
 import { default as ClinicDentistsManagement } from './clinic/DentistsManagement'
 import ClinicSettings from './clinic/ClinicSettings'
@@ -116,8 +120,10 @@ const UnifiedDashboard = () => {
           overview: { component: ClinicOverview, label: 'Overview' },
           secretaries: { component: SecretariesManagement, label: 'Secretaries' },
           dentists: { component: ClinicDentistsManagement, label: 'Dentists' },
-          appointments: { component: ComingSoon, label: 'Appointments', icon: FaCalendarAlt },
-          patients: { component: ComingSoon, label: 'Patients', icon: FaUsers },
+          appointments: { component: ClinicAppointments, label: 'Appointments' },
+          treatments: { component: ClinicTreatments, label: 'Treatments' },
+          payments: { component: ClinicPayments, label: 'Payments' },
+          patients: { component: ClinicPatients, label: 'Patients' },
           analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
           settings: { component: ClinicSettings, label: 'Settings' }
         }

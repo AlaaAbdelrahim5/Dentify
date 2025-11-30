@@ -263,29 +263,45 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Get all payments for clinic (Secretary access)
-router.get('/clinic/my-payments', authenticate, authorize('Secretary'), async (req, res) => {
+// Get all payments for clinic (Clinic and Secretary access)
+router.get('/clinic/my-payments', authenticate, authorize('Clinic', 'Secretary'), async (req, res) => {
   try {
     const userId = req.user.id;
+    const userRole = req.user.role;
     const { patientId, method, startDate, endDate } = req.query;
 
-    // Get secretary's clinic
-    const secretary = await prisma.secretary.findUnique({
-      where: { userId },
-      select: { clinicId: true }
-    });
+    let clinicId;
 
-    if (!secretary) {
-      return res.status(404).json({ error: 'Secretary profile not found' });
+    // Get clinic ID based on user role
+    if (userRole === 'Clinic') {
+      // For Clinic users, the userId IS the clinicId
+      // (Clinic table uses userId as primary key, and Dentist.clinicId references Clinic.userId)
+      clinicId = userId;
+    } else if (userRole === 'Secretary') {
+      const secretary = await prisma.secretary.findUnique({
+        where: { userId },
+        select: { clinicId: true }
+      });
+
+      if (!secretary) {
+        return res.status(404).json({ error: 'Secretary profile not found' });
+      }
+
+      clinicId = secretary.clinicId;
     }
 
     // Get all dentists in the clinic
     const dentistsInClinic = await prisma.dentist.findMany({
-      where: { clinicId: secretary.clinicId },
+      where: { clinicId },
       select: { userId: true }
     });
 
     const dentistIds = dentistsInClinic.map(d => d.userId);
+
+    // If no dentists in clinic, return empty payments array
+    if (dentistIds.length === 0) {
+      return res.json({ payments: [] });
+    }
 
     const where = {
       treatment: {
@@ -353,7 +369,7 @@ router.get('/clinic/my-payments', authenticate, authorize('Secretary'), async (r
 });
 
 // Create new payment
-router.post('/', authenticate, authorize('Dentist', 'Secretary'), async (req, res) => {
+router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), async (req, res) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
@@ -397,6 +413,11 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary'), async (req, re
       }
 
       if (treatment.dentist.clinicId !== secretary.clinicId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    } else if (userRole === 'Clinic') {
+      // Check if the treatment's dentist belongs to this clinic
+      if (treatment.dentist.clinicId !== userId) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }

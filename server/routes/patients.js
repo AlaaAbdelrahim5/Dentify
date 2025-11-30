@@ -120,23 +120,41 @@ router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (
 // Get all patients
 router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
   try {
-    // For Secretary, filter patients by their clinic
+    // For Clinic or Secretary, filter patients by their clinic
     let whereClause = {};
     
-    if (req.user.role === 'Secretary') {
-      // Get secretary's clinic
-      const secretary = await prisma.secretary.findUnique({
-        where: { userId: req.user.id },
-        select: { clinicId: true }
-      });
+    if (req.user.role === 'Clinic' || req.user.role === 'Secretary') {
+      let clinicId;
       
-      if (!secretary) {
-        return res.status(404).json({ error: 'Secretary profile not found' });
+      if (req.user.role === 'Clinic') {
+        // For clinic users, the userId is directly the clinicId
+        const clinic = await prisma.clinic.findUnique({
+          where: { userId: req.user.id },
+          select: { userId: true }
+        });
+        
+        if (!clinic) {
+          return res.status(404).json({ error: 'Clinic profile not found' });
+        }
+        
+        clinicId = clinic.userId;
+      } else if (req.user.role === 'Secretary') {
+        // Get secretary's clinic
+        const secretary = await prisma.secretary.findUnique({
+          where: { userId: req.user.id },
+          select: { clinicId: true }
+        });
+        
+        if (!secretary) {
+          return res.status(404).json({ error: 'Secretary profile not found' });
+        }
+        
+        clinicId = secretary.clinicId;
       }
       
       // Get all dentists in the clinic
       const dentistsInClinic = await prisma.dentist.findMany({
-        where: { clinicId: secretary.clinicId },
+        where: { clinicId },
         select: { userId: true }
       });
       
