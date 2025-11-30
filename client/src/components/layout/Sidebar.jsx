@@ -119,7 +119,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
       { 
         id: 'treatments', 
         label: 'Treatments', 
-        icon: FaStethoscope,
+        icon: FaTooth,
         description: 'Treatment plans and procedures'
       },
       { 
@@ -187,7 +187,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
       { 
         id: 'find-clinic', 
         label: 'Find a Clinic', 
-        icon: FaSearch
+        icon: FaHospital
       }
     ],
     radiology: [
@@ -218,7 +218,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
       { 
         id: 'treatments', 
         label: 'Treatments', 
-        icon: FaStethoscope,
+        icon: FaTooth,
         description: 'View treatment plans'
       },
       { 
@@ -242,7 +242,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
       { 
         id: 'reports', 
         label: 'Reports', 
-        icon: FaFileAlt,
+        icon: FaChartBar,
         description: 'Clinic reports and statistics'
       }
     ]
