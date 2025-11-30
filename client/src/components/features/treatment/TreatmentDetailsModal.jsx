@@ -9,6 +9,7 @@ import {
 import { Button, Card, LoadingSpinner } from '../../common'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { appointmentsAPI, treatmentsAPI } from '../../../services/api'
+import { authUtils } from '../../../utils/auth'
 
 const TreatmentDetailsModal = ({ 
   isOpen, 
@@ -40,7 +41,16 @@ const TreatmentDetailsModal = ({
   const fetchTreatmentAppointments = async () => {
     try {
       setLoadingAppointments(true)
-      const response = await appointmentsAPI.getDentistAppointments()
+      const currentUser = authUtils.getCurrentUser()
+      
+      // Fetch appointments based on user role
+      let response
+      if (currentUser?.role === 'Secretary') {
+        response = await appointmentsAPI.getClinicAppointments()
+      } else {
+        response = await appointmentsAPI.getDentistAppointments()
+      }
+      
       // Filter appointments that are linked to this treatment
       const treatmentAppointments = response.appointments.filter(
         apt => apt.treatmentId === treatmentData.id

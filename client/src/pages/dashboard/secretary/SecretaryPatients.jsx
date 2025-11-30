@@ -184,17 +184,8 @@ const SecretaryPatients = ({ userData, onTabChange }) => {
       const appointmentsResponse = await appointmentsAPI.getClinicAppointments()
       const patientAppointmentsData = appointmentsResponse.appointments?.filter(a => a.patientId === patient.id) || []
       
-      const transformedAppointments = patientAppointmentsData.map(appointment => ({
-        id: appointment.id,
-        date: appointment.appointmentDate,
-        time: new Date(appointment.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        treatment: appointment.treatment?.treatmentType || 'General Appointment',
-        status: appointment.status,
-        dentist: `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`,
-        notes: appointment.patientNotes
-      }))
-      
-      setPatientAppointments(transformedAppointments)
+      // Keep the original appointment structure for AppointmentsHistoryTab
+      setPatientAppointments(patientAppointmentsData)
       
     } catch (error) {
       console.error('Error fetching patient details:', error)
