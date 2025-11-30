@@ -215,8 +215,8 @@ const UnifiedDashboard = () => {
   useEffect(() => {
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab)
-      // Clear the state to prevent re-triggering
-      navigate(location.pathname, { replace: true, state: {} })
+      // Clear the state without triggering navigation to prevent re-render loop
+      window.history.replaceState({}, document.title)
     }
   }, [location.state])
 

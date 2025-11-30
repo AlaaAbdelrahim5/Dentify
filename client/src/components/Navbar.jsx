@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FaTimes, FaBars, FaBell, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown } from 'react-icons/fa'
 import { MdDashboard } from 'react-icons/md'
 import Logo from './Logo'
@@ -15,6 +15,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const { isDarkMode } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
   const dropdownRef = useRef(null)
 
   // Check authentication status
@@ -75,7 +76,8 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
       'dentist': '/dentist/dashboard',
       'patient': '/patient/dashboard',
       'secretary': '/secretary/dashboard',
-      'radiology': '/radiology/dashboard'
+      'radiology': '/radiology/dashboard',
+      'radiologycenter': '/radiology/dashboard'
     }
     
     return roleRoutes[currentUser.role.toLowerCase()] || '/'
@@ -84,7 +86,14 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
   const handleSettingsClick = () => {
     setIsProfileDropdownOpen(false)
     const dashboardPath = getDashboardRoute()
-    navigate(dashboardPath, { state: { activeTab: 'settings' } })
+    // Check if we're already on the dashboard route
+    if (location.pathname === dashboardPath) {
+      // If already on dashboard, use replace to update state without navigation
+      navigate(dashboardPath, { state: { activeTab: 'settings' }, replace: true })
+    } else {
+      // If on a different route, navigate normally
+      navigate(dashboardPath, { state: { activeTab: 'settings' } })
+    }
   }
 
   return (
