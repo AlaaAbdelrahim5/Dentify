@@ -399,11 +399,11 @@ const NewTreatmentModal = ({
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
                       Select Patient <span className="text-red-500">*</span>
-                      {appointmentData && (
+                      {(appointmentData || initialData) && (
                         <span className={`ml-2 text-xs font-normal ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-500'
                         }`}>
-                          (From appointment - cannot be changed)
+                          (Cannot be changed)
                         </span>
                       )}
                     </label>
@@ -414,7 +414,7 @@ const NewTreatmentModal = ({
                       options={[
                         ...patients.map(p => ({ value: p.id, label: p.name }))
                       ]}
-                      disabled={!!appointmentData}
+                      disabled={!!appointmentData || !!initialData}
                     />
                     {errors.patientId && (
                       <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
@@ -524,6 +524,13 @@ const NewTreatmentModal = ({
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
                       Total Amount <span className="text-red-500">*</span>
+                      {initialData && (
+                        <span className={`ml-2 text-xs font-normal ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          (Cannot be changed after creation)
+                        </span>
+                      )}
                     </label>
                     <Input
                       type="number"
@@ -534,6 +541,7 @@ const NewTreatmentModal = ({
                       step="0.01"
                       min="0"
                       icon={FaDollarSign}
+                      disabled={!!initialData}
                     />
                     {errors.totalAmount && (
                       <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
