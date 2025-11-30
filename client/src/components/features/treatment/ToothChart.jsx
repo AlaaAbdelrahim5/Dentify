@@ -87,15 +87,15 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
   const getToothSize = (type) => {
     switch (type) {
       case 'molar':
-        return 'w-14 h-18'
+        return 'w-11 h-14 sm:w-12 sm:h-16'
       case 'premolar':
-        return 'w-12 h-16'
+        return 'w-10 h-12 sm:w-11 sm:h-14'
       case 'canine':
-        return 'w-11 h-16'
+        return 'w-9 h-12 sm:w-10 sm:h-14'
       case 'incisor':
-        return 'w-10 h-14'
+        return 'w-8 h-11 sm:w-9 sm:h-12'
       default:
-        return 'w-12 h-16'
+        return 'w-10 h-12 sm:w-11 sm:h-14'
     }
   }
 
@@ -119,19 +119,19 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
           className={`
             ${getToothSize(tooth.type)}
             ${getToothColor(tooth.number)}
-            border-2 rounded-xl
+            border-2 rounded-lg sm:rounded-xl
             flex flex-col items-center justify-center
             transition-all duration-200
             ${!readOnly ? 'cursor-pointer transform hover:scale-110 hover:shadow-lg' : condition ? 'cursor-help' : 'cursor-default'}
-            ${selectedTeeth.includes(tooth.number) ? 'ring-4 ring-teal-400/50 scale-105' : ''}
+            ${selectedTeeth.includes(tooth.number) ? 'ring-2 sm:ring-4 ring-teal-400/50 scale-105' : ''}
             relative font-semibold
           `}
         >
-          <FaTooth className="text-2xl mb-1.5" />
-          <span className="text-sm font-bold tracking-wide">{tooth.number}</span>
+          <FaTooth className="text-lg sm:text-xl md:text-2xl mb-0.5 sm:mb-1" />
+          <span className="text-xs sm:text-sm font-bold tracking-wide">{tooth.number}</span>
           
           {condition && condition.conditionCount && (
-            <div className="absolute -top-1.5 -right-1.5 bg-teal-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-lg">
+            <div className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 bg-teal-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-lg">
               {condition.conditionCount}
             </div>
           )}
@@ -195,11 +195,11 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
   }
 
   return (
-    <div className={`p-8 rounded-2xl ${
+    <div className={`p-4 sm:p-6 lg:p-8 rounded-2xl w-full max-w-full overflow-x-auto ${
       isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50 border border-gray-200'
     }`}>
       {/* Title */}
-      <div className="mb-6 text-center">
+      <div className="mb-4 sm:mb-6 text-center">
         <h3 className={`text-xl font-bold mb-2 ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>
@@ -213,7 +213,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
       </div>
 
       {/* Legend */}
-      <div className={`mb-8 p-4 rounded-xl ${
+      <div className={`mb-6 sm:mb-8 p-3 sm:p-4 rounded-xl ${
         isDarkMode ? 'bg-gray-900/50 border border-gray-700' : 'bg-white border border-gray-200'
       }`}>
         <div className="flex items-center gap-2 mb-3">
@@ -249,25 +249,25 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
         </div>
       </div>
 
-      <div className="space-y-12">
+      <div className="space-y-8 sm:space-y-12">
         {/* Upper Jaw */}
-        <div className="space-y-4">
-          <div className={`text-base font-bold text-center mb-6 flex items-center justify-center gap-2 ${
+        <div className="space-y-3 sm:space-y-4">
+          <div className={`text-sm sm:text-base font-bold text-center mb-4 sm:mb-6 flex items-center justify-center gap-2 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-700'
           }`}>
             <div className={`h-px flex-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
-            <span className="px-4">Upper Jaw</span>
+            <span className="px-2 sm:px-4 whitespace-nowrap">Upper Jaw</span>
             <div className={`h-px flex-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
           </div>
-          <div className="flex justify-center gap-12">
+          <div className="flex justify-center gap-2 sm:gap-4 lg:gap-8 flex-wrap sm:flex-nowrap">
             {/* Upper Right */}
-            <div>
-              <div className={`text-sm font-semibold text-center mb-4 px-3 py-1 rounded-full inline-block ${
+            <div className="flex-shrink-0">
+              <div className={`text-xs sm:text-sm font-semibold text-center mb-2 sm:mb-4 px-2 sm:px-3 py-1 rounded-full inline-block ${
                 isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}>
                 Right
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2">
                 {upperRight.map(tooth => (
                   <ToothButton key={tooth.number} tooth={tooth} />
                 ))}
@@ -275,13 +275,13 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
             </div>
             
             {/* Upper Left */}
-            <div>
-              <div className={`text-sm font-semibold text-center mb-4 px-3 py-1 rounded-full inline-block ${
+            <div className="flex-shrink-0">
+              <div className={`text-xs sm:text-sm font-semibold text-center mb-2 sm:mb-4 px-2 sm:px-3 py-1 rounded-full inline-block ${
                 isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}>
                 Left
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2">
                 {upperLeft.map(tooth => (
                   <ToothButton key={tooth.number} tooth={tooth} />
                 ))}
@@ -303,23 +303,23 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
         </div>
 
         {/* Lower Jaw */}
-        <div className="space-y-4">
-          <div className={`text-base font-bold text-center mb-6 flex items-center justify-center gap-2 ${
+        <div className="space-y-3 sm:space-y-4">
+          <div className={`text-sm sm:text-base font-bold text-center mb-4 sm:mb-6 flex items-center justify-center gap-2 ${
             isDarkMode ? 'text-gray-300' : 'text-gray-700'
           }`}>
             <div className={`h-px flex-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
-            <span className="px-4">Lower Jaw</span>
+            <span className="px-2 sm:px-4 whitespace-nowrap">Lower Jaw</span>
             <div className={`h-px flex-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
           </div>
-          <div className="flex justify-center gap-12">
+          <div className="flex justify-center gap-2 sm:gap-4 lg:gap-8 flex-wrap sm:flex-nowrap">
             {/* Lower Right */}
-            <div>
-              <div className="flex gap-2 mb-4">
+            <div className="flex-shrink-0">
+              <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-4">
                 {lowerRight.map(tooth => (
                   <ToothButton key={tooth.number} tooth={tooth} />
                 ))}
               </div>
-              <div className={`text-sm font-semibold text-center px-3 py-1 rounded-full inline-block ${
+              <div className={`text-xs sm:text-sm font-semibold text-center px-2 sm:px-3 py-1 rounded-full inline-block ${
                 isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}>
                 Right
@@ -327,13 +327,13 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
             </div>
             
             {/* Lower Left */}
-            <div>
-              <div className="flex gap-2 mb-4">
+            <div className="flex-shrink-0">
+              <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-4">
                 {lowerLeft.map(tooth => (
                   <ToothButton key={tooth.number} tooth={tooth} />
                 ))}
               </div>
-              <div className={`text-sm font-semibold text-center px-3 py-1 rounded-full inline-block ${
+              <div className={`text-xs sm:text-sm font-semibold text-center px-2 sm:px-3 py-1 rounded-full inline-block ${
                 isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}>
                 Left
