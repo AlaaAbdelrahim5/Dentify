@@ -50,14 +50,16 @@ const NewTreatmentModal = ({
         setSelectedTeeth(initialData.teethStatus?.map(t => t.toothNumber) || [])
         const conditions = {}
         initialData.teethStatus?.forEach(tooth => {
+          console.log('Loading tooth from database:', tooth)
           conditions[tooth.toothNumber] = {
-            status: tooth.conditionStatus,
-            priority: tooth.treatmentPriority,
-            diagnosedDate: tooth.diagnosedDate,
-            notes: tooth.notes,
+            status: tooth.conditionStatus?.toLowerCase() || 'cavity',
+            priority: tooth.priority || 'Medium',
+            diagnosedDate: tooth.diagnosedDate || new Date().toISOString().split('T')[0],
+            notes: tooth.notes || '',
             toothStatus: tooth.status || 'In Progress' // Track if tooth is completed
           }
         })
+        console.log('Loaded toothConditions from database:', conditions)
         setToothConditions(conditions)
       } else {
         setFormData({
@@ -223,11 +225,13 @@ const NewTreatmentModal = ({
       const teethStatus = selectedTeeth.map(toothNumber => ({
         toothNumber,
         conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
-        treatmentPriority: toothConditions[toothNumber]?.priority || 'Medium',
+        priority: toothConditions[toothNumber]?.priority || 'Medium',
         diagnosedDate: toothConditions[toothNumber]?.diagnosedDate || new Date().toISOString().split('T')[0],
         notes: toothConditions[toothNumber]?.notes || '',
         status: toothConditions[toothNumber]?.toothStatus || 'In Progress' // Include tooth status
       }))
+      
+      console.log('TeethStatus being saved:', teethStatus)
 
       const treatmentData = {
         ...formData,

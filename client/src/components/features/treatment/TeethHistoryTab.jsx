@@ -22,6 +22,14 @@ const TeethHistoryTab = ({ treatments = [] }) => {
 
   // Aggregate all teeth history from all treatments
   const teethHistoryMap = useMemo(() => {
+    console.log('=== TeethHistoryTab Debug ===')
+    console.log('Total treatments:', treatments.length)
+    console.log('Treatments data:', treatments)
+    if (treatments.length > 0) {
+      console.log('First treatment teethStatus:', treatments[0].teethStatus)
+      console.log('teethStatus type:', typeof treatments[0].teethStatus)
+    }
+    
     const historyMap = {}
     
     treatments.forEach(treatment => {
@@ -36,8 +44,11 @@ const TeethHistoryTab = ({ treatments = [] }) => {
         console.error('Error parsing teethStatus:', e)
       }
 
+      console.log('Treatment teethStatus:', teethStatus)
+      
       teethStatus.forEach(toothEntry => {
         const toothNumber = toothEntry.toothNumber
+        console.log('Processing tooth:', toothNumber, toothEntry)
         
         if (!historyMap[toothNumber]) {
           historyMap[toothNumber] = []
@@ -64,6 +75,8 @@ const TeethHistoryTab = ({ treatments = [] }) => {
       })
     })
 
+    console.log('Final historyMap:', historyMap)
+    console.log('===========================')
     return historyMap
   }, [treatments])
 
