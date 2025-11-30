@@ -88,8 +88,8 @@ const NewTreatmentModal = ({
         ...prev,
         patientId: appointmentData.patientId?.toString() || '',
         treatmentType: appointmentData.treatmentType || '',
-        description: appointmentData.notes || '',
-        notes: appointmentData.notes || '',
+        description: '',
+        notes: '',
         appointmentId: appointmentData.id
       }))
     }
@@ -210,6 +210,9 @@ const NewTreatmentModal = ({
 
       const treatmentData = {
         ...formData,
+        description: formData.description?.trim() || null,
+        notes: formData.notes?.trim() || null,
+        priority: formData.priority || null,
         totalAmount: parseFloat(formData.totalAmount),
         paidAmount: parseFloat(formData.paidAmount),
         teethStatus
