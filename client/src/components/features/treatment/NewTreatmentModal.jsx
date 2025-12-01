@@ -29,6 +29,7 @@ const NewTreatmentModal = ({
   })
   const [selectedTeeth, setSelectedTeeth] = useState([])
   const [toothConditions, setToothConditions] = useState({})
+  const [patientTeethHistory, setPatientTeethHistory] = useState({})
   const [showToothChart, setShowToothChart] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -82,6 +83,66 @@ const NewTreatmentModal = ({
       setActiveTab('basic')
     }
   }, [isOpen, initialData])
+
+  // Fetch patient's teeth history when patient is selected
+  useEffect(() => {
+    const fetchPatientTeethHistory = async () => {
+      if (!formData.patientId || formData.patientId === '') {
+        setPatientTeethHistory({})
+        return
+      }
+
+      try {
+        const { treatmentsAPI } = await import('../../../services/api')
+        // Fetch all treatments for this patient
+        const response = await treatmentsAPI.getDentistTreatments()
+        const patientTreatments = response.treatments.filter(
+          t => t.patientId === parseInt(formData.patientId)
+        )
+
+        // Build teeth history map
+        const historyMap = {}
+        patientTreatments.forEach(treatment => {
+          // Parse teethStatus
+          let teethStatus = []
+          try {
+            if (typeof treatment.teethStatus === 'string') {
+              teethStatus = JSON.parse(treatment.teethStatus)
+            } else if (Array.isArray(treatment.teethStatus)) {
+              teethStatus = treatment.teethStatus
+            }
+          } catch (e) {
+            console.error('Error parsing teethStatus:', e)
+          }
+
+          teethStatus.forEach(tooth => {
+            if (!historyMap[tooth.toothNumber]) {
+              historyMap[tooth.toothNumber] = {
+                hasHistory: true,
+                conditionCount: 0,
+                allConditions: []
+              }
+            }
+            historyMap[tooth.toothNumber].conditionCount++
+            historyMap[tooth.toothNumber].allConditions.push({
+              status: tooth.conditionStatus?.toLowerCase() || 'cavity',
+              treatment: treatment.treatmentType,
+              date: treatment.createdAt,
+              notes: tooth.notes
+            })
+          })
+        })
+
+        setPatientTeethHistory(historyMap)
+      } catch (error) {
+        console.error('Error fetching patient teeth history:', error)
+      }
+    }
+
+    if (isOpen) {
+      fetchPatientTeethHistory()
+    }
+  }, [formData.patientId, isOpen])
 
   // Handle appointment data pre-filling
   useEffect(() => {
@@ -633,7 +694,7 @@ const NewTreatmentModal = ({
                       <ToothChart
                         selectedTeeth={selectedTeeth}
                         onToothSelect={handleToothSelect}
-                        toothConditions={toothConditions}
+                        toothConditions={patientTeethHistory}
                       />
                     </div>
                   )}
