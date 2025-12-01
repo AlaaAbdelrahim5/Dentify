@@ -14,7 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt } from '../../../components'
+import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 
 const DentistPayments = () => {
@@ -34,6 +34,7 @@ const DentistPayments = () => {
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Fetch data on mount
   useEffect(() => {
@@ -226,12 +227,13 @@ const DentistPayments = () => {
   const handleSavePayment = async (paymentData) => {
     try {
       await paymentsAPI.create(paymentData)
+      setToast({ message: 'Payment recorded successfully!', type: 'success' })
       await fetchAllData()
       setIsPaymentModalOpen(false)
       setSelectedTreatment(null)
     } catch (error) {
       console.error('Error creating payment:', error)
-      alert('Failed to create payment. Please try again.')
+      setToast({ message: 'Failed to create payment. Please try again.', type: 'error' })
     }
   }
 
@@ -632,6 +634,15 @@ const DentistPayments = () => {
         patients={mockPatients}
         treatments={mockTreatments}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

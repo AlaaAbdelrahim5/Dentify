@@ -9,7 +9,7 @@ import {
   FaTimes,
   FaCheck
 } from 'react-icons/fa'
-import { Card, Button, Input } from '../../../components'
+import { Card, Button, Input, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -20,6 +20,7 @@ const DentistSchedule = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
   
   // Fetch dentist profile on mount
   useEffect(() => {
@@ -255,11 +256,11 @@ const DentistSchedule = () => {
         appointmentDuration: defaultDuration
       })
       
-      alert('Schedule saved successfully!')
+      setToast({ message: 'Schedule saved successfully!', type: 'success' })
     } catch (error) {
       console.error('Error saving schedule:', error)
       setError('Failed to save schedule. Please try again.')
-      alert('Failed to save schedule. Please try again.')
+      setToast({ message: 'Failed to save schedule. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -581,6 +582,15 @@ const DentistSchedule = () => {
         </div>
       </Card>
       </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

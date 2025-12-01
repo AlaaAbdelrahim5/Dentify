@@ -20,7 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, StatsOverview, RadiologyRequestModal, DeleteConfirmationModal } from '../../../components'
+import { Card, Button, Input, DataTable, FilterBar, StatsOverview, RadiologyRequestModal, DeleteConfirmationModal, Toast } from '../../../components'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
@@ -41,6 +41,7 @@ const DentistRadiology = () => {
   const [loading, setLoading] = useState(true)
   const [modalLoading, setModalLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Fetch only requests on mount - fetch other data when modal opens
   useEffect(() => {
@@ -239,15 +240,17 @@ const DentistRadiology = () => {
           apiData.status = requestData.status
         }
         await radiologyRequestsAPI.update(selectedRequest.id, apiData)
+        setToast({ message: 'Radiology request updated successfully!', type: 'success' })
       } else {
         await radiologyRequestsAPI.create(apiData)
+        setToast({ message: 'Radiology request created successfully!', type: 'success' })
       }
       await fetchRadiologyRequests() // Only refresh requests
       setIsRequestModalOpen(false)
       setSelectedRequest(null)
     } catch (error) {
       console.error('Error saving radiology request:', error)
-      alert(error.response?.data?.error || 'Failed to save radiology request. Please try again.')
+      setToast({ message: error.response?.data?.error || 'Failed to save radiology request. Please try again.', type: 'error' })
     }
   }
 
@@ -259,12 +262,13 @@ const DentistRadiology = () => {
   const handleConfirmDelete = async () => {
     try {
       await radiologyRequestsAPI.delete(selectedRequest.id)
+      setToast({ message: 'Radiology request cancelled successfully!', type: 'success' })
       await fetchRadiologyRequests() // Only refresh requests
       setIsDeleteModalOpen(false)
       setSelectedRequest(null)
     } catch (error) {
       console.error('Error deleting radiology request:', error)
-      alert('Failed to delete radiology request. Please try again.')
+      setToast({ message: 'Failed to delete radiology request. Please try again.', type: 'error' })
     }
   }
 
@@ -672,6 +676,15 @@ const DentistRadiology = () => {
           time: ''
         } : null}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

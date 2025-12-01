@@ -28,7 +28,8 @@ import {
   ConfirmationModal,
   NewAppointmentModal,
   SessionCostModal,
-  ToothChartModal
+  ToothChartModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
@@ -46,6 +47,7 @@ const DentistAppointments = ({ onTabChange }) => {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Fetch appointments on mount
   useEffect(() => {
@@ -201,6 +203,7 @@ const DentistAppointments = ({ onTabChange }) => {
   const handleSaveAppointment = async (appointmentData) => {
     try {
       await appointmentsAPI.create(appointmentData)
+      setToast({ message: 'Appointment created successfully!', type: 'success' })
       await fetchAppointments()
       setIsNewAppointmentModalOpen(false)
     } catch (err) {
@@ -217,12 +220,13 @@ const DentistAppointments = ({ onTabChange }) => {
   const handleConfirmCancel = async () => {
     try {
       await appointmentsAPI.cancel(selectedAppointment.id)
+      setToast({ message: 'Appointment cancelled successfully!', type: 'success' })
       await fetchAppointments()
       setIsCancelModalOpen(false)
       setSelectedAppointment(null)
     } catch (err) {
       console.error('Error cancelling appointment:', err)
-      alert('Failed to cancel appointment. Please try again.')
+      setToast({ message: 'Failed to cancel appointment. Please try again.', type: 'error' })
     }
   }
 
@@ -230,17 +234,18 @@ const DentistAppointments = ({ onTabChange }) => {
     try {
       // Update appointment status to confirmed
       await appointmentsAPI.update(appointmentId, { status: 'CONFIRMED' })
+      setToast({ message: 'Appointment confirmed successfully!', type: 'success' })
       await fetchAppointments()
     } catch (err) {
       console.error('Error confirming appointment:', err)
-      alert('Failed to confirm appointment. Please try again.')
+      setToast({ message: 'Failed to confirm appointment. Please try again.', type: 'error' })
     }
   }
 
   const handleCompleteAppointment = (appointment) => {
     // Check if appointment is linked to a treatment
     if (!appointment.rawData?.treatmentId) {
-      alert('This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.')
+      setToast({ message: 'This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.', type: 'error' })
       return
     }
     setSelectedAppointment(appointment)
@@ -251,6 +256,7 @@ const DentistAppointments = ({ onTabChange }) => {
     try {
       // Mark appointment as completed with session cost
       await appointmentsAPI.complete(selectedAppointment.id, { sessionCost })
+      setToast({ message: 'Appointment completed successfully!', type: 'success' })
       await fetchAppointments()
       setIsSessionCostModalOpen(false)
       setSelectedAppointment(null)
@@ -280,7 +286,7 @@ const DentistAppointments = ({ onTabChange }) => {
       console.log('Appointment:', selectedAppointment.treatment)
       console.log('Patient:', selectedAppointment.patient.name)
       
-      alert(`Tooth chart successfully added to appointment: ${selectedAppointment.treatment} for ${selectedAppointment.patient.name}`)
+      setToast({ message: `Tooth chart successfully added to appointment: ${selectedAppointment.treatment} for ${selectedAppointment.patient.name}`, type: 'success' })
     } else {
       // Save as standalone tooth chart examination
       console.log('Saving standalone tooth chart')
@@ -319,7 +325,7 @@ const DentistAppointments = ({ onTabChange }) => {
       if (onTabChange) {
         onTabChange('treatments')
       } else {
-        alert('Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + appointment.patient.name)
+        setToast({ message: 'Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + appointment.patient.name, type: 'error' })
       }
     }
   }
@@ -329,7 +335,7 @@ const DentistAppointments = ({ onTabChange }) => {
     console.log('Creating treatment for tooth:', toothData)
     
     if (!selectedAppointment) {
-      alert('No appointment selected')
+      setToast({ message: 'No appointment selected', type: 'error' })
       return
     }
     
@@ -362,7 +368,7 @@ const DentistAppointments = ({ onTabChange }) => {
     if (onTabChange) {
       onTabChange('treatments')
     } else {
-      alert('Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + selectedAppointment.patient.name)
+      setToast({ message: 'Unable to navigate to treatments. Please go to the Treatments tab manually and create a treatment plan for ' + selectedAppointment.patient.name, type: 'error' })
     }
   }
 
@@ -382,7 +388,7 @@ const DentistAppointments = ({ onTabChange }) => {
     
     if (!patientUserId) {
       console.error('Patient userId not found in appointment data')
-      alert('Unable to find patient information. Please try again.')
+      setToast({ message: 'Unable to find patient information. Please try again.', type: 'error' })
       return
     }
     
@@ -393,7 +399,7 @@ const DentistAppointments = ({ onTabChange }) => {
     if (onTabChange) {
       onTabChange('patients')
     } else {
-      alert('Unable to navigate to patients page. Please go to the Patients tab manually.')
+      setToast({ message: 'Unable to navigate to patients page. Please go to the Patients tab manually.', type: 'error' })
     }
   }
 
@@ -782,6 +788,15 @@ const DentistAppointments = ({ onTabChange }) => {
           appointmentTime: selectedAppointment.time
         } : null}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

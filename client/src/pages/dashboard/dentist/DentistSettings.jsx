@@ -17,9 +17,10 @@ import {
   FaTiktok,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
+import { authUtils } from '../../../utils/auth'
 import DentistSchedule from './DentistSchedule'
 
 const DentistSettings = () => {
@@ -29,6 +30,7 @@ const DentistSettings = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Dentist profile data
   const [profile, setProfile] = useState({
@@ -181,13 +183,13 @@ const DentistSettings = () => {
 
       await dentistsAPI.updateMyProfile(updateData)
       setIsEditing(false)
-      alert('Profile updated successfully!')
+      setToast({ message: 'Profile updated successfully!', type: 'success' })
       // Refresh profile data
       await fetchDentistProfile()
     } catch (err) {
       console.error('Error saving profile:', err)
       setError('Failed to save profile. Please try again.')
-      alert('Failed to save profile. Please try again.')
+      setToast({ message: 'Failed to save profile. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -195,12 +197,12 @@ const DentistSettings = () => {
 
   const handleChangePassword = async () => {
     if (security.newPassword !== security.confirmPassword) {
-      alert('New passwords do not match!')
+      setToast({ message: 'New passwords do not match!', type: 'error' })
       return
     }
 
     if (security.newPassword.length < 6) {
-      alert('Password must be at least 6 characters long!')
+      setToast({ message: 'Password must be at least 6 characters long!', type: 'error' })
       return
     }
 
@@ -225,7 +227,7 @@ const DentistSettings = () => {
         throw new Error(errorData.error || 'Failed to change password')
       }
 
-      alert('Password changed successfully!')
+      setToast({ message: 'Password changed successfully!', type: 'success' })
       setSecurity({
         currentPassword: '',
         newPassword: '',
@@ -234,7 +236,7 @@ const DentistSettings = () => {
       })
     } catch (err) {
       console.error('Error changing password:', err)
-      alert(err.message || 'Failed to change password. Please try again.')
+      setToast({ message: err.message || 'Failed to change password. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -689,6 +691,15 @@ const DentistSettings = () => {
           {activeTab === 'schedule' && <DentistSchedule />}
           {activeTab === 'security' && renderSecurityTab()}
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

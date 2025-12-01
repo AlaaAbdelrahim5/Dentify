@@ -7,6 +7,7 @@ import {
   FaTimesCircle, FaFileInvoiceDollar, FaPrescriptionBottle, FaPrint
 } from 'react-icons/fa'
 import { Button, Card, LoadingSpinner } from '../../common'
+import Toast from '../../common/Toast'
 import generatePaymentReceipt from '../payment/PaymentReceipt'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { appointmentsAPI, treatmentsAPI } from '../../../services/api'
@@ -31,6 +32,7 @@ const TreatmentDetailsModal = ({
   const [activeTab, setActiveTab] = useState('overview') // overview, payments, appointments, prescriptions
   const [appointments, setAppointments] = useState([])
   const [loadingAppointments, setLoadingAppointments] = useState(false)
+  const [toast, setToast] = useState(null)
 
   if (!isOpen || !treatmentData) return null
 
@@ -85,7 +87,7 @@ const TreatmentDetailsModal = ({
         teethStatus: updatedTeethStatus
       })
       
-      alert('Tooth marked as complete!')
+      setToast({ message: 'Tooth treatment completed successfully!', type: 'success' })
       
       // Refresh the data without closing
       if (onRefresh) {
@@ -94,7 +96,7 @@ const TreatmentDetailsModal = ({
       
     } catch (error) {
       console.error('Error marking tooth as complete:', error)
-      alert('Failed to update tooth status. Please try again.')
+      setToast({ message: 'Failed to update tooth status. Please try again.', type: 'error' })
     }
   }
 
@@ -1343,7 +1345,19 @@ const TreatmentDetailsModal = ({
 
   // Wrap content in modal backdrop if not full page
   if (asFullPage) {
-    return content
+    return (
+      <>
+        {content}
+        {/* Toast Notification */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </>
+    )
   }
 
   return (
@@ -1367,6 +1381,15 @@ const TreatmentDetailsModal = ({
           {content}
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
