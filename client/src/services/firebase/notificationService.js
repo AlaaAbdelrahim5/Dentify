@@ -73,6 +73,8 @@ export const createNotification = async (notificationData) => {
 
 // Get notifications for a user
 export const getUserNotifications = (userId, callback) => {
+  console.log('getUserNotifications called with userId:', userId, 'Type:', typeof userId);
+  
   const notificationsRef = collection(db, 'notifications');
   const q = query(
     notificationsRef,
@@ -81,12 +83,22 @@ export const getUserNotifications = (userId, callback) => {
     limit(50)
   );
 
+  console.log('Setting up Firestore listener for notifications...');
+
   return onSnapshot(q, (snapshot) => {
-    const notifications = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    console.log('Firestore snapshot received, docs count:', snapshot.docs.length);
+    const notifications = snapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Notification doc:', doc.id, data);
+      return {
+        id: doc.id,
+        ...data
+      };
+    });
+    console.log('Processed notifications:', notifications);
     callback(notifications);
+  }, (error) => {
+    console.error('Firestore listener error:', error);
   });
 };
 

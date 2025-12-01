@@ -2,6 +2,40 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { db } = require('../config/firebase-admin');
+const admin = require('firebase-admin');
+
+// Helper function to send appointment notifications
+async function sendAppointmentNotification(userId, title, body, data = {}) {
+  try {
+    // Store notification in Firestore
+    await db.collection('notifications').add({
+      userId: userId.toString(),
+      title,
+      body,
+      data,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      type: 'appointment'
+    });
+
+    console.log(`Notification sent to user ${userId}: ${title}`);
+  } catch (error) {
+    console.error('Error sending appointment notification:', error);
+  }
+}
+
+// Helper function to format date and time
+function formatDateTime(date) {
+  return new Date(date).toLocaleString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
 // Get patient's appointments
 router.get('/patient/my-appointments', authenticate, authorize('Patient'), async (req, res) => {
@@ -464,6 +498,37 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
       }
     });
 
+    // Send notifications
+    const dateTimeStr = formatDateTime(appointment.startTime);
+    const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`;
+    const dentistName = `${appointment.dentist.firstName} ${appointment.dentist.lastName}`;
+
+    if (req.user.role === 'Patient') {
+      // Notify dentist about new appointment request
+      await sendAppointmentNotification(
+        dentistId,
+        'New Appointment Request',
+        `${patientName} requested an appointment on ${dateTimeStr}`,
+        { appointmentId: appointment.id, type: 'new_request' }
+      );
+
+      // Notify clinic
+      await sendAppointmentNotification(
+        clinicId,
+        'New Appointment Request',
+        `${patientName} requested an appointment with Dr. ${dentistName} on ${dateTimeStr}`,
+        { appointmentId: appointment.id, type: 'new_request' }
+      );
+    } else {
+      // Notify patient about confirmed appointment
+      await sendAppointmentNotification(
+        patientId,
+        'Appointment Confirmed',
+        `Your appointment with Dr. ${dentistName} is confirmed for ${dateTimeStr}`,
+        { appointmentId: appointment.id, type: 'confirmed' }
+      );
+    }
+
     res.status(201).json({ 
       message: 'Appointment created successfully',
       appointment 
@@ -644,6 +709,75 @@ router.put('/:id', authenticate, async (req, res) => {
       }
     });
 
+    // Send notifications if status changed
+    if (status && status !== existingAppointment.status) {
+      const dateTimeStr = formatDateTime(appointment.startTime);
+      const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`;
+      const dentistName = `${appointment.dentist.firstName} ${appointment.dentist.lastName}`;
+
+      if (status === 'CONFIRMED') {
+        // Notify patient
+        await sendAppointmentNotification(
+          appointment.patientId,
+          'Appointment Confirmed',
+          `Your appointment with Dr. ${dentistName} has been confirmed for ${dateTimeStr}`,
+          { appointmentId: appointment.id, type: 'confirmed' }
+        );
+      } else if (status === 'CANCELLED') {
+        // Notify patient and dentist
+        await sendAppointmentNotification(
+          appointment.patientId,
+          'Appointment Cancelled',
+          `Your appointment with Dr. ${dentistName} on ${dateTimeStr} has been cancelled`,
+          { appointmentId: appointment.id, type: 'cancelled' }
+        );
+
+        if (req.user.id !== appointment.dentistId) {
+          await sendAppointmentNotification(
+            appointment.dentistId,
+            'Appointment Cancelled',
+            `Appointment with ${patientName} on ${dateTimeStr} has been cancelled`,
+            { appointmentId: appointment.id, type: 'cancelled' }
+          );
+        }
+      } else if (status === 'COMPLETED') {
+        // Notify patient
+        await sendAppointmentNotification(
+          appointment.patientId,
+          'Appointment Completed',
+          `Your appointment with Dr. ${dentistName} has been completed`,
+          { appointmentId: appointment.id, type: 'completed' }
+        );
+      }
+    }
+
+    // Notify if time/date changed
+    if ((appointmentDate || startTime || endTime) && 
+        (new Date(appointmentDate || existingAppointment.appointmentDate).getTime() !== existingAppointment.appointmentDate.getTime() ||
+         new Date(startTime || existingAppointment.startTime).getTime() !== existingAppointment.startTime.getTime())) {
+      const newDateTimeStr = formatDateTime(appointment.startTime);
+      const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`;
+      const dentistName = `${appointment.dentist.firstName} ${appointment.dentist.lastName}`;
+
+      // Notify patient
+      await sendAppointmentNotification(
+        appointment.patientId,
+        'Appointment Rescheduled',
+        `Your appointment with Dr. ${dentistName} has been rescheduled to ${newDateTimeStr}`,
+        { appointmentId: appointment.id, type: 'rescheduled' }
+      );
+
+      // Notify dentist if not the one making the change
+      if (req.user.id !== appointment.dentistId) {
+        await sendAppointmentNotification(
+          appointment.dentistId,
+          'Appointment Rescheduled',
+          `Appointment with ${patientName} has been rescheduled to ${newDateTimeStr}`,
+          { appointmentId: appointment.id, type: 'rescheduled' }
+        );
+      }
+    }
+
     // If status is being changed to CONFIRMED, cancel any other pending appointments in the same time slot
     if (status === 'CONFIRMED') {
       const appointmentStartTime = appointment.startTime;
@@ -766,6 +900,41 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
       }
     });
 
+    // Send notifications
+    const dateTimeStr = formatDateTime(appointment.startTime);
+    const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`;
+    const dentistName = `${appointment.dentist.firstName} ${appointment.dentist.lastName}`;
+
+    // Notify patient if not the one cancelling
+    if (req.user.id !== appointment.patientId) {
+      await sendAppointmentNotification(
+        appointment.patientId,
+        'Appointment Cancelled',
+        `Your appointment with Dr. ${dentistName} on ${dateTimeStr} has been cancelled`,
+        { appointmentId: appointment.id, type: 'cancelled' }
+      );
+    }
+
+    // Notify dentist if not the one cancelling
+    if (req.user.id !== appointment.dentistId) {
+      await sendAppointmentNotification(
+        appointment.dentistId,
+        'Appointment Cancelled',
+        `Appointment with ${patientName} on ${dateTimeStr} has been cancelled`,
+        { appointmentId: appointment.id, type: 'cancelled' }
+      );
+    }
+
+    // Notify clinic if not the one cancelling
+    if (req.user.id !== appointment.clinicId) {
+      await sendAppointmentNotification(
+        appointment.clinicId,
+        'Appointment Cancelled',
+        `Appointment between ${patientName} and Dr. ${dentistName} on ${dateTimeStr} has been cancelled`,
+        { appointmentId: appointment.id, type: 'cancelled' }
+      );
+    }
+
     res.json({ 
       message: 'Appointment cancelled successfully',
       appointment 
@@ -873,6 +1042,17 @@ router.patch('/:id/complete', authenticate, authorize('Dentist', 'Secretary'), a
         });
       }
     }
+
+    // Send notification to patient
+    const dateTimeStr = formatDateTime(appointment.startTime);
+    const dentistName = `${appointment.dentist.firstName} ${appointment.dentist.lastName}`;
+
+    await sendAppointmentNotification(
+      appointment.patientId,
+      'Appointment Completed',
+      `Your appointment with Dr. ${dentistName} has been completed`,
+      { appointmentId: appointment.id, type: 'completed' }
+    );
 
     res.json({ 
       message: 'Appointment completed successfully',

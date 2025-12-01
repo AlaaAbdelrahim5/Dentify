@@ -58,7 +58,7 @@ const NotificationDropdown = () => {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className={`absolute right-0 z-20 mt-3 w-96 rounded-2xl shadow-2xl border backdrop-blur-xl overflow-hidden animate-in fade-in slide-in-from-top-2 ${
+          <div className={`absolute right-0 z-[80] mt-3 w-96 rounded-2xl shadow-2xl border backdrop-blur-xl overflow-hidden animate-in fade-in slide-in-from-top-2 ${
             isDarkMode
               ? 'bg-gray-800/95 border-gray-700/50 shadow-gray-900/50'
               : 'bg-white/95 border-gray-200/50 shadow-gray-200/50'
@@ -120,7 +120,7 @@ const NotificationDropdown = () => {
             </div>
 
             {/* Notifications List */}
-            <div className="overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+            <div className="max-h-96 overflow-y-auto overflow-x-hidden">
               {notifications.length === 0 ? (
                 <div className={`p-12 text-center ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -138,7 +138,7 @@ const NotificationDropdown = () => {
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`p-4 border-b transition-all duration-200 hover:scale-[1.02] cursor-pointer ${
+                    className={`p-4 border-b transition-colors duration-200 cursor-pointer ${
                       isDarkMode
                         ? 'border-gray-700/50 hover:bg-gray-700/50'
                         : 'border-gray-200/50 hover:bg-gray-50'

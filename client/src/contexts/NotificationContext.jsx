@@ -32,6 +32,7 @@ export const NotificationProvider = ({ children }) => {
     try {
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
+      console.log('NotificationContext - User ID:', userId, 'Type:', typeof userId);
 
       // Request notification permission
       requestNotificationPermission().then(token => {
@@ -42,11 +43,16 @@ export const NotificationProvider = ({ children }) => {
         }
       });
 
-      // Listen for notifications
-      const unsubscribe = getUserNotifications(userId, (notifs) => {
+      // Listen for notifications - convert userId to string
+      const userIdStr = String(userId);
+      console.log('NotificationContext - Listening for notifications with userId:', userIdStr);
+      
+      const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
+        console.log('NotificationContext - Received notifications:', notifs);
         setNotifications(notifs);
         const unread = notifs.filter(n => !n.read).length;
         setUnreadCount(unread);
+        console.log('NotificationContext - Unread count:', unread);
       });
 
       // Listen for foreground messages
@@ -99,8 +105,9 @@ export const NotificationProvider = ({ children }) => {
 
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
+      const userIdStr = String(userId);
 
-      await markAllNotificationsAsRead(userId);
+      await markAllNotificationsAsRead(userIdStr);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
