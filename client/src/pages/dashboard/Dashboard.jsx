@@ -433,6 +433,19 @@ const UnifiedDashboard = () => {
     setActiveTab('appointments')
   }
 
+  // Not found placeholder - defined before useMemo to avoid initialization errors
+  const renderNotFound = () => (
+    <Card className="p-8 text-center">
+      <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+        Tab Not Found
+      </h3>
+      <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        The requested tab does not exist
+      </p>
+      <Button onClick={() => setActiveTab('overview')}>Go to Overview</Button>
+    </Card>
+  )
+
   // Render tab content based on active tab and user role - memoized to prevent unnecessary re-renders
   const renderTabContent = useMemo(() => {
     if (!currentUser) return null
@@ -463,19 +476,6 @@ const UnifiedDashboard = () => {
     
     return <Component {...componentProps} />
   }, [activeTab, currentUser, userData, stats, appointments, isDarkMode])
-
-  // Not found placeholder
-  const renderNotFound = () => (
-    <Card className="p-8 text-center">
-      <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-        Tab Not Found
-      </h3>
-      <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        The requested tab does not exist
-      </p>
-      <Button onClick={() => setActiveTab('overview')}>Go to Overview</Button>
-    </Card>
-  )
 
   // Loading state
   if (isLoading) {
