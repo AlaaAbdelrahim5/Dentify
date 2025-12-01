@@ -154,6 +154,21 @@ const DentistPatients = () => {
     })
   }, [transformedPatients, searchTerm])
 
+  // Check if we need to open a specific patient (from appointments page)
+  useEffect(() => {
+    const viewPatientId = sessionStorage.getItem('viewPatientId')
+    if (viewPatientId && transformedPatients.length > 0) {
+      // Find the patient with this ID
+      const patient = transformedPatients.find(p => p.id === parseInt(viewPatientId))
+      if (patient) {
+        // Clear the session storage
+        sessionStorage.removeItem('viewPatientId')
+        // Open the patient profile
+        handleViewPatient(patient)
+      }
+    }
+  }, [transformedPatients])
+
   const handleViewPatient = async (patient) => {
     setSelectedPatient(patient)
     setCurrentPage('view')

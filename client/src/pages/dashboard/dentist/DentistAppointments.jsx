@@ -374,6 +374,29 @@ const DentistAppointments = ({ onTabChange }) => {
     // You can pass the tooth number to pre-fill the appointment modal
   }
 
+  const handleViewPatient = (appointment) => {
+    // Get patient userId from appointment - try multiple paths
+    const patientUserId = appointment.rawData?.patient?.userId || 
+                         appointment.rawData?.patientId ||
+                         appointment.rawData?.patient?.id
+    
+    if (!patientUserId) {
+      console.error('Patient userId not found in appointment data')
+      alert('Unable to find patient information. Please try again.')
+      return
+    }
+    
+    // Store patient ID in sessionStorage to be accessed by DentistPatients page
+    sessionStorage.setItem('viewPatientId', patientUserId)
+    
+    // Navigate to patients tab
+    if (onTabChange) {
+      onTabChange('patients')
+    } else {
+      alert('Unable to navigate to patients page. Please go to the Patients tab manually.')
+    }
+  }
+
   // Computed stats using useMemo
   const stats = useMemo(() => [
     {
@@ -498,7 +521,10 @@ const DentistAppointments = ({ onTabChange }) => {
             <FaUser className="text-white text-sm" />
           </div>
           <div>
-            <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div 
+              className={`font-medium cursor-pointer hover:underline transition-colors ${isDarkMode ? 'text-white hover:text-teal-400' : 'text-gray-900 hover:text-teal-600'}`}
+              onClick={() => handleViewPatient(appointment)}
+            >
               {appointment.patient.name}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -599,9 +625,6 @@ const DentistAppointments = ({ onTabChange }) => {
         title="Appointments"
         description="Manage and track your daily appointment schedule"
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={stats} />
 
       {/* View Toggle */}
       <div className="flex items-center justify-between">

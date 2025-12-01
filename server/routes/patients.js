@@ -198,7 +198,7 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const patient = await prisma.patient.findUnique({
-      where: { userId: id },
+      where: { userId: parseInt(id) },
       include: {
         user: {
           select: {
@@ -219,6 +219,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ patient });
   } catch (error) {
+    console.error('Error fetching patient by ID:', error);
     res.status(500).json({ error: 'Failed to fetch patient' });
   }
 });
