@@ -2,13 +2,13 @@ import { useChat } from '../../../contexts/ChatContext';
 import { FiMessageCircle } from 'react-icons/fi';
 import { useTheme } from '../../../contexts/ThemeContext';
 
-const ChatButton = () => {
+const ChatButton = ({ onClick }) => {
   const { totalUnreadCount } = useChat();
   const { isDarkMode } = useTheme();
 
   return (
     <button
-      onClick={() => window.location.href = '/chat'}
+      onClick={onClick}
       className={`relative p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group ${
         isDarkMode 
           ? 'hover:bg-gradient-to-br from-blue-500/20 to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20' 

@@ -9,12 +9,13 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { useChat } from '../../contexts/ChatContext'
 import { NotificationDropdown } from '../features/notifications'
-import { ChatButton } from '../features/chat'
+import { ChatButton, ChatSidebar } from '../features/chat'
 import { authUtils } from '../../utils/auth'
 
 const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const { isDarkMode } = useTheme()
@@ -168,7 +169,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                 // Authenticated user navigation
                 <>
                   {/* Chat Button */}
-                  <ChatButton />
+                  <ChatButton onClick={() => setIsChatSidebarOpen(true)} />
 
                   {/* Notifications */}
                   <NotificationDropdown />
@@ -451,6 +452,14 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
           </div>
         )}
       </div>
+
+      {/* Chat Sidebar */}
+      {isAuthenticated && (
+        <ChatSidebar 
+          isOpen={isChatSidebarOpen} 
+          onClose={() => setIsChatSidebarOpen(false)} 
+        />
+      )}
     </nav>
   )
 }
