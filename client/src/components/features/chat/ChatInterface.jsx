@@ -18,15 +18,17 @@ const ChatInterface = ({ users = [] }) => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900">
-      <ConversationsList 
-        onSelectConversation={handleSelectConversation}
-        users={users}
-      />
-      <ChatWindow 
-        conversation={activeConversation || selectedConversation}
-        otherUser={getOtherUser(activeConversation || selectedConversation)}
-      />
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+      <div className="flex h-[calc(100vh-14rem)]">
+        <ConversationsList 
+          onSelectConversation={handleSelectConversation}
+          users={users}
+        />
+        <ChatWindow 
+          conversation={activeConversation || selectedConversation}
+          otherUser={getOtherUser(activeConversation || selectedConversation)}
+        />
+      </div>
     </div>
   );
 };

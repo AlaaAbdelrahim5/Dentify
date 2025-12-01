@@ -35,8 +35,10 @@ const ChatPage = () => {
   return (
     <>
       <Navbar />
-      <div className="pt-16 h-screen">
-        <ChatInterface users={users} />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
+        <div className="max-w-7xl mx-auto p-6">
+          <ChatInterface users={users} />
+        </div>
       </div>
     </>
   );

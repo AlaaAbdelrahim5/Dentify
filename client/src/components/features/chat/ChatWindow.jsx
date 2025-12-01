@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChat } from '../../../contexts/ChatContext';
-import { FiSend, FiPaperclip, FiSmile, FiMoreVertical } from 'react-icons/fi';
+import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiMessageSquare } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
 
 const ChatWindow = ({ conversation, otherUser }) => {
@@ -43,14 +43,14 @@ const ChatWindow = ({ conversation, otherUser }) => {
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <FiSmile className="w-12 h-12 text-gray-400" />
+        <div className="text-center px-6">
+          <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <FiMessageSquare className="w-16 h-16 text-blue-600 dark:text-blue-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
             Select a conversation
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             Choose a conversation from the list to start chatting
           </p>
         </div>
@@ -61,27 +61,27 @@ const ChatWindow = ({ conversation, otherUser }) => {
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
       {/* Chat Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
             {otherUser?.name?.[0]?.toUpperCase() || '?'}
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg">
               {otherUser?.name || 'Unknown User'}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {otherUser?.role || 'User'}
             </p>
           </div>
         </div>
-        <button className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <button className="p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
           <FiMoreVertical className="w-5 h-5" />
         </button>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
         {messages.map((message) => {
           const isSender = message.senderId === userId;
           return (
@@ -92,13 +92,13 @@ const ChatWindow = ({ conversation, otherUser }) => {
               <div
                 className={`max-w-xs lg:max-w-md xl:max-w-lg ${
                   isSender
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                } rounded-lg px-4 py-2`}
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700'
+                } rounded-2xl px-4 py-3`}
               >
-                <p className="text-sm break-words">{message.message}</p>
+                <p className="text-sm break-words leading-relaxed">{message.message}</p>
                 <p
-                  className={`text-xs mt-1 ${
+                  className={`text-xs mt-1.5 ${
                     isSender ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
@@ -112,17 +112,17 @@ const ChatWindow = ({ conversation, otherUser }) => {
       </div>
 
       {/* Message Input */}
-      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+      <div className="px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <form onSubmit={handleSendMessage} className="flex items-end gap-3">
           <button
             type="button"
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
           >
             <FiPaperclip className="w-5 h-5" />
           </button>
           <button
             type="button"
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
           >
             <FiSmile className="w-5 h-5" />
           </button>
@@ -131,13 +131,13 @@ const ChatWindow = ({ conversation, otherUser }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            className="flex-1 resize-none rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
+            className="flex-1 resize-none rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-32 transition-all"
             rows={1}
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg disabled:shadow-none"
           >
             <FiSend className="w-5 h-5" />
           </button>
