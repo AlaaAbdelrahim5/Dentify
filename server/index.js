@@ -102,6 +102,10 @@ app.use('/api/payments', paymentRoutes);
 const radiologyRequestRoutes = require('./routes/radiologyRequests');
 app.use('/api/radiology-requests', radiologyRequestRoutes);
 
+// Notification routes
+const notificationRoutes = require('./routes/notifications');
+app.use('/api/notifications', notificationRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

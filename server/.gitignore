@@ -20,6 +20,11 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Firebase
+config/serviceAccountKey.json
+firebase-debug.log
+firestore-debug.log
+
 # Prisma
 prisma/.env
 *.db

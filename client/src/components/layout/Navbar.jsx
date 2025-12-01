@@ -6,6 +6,10 @@ import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '../common'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useNotifications } from '../../contexts/NotificationContext'
+import { useChat } from '../../contexts/ChatContext'
+import { NotificationDropdown } from '../features/notifications'
+import { ChatButton } from '../features/chat'
 import { authUtils } from '../../utils/auth'
 
 const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
@@ -163,33 +167,11 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
               ) : (
                 // Authenticated user navigation
                 <>
-                  {/* Messages */}
-                  <div className="relative group">
-                    <button className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-800/70 text-gray-400 hover:text-blue-400 hover:shadow-lg hover:shadow-blue-500/10' 
-                        : 'hover:bg-blue-50 text-gray-500 hover:text-blue-600 hover:shadow-md'
-                    }`}>
-                      <FaEnvelope className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                    <span className="absolute top-1 right-1 bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg border-2 border-current">
-                      3
-                    </span>
-                  </div>
+                  {/* Chat Button */}
+                  <ChatButton />
 
                   {/* Notifications */}
-                  <div className="relative group">
-                    <button className={`p-2.5 md:p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-800/70 text-gray-400 hover:text-red-400 hover:shadow-lg hover:shadow-red-500/10' 
-                        : 'hover:bg-red-50 text-gray-500 hover:text-red-600 hover:shadow-md'
-                    }`}>
-                      <MdNotifications className="w-5 h-5 md:w-6 md:h-6" />
-                    </button>
-                    <span className="absolute top-1 right-1 bg-gradient-to-br from-red-500 to-pink-500 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-current">
-                      2
-                    </span>
-                  </div>
+                  <NotificationDropdown />
 
                   {/* Divider */}
                   <div className={`hidden md:block h-8 w-px mx-1 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-300/50'}`}></div>

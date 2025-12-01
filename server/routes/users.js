@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 
-// Get all users (admin only)
-router.get('/', authenticate, authorize('Admin'), async (req, res) => {
+// Get all users (authenticated users - needed for chat)
+router.get('/', authenticate, async (req, res) => {
   try {
     const users = await req.prisma.user.findMany({
       select: {
@@ -12,11 +12,75 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
         role: true,
         status: true,
         phone: true,
-        profileImage: true
+        profileImage: true,
+        admin: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        dentist: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        secretary: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        patient: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        radiology: {
+          select: {
+            centerName: true
+          }
+        },
+        clinic: {
+          select: {
+            clinicName: true
+          }
+        }
       }
     });
-    res.json({ users });
+    
+    // Format the response to include firstName and lastName at root level
+    const formattedUsers = users.map(user => {
+      const roleData = user.admin || user.dentist || user.secretary || user.patient;
+      let displayName = user.email;
+      
+      if (roleData) {
+        displayName = `${roleData.firstName || ''} ${roleData.lastName || ''}`.trim();
+      } else if (user.radiology?.centerName) {
+        displayName = user.radiology.centerName;
+      } else if (user.clinic?.clinicName) {
+        displayName = user.clinic.clinicName;
+      }
+      
+      return {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        phone: user.phone,
+        profileImage: user.profileImage,
+        firstName: roleData?.firstName || '',
+        lastName: roleData?.lastName || '',
+        centerName: user.radiology?.centerName || '',
+        clinicName: user.clinic?.clinicName || '',
+        name: displayName
+      };
+    });
+    
+    res.json(formattedUsers);
   } catch (error) {
+    console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });

@@ -21,6 +21,11 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Firebase
+firebase-debug.log
+firestore-debug.log
+.firebase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

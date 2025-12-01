@@ -4,9 +4,13 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Dashboard from './pages/dashboard/Dashboard'
+import ChatPage from './pages/ChatPage'
+import NotificationsPage from './pages/NotificationsPage'
 import NotFound from './pages/NotFound'
 import { LoadingSpinner } from './components'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
+import { NotificationProvider } from './contexts/NotificationContext'
+import { ChatProvider } from './contexts/ChatContext'
 import { authUtils } from './utils/auth'
 import './styles/App.css'
 
@@ -114,6 +118,8 @@ const AuthRouter = () => {
         <Route path="/dentist/dashboard" element={<Dashboard />} />
         <Route path="/secretary/dashboard" element={<Dashboard />} />
         <Route path="/radiology/dashboard" element={<Dashboard />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -132,7 +138,11 @@ const AppContent = () => {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <NotificationProvider>
+        <ChatProvider>
+          <AppContent />
+        </ChatProvider>
+      </NotificationProvider>
     </ThemeProvider>
   )
 }
