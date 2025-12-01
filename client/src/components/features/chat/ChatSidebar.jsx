@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FiX, FiSearch, FiMessageCircle, FiMoreVertical, FiUserPlus } from 'react-icons/fi';
+import { FiX, FiSearch, FiMessageCircle, FiMoreVertical, FiUserPlus, FiSend } from 'react-icons/fi';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useChat } from '../../../contexts/ChatContext';
 import { authUtils } from '../../../utils/auth';
@@ -532,6 +532,21 @@ const ChatWindow = ({ user, onClose }) => {
                 : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-blue-500'
             }`}
           />
+          <button
+            onClick={handleSend}
+            disabled={!messageText.trim()}
+            className={`p-2.5 rounded-full transition-all duration-200 flex-shrink-0 ${
+              messageText.trim()
+                ? isDarkMode
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
+                : isDarkMode
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <FiSend className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </div>
