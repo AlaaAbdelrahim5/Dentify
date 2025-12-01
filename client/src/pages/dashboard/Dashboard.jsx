@@ -31,6 +31,8 @@ import DentistSchedule from './dentist/DentistSchedule'
 import DentistTreatments from './dentist/DentistTreatments'
 import DentistPayments from './dentist/DentistPayments'
 import DentistRadiology from './dentist/DentistRadiology'
+import DentistReports from './dentist/DentistReports'
+import DentistAnalytics from './dentist/DentistAnalytics'
 import DentistSettings from './dentist/DentistSettings'
 
 // Import patient components
@@ -140,8 +142,8 @@ const UnifiedDashboard = () => {
           treatments: { component: DentistTreatments, label: 'Treatments' },
           payments: { component: DentistPayments, label: 'Payments' },
           radiology: { component: DentistRadiology, label: 'Radiology' },
-          reports: { component: ComingSoon, label: 'Reports', icon: FaFileAlt },
-          analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
+          reports: { component: DentistReports, label: 'Reports' },
+          analytics: { component: DentistAnalytics, label: 'Analytics' },
           settings: { component: DentistSettings, label: 'Settings' }
         }
       },
