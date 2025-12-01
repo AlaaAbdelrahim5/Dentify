@@ -173,22 +173,39 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                   >
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">
-                          {otherUser.name?.[0]?.toUpperCase() || '?'}
-                        </span>
-                      </div>
+                      {otherUser.profileImage ? (
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}${otherUser.profileImage}`}
+                          alt={otherUser.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">
+                            {otherUser.name?.[0]?.toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      )}
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
                     </div>
                     
                     {/* Info */}
                     <div className="flex-1 min-w-0 text-left">
                       <div className="flex items-center justify-between">
-                        <h4 className={`font-semibold truncate ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>
-                          {otherUser.name}
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className={`font-semibold truncate ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {otherUser.name}
+                          </h4>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                            isDarkMode
+                              ? 'bg-gray-700 text-gray-400'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}>
+                            {otherUser.role}
+                          </span>
+                        </div>
                         {conversation.lastMessageAt && (
                           <span className={`text-xs ${
                             isDarkMode ? 'text-gray-500' : 'text-gray-500'
@@ -197,7 +214,12 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center justify-between">
+                      <p className={`text-xs truncate ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
+                        {otherUser.email}
+                      </p>
+                      <div className="flex items-center justify-between mt-1">
                         <p className={`text-sm truncate ${
                           isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
@@ -324,11 +346,19 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                     >
                       {/* Avatar */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {user.name?.[0]?.toUpperCase() || '?'}
-                          </span>
-                        </div>
+                        {user.profileImage ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_URL}${user.profileImage}`}
+                            alt={user.name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {user.name?.[0]?.toUpperCase() || '?'}
+                            </span>
+                          </div>
+                        )}
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                       </div>
                       
@@ -414,14 +444,22 @@ const ChatWindow = ({ user, onClose }) => {
           : 'bg-gradient-to-r from-blue-500 to-cyan-500'
       }`}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <span className="text-white font-bold text-sm">
-              {user.name?.[0]?.toUpperCase() || '?'}
-            </span>
-          </div>
+          {user.profileImage ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL}${user.profileImage}`}
+              alt={user.name}
+              className="w-9 h-9 rounded-full object-cover border-2 border-white/30"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {user.name?.[0]?.toUpperCase() || '?'}
+              </span>
+            </div>
+          )}
           <div>
             <h3 className="text-white font-bold text-sm">{user.name}</h3>
-            <p className="text-white/80 text-xs">Active now</p>
+            <p className="text-white/80 text-xs capitalize">{user.role}</p>
           </div>
         </div>
         <button
