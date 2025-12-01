@@ -172,6 +172,10 @@ model Treatment {
   // [{ toothNumber: 12, conditionStatus:"Cavity", priority:"High", diagnosedDate:"2025-10-27", notes:"Deep decay" }, ...]
   teethStatus Json?
 
+  // Prescriptions list for this treatment.
+  // [{ id: "uuid", prescriptionNumber: "RX-2024-001", prescriptionDate: "2024-12-01", medications: [...], createdAt: "...", createdBy: dentistId }]
+  prescriptions Json?
+
   patient       Patient            @relation(fields: [patientId], references: [userId], onDelete: Cascade)
   dentist       Dentist            @relation(fields: [dentistId], references: [userId], onDelete: Cascade)
   appointments  Appointment[]

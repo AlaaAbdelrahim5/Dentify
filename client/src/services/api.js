@@ -473,6 +473,17 @@ export const treatmentsAPI = {
   
   // Delete treatment
   delete: (id) => ApiService.delete(`/treatments/${id}`),
+  
+  // Get prescriptions for a treatment
+  getPrescriptions: (treatmentId) => ApiService.get(`/treatments/${treatmentId}/prescriptions`),
+  
+  // Create prescription for a treatment
+  createPrescription: (treatmentId, prescriptionData) => 
+    ApiService.post(`/treatments/${treatmentId}/prescriptions`, prescriptionData),
+  
+  // Delete prescription from a treatment
+  deletePrescription: (treatmentId, prescriptionId) => 
+    ApiService.delete(`/treatments/${treatmentId}/prescriptions/${prescriptionId}`),
 };
 
 // Payments API functions

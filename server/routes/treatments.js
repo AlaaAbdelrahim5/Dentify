@@ -503,6 +503,160 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
   }
 });
 
+// Get prescriptions for a treatment
+router.get('/:id/prescriptions', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const treatment = await prisma.treatment.findUnique({
+      where: { id: parseInt(id) },
+      select: { prescriptions: true, dentistId: true, patientId: true }
+    });
+
+    if (!treatment) {
+      return res.status(404).json({ error: 'Treatment not found' });
+    }
+
+    // Check access: dentist, patient, or admin
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    if (userRole !== 'Admin' && 
+        treatment.dentistId !== userId && 
+        treatment.patientId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const prescriptions = treatment.prescriptions || [];
+    res.json({ prescriptions });
+  } catch (error) {
+    console.error('Error fetching prescriptions:', error);
+    res.status(500).json({ error: 'Failed to fetch prescriptions' });
+  }
+});
+
+// Create prescription for a treatment
+router.post('/:id/prescriptions', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dentistId = req.user.id;
+    const { prescriptionDate, medications, notes } = req.body;
+
+    // Validate required fields
+    if (!prescriptionDate || !medications || medications.length === 0) {
+      return res.status(400).json({ error: 'Prescription date and at least one medication are required' });
+    }
+
+    // Check if treatment exists and belongs to dentist
+    const treatment = await prisma.treatment.findUnique({
+      where: { id: parseInt(id) },
+      select: { 
+        id: true, 
+        dentistId: true, 
+        prescriptions: true,
+        patient: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    if (!treatment) {
+      return res.status(404).json({ error: 'Treatment not found' });
+    }
+
+    if (treatment.dentistId !== dentistId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get existing prescriptions
+    const existingPrescriptions = treatment.prescriptions || [];
+    
+    // Generate prescription number
+    const year = new Date().getFullYear();
+    const count = existingPrescriptions.length + 1;
+    const prescriptionNumber = `RX-${year}-${String(count).padStart(4, '0')}`;
+
+    // Create new prescription object
+    const newPrescription = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      prescriptionNumber,
+      prescriptionDate,
+      medications: medications.filter(m => m.name && m.name.trim()),
+      notes: notes || '',
+      createdAt: new Date().toISOString(),
+      createdBy: dentistId,
+      patientId: treatment.patient.userId,
+      patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`
+    };
+
+    // Add to existing prescriptions
+    const updatedPrescriptions = [...existingPrescriptions, newPrescription];
+
+    // Update treatment with new prescriptions
+    await prisma.treatment.update({
+      where: { id: parseInt(id) },
+      data: {
+        prescriptions: updatedPrescriptions
+      }
+    });
+
+    res.status(201).json({ 
+      message: 'Prescription created successfully',
+      prescription: newPrescription 
+    });
+  } catch (error) {
+    console.error('Error creating prescription:', error);
+    res.status(500).json({ error: 'Failed to create prescription' });
+  }
+});
+
+// Delete prescription from a treatment
+router.delete('/:id/prescriptions/:prescriptionId', authenticate, authorize('Dentist'), async (req, res) => {
+  try {
+    const { id, prescriptionId } = req.params;
+    const dentistId = req.user.id;
+
+    // Check if treatment exists and belongs to dentist
+    const treatment = await prisma.treatment.findUnique({
+      where: { id: parseInt(id) },
+      select: { dentistId: true, prescriptions: true }
+    });
+
+    if (!treatment) {
+      return res.status(404).json({ error: 'Treatment not found' });
+    }
+
+    if (treatment.dentistId !== dentistId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get existing prescriptions and filter out the one to delete
+    const existingPrescriptions = treatment.prescriptions || [];
+    const updatedPrescriptions = existingPrescriptions.filter(p => p.id !== prescriptionId);
+
+    if (existingPrescriptions.length === updatedPrescriptions.length) {
+      return res.status(404).json({ error: 'Prescription not found' });
+    }
+
+    // Update treatment
+    await prisma.treatment.update({
+      where: { id: parseInt(id) },
+      data: {
+        prescriptions: updatedPrescriptions
+      }
+    });
+
+    res.json({ message: 'Prescription deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting prescription:', error);
+    res.status(500).json({ error: 'Failed to delete prescription' });
+  }
+});
+
 // Delete treatment
 router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, res) => {
   try {

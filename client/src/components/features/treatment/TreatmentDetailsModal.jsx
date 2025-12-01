@@ -4,7 +4,7 @@ import {
   FaTimes, FaEdit, FaCalendarAlt, FaDollarSign, FaStethoscope, 
   FaUser, FaStickyNote, FaTooth, FaPlus, FaXRay, FaMoneyBillWave,
   FaExclamationTriangle, FaClock, FaCheckCircle, FaEye, FaPhone,
-  FaTimesCircle, FaFileInvoiceDollar
+  FaTimesCircle, FaFileInvoiceDollar, FaPrescriptionBottle, FaPrint
 } from 'react-icons/fa'
 import { Button, Card, LoadingSpinner } from '../../common'
 import generatePaymentReceipt from '../payment/PaymentReceipt'
@@ -20,13 +20,15 @@ const TreatmentDetailsModal = ({
   onUpdateStatus,
   onAddPayment,
   onRequestRadiology,
+  onCreatePrescription, // New prop for prescription
   onRefresh, // New prop to refresh data
   payments = [],
+  prescriptions = [], // New prop for prescription history
   asFullPage = false, // New prop to render as full page instead of modal
   readOnly = false // New prop to disable edit actions (for Secretary view)
 }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview') // overview, payments, appointments
+  const [activeTab, setActiveTab] = useState('overview') // overview, payments, appointments, prescriptions
   const [appointments, setAppointments] = useState([])
   const [loadingAppointments, setLoadingAppointments] = useState(false)
 
@@ -94,6 +96,170 @@ const TreatmentDetailsModal = ({
       console.error('Error marking tooth as complete:', error)
       alert('Failed to update tooth status. Please try again.')
     }
+  }
+
+  const handlePrintPrescription = (prescription, index) => {
+    const printWindow = window.open('', '_blank')
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Prescription - ${treatmentData.patientName}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 3px solid #14b8a6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .header h1 {
+            margin: 0;
+            color: #14b8a6;
+            font-size: 28px;
+          }
+          .header p {
+            margin: 5px 0;
+            color: #666;
+          }
+          .patient-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+          }
+          .patient-info div {
+            margin: 5px 0;
+          }
+          .patient-info strong {
+            color: #14b8a6;
+          }
+          .medications {
+            margin-bottom: 30px;
+          }
+          .medications h2 {
+            color: #14b8a6;
+            border-bottom: 2px solid #14b8a6;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          .medication {
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+          }
+          .medication h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+          }
+          .medication-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+          }
+          .medication-detail {
+            font-size: 14px;
+          }
+          .medication-detail strong {
+            color: #666;
+          }
+          .instructions {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-style: italic;
+            color: #666;
+          }
+          .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+          }
+          .signature {
+            margin-top: 40px;
+            text-align: right;
+          }
+          .signature-line {
+            border-top: 1px solid #333;
+            width: 200px;
+            margin-left: auto;
+            padding-top: 5px;
+            text-align: center;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 20px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>🦷 Dentify Clinic</h1>
+          <p>Medical Prescription</p>
+          <p>Prescription #${index + 1} - ${prescription.prescriptionNumber || `RX-${index + 1}`}</p>
+        </div>
+
+        <div class="patient-info">
+          <div><strong>Patient Name:</strong> ${treatmentData.patientName || 'N/A'}</div>
+          <div><strong>Treatment:</strong> ${treatmentData.treatmentType || 'N/A'}</div>
+          <div><strong>Date:</strong> ${new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString()}</div>
+        </div>
+
+        <div class="medications">
+          <h2>💊 Medications</h2>
+          ${prescription.medications.map((med, medIndex) => `
+            <div class="medication">
+              <h3>${medIndex + 1}. ${med.name}</h3>
+              <div class="medication-details">
+                <div class="medication-detail">
+                  <strong>Dosage:</strong> ${med.dosage || 'N/A'}
+                </div>
+                <div class="medication-detail">
+                  <strong>Frequency:</strong> ${med.frequency || 'N/A'}
+                </div>
+                <div class="medication-detail">
+                  <strong>Duration:</strong> ${med.duration || 'N/A'}
+                </div>
+              </div>
+              ${med.instructions ? `
+                <div class="instructions">
+                  <strong>Instructions:</strong> ${med.instructions}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="signature">
+          <div class="signature-line">
+            Doctor's Signature
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>This prescription is generated electronically and is valid.</p>
+          <p>For any queries, please contact the clinic.</p>
+        </div>
+      </body>
+      </html>
+    `
+    printWindow.document.write(printContent)
+    printWindow.document.close()
+    printWindow.print()
   }
 
   const remainingBalance = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0) - treatmentData.paidAmount
@@ -419,6 +585,20 @@ const TreatmentDetailsModal = ({
           >
             Appointments
           </button>
+          <button
+            onClick={() => setActiveTab('prescriptions')}
+            className={`
+              px-6 py-2.5 rounded-lg font-medium transition-all duration-200
+              ${activeTab === 'prescriptions'
+                ? 'bg-teal-600 text-white shadow-md'
+                : isDarkMode
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+              }
+            `}
+          >
+            Prescriptions
+          </button>
         </div>
 
         {/* Content Area - Scrollable */}
@@ -569,6 +749,16 @@ const TreatmentDetailsModal = ({
                         >
                           <FaXRay className="w-4 h-4 mr-2" />
                           Request Radiology
+                        </Button>
+                      )}
+                      {onCreatePrescription && (
+                        <Button
+                          variant="outline"
+                          onClick={() => onCreatePrescription(treatmentData)}
+                          className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <FaPrescriptionBottle className="w-4 h-4 mr-2" />
+                          Create Prescription
                         </Button>
                       )}
                       {treatmentData.treatmentStatus !== 'Cancelled' && treatmentData.treatmentStatus !== 'Completed' && (
@@ -971,6 +1161,161 @@ const TreatmentDetailsModal = ({
                       }`}>
                         No appointments linked to this treatment
                       </p>
+                    </div>
+                  )}
+                </Card.Content>
+              </Card>
+            </div>
+          )}
+
+          {/* Prescriptions Tab */}
+          {activeTab === 'prescriptions' && (
+            <div className="space-y-6">
+              <Card>
+                <Card.Header>
+                  <div className="flex items-center justify-between">
+                    <h3 className={`font-semibold text-lg flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>
+                      <FaPrescriptionBottle className="w-5 h-5 text-blue-600" />
+                      Prescription History
+                    </h3>
+                    {!readOnly && onCreatePrescription && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => onCreatePrescription(treatmentData)}
+                      >
+                        <FaPlus className="w-4 h-4 mr-2" />
+                        New Prescription
+                      </Button>
+                    )}
+                  </div>
+                </Card.Header>
+                <Card.Content>
+                  {prescriptions && prescriptions.length > 0 ? (
+                    <div className="space-y-4">
+                      {prescriptions.map((prescription, index) => (
+                        <div
+                          key={prescription.id || index}
+                          className={`p-4 rounded-lg border ${
+                            isDarkMode
+                              ? 'bg-gray-700/50 border-gray-600'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'
+                              }`}>
+                                <FaPrescriptionBottle className="text-blue-600" />
+                              </div>
+                              <div>
+                                <p className={`font-semibold ${
+                                  isDarkMode ? 'text-white' : 'text-gray-800'
+                                }`}>
+                                  Prescription #{index + 1}
+                                </p>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <FaCalendarAlt className={`w-3 h-3 ${
+                                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                  }`} />
+                                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                                    {new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePrintPrescription(prescription, index)}
+                              className="flex items-center gap-2"
+                            >
+                              <FaPrint className="w-4 h-4" />
+                              Print
+                            </Button>
+                          </div>
+
+                          {/* Medications List */}
+                          <div className="space-y-2">
+                            <p className={`text-sm font-medium mb-2 ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                              Medications:
+                            </p>
+                            {prescription.medications && prescription.medications.map((med, medIndex) => (
+                              <div
+                                key={medIndex}
+                                className={`p-3 rounded border ${
+                                  isDarkMode
+                                    ? 'bg-gray-800/50 border-gray-600'
+                                    : 'bg-white border-gray-200'
+                                }`}
+                              >
+                                <p className={`font-medium mb-1 ${
+                                  isDarkMode ? 'text-white' : 'text-gray-800'
+                                }`}>
+                                  {medIndex + 1}. {med.name}
+                                </p>
+                                <div className={`grid grid-cols-2 md:grid-cols-3 gap-2 text-sm ${
+                                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                }`}>
+                                  {med.dosage && (
+                                    <div>
+                                      <span className="font-medium">Dosage:</span> {med.dosage}
+                                    </div>
+                                  )}
+                                  {med.frequency && (
+                                    <div>
+                                      <span className="font-medium">Frequency:</span> {med.frequency}
+                                    </div>
+                                  )}
+                                  {med.duration && (
+                                    <div>
+                                      <span className="font-medium">Duration:</span> {med.duration}
+                                    </div>
+                                  )}
+                                </div>
+                                {med.instructions && (
+                                  <p className={`mt-2 text-sm italic ${
+                                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                                  }`}>
+                                    <FaStickyNote className="inline w-3 h-3 mr-1" />
+                                    {med.instructions}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FaPrescriptionBottle className={`w-12 h-12 mx-auto mb-4 ${
+                        isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                      }`} />
+                      <p className={`text-lg mb-2 ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        No prescriptions yet
+                      </p>
+                      <p className={`text-sm mb-4 ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
+                        Create a prescription to track medications for this treatment
+                      </p>
+                      {!readOnly && onCreatePrescription && (
+                        <Button
+                          variant="primary"
+                          onClick={() => onCreatePrescription(treatmentData)}
+                        >
+                          <FaPlus className="w-4 h-4 mr-2" />
+                          Create First Prescription
+                        </Button>
+                      )}
                     </div>
                   )}
                 </Card.Content>

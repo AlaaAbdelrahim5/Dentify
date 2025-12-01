@@ -17,9 +17,10 @@ import {
   FaXRay,
   FaExclamationTriangle,
   FaArrowLeft,
-  FaSave
+  FaSave,
+  FaPrescriptionBottle
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, NewTreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, DeleteConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, NewTreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, DeleteConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal } from '../../../components'
 import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 
 const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
@@ -38,6 +39,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
   const [appointmentDataState, setAppointmentDataState] = useState(null)
   
@@ -47,6 +49,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const [appointments, setAppointments] = useState([])
   const [radiologyCenters, setRadiologyCenters] = useState([])
   const [payments, setPayments] = useState([])
+  const [prescriptions, setPrescriptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -258,7 +261,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     return { total, active, completed, totalRevenue, pendingPayments }
   }, [displayTreatments])
 
-  // Fetch payments for a specific treatment
+  // Fetch payments and prescriptions for a specific treatment
   const fetchTreatmentPayments = async (treatmentId) => {
     try {
       const response = await paymentsAPI.getByTreatment(treatmentId)
@@ -271,12 +274,25 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     }
   }
 
+  const fetchTreatmentPrescriptions = async (treatmentId) => {
+    try {
+      const response = await treatmentsAPI.getPrescriptions(treatmentId)
+      console.log('Treatment prescriptions:', response)
+      
+      setPrescriptions(response.prescriptions || [])
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error)
+      setPrescriptions([])
+    }
+  }
+
   // Navigation handlers
   const handleBackToList = () => {
     setCurrentPage('list')
     setSelectedTreatment(null)
     setAppointmentDataState(null)
     setPayments([])
+    setPrescriptions([])
   }
 
   // Modal handlers
@@ -376,6 +392,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     setSelectedTreatment(treatment)
     setCurrentPage('view')
     await fetchTreatmentPayments(treatment.id)
+    await fetchTreatmentPrescriptions(treatment.id)
   }
 
   const handleRefreshTreatment = async () => {
@@ -389,6 +406,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     setSelectedTreatment(treatment)
     setCurrentPage('edit')
     await fetchTreatmentPayments(treatment.id)
+    await fetchTreatmentPrescriptions(treatment.id)
   }
 
   const handleDeleteTreatment = (treatment) => {
@@ -524,6 +542,44 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       console.error('Error creating radiology request:', error)
       console.error('Error response:', error.response?.data)
       alert(error.response?.data?.error || 'Failed to create radiology request. Please try again.')
+    }
+  }
+
+  const handleCreatePrescription = (treatment) => {
+    // Don't change selectedTreatment if it's already set (e.g., from view page)
+    if (!selectedTreatment) {
+      setSelectedTreatment(treatment)
+    }
+    setIsPrescriptionModalOpen(true)
+  }
+
+  const handleClosePrescriptionModal = () => {
+    setIsPrescriptionModalOpen(false)
+    // Don't clear selectedTreatment - let the page state handle it
+  }
+
+  const handleSavePrescription = async (prescriptionData) => {
+    try {
+      console.log('Creating prescription:', prescriptionData)
+      
+      const treatmentId = selectedTreatment?.id || prescriptionData.treatmentId
+      if (!treatmentId) {
+        alert('Treatment ID is missing')
+        return
+      }
+      
+      // Create prescription via API
+      const response = await treatmentsAPI.createPrescription(treatmentId, prescriptionData)
+      console.log('Prescription created:', response)
+      
+      // Refresh prescriptions list
+      await fetchTreatmentPrescriptions(treatmentId)
+      
+      alert('Prescription created successfully! You can view it in the Prescriptions tab.')
+      setIsPrescriptionModalOpen(false)
+    } catch (error) {
+      console.error('Error creating prescription:', error)
+      alert(error.response?.data?.error || 'Failed to create prescription. Please try again.')
     }
   }
 
@@ -693,6 +749,15 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           >
             <FaXRay className="w-4 h-4" />
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleCreatePrescription(treatment)}
+            title="Create Prescription"
+            className="text-blue-600"
+          >
+            <FaPrescriptionBottle className="w-4 h-4" />
+          </Button>
           {treatment.treatmentStatus === 'In Progress' && (
             <Button 
               variant="outline" 
@@ -830,8 +895,10 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
             onUpdateStatus={handleUpdateStatus}
             onAddPayment={handleAddPayment}
             onRequestRadiology={handleRequestRadiology}
+            onCreatePrescription={handleCreatePrescription}
             onRefresh={handleRefreshTreatment}
             payments={payments}
+            prescriptions={prescriptions}
             asFullPage={true}
           />
         </div>
@@ -1089,6 +1156,20 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           patient: { name: selectedTreatment.patientName },
           treatment: selectedTreatment.treatmentType,
           time: ''
+        } : null}
+      />
+
+      <PrescriptionModal
+        isOpen={isPrescriptionModalOpen}
+        onClose={handleClosePrescriptionModal}
+        onSave={handleSavePrescription}
+        patientInfo={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName
+        } : null}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentType: selectedTreatment.treatmentType
         } : null}
       />
     </div>
