@@ -98,7 +98,7 @@ const UnifiedDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [appointments, setAppointments] = useState([])
   const [selectedAppointment, setSelectedAppointment] = useState(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024)
 
   // Dashboard configuration based on user role
   const getDashboardConfig = (role) => {
@@ -532,8 +532,8 @@ const UnifiedDashboard = () => {
         onClose={closeSidebar}
       />
 
-      {/* Main Content with left margin to account for fixed sidebar */}
-      <div className="lg:ml-72 pt-20">
+      {/* Main Content with dynamic left margin based on sidebar state (only on desktop) */}
+      <div className={`pt-20 transition-all duration-300 ${isSidebarOpen ? 'lg:ml-72' : 'lg:ml-0'}`}>
         <div className="p-4 md:p-8">
           {renderTabContent}
         </div>

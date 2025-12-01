@@ -2,6 +2,24 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { db, admin } = require('../config/firebase-admin');
+
+// Helper function to send payment notifications
+const sendPaymentNotification = async (userId, title, body, data = {}) => {
+  try {
+    await db.collection('notifications').add({
+      userId: String(userId),
+      title,
+      body,
+      type: 'payment',
+      data,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error sending payment notification:', error);
+  }
+};
 
 // Get payment statistics for dentist
 router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
@@ -468,9 +486,7 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
       }
     });
 
-    // Update treatment: 
-    // - Discount reduces the total amount owed
-    // - Payment amount increases what's been paid
+    // Update treatment's paid amount
     const updatedTreatment = await prisma.treatment.update({
       where: { id: parseInt(treatmentId) },
       data: {
@@ -491,6 +507,19 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
         }
       }
     });
+
+    // Send notification to patient
+    await sendPaymentNotification(
+      payment.patientUserId,
+      'Payment Received',
+      `Your payment of $${amount} has been received. ${discount > 0 ? `Discount applied: $${discount}.` : ''} Thank you!`,
+      {
+        paymentId: payment.id,
+        amount: amount,
+        method: method,
+        treatmentId: treatmentId
+      }
+    );
 
     res.status(201).json({ 
       message: 'Payment recorded successfully', 

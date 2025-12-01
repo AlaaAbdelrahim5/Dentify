@@ -271,7 +271,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay - only on mobile/tablet */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -285,7 +285,7 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
           ? 'bg-gray-800 border-gray-700' 
           : 'bg-white border-gray-200'
       } ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
       <div className="h-full overflow-y-auto my-2 flex flex-col">
         {/* Navigation Menu */}
@@ -297,7 +297,13 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id)
+                  // Close sidebar on mobile when a tab is clicked
+                  if (window.innerWidth < 1024 && onClose) {
+                    onClose()
+                  }
+                }}
                 className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
                   isActive
                     ? isDarkMode

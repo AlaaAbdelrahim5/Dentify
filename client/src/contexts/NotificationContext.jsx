@@ -23,16 +23,36 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [fcmToken, setFcmToken] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     // Get user from token
     const token = authUtils.getAccessToken();
-    if (!token) return;
+    
+    // If no token, reset everything
+    if (!token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setFcmToken(null);
+      setCurrentUserId(null);
+      return;
+    }
 
     try {
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
+      const userIdStr = String(userId);
+      
       console.log('NotificationContext - User ID:', userId, 'Type:', typeof userId);
+
+      // If user changed, reset notifications
+      if (currentUserId && currentUserId !== userIdStr) {
+        console.log('NotificationContext - User changed, resetting notifications');
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+      
+      setCurrentUserId(userIdStr);
 
       // Request notification permission
       requestNotificationPermission().then(token => {
@@ -44,7 +64,6 @@ export const NotificationProvider = ({ children }) => {
       });
 
       // Listen for notifications - convert userId to string
-      const userIdStr = String(userId);
       console.log('NotificationContext - Listening for notifications with userId:', userIdStr);
       
       const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
@@ -69,11 +88,53 @@ export const NotificationProvider = ({ children }) => {
         })
         .catch((err) => console.log('Failed to receive message:', err));
 
-      return () => unsubscribe && unsubscribe();
+      return () => {
+        console.log('NotificationContext - Cleaning up listener');
+        unsubscribe && unsubscribe();
+      };
     } catch (error) {
       console.error('Error initializing notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     }
-  }, []);
+  }, [currentUserId]);
+
+  // Separate effect to watch for storage changes (login/logout events)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = authUtils.getAccessToken();
+      if (!token) {
+        setCurrentUserId(null);
+        setNotifications([]);
+        setUnreadCount(0);
+        setFcmToken(null);
+      } else {
+        try {
+          const decoded = jwtDecode(token);
+          const userId = decoded.userId || decoded.id;
+          const userIdStr = String(userId);
+          
+          // Trigger re-fetch by updating currentUserId
+          if (currentUserId !== userIdStr) {
+            setCurrentUserId(userIdStr);
+          }
+        } catch (error) {
+          console.error('Error decoding token on storage change:', error);
+        }
+      }
+    };
+
+    // Listen for storage events (changes in other tabs)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically in case of same-tab changes
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [currentUserId]);
 
   const saveFcmTokenToBackend = async (token) => {
     try {

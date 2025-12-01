@@ -2,6 +2,24 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { db, admin } = require('../config/firebase-admin');
+
+// Helper function to send treatment notifications
+const sendTreatmentNotification = async (userId, title, body, data = {}) => {
+  try {
+    await db.collection('notifications').add({
+      userId: String(userId),
+      title,
+      body,
+      type: 'treatment',
+      data,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error sending treatment notification:', error);
+  }
+};
 
 // Get treatments statistics for dentist
 router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
@@ -426,6 +444,19 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       }
     });
 
+    // Send notification to patient
+    const patientName = `${treatment.patient.firstName} ${treatment.patient.lastName}`;
+    await sendTreatmentNotification(
+      treatment.patientId,
+      'New Treatment Plan',
+      `A new treatment plan for ${treatmentType} has been created. Total amount: $${totalAmount || 0}`,
+      {
+        treatmentId: treatment.id,
+        treatmentType: treatmentType,
+        totalAmount: totalAmount || 0
+      }
+    );
+
     res.status(201).json({ 
       message: 'Treatment created successfully', 
       treatment 
@@ -492,6 +523,31 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
         }
       }
     });
+
+    // Send notification to patient if status changed
+    if (status && status !== existingTreatment.status) {
+      let statusMessage = '';
+      if (status === 'COMPLETED') {
+        statusMessage = 'Your treatment has been completed successfully.';
+      } else if (status === 'IN_PROGRESS') {
+        statusMessage = 'Your treatment is now in progress.';
+      } else if (status === 'CANCELLED') {
+        statusMessage = 'Your treatment has been cancelled.';
+      }
+
+      if (statusMessage) {
+        await sendTreatmentNotification(
+          treatment.patientId,
+          'Treatment Status Update',
+          statusMessage,
+          {
+            treatmentId: treatment.id,
+            status: status,
+            treatmentType: treatment.treatmentType
+          }
+        );
+      }
+    }
 
     res.json({ 
       message: 'Treatment updated successfully', 

@@ -2,6 +2,24 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../utils/prisma');
+const { db, admin } = require('../config/firebase-admin');
+
+// Helper function to send radiology notifications
+const sendRadiologyNotification = async (userId, title, body, data = {}) => {
+  try {
+    await db.collection('notifications').add({
+      userId: String(userId),
+      title,
+      body,
+      type: 'radiology',
+      data,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error sending radiology notification:', error);
+  }
+};
 
 // Get radiology request statistics for dentist or radiology center
 router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), async (req, res) => {
@@ -403,6 +421,31 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       }
     });
 
+    // Send notification to patient
+    const patientName = `${radiologyRequest.patient.firstName} ${radiologyRequest.patient.lastName}`;
+    await sendRadiologyNotification(
+      radiologyRequest.patientId,
+      'Radiology Request Created',
+      `A radiology request for ${imagingType} has been submitted to ${radiologyRequest.radiologyCenter.user.email}.`,
+      {
+        requestId: radiologyRequest.id,
+        imagingType: imagingType,
+        status: 'REQUESTED'
+      }
+    );
+
+    // Send notification to radiology center
+    await sendRadiologyNotification(
+      radiologyRequest.radiologyCenterId,
+      'New Radiology Request',
+      `New ${imagingType} request for patient ${patientName}.`,
+      {
+        requestId: radiologyRequest.id,
+        imagingType: imagingType,
+        patientName: patientName
+      }
+    );
+
     res.status(201).json({ 
       message: 'Radiology request created successfully', 
       radiologyRequest 
@@ -475,9 +518,63 @@ router.patch('/:id/status', authenticate, authorize('RadiologyCenter', 'Dentist'
               }
             }
           }
+        },
+        dentist: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true
+              }
+            }
+          }
         }
       }
     });
+
+    // Send notifications based on status change
+    if (status && status.toUpperCase().replace(' ', '_') !== existingRequest.status) {
+      const patientName = `${radiologyRequest.patient.firstName} ${radiologyRequest.patient.lastName}`;
+      const newStatus = status.toUpperCase().replace(' ', '_');
+      
+      // Notify patient about status change
+      let patientMessage = '';
+      if (newStatus === 'IN_PROGRESS') {
+        patientMessage = `Your radiology request for ${radiologyRequest.imagingType} is now being processed.`;
+      } else if (newStatus === 'COMPLETED') {
+        patientMessage = `Your radiology results for ${radiologyRequest.imagingType} are now available.`;
+      } else if (newStatus === 'CANCELLED') {
+        patientMessage = `Your radiology request for ${radiologyRequest.imagingType} has been cancelled.`;
+      }
+
+      if (patientMessage) {
+        await sendRadiologyNotification(
+          radiologyRequest.patientId,
+          'Radiology Status Update',
+          patientMessage,
+          {
+            requestId: radiologyRequest.id,
+            status: newStatus,
+            imagingType: radiologyRequest.imagingType,
+            availableDate: availableDate
+          }
+        );
+      }
+
+      // Notify dentist about completed results
+      if (newStatus === 'COMPLETED' && radiologyRequest.dentistId) {
+        await sendRadiologyNotification(
+          radiologyRequest.dentistId,
+          'Radiology Results Available',
+          `Radiology results for ${patientName} (${radiologyRequest.imagingType}) are now available.`,
+          {
+            requestId: radiologyRequest.id,
+            patientName: patientName,
+            imagingType: radiologyRequest.imagingType
+          }
+        );
+      }
+    }
 
     res.json({ 
       message: 'Radiology request updated successfully', 
@@ -562,6 +659,35 @@ router.patch('/:id/upload-result', authenticate, authorize('RadiologyCenter'), a
         }
       }
     });
+
+    // Send notifications about completed results
+    const patientName = `${radiologyRequest.patient.firstName} ${radiologyRequest.patient.lastName}`;
+    
+    // Notify patient
+    await sendRadiologyNotification(
+      radiologyRequest.patientId,
+      'Radiology Results Available',
+      `Your radiology results for ${radiologyRequest.imagingType} are now available.`,
+      {
+        requestId: radiologyRequest.id,
+        imagingType: radiologyRequest.imagingType,
+        status: 'COMPLETED'
+      }
+    );
+
+    // Notify dentist if exists
+    if (radiologyRequest.dentistId) {
+      await sendRadiologyNotification(
+        radiologyRequest.dentistId,
+        'Radiology Results Available',
+        `Radiology results for ${patientName} (${radiologyRequest.imagingType}) are now available.`,
+        {
+          requestId: radiologyRequest.id,
+          patientName: patientName,
+          imagingType: radiologyRequest.imagingType
+        }
+      );
+    }
 
     res.json({ 
       success: true,

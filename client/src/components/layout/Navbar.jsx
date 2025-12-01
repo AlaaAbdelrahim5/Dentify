@@ -123,16 +123,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
         <div className="flex justify-between items-center h-16">
           {/* Logo and Sidebar Toggle */}
           <div className="flex items-center space-x-3">
-            {/* Sidebar Toggle Button (only show on dashboard pages) */}
+            {/* Sidebar Toggle Button - Visible on all screen sizes */}
             {showDashboardInfo && onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className={`lg:hidden p-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
+                className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${
                   isDarkMode 
                     ? 'hover:bg-gray-800/70 text-gray-400 hover:text-teal-400 hover:shadow-lg hover:shadow-teal-500/10' 
                     : 'hover:bg-gray-100 text-gray-600 hover:text-teal-600 hover:shadow-md'
                 }`}
                 aria-label="Toggle sidebar"
+                type="button"
               >
                 <FaBars className="w-5 h-5" />
               </button>
@@ -169,7 +170,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                 // Authenticated user navigation
                 <>
                   {/* Chat Button */}
-                  <ChatButton onClick={() => setIsChatSidebarOpen(true)} />
+                  <ChatButton onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)} />
 
                   {/* Notifications */}
                   <NotificationDropdown />
@@ -228,7 +229,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
                     {/* Dropdown Menu */}
                     {isProfileDropdownOpen && (
-                      <div className={`absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl border backdrop-blur-lg overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-top-2 ${
+                      <div className={`absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl border backdrop-blur-lg overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-top-2 z-[100] ${
                         isDarkMode 
                           ? 'bg-gray-800/95 border-gray-700/50 shadow-gray-900/50' 
                           : 'bg-white/95 border-gray-200/50 shadow-gray-200/50'
@@ -320,9 +321,9 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
               )}
             </div>
 
-          {/* Mobile Menu Button (only when not showing dashboard) */}
-          {!showDashboardInfo && (
-            <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile Menu Button - Only for authenticated users on non-dashboard pages */}
+          {!showDashboardInfo && isAuthenticated && (
+            <div className="flex items-center space-x-2">
               <button 
                 onClick={toggleMobileMenu}
                 className={`p-2 transition-colors duration-200 ${
@@ -343,7 +344,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden">
+          <div>
             <div className={`px-3 pt-3 pb-4 space-y-2 shadow-xl rounded-b-2xl transition-all duration-300 ${
               isDarkMode 
                 ? 'bg-gray-900/95 border-t border-gray-700/50' 
