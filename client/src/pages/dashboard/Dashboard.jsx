@@ -21,6 +21,7 @@ import ClinicPayments from './clinic/ClinicPayments'
 import ClinicPatients from './clinic/ClinicPatients'
 import SecretariesManagement from './clinic/SecretariesManagement'
 import { default as ClinicDentistsManagement } from './clinic/DentistsManagement'
+import ClinicInventory from './clinic/ClinicInventory'
 import ClinicSettings from './clinic/ClinicSettings'
 
 // Import dentist components
@@ -31,6 +32,7 @@ import DentistSchedule from './dentist/DentistSchedule'
 import DentistTreatments from './dentist/DentistTreatments'
 import DentistPayments from './dentist/DentistPayments'
 import DentistRadiology from './dentist/DentistRadiology'
+import DentistInventory from './dentist/DentistInventory'
 import DentistReports from './dentist/DentistReports'
 import DentistAnalytics from './dentist/DentistAnalytics'
 import DentistSettings from './dentist/DentistSettings'
@@ -128,6 +130,7 @@ const UnifiedDashboard = () => {
           treatments: { component: ClinicTreatments, label: 'Treatments' },
           payments: { component: ClinicPayments, label: 'Payments' },
           patients: { component: ClinicPatients, label: 'Patients' },
+          inventory: { component: ClinicInventory, label: 'Inventory' },
           analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
           settings: { component: ClinicSettings, label: 'Settings' }
         }
@@ -142,6 +145,7 @@ const UnifiedDashboard = () => {
           treatments: { component: DentistTreatments, label: 'Treatments' },
           payments: { component: DentistPayments, label: 'Payments' },
           radiology: { component: DentistRadiology, label: 'Radiology' },
+          inventory: { component: DentistInventory, label: 'Inventory' },
           reports: { component: DentistReports, label: 'Reports' },
           analytics: { component: DentistAnalytics, label: 'Analytics' },
           settings: { component: DentistSettings, label: 'Settings' }

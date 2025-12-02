@@ -17,7 +17,8 @@ import {
   FaHistory,
   FaHome,
   FaSearch,
-  FaFileImage
+  FaFileImage,
+  FaBoxes
 } from 'react-icons/fa'
 import { MdDashboard, MdPendingActions } from 'react-icons/md'
 import ThemeToggle from './ThemeToggle'
@@ -115,6 +116,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Manage clinic secretaries'
       },
       { 
+        id: 'inventory', 
+        label: 'Inventory', 
+        icon: FaBoxes,
+        description: 'Manage clinic inventory and supplies'
+      },
+      { 
         id: 'analytics', 
         label: 'Analytics', 
         icon: FaChartBar,
@@ -157,6 +164,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'My Patients', 
         icon: FaUsers,
         description: 'Manage patient records'
+      },
+      { 
+        id: 'inventory', 
+        label: 'Inventory', 
+        icon: FaBoxes,
+        description: 'Manage medical supplies and materials'
       },
       { 
         id: 'reports', 

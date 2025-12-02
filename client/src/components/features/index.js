@@ -16,6 +16,17 @@ export { default as DentistCard } from './dentist/DentistCard'
 export { default as DentistDetailsModal } from './dentist/DentistDetailsModal'
 export { default as DentistModal } from './dentist/DentistModal'
 
+// Feature-specific Components - Inventory
+export { default as AddItemModal } from './inventory/AddItemModal'
+export { default as EditItemModal } from './inventory/EditItemModal'
+export { default as AddSupplierModal } from './inventory/AddSupplierModal'
+export { default as EditSupplierModal } from './inventory/EditSupplierModal'
+export { default as ViewSupplierModal } from './inventory/ViewSupplierModal'
+export { default as SupplierItemsModal } from './inventory/SupplierItemsModal'
+export { default as CreatePurchaseOrderModal } from './inventory/CreatePurchaseOrderModal'
+export { default as ReorderItemModal } from './inventory/ReorderItemModal'
+export { default as ViewItemModal } from './inventory/ViewItemModal'
+
 // Feature-specific Components - Patient
 export { default as EditPatientModal } from './patient/EditPatientModal'
 export { default as NewPatientModal } from './patient/NewPatientModal'
