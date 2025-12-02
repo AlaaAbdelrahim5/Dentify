@@ -8,6 +8,7 @@ import {
   FaStethoscope,
   FaFileAlt,
   FaMoneyBillWave,
+  FaFileInvoiceDollar,
   FaXRay,
   FaHospital,
   FaUserMd,
@@ -120,6 +121,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Inventory', 
         icon: FaBoxes,
         description: 'Manage clinic inventory and supplies'
+      },
+      { 
+        id: 'expenses', 
+        label: 'Expenses & Invoices', 
+        icon: FaFileInvoiceDollar,
+        description: 'Manage invoices and clinic expenses'
       },
       { 
         id: 'analytics', 

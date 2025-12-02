@@ -16,6 +16,10 @@ export { default as DentistCard } from './dentist/DentistCard'
 export { default as DentistDetailsModal } from './dentist/DentistDetailsModal'
 export { default as DentistModal } from './dentist/DentistModal'
 
+// Feature-specific Components - Expenses
+export { default as AddInvoiceModal } from './expenses/AddInvoiceModal'
+export { default as AddExpenseModal } from './expenses/AddExpenseModal'
+
 // Feature-specific Components - Inventory
 export { default as AddItemModal } from './inventory/AddItemModal'
 export { default as EditItemModal } from './inventory/EditItemModal'
