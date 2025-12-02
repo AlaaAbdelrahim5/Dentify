@@ -382,21 +382,15 @@ const DentistAnalytics = () => {
     'from-indigo-600 to-purple-600'
   ]
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <PageHeader
-        title="Analytics Dashboard"
-        description="Visual insights and trends for your dental practice"
-      />
+      <div className="mb-8">
+        <PageHeader
+          title="Analytics Dashboard"
+          description="Visual insights, trends, and data-driven analytics for your dental practice"
+        />
+      </div>
 
       {/* Filters */}
       <Card>
@@ -435,84 +429,128 @@ const DentistAnalytics = () => {
       </Card>
 
       {/* Chart Type Selector */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { id: 'revenue', label: 'Revenue Trend', icon: FaDollarSign, color: 'from-green-600 to-emerald-600' },
-          { id: 'treatments', label: 'Treatments Trend', icon: FaTooth, color: 'from-purple-600 to-pink-600' },
-          { id: 'patients', label: 'Patients Trend', icon: FaUsers, color: 'from-blue-600 to-cyan-600' },
-          { id: 'appointments', label: 'Appointments Trend', icon: FaCalendarAlt, color: 'from-orange-600 to-red-600' }
-        ].map(view => (
-          <Card 
-            key={view.id}
-            hover
-            onClick={() => setChartView(view.id)}
-            className={`cursor-pointer transition-all ${
-              chartView === view.id 
-                ? 'ring-2 ring-teal-600 ring-offset-2 dark:ring-offset-gray-800' 
-                : ''
-            }`}
-          >
-            <Card.Content className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {view.label}
-                  </p>
-                  <p className={`text-2xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {view.id === 'revenue' && '$'}
-                    {view.id === 'revenue' 
-                      ? revenueData.reduce((sum, d) => sum + d.value, 0).toFixed(2)
-                      : view.id === 'treatments'
-                      ? treatmentsData.reduce((sum, d) => sum + d.value, 0)
-                      : view.id === 'patients'
-                      ? Math.max(...patientsData.map(d => d.value))
-                      : appointmentsData.reduce((sum, d) => sum + d.value, 0)
-                    }
-                  </p>
+      <div>
+        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <FaChartBar className="text-teal-600" />
+          Select Metric to Analyze
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { id: 'revenue', label: 'Revenue Trend', icon: FaDollarSign, color: 'from-green-600 to-emerald-600' },
+            { id: 'treatments', label: 'Treatments Trend', icon: FaTooth, color: 'from-purple-600 to-pink-600' },
+            { id: 'patients', label: 'Patients Trend', icon: FaUsers, color: 'from-blue-600 to-cyan-600' },
+            { id: 'appointments', label: 'Appointments Trend', icon: FaCalendarAlt, color: 'from-orange-600 to-red-600' }
+          ].map(view => (
+            <Card 
+              key={view.id}
+              hover
+              onClick={() => setChartView(view.id)}
+              className={`cursor-pointer transition-all transform hover:scale-105 ${
+                chartView === view.id 
+                  ? 'ring-2 ring-teal-600 ring-offset-2 dark:ring-offset-gray-800 shadow-xl' 
+                  : 'hover:shadow-lg'
+              }`}
+            >
+              <Card.Content className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className={`text-xs font-medium uppercase tracking-wide mb-1 ${
+                      chartView === view.id 
+                        ? 'text-teal-600 dark:text-teal-400' 
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {view.label}
+                    </p>
+                    <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {loading ? (
+                        <span className="inline-block w-20 h-8 bg-gray-300 dark:bg-gray-700 animate-pulse rounded"></span>
+                      ) : (
+                        <>
+                          {view.id === 'revenue' && '$'}
+                          {view.id === 'revenue' 
+                            ? revenueData.reduce((sum, d) => sum + d.value, 0).toFixed(2)
+                            : view.id === 'treatments'
+                            ? treatmentsData.reduce((sum, d) => sum + d.value, 0)
+                            : view.id === 'patients'
+                            ? Math.max(...patientsData.map(d => d.value))
+                            : appointmentsData.reduce((sum, d) => sum + d.value, 0)
+                          }
+                        </>
+                      )}
+                    </p>
+                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                      {dateRange === 'month' ? 'Last 30 days' : dateRange === 'quarter' ? 'Last 3 months' : 'Last 12 months'}
+                    </p>
+                  </div>
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${view.color} flex items-center justify-center shadow-lg transform transition-transform ${
+                    chartView === view.id ? 'scale-110' : ''
+                  }`}>
+                    <view.icon className="text-white text-2xl" />
+                  </div>
                 </div>
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${view.color} flex items-center justify-center`}>
-                  <view.icon className="text-white text-xl" />
-                </div>
-              </div>
-            </Card.Content>
-          </Card>
-        ))}
+              </Card.Content>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Main Chart */}
-      <Card>
-        <Card.Header>
-          <div className="flex items-center justify-between">
+      <Card className="shadow-xl">
+        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50/50'}`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className={`text-xl font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 <FaChartLine className="text-teal-600" />
                 {chartData.label} Over Time
               </h3>
               <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Showing {dateRange === 'month' ? 'daily' : dateRange === 'quarter' ? 'weekly' : 'monthly'} trends
+                Showing {dateRange === 'month' ? 'daily' : dateRange === 'quarter' ? 'weekly' : 'monthly'} trends for the selected period
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              {trend.trend === 'up' && <FaArrowUp className="text-green-500 text-2xl" />}
-              {trend.trend === 'down' && <FaArrowDown className="text-red-500 text-2xl" />}
-              {trend.trend === 'stable' && <FaMinus className="text-gray-500 text-2xl" />}
-              <div className="text-right">
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Trend
-                </p>
-                <p className={`text-lg font-bold ${
-                  trend.trend === 'up' ? 'text-green-500' : 
-                  trend.trend === 'down' ? 'text-red-500' : 
-                  'text-gray-500'
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                trend.trend === 'up' 
+                  ? isDarkMode ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-200'
+                  : trend.trend === 'down'
+                  ? isDarkMode ? 'bg-red-900/30 border border-red-700' : 'bg-red-50 border border-red-200'
+                  : isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-100 border border-gray-300'
+              }`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  trend.trend === 'up' ? 'bg-green-600' : trend.trend === 'down' ? 'bg-red-600' : 'bg-gray-600'
                 }`}>
-                  {trend.trend === 'up' ? '+' : trend.trend === 'down' ? '-' : ''}{trend.percentage.toFixed(1)}%
-                </p>
+                  {trend.trend === 'up' && <FaArrowUp className="text-white text-lg" />}
+                  {trend.trend === 'down' && <FaArrowDown className="text-white text-lg" />}
+                  {trend.trend === 'stable' && <FaMinus className="text-white text-lg" />}
+                </div>
+                <div className="text-right">
+                  <p className={`text-xs font-medium uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Period Trend
+                  </p>
+                  <p className={`text-xl font-bold ${
+                    trend.trend === 'up' ? 'text-green-600' : 
+                    trend.trend === 'down' ? 'text-red-600' : 
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {trend.trend === 'up' ? '+' : trend.trend === 'down' ? '-' : ''}{trend.percentage.toFixed(1)}%
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </Card.Header>
         <Card.Content className="p-6">
-          <LineChart data={chartData.data} color={chartData.color} />
+          {loading ? (
+            <div className="space-y-4">
+              <div className={`h-64 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+              <div className="flex justify-between">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className={`h-4 w-8 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <LineChart data={chartData.data} color={chartData.color} />
+          )}
         </Card.Content>
       </Card>
 
@@ -527,7 +565,15 @@ const DentistAnalytics = () => {
             </h3>
           </Card.Header>
           <Card.Content>
-            <BarChart data={chartData.data} color={chartData.color} prefix={chartData.prefix} />
+            {loading ? (
+              <div className="h-64 flex items-end justify-between gap-2">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className={`w-full rounded-t-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`} style={{ height: `${Math.random() * 80 + 20}%` }}></div>
+                ))}
+              </div>
+            ) : (
+              <BarChart data={chartData.data} color={chartData.color} prefix={chartData.prefix} />
+            )}
           </Card.Content>
         </Card>
 
@@ -540,7 +586,18 @@ const DentistAnalytics = () => {
             </h3>
           </Card.Header>
           <Card.Content className="space-y-3">
-            {treatmentDistribution.map(([type, count], index) => {
+            {loading ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className={`w-32 h-6 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                    <div className={`w-16 h-6 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                  </div>
+                  <div className={`w-full h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                </div>
+              ))
+            ) : (
+              treatmentDistribution.map(([type, count], index) => {
               const percentage = (count / treatments.length) * 100
               return (
                 <div key={type} className="space-y-2">
@@ -569,49 +626,97 @@ const DentistAnalytics = () => {
                     />
                   </div>
                 </div>
-              )
-            })}
+              )})
+            )}
           </Card.Content>
         </Card>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <Card.Content className="p-6 text-center">
-            <FaCheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Avg. Daily Revenue
-            </p>
-            <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              ${(revenueData.reduce((sum, d) => sum + d.value, 0) / revenueData.length).toFixed(2)}
-            </p>
-          </Card.Content>
-        </Card>
+      <div>
+        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <FaChartPie className="text-teal-600" />
+          Average Daily Performance
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-800' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'} border-2 hover:shadow-lg transition-shadow`}>
+            <Card.Content className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <FaCheckCircle className="text-white text-2xl" />
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>
+                  Revenue
+                </div>
+              </div>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Avg. Daily Revenue
+              </p>
+              <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {loading ? (
+                  <span className="inline-block w-24 h-9 bg-gray-300 dark:bg-gray-700 animate-pulse rounded"></span>
+                ) : (
+                  `$${(revenueData.reduce((sum, d) => sum + d.value, 0) / revenueData.length).toFixed(2)}`
+                )}
+              </p>
+              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Based on {revenueData.length} {dateRange === 'month' ? 'days' : dateRange === 'quarter' ? 'weeks' : 'months'}
+              </p>
+            </Card.Content>
+          </Card>
 
-        <Card>
-          <Card.Content className="p-6 text-center">
-            <FaTooth className="w-12 h-12 mx-auto mb-3 text-purple-500" />
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Avg. Daily Treatments
-            </p>
-            <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {(treatmentsData.reduce((sum, d) => sum + d.value, 0) / treatmentsData.length).toFixed(1)}
-            </p>
-          </Card.Content>
-        </Card>
+          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-800' : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'} border-2 hover:shadow-lg transition-shadow`}>
+            <Card.Content className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                  <FaTooth className="text-white text-2xl" />
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-purple-900/50 text-purple-400' : 'bg-purple-100 text-purple-700'}`}>
+                  Clinical
+                </div>
+              </div>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Avg. Daily Treatments
+              </p>
+              <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {loading ? (
+                  <span className="inline-block w-16 h-9 bg-gray-300 dark:bg-gray-700 animate-pulse rounded"></span>
+                ) : (
+                  (treatmentsData.reduce((sum, d) => sum + d.value, 0) / treatmentsData.length).toFixed(1)
+                )}
+              </p>
+              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Total: {treatmentsData.reduce((sum, d) => sum + d.value, 0)} treatments
+              </p>
+            </Card.Content>
+          </Card>
 
-        <Card>
-          <Card.Content className="p-6 text-center">
-            <FaCalendarCheck className="w-12 h-12 mx-auto mb-3 text-blue-500" />
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Avg. Daily Appointments
-            </p>
-            <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {(appointmentsData.reduce((sum, d) => sum + d.value, 0) / appointmentsData.length).toFixed(1)}
-            </p>
-          </Card.Content>
-        </Card>
+          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'} border-2 hover:shadow-lg transition-shadow`}>
+            <Card.Content className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                  <FaCalendarCheck className="text-white text-2xl" />
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>
+                  Schedule
+                </div>
+              </div>
+              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Avg. Daily Appointments
+              </p>
+              <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {loading ? (
+                  <span className="inline-block w-16 h-9 bg-gray-300 dark:bg-gray-700 animate-pulse rounded"></span>
+                ) : (
+                  (appointmentsData.reduce((sum, d) => sum + d.value, 0) / appointmentsData.length).toFixed(1)
+                )}
+              </p>
+              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Total: {appointmentsData.reduce((sum, d) => sum + d.value, 0)} appointments
+              </p>
+            </Card.Content>
+          </Card>
+        </div>
       </div>
     </div>
   )

@@ -538,7 +538,10 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       console.log('Radiology request created:', response)
       setToast({ message: 'Radiology request created successfully!', type: 'success' })
       setIsRadiologyModalOpen(false)
-      setSelectedTreatment(null)
+      // Don't clear selectedTreatment if we're in view mode
+      if (currentPage === 'list') {
+        setSelectedTreatment(null)
+      }
     } catch (error) {
       console.error('Error creating radiology request:', error)
       console.error('Error response:', error.response?.data)
@@ -573,11 +576,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       const response = await treatmentsAPI.createPrescription(treatmentId, prescriptionData)
       console.log('Prescription created:', response)
       
-      // Refresh prescriptions list
-      await fetchTreatmentPrescriptions(treatmentId)
+      // Refresh prescriptions list if we're viewing the treatment
+      if (currentPage === 'view') {
+        await fetchTreatmentPrescriptions(treatmentId)
+      }
       
       setToast({ message: 'Prescription created successfully! You can view it in the Prescriptions tab.', type: 'success' })
       setIsPrescriptionModalOpen(false)
+      // Don't clear selectedTreatment - it's handled by page navigation
     } catch (error) {
       console.error('Error creating prescription:', error)
       setToast({ message: error.response?.data?.error || 'Failed to create prescription. Please try again.', type: 'error' })
@@ -974,38 +980,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
               <FaCheck className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Total Revenue</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{loading ? '-' : `$${stats.totalRevenue.toFixed(0)}`}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
-              <FaDollarSign className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Pending</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
-              <FaMoneyBillWave className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>

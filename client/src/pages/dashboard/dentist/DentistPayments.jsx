@@ -14,7 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast } from '../../../components'
+import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 
 const DentistPayments = () => {
@@ -343,41 +343,7 @@ const DentistPayments = () => {
         }}
       />
 
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        {
-          label: `${selectedDateRange === 'all' ? 'Total' : 
-                   selectedDateRange === 'today' ? 'Today' :
-                   selectedDateRange === 'week' ? 'This Week' : 'This Month'} Revenue`,
-          value: loading ? '-' : `$${stats.total.toFixed(2)}`,
-          icon: FaDollarSign,
-          gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Total Discounts',
-          value: loading ? '-' : `$${stats.totalDiscount.toFixed(2)}`,
-          icon: FaFileInvoiceDollar,
-          gradient: 'from-orange-600 to-orange-700'
-        },
-        {
-          label: 'Cash Payments',
-          value: loading ? '-' : `$${stats.cashPayments.toFixed(2)}`,
-          icon: FaMoneyBillWave,
-          gradient: 'from-emerald-600 to-emerald-700'
-        },
-        {
-          label: 'Card Payments',
-          value: loading ? '-' : `$${stats.cardPayments.toFixed(2)}`,
-          icon: FaCreditCard,
-          gradient: 'from-blue-600 to-blue-700'
-        },
-        {
-          label: 'Transactions',
-          value: loading ? '-' : stats.count,
-          icon: FaChartLine,
-          gradient: 'from-purple-600 to-purple-700'
-        }
-      ]} />
+
 
       {/* Patient Summary Section - Shows when patient filter is selected */}
       {selectedPatient !== 'all' && (

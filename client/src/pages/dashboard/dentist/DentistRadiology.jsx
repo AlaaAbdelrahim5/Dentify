@@ -20,7 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, StatsOverview, RadiologyRequestModal, DeleteConfirmationModal, Toast } from '../../../components'
+import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, DeleteConfirmationModal, Toast } from '../../../components'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
@@ -411,33 +411,7 @@ const DentistRadiology = () => {
         </Button>
       </div>
 
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        { 
-          label: 'Total Requests', 
-          value: loading ? '-' : stats.total, 
-          icon: FaXRay, 
-          gradient: 'from-purple-600 to-purple-700' 
-        },
-        { 
-          label: 'Requested', 
-          value: loading ? '-' : stats.requested, 
-          icon: FaClock, 
-          gradient: 'from-yellow-600 to-yellow-700' 
-        },
-        { 
-          label: 'In Progress', 
-          value: loading ? '-' : stats.inProgress, 
-          icon: FaExclamationCircle, 
-          gradient: 'from-blue-600 to-blue-700' 
-        },
-        { 
-          label: 'Completed', 
-          value: loading ? '-' : stats.completed, 
-          icon: FaCheck, 
-          gradient: 'from-green-600 to-green-700' 
-        }
-      ]} />
+
 
       {/* Filters and View Mode */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

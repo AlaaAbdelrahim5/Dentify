@@ -434,18 +434,6 @@ const DentistPatients = () => {
           value: loading ? '-' : stats.activeTreatments,
           icon: FaTooth,
           gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Total Revenue',
-          value: loading ? '-' : `$${stats.totalRevenue.toFixed(2)}`,
-          icon: FaDollarSign,
-          gradient: 'from-teal-600 to-teal-700'
-        },
-        {
-          label: 'Pending Payments',
-          value: loading ? '-' : `$${stats.pendingPayments.toFixed(2)}`,
-          icon: FaExclamationCircle,
-          gradient: 'from-orange-600 to-orange-700'
         }
       ]} />
 
