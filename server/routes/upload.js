@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const path = require('path');
-const fs = require('fs');
 
 // Upload profile image
 router.post('/profile-image', authenticate, upload.single('profileImage'), async (req, res) => {
@@ -13,12 +11,14 @@ router.post('/profile-image', authenticate, upload.single('profileImage'), async
     }
 
     const userId = req.user.id;
-    const imageUrl = `/uploads/profiles/${req.file.filename}`;
+    
+    // Convert buffer to base64 data URI
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
-    // Update user's profileImage in database
+    // Update user's profileImage in database with base64 string
     const updatedUser = await req.prisma.user.update({
       where: { id: userId },
-      data: { profileImage: imageUrl },
+      data: { profileImage: base64Image },
       select: {
         id: true,
         email: true,
@@ -27,31 +27,13 @@ router.post('/profile-image', authenticate, upload.single('profileImage'), async
       }
     });
 
-    // Delete old profile image if it exists
-    const oldImagePath = req.body.oldImageUrl;
-    if (oldImagePath && oldImagePath !== imageUrl) {
-      const oldFilePath = path.join(__dirname, '..', oldImagePath);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-      }
-    }
-
     res.json({
       message: 'Profile image uploaded successfully',
-      imageUrl: imageUrl,
+      imageUrl: base64Image,
       user: updatedUser
     });
   } catch (error) {
     console.error('Error uploading profile image:', error);
-    
-    // Clean up uploaded file if database update fails
-    if (req.file) {
-      const filePath = path.join(__dirname, '../uploads/profiles', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-    
     res.status(500).json({ error: 'Failed to upload profile image' });
   }
 });
@@ -61,7 +43,7 @@ router.delete('/profile-image', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get current user to find their profile image
+    // Get current user to check if they have a profile image
     const user = await req.prisma.user.findUnique({
       where: { id: userId },
       select: { profileImage: true }
@@ -71,13 +53,7 @@ router.delete('/profile-image', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'No profile image found' });
     }
 
-    // Delete file from filesystem
-    const filePath = path.join(__dirname, '..', user.profileImage);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // Update database
+    // Update database - remove the base64 image
     const updatedUser = await req.prisma.user.update({
       where: { id: userId },
       data: { profileImage: null },

@@ -12,6 +12,14 @@ import { NotificationDropdown } from '../features/notifications'
 import { ChatButton, ChatSidebar } from '../features/chat'
 import { authUtils } from '../../utils/auth'
 
+// Utility function to get image URL (handles base64 and URL paths)
+const getImageUrl = (profileImage) => {
+  if (!profileImage) return null
+  if (profileImage.startsWith('data:')) return profileImage // base64 image
+  if (profileImage.startsWith('http')) return profileImage // full URL
+  return `http://localhost:5000${profileImage}` // relative path
+}
+
 const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
@@ -191,7 +199,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                       <div className="relative">
                         {currentUser?.profileImage ? (
                           <img 
-                            src={`http://localhost:5000${currentUser.profileImage}`}
+                            src={getImageUrl(currentUser.profileImage)}
                             alt={authUtils.getUserName()}
                             className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20"
                             onError={(e) => {
@@ -238,17 +246,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                         <div className={`px-5 py-4 border-b backdrop-blur-sm ${
                           isDarkMode ? 'border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50' : 'border-gray-200/50 bg-gradient-to-r from-gray-50 to-white'
                         }`}>
-                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-3">
                             {currentUser?.profileImage ? (
-                              <img 
-                                src={`http://localhost:5000${currentUser.profileImage}`}
+                                <img 
+                                src={getImageUrl(currentUser.profileImage)}
                                 alt={authUtils.getUserName()}
                                 className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-teal-400/30"
                                 onError={(e) => {
-                                  e.target.style.display = 'none'
-                                  e.target.nextElementSibling.style.display = 'flex'
+                                    e.target.style.display = 'none'
+                                    e.target.nextElementSibling.style.display = 'flex'
                                 }}
-                              />
+                                />
                             ) : null}
                             <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 ${currentUser?.profileImage ? 'hidden' : ''}`}>
                               <span className="text-white text-base font-bold">
@@ -389,17 +397,17 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   <div className={`px-4 py-3 rounded-xl flex items-center space-x-3 ${
                     isDarkMode ? 'bg-gray-800/50' : 'bg-gray-100/70'
                   }`}>
-                    <div className="relative">
+                      <div className="relative mb-4">
                       {currentUser?.profileImage ? (
-                        <img 
-                          src={`http://localhost:5000${currentUser.profileImage}`}
+                          <img 
+                          src={getImageUrl(currentUser.profileImage)}
                           alt={authUtils.getUserName()}
-                          className="w-12 h-12 rounded-full object-cover shadow-lg"
+                          className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-teal-400/30"
                           onError={(e) => {
-                            e.target.style.display = 'none'
-                            e.target.nextElementSibling.style.display = 'flex'
+                              e.target.style.display = 'none'
+                              e.target.nextElementSibling.style.display = 'flex'
                           }}
-                        />
+                          />
                       ) : null}
                       <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ${currentUser?.profileImage ? 'hidden' : ''}`}>
                         <span className="text-white text-base font-bold">

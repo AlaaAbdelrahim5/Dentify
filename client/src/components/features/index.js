@@ -3,7 +3,6 @@ export { default as AppointmentDetailsModal } from './appointment/AppointmentDet
 export { default as AppointmentSchedule } from './appointment/AppointmentSchedule'
 export { default as AppointmentsHistoryTab } from './appointment/AppointmentsHistoryTab'
 export { default as BookAppointmentModal } from './appointment/BookAppointmentModal'
-export { default as DentistAppointmentHistory } from './appointment/DentistAppointmentHistory'
 export { default as EditAppointmentModal } from './appointment/EditAppointmentModal'
 export { default as NewAppointmentModal } from './appointment/NewAppointmentModal'
 
