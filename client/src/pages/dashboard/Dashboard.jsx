@@ -89,11 +89,7 @@ const UnifiedDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState(() => {
-    // Get saved tab from localStorage on initial render
-    const savedTab = localStorage.getItem('dashboardActiveTab')
-    return savedTab || 'overview'
-  })
+  const [activeTab, setActiveTab] = useState('overview') // Default to overview initially
   const [currentUser, setCurrentUser] = useState(null)
   const [userData, setUserData] = useState(null)
   const [stats, setStats] = useState({})
@@ -213,9 +209,27 @@ const UnifiedDashboard = () => {
         
         setCurrentUser(user)
         
+        // Get dashboard config for this user's role
+        const config = getDashboardConfig(user.role)
+        
+        // Validate and set active tab
+        const savedTab = localStorage.getItem('dashboardActiveTab')
+        
         // Check if navigating to settings via state
         if (location.state?.activeTab) {
-          setActiveTab(location.state.activeTab)
+          const requestedTab = location.state.activeTab
+          // Validate the requested tab exists for this user role
+          if (config.tabs[requestedTab]) {
+            setActiveTab(requestedTab)
+          } else {
+            setActiveTab('overview')
+          }
+        } else if (savedTab && config.tabs[savedTab]) {
+          // Use saved tab only if it's valid for this user's role
+          setActiveTab(savedTab)
+        } else {
+          // Default to overview if saved tab is invalid
+          setActiveTab('overview')
         }
         
         // Fetch user-specific data based on role

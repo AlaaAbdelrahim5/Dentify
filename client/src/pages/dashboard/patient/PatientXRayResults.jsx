@@ -10,7 +10,8 @@ import {
   FaListAlt,
   FaTh,
   FaFileAlt,
-  FaHospital
+  FaHospital,
+  FaLink
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
 import { 
@@ -38,6 +39,85 @@ const PatientXRayResults = () => {
   useEffect(() => {
     fetchXRayRequests()
   }, [])
+
+  // Check if reportFile is a URL (not base64)
+  const isReportFileUrl = (reportFile) => {
+    if (!reportFile) return false
+    try {
+      // Try parsing as JSON array first
+      const parsed = JSON.parse(reportFile)
+      if (Array.isArray(parsed)) return false // It's a file array
+    } catch (e) {
+      // Not JSON, continue checking
+    }
+    // Check if it's a URL
+    return reportFile.startsWith('http://') || reportFile.startsWith('https://')
+  }
+
+  const handleDownloadReport = (reportFile) => {
+    if (!reportFile) return
+
+    // Helper function to download a single file
+    const downloadSingleFile = (fileData, index = 0) => {
+      // Check if it's a base64 data URI
+      if (fileData.startsWith('data:')) {
+        // Extract the MIME type and base64 data
+        const matches = fileData.match(/^data:([^;]+);base64,(.+)$/)
+        if (matches) {
+          const mimeType = matches[1]
+          const base64Data = matches[2]
+          
+          // Convert base64 to blob
+          const byteCharacters = atob(base64Data)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blob = new Blob([byteArray], { type: mimeType })
+          
+          // Create download link
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          
+          // Determine file extension from MIME type
+          const extension = mimeType.includes('pdf') ? 'pdf' : mimeType.split('/')[1] || 'jpg'
+          const fileName = index > 0 
+            ? `xray-report-${index + 1}-${Date.now()}.${extension}`
+            : `xray-report-${Date.now()}.${extension}`
+          link.download = fileName
+          
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }
+      } else {
+        // If it's a URL, open in new tab (let browser handle download)
+        window.open(fileData, '_blank')
+      }
+    }
+
+    // Try to parse as JSON array (multiple files)
+    try {
+      const filesArray = JSON.parse(reportFile)
+      if (Array.isArray(filesArray)) {
+        // Download each file with a slight delay to prevent browser blocking
+        filesArray.forEach((file, index) => {
+          setTimeout(() => {
+            downloadSingleFile(file, index)
+          }, index * 200) // 200ms delay between downloads
+        })
+        return
+      }
+    } catch (e) {
+      // Not JSON, treat as single file
+    }
+
+    // Download as single file
+    downloadSingleFile(reportFile)
+  }
 
   // Filter requests
   const filteredRequests = useMemo(() => {
@@ -214,21 +294,25 @@ const PatientXRayResults = () => {
 
       <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
         {request.reportFile && (
-          <a
-            href={request.reportFile}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1"
+          <Button 
+            variant="primary" 
+            size="sm"
+            className="w-full"
+            onClick={() => handleDownloadReport(request.reportFile)}
+            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Result"}
           >
-            <Button 
-              variant="primary" 
-              size="sm"
-              className="w-full"
-            >
-              <FaDownload className="w-4 h-4 mr-2" />
-              Download Result
-            </Button>
-          </a>
+            {isReportFileUrl(request.reportFile) ? (
+              <>
+                <FaLink className="w-4 h-4 mr-2" />
+                View Report
+              </>
+            ) : (
+              <>
+                <FaDownload className="w-4 h-4 mr-2" />
+                Download Result
+              </>
+            )}
+          </Button>
         )}
         {!request.reportFile && request.status === 'COMPLETED' && (
           <Button 
@@ -482,20 +566,24 @@ const PatientXRayResults = () => {
                     render: (value, row) => (
                       <div className="flex gap-2">
                         {row.reportFile && (
-                          <a
-                            href={row.reportFile}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Download Report"
+                          <Button 
+                            variant="primary" 
+                            size="sm"
+                            onClick={() => handleDownloadReport(row.reportFile)}
+                            title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
                           >
-                            <Button 
-                              variant="primary" 
-                              size="sm"
-                            >
-                              <FaDownload className="w-4 h-4 mr-1" />
-                              Download
-                            </Button>
-                          </a>
+                            {isReportFileUrl(row.reportFile) ? (
+                              <>
+                                <FaLink className="w-4 h-4 mr-1" />
+                                View
+                              </>
+                            ) : (
+                              <>
+                                <FaDownload className="w-4 h-4 mr-1" />
+                                Download
+                              </>
+                            )}
+                          </Button>
                         )}
                         {!row.reportFile && row.status === 'COMPLETED' && (
                           <Button 

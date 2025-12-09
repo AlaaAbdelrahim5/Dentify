@@ -16,7 +16,9 @@ import {
   FaStethoscope,
   FaTh,
   FaListAlt,
-  FaCheck
+  FaCheck,
+  FaEdit,
+  FaLink
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
 import { 
@@ -48,6 +50,85 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
+
+  // Check if reportFile is a URL (not base64)
+  const isReportFileUrl = (reportFile) => {
+    if (!reportFile) return false
+    try {
+      // Try parsing as JSON array first
+      const parsed = JSON.parse(reportFile)
+      if (Array.isArray(parsed)) return false // It's a file array
+    } catch (e) {
+      // Not JSON, continue checking
+    }
+    // Check if it's a URL
+    return reportFile.startsWith('http://') || reportFile.startsWith('https://')
+  }
+
+  const handleDownloadReport = (reportFile) => {
+    if (!reportFile) return
+
+    // Helper function to download a single file
+    const downloadSingleFile = (fileData, index = 0) => {
+      // Check if it's a base64 data URI
+      if (fileData.startsWith('data:')) {
+        // Extract the MIME type and base64 data
+        const matches = fileData.match(/^data:([^;]+);base64,(.+)$/)
+        if (matches) {
+          const mimeType = matches[1]
+          const base64Data = matches[2]
+          
+          // Convert base64 to blob
+          const byteCharacters = atob(base64Data)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blob = new Blob([byteArray], { type: mimeType })
+          
+          // Create download link
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          
+          // Determine file extension from MIME type
+          const extension = mimeType.includes('pdf') ? 'pdf' : mimeType.split('/')[1] || 'jpg'
+          const fileName = index > 0 
+            ? `radiology-report-${index + 1}-${Date.now()}.${extension}`
+            : `radiology-report-${Date.now()}.${extension}`
+          link.download = fileName
+          
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        }
+      } else {
+        // If it's a URL, open in new tab (let browser handle download)
+        window.open(fileData, '_blank')
+      }
+    }
+
+    // Try to parse as JSON array (multiple files)
+    try {
+      const filesArray = JSON.parse(reportFile)
+      if (Array.isArray(filesArray)) {
+        // Download each file with a slight delay to prevent browser blocking
+        filesArray.forEach((file, index) => {
+          setTimeout(() => {
+            downloadSingleFile(file, index)
+          }, index * 200) // 200ms delay between downloads
+        })
+        return
+      }
+    } catch (e) {
+      // Not JSON, treat as single file
+    }
+
+    // Download as single file
+    downloadSingleFile(reportFile)
+  }
 
   // Fetch requests
   useEffect(() => {
@@ -282,21 +363,31 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
             <FaFileUpload className="w-4 h-4" />
           </Button>
         )}
-        {request.reportFile && (
-          <a
-            href={request.reportFile}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Download Report"
+        {request.status === 'COMPLETED' && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleUploadResult(request)}
+            title="Update Result"
+            className="text-orange-600"
           >
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="text-purple-600"
-            >
+            <FaEdit className="w-4 h-4" />
+          </Button>
+        )}
+        {request.reportFile && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-purple-600"
+            onClick={() => handleDownloadReport(request.reportFile)}
+            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+          >
+            {isReportFileUrl(request.reportFile) ? (
+              <FaLink className="w-4 h-4" />
+            ) : (
               <FaDownload className="w-4 h-4" />
-            </Button>
-          </a>
+            )}
+          </Button>
         )}
       </div>
     </Card>
@@ -550,21 +641,31 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                             <FaFileUpload className="w-4 h-4" />
                           </Button>
                         )}
-                        {row.reportFile && (
-                          <a
-                            href={row.reportFile}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Download Report"
+                        {row.status === 'COMPLETED' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleUploadResult(row)}
+                            title="Update Result"
+                            className="text-orange-600"
                           >
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-purple-600"
-                            >
+                            <FaEdit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {row.reportFile && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-purple-600"
+                            onClick={() => handleDownloadReport(row.reportFile)}
+                            title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
+                          >
+                            {isReportFileUrl(row.reportFile) ? (
+                              <FaLink className="w-4 h-4" />
+                            ) : (
                               <FaDownload className="w-4 h-4" />
-                            </Button>
-                          </a>
+                            )}
+                          </Button>
                         )}
                       </div>
                     )
