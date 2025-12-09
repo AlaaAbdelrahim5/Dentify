@@ -160,7 +160,32 @@ const PatientOverview = ({ userData, onTabChange }) => {
             })}
           </div>
         </Card>
-      ) : null}
+      ) : (
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={`text-lg font-semibold ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>Next Appointments</h3>
+          </div>
+          <div className={`text-center py-8 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            <FaCalendarAlt className={`w-12 h-12 mx-auto mb-3 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-300'
+            }`} />
+            <p className="text-lg font-medium">No appointments scheduled</p>
+            <p className="text-sm mt-2">Book an appointment with your dentist</p>
+            <Button 
+              variant="primary" 
+              size="sm"
+              className="mt-4"
+              onClick={() => onTabChange?.('appointments')}
+            >
+              Book Appointment
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

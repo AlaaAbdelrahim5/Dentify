@@ -218,14 +218,9 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         icon: FaXRay
       },
       { 
-        id: 'find-dentist', 
-        label: 'Find a Dentist', 
-        icon: FaUserMd
-      },
-      { 
-        id: 'find-clinic', 
-        label: 'Find a Clinic', 
-        icon: FaHospital
+        id: 'search', 
+        label: 'Find Providers', 
+        icon: FaSearch
       }
     ],
     radiology: [

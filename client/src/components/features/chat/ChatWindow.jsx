@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useChat } from '../../../contexts/ChatContext';
 import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiMessageSquare } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
+import { LoadingSpinner } from '../../common';
 
 const ChatWindow = ({ conversation, otherUser }) => {
   const { messages, sendChatMessage, markConversationAsRead, userId } = useChat();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -16,10 +18,18 @@ const ChatWindow = ({ conversation, otherUser }) => {
 
   useEffect(() => {
     // Mark messages as read when opening conversation
-    if (conversation) {
+    if (conversation?.id) {
+      setIsLoadingMessages(true);
       markConversationAsRead(conversation.id);
+      // Give a brief moment for messages to load
+      const timer = setTimeout(() => {
+        setIsLoadingMessages(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoadingMessages(false);
     }
-  }, [conversation]);
+  }, [conversation?.id, markConversationAsRead]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -82,33 +92,52 @@ const ChatWindow = ({ conversation, otherUser }) => {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
-        {messages.map((message) => {
-          const isSender = message.senderId === userId;
-          return (
-            <div
-              key={message.id}
-              className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md xl:max-w-lg ${
-                  isSender
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700'
-                } rounded-2xl px-4 py-3`}
-              >
-                <p className="text-sm break-words leading-relaxed">{message.message}</p>
-                <p
-                  className={`text-xs mt-1.5 ${
-                    isSender ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  {message.createdAt && formatDistanceToNow(message.createdAt.toDate())}
-                </p>
-              </div>
+        {isLoadingMessages ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <LoadingSpinner size="lg" />
+              <p className="text-gray-500 dark:text-gray-400 mt-4">Loading messages...</p>
             </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <FiMessageSquare className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Start your conversation</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Send a message to begin chatting</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {messages.map((message) => {
+              const isSender = message.senderId === userId;
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md xl:max-w-lg ${
+                      isSender
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-gray-700'
+                    } rounded-2xl px-4 py-3`}
+                  >
+                    <p className="text-sm break-words leading-relaxed">{message.message}</p>
+                    <p
+                      className={`text-xs mt-1.5 ${
+                        isSender ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      {message.createdAt && formatDistanceToNow(message.createdAt.toDate())}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
 
       {/* Message Input */}

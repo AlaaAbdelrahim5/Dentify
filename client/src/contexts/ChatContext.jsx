@@ -26,6 +26,7 @@ export const ChatProvider = ({ children }) => {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [userId, setUserId] = useState(null);
   const [initKey, setInitKey] = useState(0); // Used to force re-initialization
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
 
   // Listen for logout events to reset state
   useEffect(() => {
@@ -77,17 +78,13 @@ export const ChatProvider = ({ children }) => {
       
       // Always update userId to ensure it's current
       setUserId(currentUserId);
+      setIsLoadingConversations(true);
 
       // Listen for conversations
       const unsubscribe = getUserConversations(currentUserId, (convs) => {
         console.log('ChatContext: Received', convs.length, 'conversations for user', currentUserId);
         setConversations(convs);
-        
-        // Calculate total unread count
-        const total = convs.reduce((sum, conv) => {
-          return sum + (conv.unreadCount?.[currentUserId] || 0);
-        }, 0);
-        setTotalUnreadCount(total);
+        setIsLoadingConversations(false);
       });
 
       return () => {
@@ -104,6 +101,22 @@ export const ChatProvider = ({ children }) => {
       setTotalUnreadCount(0);
     }
   }, [initKey]); // Re-run when initKey changes
+
+  // Recalculate total unread count when conversations or activeConversation changes
+  useEffect(() => {
+    if (!userId) return;
+    
+    const total = conversations.reduce((sum, conv) => {
+      // Don't count unread messages from the currently active conversation
+      if (activeConversation?.id === conv.id) {
+        return sum;
+      }
+      return sum + (conv.unreadCount?.[userId] || 0);
+    }, 0);
+    
+    console.log('ChatContext: Recalculated total unread count:', total, 'activeConversation:', activeConversation?.id);
+    setTotalUnreadCount(total);
+  }, [conversations, activeConversation, userId]);
 
   useEffect(() => {
     if (!activeConversation) {
@@ -157,6 +170,7 @@ export const ChatProvider = ({ children }) => {
     messages,
     totalUnreadCount,
     userId,
+    isLoadingConversations,
     setActiveConversation,
     startConversation,
     sendChatMessage,

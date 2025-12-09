@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChat } from '../../../contexts/ChatContext';
 import { FiSearch, FiMessageSquare, FiPlus, FiX } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
+import { authUtils } from '../../../utils/auth';
+import { LoadingSpinner } from '../../common';
 
 const ConversationsList = ({ onSelectConversation, users = [] }) => {
-  const { conversations, setActiveConversation, userId, startConversation } = useChat();
+  const { conversations, setActiveConversation, activeConversation, userId, startConversation, markConversationAsRead, isLoadingConversations } = useChat();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -16,12 +18,18 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
 
   const filteredConversations = conversations.filter((conv) => {
     const otherUser = getUserInfo(conv.participants);
+    // Only show conversations that have at least one message
+    if (!conv.lastMessage) {
+      return false;
+    }
     return otherUser.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const handleSelectConversation = (conversation) => {
     setActiveConversation(conversation);
     onSelectConversation?.(conversation);
+    // Mark as read immediately when opening the conversation
+    markConversationAsRead(conversation.id);
   };
 
   const handleStartNewChat = async (otherUserId) => {
@@ -37,9 +45,20 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
   // Filter users excluding current user
   console.log('Users prop:', users);
   console.log('Current userId:', userId, 'type:', typeof userId);
+  
+  // Get current user info to check their role
+  const currentUser = authUtils.getCurrentUser();
+  const currentUserRole = currentUser?.role?.toLowerCase();
+  
   // Ensure both values are numbers for comparison
   const availableUsers = users.filter(u => {
     const isCurrentUser = Number(u.id) === Number(userId);
+    
+    // If current user is a patient, exclude other patients
+    if (currentUserRole === 'patient' && u.role?.toLowerCase() === 'patient') {
+      return false;
+    }
+    
     console.log(`User ${u.name} (id: ${u.id}, type: ${typeof u.id}) === ${userId}? ${isCurrentUser}`);
     return !isCurrentUser;
   });
@@ -81,7 +100,14 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.length === 0 ? (
+        {isLoadingConversations ? (
+          <div className="flex items-center justify-center h-full py-20">
+            <div className="text-center">
+              <LoadingSpinner size="lg" />
+              <p className="text-gray-500 dark:text-gray-400 mt-4">Loading conversations...</p>
+            </div>
+          </div>
+        ) : filteredConversations.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <FiMessageSquare className="w-10 h-10 text-blue-600 dark:text-blue-400" />
@@ -106,19 +132,31 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
           filteredConversations.map((conversation) => {
             const otherUser = getUserInfo(conversation.participants);
             const unreadCount = conversation.unreadCount?.[userId] || 0;
+            const isActive = activeConversation?.id === conversation.id;
+            // Don't show unread indicator for active conversation
+            const showUnread = !isActive && unreadCount > 0;
+            
+            // Debug logging
+            if (unreadCount > 0) {
+              console.log('Conversation:', conversation.id, 'Active:', activeConversation?.id, 'isActive:', isActive, 'showUnread:', showUnread);
+            }
 
             return (
               <div
                 key={conversation.id}
                 onClick={() => handleSelectConversation(conversation)}
-                className="mx-3 my-2 p-4 rounded-xl hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all duration-200 hover:shadow-md"
+                className={`mx-3 my-2 p-4 rounded-xl cursor-pointer transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-white dark:bg-gray-800 shadow-lg ring-2 ring-blue-500' 
+                    : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-md'
+                }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="relative">
                     <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
                       {otherUser.name?.[0]?.toUpperCase() || '?'}
                     </div>
-                    {unreadCount > 0 && (
+                    {showUnread && (
                       <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white dark:ring-gray-900">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
@@ -134,7 +172,7 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
                       </span>
                     </div>
                     <p className={`text-sm truncate ${
-                      unreadCount > 0 
+                      showUnread 
                         ? 'text-gray-900 dark:text-white font-semibold' 
                         : 'text-gray-600 dark:text-gray-400'
                     }`}>

@@ -41,8 +41,7 @@ import DentistSettings from './dentist/DentistSettings'
 // Import patient components
 import PatientOverview from './patient/PatientOverview'
 import PatientAppointments from './patient/PatientAppointments'
-import FindClinic from './patient/FindClinic'
-import FindDentist from './patient/FindDentist'
+import SearchPage from './patient/SearchPage'
 import PatientTreatments from './patient/PatientTreatments'
 import PatientPayments from './patient/PatientPayments'
 import PatientXRayResults from './patient/PatientXRayResults'
@@ -158,8 +157,7 @@ const UnifiedDashboard = () => {
         userType: 'patient',
         tabs: {
           overview: { component: PatientOverview, label: 'Overview' },
-          'find-dentist': { component: FindDentist, label: 'Find a Dentist' },
-          'find-clinic': { component: FindClinic, label: 'Find a Clinic' },
+          search: { component: SearchPage, label: 'Find Providers' },
           appointments: { component: PatientAppointments, label: 'Appointments' },
           payments: { component: PatientPayments, label: 'Payments' },
           xrays: { component: PatientXRayResults, label: 'X-ray Results', icon: FaFileAlt },

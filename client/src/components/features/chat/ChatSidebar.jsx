@@ -22,6 +22,9 @@ const ChatSidebar = ({ isOpen, onClose }) => {
   const fetchUsers = async () => {
     try {
       const token = authUtils.getAccessToken();
+      const currentUser = authUtils.getCurrentUser();
+      const currentUserRole = currentUser?.role?.toLowerCase();
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -29,7 +32,18 @@ const ChatSidebar = ({ isOpen, onClose }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(Array.isArray(data) ? data.filter(u => u.id !== userId) : []);
+        const filteredUsers = Array.isArray(data) ? data.filter(u => {
+          // Exclude current user
+          if (u.id === userId) return false;
+          
+          // If current user is a patient, exclude other patients
+          if (currentUserRole === 'patient' && u.role?.toLowerCase() === 'patient') {
+            return false;
+          }
+          
+          return true;
+        }) : [];
+        setUsers(filteredUsers);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -153,16 +167,23 @@ const ChatSidebar = ({ isOpen, onClose }) => {
               }`}>
                 Recent
               </h3>
-              {conversations.map((conversation) => {
+              {conversations
+                .filter(conversation => conversation.lastMessage) // Only show conversations with messages
+                .map((conversation) => {
                 const otherUser = getOtherUserFromConversation(conversation);
                 if (!otherUser) return null;
+                
+                const isActiveChatOpen = activeChat?.conversationId === conversation.id;
+                const unreadCount = conversation.unreadCount?.[userId] || 0;
+                // Don't show unread count if this conversation is currently active
+                const showUnreadCount = !isActiveChatOpen && unreadCount > 0;
                 
                 return (
                   <button
                     key={conversation.id}
                     onClick={() => handleUserClick(otherUser)}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] ${
-                      activeChat?.conversationId === conversation.id
+                      isActiveChatOpen
                         ? isDarkMode
                           ? 'bg-blue-500/20'
                           : 'bg-blue-50'
@@ -225,9 +246,9 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                         }`}>
                           {conversation.lastMessage || 'Start chatting...'}
                         </p>
-                        {conversation.unreadCount?.[userId] > 0 && (
+                        {showUnreadCount && (
                           <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
-                            {conversation.unreadCount[userId]}
+                            {unreadCount}
                           </span>
                         )}
                       </div>
