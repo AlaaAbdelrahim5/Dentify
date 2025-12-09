@@ -327,18 +327,21 @@ const DentistsManagement = () => {
             {dentist.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
-                src={dentist.user.profileImage}
+                src={dentist.user.profileImage.startsWith('data:') || dentist.user.profileImage.startsWith('http') ? dentist.user.profileImage : `http://localhost:5000${dentist.user.profileImage}`}
                 alt={`${dentist.firstName} ${dentist.lastName}`}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                }}
               />
-            ) : (
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+            ) : null}
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${dentist.user?.profileImage ? 'hidden' : ''} ${
                 isDarkMode 
                   ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
                   : 'bg-gradient-to-br from-teal-500 to-cyan-500'
               }`}>
-                <FaUserMd className="text-white text-lg" />
-              </div>
-            )}
+              <FaUserMd className="text-white text-lg" />
+            </div>
           </div>
           <div className="ml-4">
             <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>

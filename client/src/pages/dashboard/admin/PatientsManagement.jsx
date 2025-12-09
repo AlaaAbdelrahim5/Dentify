@@ -303,18 +303,21 @@ const PatientsManagement = () => {
             {patient.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
-                src={patient.user.profileImage}
+                src={patient.user.profileImage.startsWith('data:') || patient.user.profileImage.startsWith('http') ? patient.user.profileImage : `http://localhost:5000${patient.user.profileImage}`}
                 alt={`${patient.firstName} ${patient.lastName}`}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                }}
               />
-            ) : (
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+            ) : null}
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${patient.user?.profileImage ? 'hidden' : ''} ${
                 isDarkMode 
                   ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
                   : 'bg-gradient-to-br from-teal-500 to-cyan-500'
               }`}>
-                <FaUser className="text-white text-lg" />
-              </div>
-            )}
+              <FaUser className="text-white text-lg" />
+            </div>
           </div>
           <div className="ml-4">
             <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>

@@ -340,10 +340,17 @@ const AdminsManagement = () => {
                   <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
                     {admin.userId?.profileImage ? (
                       <img 
-                        src={admin.userId.profileImage} 
+                        src={admin.userId.profileImage.startsWith('data:') || admin.userId.profileImage.startsWith('http') ? admin.userId.profileImage : `http://localhost:5000${admin.userId.profileImage}`}
                         alt={admin.fullName}
                         className="w-24 h-24 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'block';
+                        }}
                       />
+                    ) : null}
+                    {admin.userId?.profileImage ? (
+                      <FaUserShield className="w-12 h-12 text-teal-600 hidden" />
                     ) : (
                       <FaUserShield className="w-12 h-12 text-teal-600" />
                     )}

@@ -4,6 +4,14 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useChat } from '../../../contexts/ChatContext';
 import { authUtils } from '../../../utils/auth';
 
+// Utility function to get image URL (handles base64 and URL paths)
+const getImageUrl = (profileImage) => {
+  if (!profileImage) return null;
+  if (profileImage.startsWith('data:')) return profileImage; // base64 image
+  if (profileImage.startsWith('http')) return profileImage; // full URL
+  return `${import.meta.env.VITE_API_URL}${profileImage}`; // relative path
+};
+
 const ChatSidebar = ({ isOpen, onClose }) => {
   const { isDarkMode } = useTheme();
   const { conversations, userId, startConversation, setActiveConversation, markConversationAsRead } = useChat();
@@ -196,9 +204,13 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                     <div className="relative flex-shrink-0">
                       {otherUser.profileImage ? (
                         <img
-                          src={`${import.meta.env.VITE_API_URL}${otherUser.profileImage}`}
+                          src={getImageUrl(otherUser.profileImage)}
                           alt={otherUser.name}
                           className="w-12 h-12 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'flex';
+                          }}
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
@@ -369,9 +381,13 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                       <div className="relative flex-shrink-0">
                         {user.profileImage ? (
                           <img
-                            src={`${import.meta.env.VITE_API_URL}${user.profileImage}`}
+                            src={getImageUrl(user.profileImage)}
                             alt={user.name}
                             className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextElementSibling.style.display = 'flex';
+                            }}
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
@@ -467,9 +483,13 @@ const ChatWindow = ({ user, onClose }) => {
         <div className="flex items-center gap-3">
           {user.profileImage ? (
             <img
-              src={`${import.meta.env.VITE_API_URL}${user.profileImage}`}
+              src={getImageUrl(user.profileImage)}
               alt={user.name}
               className="w-9 h-9 rounded-full object-cover border-2 border-white/30"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
             />
           ) : (
             <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
