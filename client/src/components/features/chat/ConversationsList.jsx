@@ -36,8 +36,13 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
 
   // Filter users excluding current user
   console.log('Users prop:', users);
-  console.log('Current userId:', userId);
-  const availableUsers = users.filter(u => u.id !== userId);
+  console.log('Current userId:', userId, 'type:', typeof userId);
+  // Ensure both values are numbers for comparison
+  const availableUsers = users.filter(u => {
+    const isCurrentUser = Number(u.id) === Number(userId);
+    console.log(`User ${u.name} (id: ${u.id}, type: ${typeof u.id}) === ${userId}? ${isCurrentUser}`);
+    return !isCurrentUser;
+  });
   console.log('Available users after filter:', availableUsers);
   const filteredUsers = availableUsers.filter(u => 
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(userSearchTerm.toLowerCase()) ||

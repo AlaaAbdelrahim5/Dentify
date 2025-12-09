@@ -25,21 +25,62 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [userId, setUserId] = useState(null);
+  const [initKey, setInitKey] = useState(0); // Used to force re-initialization
+
+  // Listen for logout events to reset state
+  useEffect(() => {
+    const handleLogout = () => {
+      console.log('ChatContext: Logout detected, clearing state');
+      setUserId(null);
+      setConversations([]);
+      setActiveConversation(null);
+      setMessages([]);
+      setTotalUnreadCount(0);
+      setInitKey(prev => prev + 1); // Force re-init on next mount
+    };
+
+    const handleLogin = () => {
+      console.log('ChatContext: Login detected, forcing re-initialization');
+      setInitKey(prev => prev + 1); // Force re-init
+    };
+
+    window.addEventListener('logout', handleLogout);
+    window.addEventListener('login', handleLogin);
+    
+    return () => {
+      window.removeEventListener('logout', handleLogout);
+      window.removeEventListener('login', handleLogin);
+    };
+  }, []);
 
   useEffect(() => {
     // Get user from token
-    const token = authUtils.getAccessToken();
-    if (!token) return;
+    const currentToken = authUtils.getAccessToken();
+    
+    if (!currentToken) {
+      // Clear all state if no token
+      console.log('ChatContext: No token found, clearing state');
+      setUserId(null);
+      setConversations([]);
+      setActiveConversation(null);
+      setMessages([]);
+      setTotalUnreadCount(0);
+      return;
+    }
 
     try {
-      const decoded = jwtDecode(token);
-      console.log('Decoded JWT token:', decoded); // Debug log
-      const currentUserId = decoded.userId || decoded.id;
-      console.log('Extracted userId:', currentUserId); // Debug log
+      const decoded = jwtDecode(currentToken);
+      console.log('ChatContext: Decoded JWT token:', decoded); // Debug log
+      // Ensure userId is a number to match database format
+      const currentUserId = Number(decoded.userId || decoded.id);
+      console.log('ChatContext: Extracted userId:', currentUserId, 'initKey:', initKey); // Debug log
+      
+      // Always update userId to ensure it's current
       setUserId(currentUserId);
 
       // Listen for conversations
       const unsubscribe = getUserConversations(currentUserId, (convs) => {
+        console.log('ChatContext: Received', convs.length, 'conversations for user', currentUserId);
         setConversations(convs);
         
         // Calculate total unread count
@@ -49,11 +90,20 @@ export const ChatProvider = ({ children }) => {
         setTotalUnreadCount(total);
       });
 
-      return () => unsubscribe && unsubscribe();
+      return () => {
+        console.log('ChatContext: Cleaning up listener for user', currentUserId);
+        unsubscribe && unsubscribe();
+      };
     } catch (error) {
-      console.error('Error initializing chat:', error);
+      console.error('ChatContext: Error initializing chat:', error);
+      // Clear state on error
+      setUserId(null);
+      setConversations([]);
+      setActiveConversation(null);
+      setMessages([]);
+      setTotalUnreadCount(0);
     }
-  }, []);
+  }, [initKey]); // Re-run when initKey changes
 
   useEffect(() => {
     if (!activeConversation) {

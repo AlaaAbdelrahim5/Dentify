@@ -63,15 +63,22 @@ export const getUserConversations = (userId, callback) => {
   const conversationsRef = collection(db, 'conversations');
   const q = query(
     conversationsRef,
-    where('participants', 'array-contains', userId),
-    orderBy('lastMessageAt', 'desc')
+    where('participants', 'array-contains', userId)
   );
 
   return onSnapshot(q, (snapshot) => {
-    const conversations = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const conversations = snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .sort((a, b) => {
+        // Sort by lastMessageAt, putting null values at the end
+        if (!a.lastMessageAt && !b.lastMessageAt) return 0;
+        if (!a.lastMessageAt) return 1;
+        if (!b.lastMessageAt) return -1;
+        return b.lastMessageAt.toMillis() - a.lastMessageAt.toMillis();
+      });
     callback(conversations);
   });
 };

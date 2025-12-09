@@ -202,6 +202,10 @@ export const authUtils = {
     
     authUtils.setTokens(tokenData, remember);
     console.log('Login complete, tokens stored in:', remember ? 'localStorage' : 'sessionStorage');
+    
+    // Dispatch custom login event to notify context providers
+    window.dispatchEvent(new Event('login'));
+    console.log('Login event dispatched');
   },
 
   // Logout user
