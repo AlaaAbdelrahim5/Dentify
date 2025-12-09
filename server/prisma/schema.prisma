@@ -208,7 +208,7 @@ model RadiologyRequest {
   requestDate       DateTime      @default(now())
   imagingType       String // "X-ray", "CT", "3D", etc.
   availableDate     DateTime? // when result is ready
-  reportFile        String? // URL or file ID
+  reportFile        String? // Base64 encoded image/PDF or URL
   status            RequestStatus @default(REQUESTED)
   notes             String?
 

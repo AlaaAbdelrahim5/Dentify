@@ -15,37 +15,36 @@ const NotificationsList = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Notifications
-          </h1>
           {unreadCount > 0 && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              You have {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+              {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
             </p>
           )}
         </div>
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-sm hover:shadow-md"
           >
             <FiCheck className="w-4 h-4" />
-            Mark all as read
+            <span className="font-medium">Mark all as read</span>
           </button>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {notifications.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
-            <FiBell className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-16 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 rounded-full flex items-center justify-center">
+              <FiBell className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               No notifications yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 max-w-sm mx-auto">
               When you get notifications, they'll show up here
             </p>
           </div>
@@ -54,36 +53,41 @@ const NotificationsList = () => {
             <div
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
-              className={`bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer ${
-                !notification.read ? 'border-l-4 border-blue-600' : ''
+              className={`group relative bg-white dark:bg-gray-800 rounded-xl border transition-all cursor-pointer overflow-hidden ${
+                !notification.read 
+                  ? 'border-blue-500 dark:border-blue-500 shadow-md hover:shadow-xl' 
+                  : 'border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
-              <div className="p-4">
+              {!notification.read && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-blue-400" />
+              )}
+              <div className="p-5">
                 <div className="flex items-start gap-4">
                   {!notification.read && (
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-1.5 flex-shrink-0 animate-pulse" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                          {notification.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {notification.body}
-                        </p>
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <h3 className={`text-base font-bold ${
+                        !notification.read 
+                          ? 'text-gray-900 dark:text-white' 
+                          : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {notification.title}
+                      </h3>
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
                         {notification.createdAt && formatDistanceToNow(notification.createdAt.toDate())}
                       </span>
                     </div>
-                    {notification.data && (
-                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                        {notification.data.type && (
-                          <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-                            {notification.data.type}
-                          </span>
-                        )}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {notification.body}
+                    </p>
+                    {notification.data && notification.data.type && (
+                      <div className="mt-3">
+                        <span className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-700 dark:text-blue-400 text-xs font-semibold rounded-lg">
+                          {notification.data.type}
+                        </span>
                       </div>
                     )}
                   </div>

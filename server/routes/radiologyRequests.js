@@ -594,7 +594,12 @@ router.patch('/:id/upload-result', authenticate, authorize('RadiologyCenter'), a
     const { reportFile, availableDate, status, notes } = req.body;
 
     if (!reportFile) {
-      return res.status(400).json({ error: 'Report file URL is required' });
+      return res.status(400).json({ error: 'Report file is required' });
+    }
+
+    // Validate base64 format if it's a data URI
+    if (reportFile.startsWith('data:') && !reportFile.includes('base64')) {
+      return res.status(400).json({ error: 'Invalid image format. Must be base64 encoded.' });
     }
 
     // Check if request exists and belongs to this radiology center
