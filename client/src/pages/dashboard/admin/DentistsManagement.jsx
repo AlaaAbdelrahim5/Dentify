@@ -29,7 +29,8 @@ import {
   Pagination,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  DentistDetailsModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
@@ -458,244 +459,7 @@ const DentistsManagement = () => {
     </tr>
   )
 
-  const DentistDetailsModal = ({ dentist, onClose }) => {
-    if (!dentist) return null
-
-    return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-transparent transition-opacity"
-          onClick={onClose}
-        />
-
-        {/* Modal */}
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div
-            className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
-              isDarkMode
-                ? "bg-gray-800 border border-gray-700"
-                : "bg-white border border-gray-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-              isDarkMode
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-                  <FaUserMd className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Dr. {dentist.firstName} {dentist.lastName}
-                  </h2>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    License: {dentist.licenseNumber}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-                }`}
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Form Container with Scroll */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-6">
-            {/* Status and Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <StatusBadge 
-                  status={
-                    dentist.user?.status === 'PENDING' ? 'pending' : 
-                    dentist.user?.status === 'ACTIVE' ? 'active' : 
-                    dentist.user?.status === 'REJECTED' ? 'rejected' :
-                    dentist.user?.status === 'DEACTIVATED' ? 'inactive' : 
-                    'inactive'
-                  } 
-                />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Registered on {formatDate(dentist.user?.createdAt)}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {dentist.user?.status === 'PENDING' && (
-                  <>
-                    <button
-                      onClick={() => {
-                        onClose()
-                        handleApproveDentist(dentist)
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-                    >
-                      <FaCheck className="w-4 h-4" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => {
-                        onClose()
-                        handleRejectDentist(dentist)
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
-                    >
-                      <FaTimes className="w-4 h-4" />
-                      Reject
-                    </button>
-                  </>
-                )}
-                {dentist.user?.status === 'REJECTED' && (
-                  <button
-                    onClick={() => {
-                      onClose()
-                      handleApproveDentist(dentist)
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-                  >
-                    <FaCheck className="w-4 h-4" />
-                    Approve
-                  </button>
-                )}
-                {dentist.user?.status === 'ACTIVE' && (
-                  <button
-                    onClick={() => {
-                      onClose()
-                      handleToggleStatus(dentist)
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white transition-colors"
-                  >
-                    <FaBan className="w-4 h-4" />
-                    Deactivate
-                  </button>
-                )}
-                {dentist.user?.status === 'DEACTIVATED' && (
-                  <button
-                    onClick={() => {
-                      onClose()
-                      handleToggleStatus(dentist)
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-                  >
-                    <FaCheck className="w-4 h-4" />
-                    Activate
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-4">
-                <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  <FaUserMd className="w-4 h-4 text-teal-600" />
-                  Personal Information
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Name:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                      Dr. {dentist.firstName} {dentist.lastName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.email || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.user?.phone || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Gender:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                      {dentist.gender?.charAt(0).toUpperCase() + dentist.gender?.slice(1) || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Birth Date:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                      {dentist.birthDate ? formatDate(dentist.birthDate) : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>City:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.city || 'N/A'}</span>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  <FaCertificate className="w-4 h-4 text-teal-600" />
-                  Professional Information
-                </h3>
-                <div className="space-y-2">
-                  <div>
-                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      License Number
-                    </span>
-                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {dentist.licenseNumber}
-                    </span>
-                  </div>
-                  <div>
-                    <span className={`block text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Specialization
-                    </span>
-                    <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {dentist.specialization || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Clinic Information */}
-            {dentist.clinic && (
-              <Card className="p-4">
-                <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  <FaHospital className="w-4 h-4 text-teal-600" />
-                  Clinic Information
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Clinic Name:</span>
-                    <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.clinicName}</span>
-                  </div>
-                  {dentist.clinic.address && (
-                    <div className="flex justify-between">
-                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Address:</span>
-                      <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{dentist.clinic.address}</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            )}
-          </div>
-        </div>
-        </div>
-      </div>
-    </div>
-    )
-  }
+  // Using the reusable DentistDetailsModal component from components folder
 
   return (
     <div className="space-y-6">
@@ -732,15 +496,14 @@ const DentistsManagement = () => {
       )}
 
       {/* Dentist Details Modal */}
-      {showDetailsModal && (
-        <DentistDetailsModal
-          dentist={selectedDentist}
-          onClose={() => {
-            setShowDetailsModal(false)
-            setSelectedDentist(null)
-          }}
-        />
-      )}
+      <DentistDetailsModal
+        isOpen={showDetailsModal}
+        dentistData={selectedDentist}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setSelectedDentist(null)
+        }}
+      />
 
       {/* Confirmation Modal */}
       <ConfirmationModal
