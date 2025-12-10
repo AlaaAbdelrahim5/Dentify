@@ -69,16 +69,16 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
   );
 
   return (
-    <div className="w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-800">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
             Messages
           </h2>
           <button
             onClick={() => setShowNewChatModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
             title="New Chat"
           >
             <FiPlus className="w-5 h-5" />
@@ -87,13 +87,13 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
         </div>
         {/* Search */}
         <div className="relative">
-          <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-500 dark:text-teal-400 w-5 h-5" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 dark:focus:border-teal-400 transition-all shadow-sm hover:shadow-md"
           />
         </div>
       </div>
@@ -109,8 +109,8 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-              <FiMessageSquare className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-100 via-cyan-100 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+              <FiMessageSquare className="w-10 h-10 text-teal-600 dark:text-teal-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               {searchTerm ? 'No conversations found' : 'No conversations yet'}
@@ -121,7 +121,7 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
             {!searchTerm && (
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg font-semibold"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold hover:scale-105 transform"
               >
                 <FiPlus className="w-5 h-5" />
                 Start a conversation
@@ -145,29 +145,30 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
               <div
                 key={conversation.id}
                 onClick={() => handleSelectConversation(conversation)}
-                className={`mx-3 my-2 p-4 rounded-xl cursor-pointer transition-all duration-200 ${
+                className={`mx-3 my-2 p-4 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
                   isActive 
-                    ? 'bg-white dark:bg-gray-800 shadow-lg ring-2 ring-blue-500' 
-                    : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-md'
+                    ? 'bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-700 shadow-lg ring-2 ring-teal-500 dark:ring-teal-400' 
+                    : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg'
                 }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    <div className="w-14 h-14 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                       {otherUser.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     {showUnread && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white dark:ring-gray-900">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white dark:ring-gray-900 animate-pulse">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
                     )}
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow-sm"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h3 className="font-bold text-gray-900 dark:text-white truncate text-base">
                         {otherUser.name}
                       </h3>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium">
+                      <span className="text-xs text-teal-600 dark:text-teal-400 whitespace-nowrap font-medium">
                         {conversation.lastMessageAt && formatDistanceToNow(conversation.lastMessageAt.toDate())}
                       </span>
                     </div>
@@ -190,19 +191,19 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
       {showNewChatModal && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
             onClick={() => setShowNewChatModal(false)}
           />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700 transform transition-all">
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
                   New Chat
                 </h3>
                 <button
                   onClick={() => setShowNewChatModal(false)}
-                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all hover:scale-110"
                 >
                   <FiX className="w-5 h-5" />
                 </button>
@@ -211,13 +212,13 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
               {/* Search Users */}
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-500 dark:text-teal-400 w-5 h-5" />
                   <input
                     type="text"
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
                     placeholder="Search users..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 dark:focus:border-teal-400 transition-all"
                     autoFocus
                   />
                 </div>
@@ -236,10 +237,10 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
                     <div
                       key={user.id}
                       onClick={() => handleStartNewChat(user.id)}
-                      className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                      className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700 cursor-pointer transition-all hover:shadow-md"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                        <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                           {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -250,7 +251,7 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
                             {user.email}
                           </p>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                        <div className="text-xs text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900 px-2.5 py-1 rounded-full font-medium capitalize">
                           {user.role}
                         </div>
                       </div>

@@ -84,7 +84,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed top-16 left-0 right-0 bottom-0 bg-black/20 z-40 transition-opacity duration-300"
+          className="fixed top-16 left-0 right-0 bottom-0 bg-black/30 backdrop-blur-sm z-40 transition-all duration-300"
           onClick={onClose}
         />
       )}
@@ -95,37 +95,31 @@ const ChatSidebar = ({ isOpen, onClose }) => {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } ${
           isDarkMode
-            ? 'bg-gray-900 border-l border-gray-800'
-            : 'bg-white border-l border-gray-200'
+            ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 border-l border-gray-800'
+            : 'bg-gradient-to-b from-white via-gray-50 to-white border-l border-gray-200'
         } shadow-2xl`}
       >
         {/* Header */}
-        <div className={`p-4 border-b flex items-center justify-between ${
-          isDarkMode ? 'border-gray-800' : 'border-gray-200'
+        <div className={`p-5 border-b flex items-center justify-between ${
+          isDarkMode ? 'border-gray-800 bg-gray-900/50 backdrop-blur-sm' : 'border-gray-200 bg-white/50 backdrop-blur-sm'
         }`}>
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'
-            }`}>
-              <FiMessageCircle className={`w-5 h-5 ${
-                isDarkMode ? 'text-blue-400' : 'text-blue-600'
-              }`} />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 shadow-lg">
+              <FiMessageCircle className="w-5 h-5 text-white" />
             </div>
-            <h2 className={`text-lg font-bold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
               Chats
             </h2>
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+            className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 ${
               isDarkMode
                 ? 'hover:bg-gray-800 text-gray-400 hover:text-gray-300'
                 : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
             }`}
           >
-            <FiX className="w-5 h-5" />
+            <FiX className="w-6 h-6" />
           </button>
         </div>
 
@@ -133,24 +127,22 @@ const ChatSidebar = ({ isOpen, onClose }) => {
         <div className="p-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <FiSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-400'
-              }`} />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-teal-500 dark:text-teal-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search conversations..."
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                className={`w-full pl-11 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 shadow-sm hover:shadow-md ${
                   isDarkMode
-                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-blue-500/50 focus:border-blue-500'
-                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500/50 focus:border-blue-500'
+                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-teal-500/50 focus:border-teal-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-teal-500/50 focus:border-teal-500'
                 }`}
               />
             </div>
             <button
               onClick={() => setIsSearchModalOpen(true)}
-              className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg hover:shadow-xl`}
+              className="p-3 rounded-xl transition-all duration-200 hover:scale-110 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
               title="New Conversation"
             >
               <FiUserPlus className="w-5 h-5" />
@@ -162,10 +154,8 @@ const ChatSidebar = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto">
           {/* Recent Conversations */}
           {conversations.length > 0 ? (
-            <div className="px-4 mb-4">
-              <h3 className={`text-xs font-bold uppercase mb-2 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
-              }`}>
+            <div className="px-3 mb-4">
+              <h3 className="text-xs font-bold uppercase mb-3 tracking-wider text-teal-600 dark:text-teal-400">
                 Recent
               </h3>
               {conversations
@@ -183,14 +173,14 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                   <button
                     key={conversation.id}
                     onClick={() => handleUserClick(otherUser)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] ${
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] shadow-sm hover:shadow-md ${
                       isActiveChatOpen
                         ? isDarkMode
-                          ? 'bg-blue-500/20'
-                          : 'bg-blue-50'
+                          ? 'bg-gradient-to-r from-teal-900/40 to-cyan-900/40 ring-2 ring-teal-500'
+                          : 'bg-gradient-to-r from-teal-50 to-cyan-50 ring-2 ring-teal-500'
                         : isDarkMode
-                        ? 'hover:bg-gray-800'
-                        : 'hover:bg-gray-50'
+                        ? 'hover:bg-gray-800/80'
+                        : 'hover:bg-white'
                     }`}
                   >
                     {/* Avatar */}
@@ -199,60 +189,56 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                         <img
                           src={getImageUrl(otherUser.profileImage)}
                           alt={otherUser.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-13 h-13 rounded-full object-cover ring-2 ring-teal-100 dark:ring-teal-900"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextElementSibling.style.display = 'flex';
                           }}
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
+                        <div className="w-13 h-13 rounded-full bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+                          <span className="text-white font-bold text-base">
                             {otherUser.name?.[0]?.toUpperCase() || '?'}
                           </span>
                         </div>
                       )}
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow-sm"></div>
                     </div>
                     
                     {/* Info */}
                     <div className="flex-1 min-w-0 text-left">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-0.5">
                         <div className="flex items-center gap-2">
-                          <h4 className={`font-semibold truncate ${
+                          <h4 className={`font-bold truncate text-base ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {otherUser.name}
                           </h4>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                            isDarkMode
-                              ? 'bg-gray-700 text-gray-400'
-                              : 'bg-gray-200 text-gray-600'
-                          }`}>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300">
                             {otherUser.role}
                           </span>
                         </div>
                         {conversation.lastMessageAt && (
-                          <span className={`text-xs ${
-                            isDarkMode ? 'text-gray-500' : 'text-gray-500'
-                          }`}>
+                          <span className="text-xs font-medium text-teal-600 dark:text-teal-400">
                             {new Date(conversation.lastMessageAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs truncate ${
+                      <p className={`text-xs truncate mb-1 ${
                         isDarkMode ? 'text-gray-500' : 'text-gray-500'
                       }`}>
                         {otherUser.email}
                       </p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className={`text-sm truncate ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm truncate font-medium ${
+                          showUnreadCount
+                            ? 'text-gray-900 dark:text-white'
+                            : isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
                           {conversation.lastMessage || 'Start chatting...'}
                         </p>
                         {showUnreadCount && (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+                          <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-md animate-pulse">
                             {unreadCount}
                           </span>
                         )}
@@ -266,16 +252,19 @@ const ChatSidebar = ({ isOpen, onClose }) => {
             <div className={`flex flex-col items-center justify-center h-full px-4 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              <FiMessageCircle className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-sm text-center mb-6">No conversations yet. Start chatting with someone!</p>
+              <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <FiMessageCircle className="w-10 h-10 text-teal-600 dark:text-teal-400" />
+              </div>
+              <p className="text-sm text-center font-medium mb-2">No conversations yet</p>
+              <p className="text-xs text-center text-gray-400">Start chatting with someone!</p>
             </div>
           )}
         </div>
 
         {/* Active Chat Window (Mini) */}
         {activeChat && (
-          <div className={`fixed bottom-4 right-[25rem] w-80 h-[500px] rounded-2xl shadow-2xl z-50 overflow-hidden ${
-            isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          <div className={`fixed bottom-4 right-[25rem] w-80 h-[500px] rounded-2xl shadow-2xl z-50 overflow-hidden border-2 transform transition-all duration-300 ${
+            isDarkMode ? 'bg-gray-800 border-teal-900' : 'bg-white border-teal-200'
           }`}>
             <ChatWindow user={activeChat} onClose={() => setActiveChat(null)} />
           </div>
@@ -299,16 +288,14 @@ const ChatSidebar = ({ isOpen, onClose }) => {
             isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
           }`}>
               {/* Modal Header */}
-              <div className={`p-4 border-b flex items-center justify-between ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              <div className={`p-5 border-b flex items-center justify-between ${
+                isDarkMode ? 'border-gray-700 bg-gradient-to-r from-gray-800 to-gray-800' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500`}>
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
                     <FiUserPlus className="w-5 h-5 text-white" />
                   </div>
-                  <h2 className={`text-lg font-bold ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
+                  <h2 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
                     Find Contacts
                   </h2>
                 </div>
@@ -317,10 +304,10 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                     setIsSearchModalOpen(false);
                     setContactSearchTerm('');
                   }}
-                  className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                  className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 ${
                     isDarkMode
                       ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
-                      : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                      : 'hover:bg-white text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <FiX className="w-5 h-5" />
@@ -330,19 +317,17 @@ const ChatSidebar = ({ isOpen, onClose }) => {
               {/* Search Input */}
               <div className="p-4">
                 <div className="relative">
-                  <FiSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-teal-500 dark:text-teal-400" />
                   <input
                     type="text"
                     value={contactSearchTerm}
                     onChange={(e) => setContactSearchTerm(e.target.value)}
                     placeholder="Search by name or email..."
                     autoFocus
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                    className={`w-full pl-11 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
                       isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500/50 focus:border-blue-500'
-                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500/50 focus:border-blue-500'
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-teal-500/50 focus:border-teal-500'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-teal-500/50 focus:border-teal-500'
                     }`}
                   />
                 </div>
@@ -354,8 +339,10 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                   <div className={`flex flex-col items-center justify-center py-12 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                   }`}>
-                    <FiSearch className="w-12 h-12 mb-3 opacity-30" />
-                    <p className="text-sm">
+                    <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+                      <FiSearch className="w-8 h-8 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <p className="text-sm font-medium">
                       {contactSearchTerm ? 'No contacts found' : 'Start typing to search contacts'}
                     </p>
                   </div>
@@ -364,10 +351,10 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                     <button
                       key={user.id}
                       onClick={() => handleUserClick(user)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] ${
+                      className={`w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] shadow-sm hover:shadow-md ${
                         isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-50'
+                          ? 'hover:bg-gray-700/80'
+                          : 'hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50'
                       }`}
                     >
                       {/* Avatar */}
@@ -376,25 +363,25 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                           <img
                             src={getImageUrl(user.profileImage)}
                             alt={user.name}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-teal-100 dark:ring-teal-900"
                             onError={(e) => {
                               e.target.style.display = 'none';
                               e.target.nextElementSibling.style.display = 'flex';
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                             <span className="text-white font-bold text-sm">
                               {user.name?.[0]?.toUpperCase() || '?'}
                             </span>
                           </div>
                         )}
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                        <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"></div>
                       </div>
                       
                       {/* Info */}
                       <div className="flex-1 min-w-0 text-left">
-                        <h4 className={`font-semibold truncate ${
+                        <h4 className={`font-bold truncate ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
                           {user.name}
@@ -407,11 +394,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                       </div>
 
                       {/* Role Badge */}
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        isDarkMode
-                          ? 'bg-gray-700 text-gray-400'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium capitalize bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300">
                         {user.role}
                       </span>
                     </button>
@@ -468,50 +451,50 @@ const ChatWindow = ({ user, onClose }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className={`p-3 flex items-center justify-between flex-shrink-0 ${
-        isDarkMode
-          ? 'bg-gradient-to-r from-blue-600 to-cyan-600'
-          : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-      }`}>
+      <div className="p-4 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
         <div className="flex items-center gap-3">
           {user.profileImage ? (
             <img
               src={getImageUrl(user.profileImage)}
               alt={user.name}
-              className="w-9 h-9 rounded-full object-cover border-2 border-white/30"
+              className="w-10 h-10 rounded-full object-cover border-2 border-white/50 shadow-md"
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextElementSibling.style.display = 'flex';
               }}
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-md border-2 border-white/50">
+              <span className="text-white font-bold text-base">
                 {user.name?.[0]?.toUpperCase() || '?'}
               </span>
             </div>
           )}
           <div>
-            <h3 className="text-white font-bold text-sm">{user.name}</h3>
-            <p className="text-white/80 text-xs capitalize">{user.role}</p>
+            <h3 className="text-white font-bold text-base">{user.name}</h3>
+            <p className="text-white/90 text-xs capitalize font-medium">{user.role}</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white"
+          className="p-2 rounded-xl hover:bg-white/20 transition-all duration-200 text-white hover:scale-110"
         >
           <FiX className="w-5 h-5" />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${
+        isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-50 to-white'
+      }`}>
         {messages.length === 0 ? (
           <div className={`flex flex-col items-center justify-center h-full ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            <FiMessageCircle className="w-12 h-12 mb-2 opacity-50" />
-            <p className="text-sm">Start your conversation</p>
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+              <FiMessageCircle className="w-8 h-8 text-teal-600 dark:text-teal-400" />
+            </div>
+            <p className="text-sm font-medium">Start your conversation</p>
           </div>
         ) : (
           <>
@@ -523,18 +506,18 @@ const ChatWindow = ({ user, onClose }) => {
                 }`}
               >
                 <div
-                  className={`max-w-[75%] px-3 py-2 rounded-2xl ${
+                  className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 ${
                     message.senderId === userId
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-sm'
+                      ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-br-sm'
                       : isDarkMode
-                      ? 'bg-gray-700 text-white rounded-bl-sm'
-                      : 'bg-gray-200 text-gray-900 rounded-bl-sm'
+                      ? 'bg-gray-700 text-white rounded-bl-sm border border-gray-600'
+                      : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200'
                   }`}
                 >
-                  <p className="text-sm break-words">{message.text || message.message || message.content || 'No message'}</p>
-                  <p className={`text-[10px] mt-1 ${
+                  <p className="text-sm break-words leading-relaxed">{message.text || message.message || message.content || 'No message'}</p>
+                  <p className={`text-[10px] mt-1.5 ${
                     message.senderId === userId
-                      ? 'text-white/70'
+                      ? 'text-teal-100'
                       : isDarkMode
                       ? 'text-gray-400'
                       : 'text-gray-500'
@@ -550,8 +533,8 @@ const ChatWindow = ({ user, onClose }) => {
       </div>
 
       {/* Input */}
-      <div className={`p-3 border-t flex-shrink-0 ${
-        isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+      <div className={`p-4 border-t flex-shrink-0 ${
+        isDarkMode ? 'border-gray-700 bg-gray-900/80 backdrop-blur-sm' : 'border-gray-200 bg-white/80 backdrop-blur-sm'
       }`}>
         <div className="flex gap-2">
           <input
@@ -560,23 +543,21 @@ const ChatWindow = ({ user, onClose }) => {
             onChange={(e) => setMessageText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type a message..."
-            className={`flex-1 px-4 py-2 rounded-full text-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 border-2 ${
               isDarkMode
-                ? 'bg-gray-800 text-white placeholder-gray-400 focus:ring-blue-500'
-                : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                ? 'bg-gray-800 text-white placeholder-gray-400 focus:ring-teal-500 focus:border-teal-500 border-gray-700'
+                : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-teal-500 focus:border-teal-500 border-gray-300'
             }`}
           />
           <button
             onClick={handleSend}
             disabled={!messageText.trim()}
-            className={`p-2.5 rounded-full transition-all duration-200 flex-shrink-0 ${
+            className={`p-3 rounded-xl transition-all duration-200 flex-shrink-0 shadow-lg ${
               messageText.trim()
-                ? isDarkMode
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white'
-                  : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white'
+                ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white hover:shadow-xl hover:scale-105'
                 : isDarkMode
-                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-50'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
             }`}
           >
             <FiSend className="w-5 h-5" />
