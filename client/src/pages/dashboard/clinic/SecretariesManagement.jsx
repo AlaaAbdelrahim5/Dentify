@@ -174,7 +174,8 @@ const SecretariesManagement = () => {
   }
 
   const getCityLabel = (cityValue) => {
-    const city = cities.find(c => c.value === cityValue?.toLowerCase())
+    if (!cityValue) return 'N/A'
+    const city = CITY_OPTIONS_LOWERCASE.find(c => c.value === cityValue?.toLowerCase())
     return city ? city.label : cityValue
   }
 

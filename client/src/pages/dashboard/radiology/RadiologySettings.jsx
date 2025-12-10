@@ -21,7 +21,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
@@ -36,13 +36,13 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   })
   const [newType, setNewType] = useState('')
   const [workingHours, setWorkingHours] = useState({
-    sunday: { start: '10:00', end: '14:00', isOpen: false },
-    monday: { start: '09:00', end: '17:00', isOpen: true },
-    tuesday: { start: '09:00', end: '17:00', isOpen: true },
-    wednesday: { start: '09:00', end: '17:00', isOpen: true },
-    thursday: { start: '09:00', end: '17:00', isOpen: true },
-    friday: { start: '09:00', end: '17:00', isOpen: true },
-    saturday: { start: '09:00', end: '14:00', isOpen: true }
+    sunday: { start: '', end: '', isOpen: false },
+    monday: { start: '', end: '', isOpen: false },
+    tuesday: { start: '', end: '', isOpen: false },
+    wednesday: { start: '', end: '', isOpen: false },
+    thursday: { start: '', end: '', isOpen: false },
+    friday: { start: '', end: '', isOpen: false },
+    saturday: { start: '', end: '', isOpen: false }
   })
   const [security, setSecurity] = useState({
     currentPassword: '',
@@ -85,13 +85,13 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     }
     
     const result = {
-      sunday: { start: '10:00', end: '14:00', isOpen: false },
-      monday: { start: '09:00', end: '17:00', isOpen: false },
-      tuesday: { start: '09:00', end: '17:00', isOpen: false },
-      wednesday: { start: '09:00', end: '17:00', isOpen: false },
-      thursday: { start: '09:00', end: '17:00', isOpen: false },
-      friday: { start: '09:00', end: '17:00', isOpen: false },
-      saturday: { start: '09:00', end: '14:00', isOpen: false }
+      sunday: { start: '', end: '', isOpen: false },
+      monday: { start: '', end: '', isOpen: false },
+      tuesday: { start: '', end: '', isOpen: false },
+      wednesday: { start: '', end: '', isOpen: false },
+      thursday: { start: '', end: '', isOpen: false },
+      friday: { start: '', end: '', isOpen: false },
+      saturday: { start: '', end: '', isOpen: false }
     }
     
     // Fill in the actual working hours with isOpen status from database
@@ -135,10 +135,12 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) {
+      e.preventDefault()
+    }
     setError('')
     setSuccess('')
-    setIsSaving(true)
+    setSaving(true)
 
     try {
       const token = authUtils.getAccessToken()
@@ -169,13 +171,13 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       console.error('Error updating settings:', error)
       setError('An error occurred while updating settings')
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
   const handleSaveWorkingHours = async () => {
     try {
-      setIsSaving(true)
+      setSaving(true)
       setError('')
       setSuccess('')
       
@@ -214,7 +216,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       console.error('Error updating working hours:', error)
       setError('An error occurred while updating working hours')
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
@@ -230,7 +232,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     }
 
     try {
-      setIsSaving(true)
+      setSaving(true)
       const token = authUtils.getAccessToken()
 
       const response = await fetch('http://localhost:5000/api/auth/change-password', {
@@ -260,7 +262,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       console.error('Error changing password:', err)
       alert(err.message || 'Failed to change password. Please try again.')
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
@@ -310,7 +312,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Center Name */}
             <div>
@@ -335,17 +337,20 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
               <label className={`block text-sm font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Registration Number <span className="text-red-500">*</span>
+                Registration Number
               </label>
               <Input
                 type="text"
                 name="registrationNumber"
                 value={formData.registrationNumber}
-                onChange={handleChange}
-                disabled={!isEditing}
-                required
+                disabled={true}
                 icon={FaIdCard}
               />
+              <p className={`text-xs mt-1 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                Registration number cannot be changed
+              </p>
             </div>
 
             {/* Email */}
@@ -422,7 +427,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
               />
             </div>
           </div>
-        </form>
+        </div>
 
         <div className="mt-6">
           <h3 className={`text-lg font-semibold mb-4 ${
@@ -488,15 +493,14 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
             <div className="mt-6 flex gap-4">
               <Button 
                 variant="primary"
-                type="submit"
-                disabled={isSaving}
+                onClick={handleSubmit}
+                disabled={saving}
               >
                 <FaSave className="w-4 h-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button
                 variant="outline"
-                type="button"
                 onClick={() => {
                   setIsEditing(false)
                   setError('')
@@ -516,7 +520,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                     })
                   }
                 }}
-                disabled={isSaving}
+                disabled={saving}
               > 
                 Cancel
               </Button>
@@ -547,7 +551,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                   ...workingHours,
                   [day]: { ...hours, isOpen: e.target.checked }
                 })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
               />
               <span className={`font-medium capitalize min-w-[100px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {day}
@@ -599,10 +603,10 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         <Button
           variant="primary"
           onClick={handleSaveWorkingHours}
-          disabled={isSaving}
+          disabled={saving}
         >
           <FaSave className="w-4 h-4 mr-2" />
-          {isSaving ? 'Saving...' : 'Save Working Hours'}
+          {saving ? 'Saving...' : 'Save Working Hours'}
         </Button>
       </div>
     </Card>
@@ -673,9 +677,9 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           <Button 
             variant="primary"
             onClick={handleChangePassword}
-            disabled={isSaving}
+            disabled={saving}
           >
-            {isSaving ? 'Updating...' : 'Update Password'}
+            {saving ? 'Updating...' : 'Update Password'}
           </Button>
         </div>
       </Card>
@@ -689,46 +693,14 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         <h1 className={`text-2xl font-bold ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>
-          Center Settings
+          Profile Settings
         </h1>
         <p className={`mt-1 ${
           isDarkMode ? 'text-gray-300' : 'text-gray-600'
         }`}>
-          Manage your center information and account preferences
+          Manage your profile and account preferences
         </p>
       </div>
-
-      {/* Tabs */}
-      <Card className={`p-4 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        <div className="flex space-x-4">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : isDarkMode
-                      ? 'text-gray-300 hover:bg-gray-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
-      </Card>
-
-      {/* Tab Content */}
-      {activeTab === 'profile' && renderProfileTab()}
-      {activeTab === 'hours' && renderWorkingHoursTab()}
-      {activeTab === 'security' && renderSecurityTab()}
 
       {/* Messages */}
       {error && (
@@ -748,6 +720,46 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         }`}>
           <p>{success}</p>
         </div>
+      )}
+
+      {/* Tabs */}
+      <Card className={`p-4 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <div className="flex space-x-4">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-teal-600 text-white'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
+      {/* Tab Content */}
+      {saving ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        <>
+          {activeTab === 'profile' && renderProfileTab()}
+          {activeTab === 'hours' && renderWorkingHoursTab()}
+          {activeTab === 'security' && renderSecurityTab()}
+        </>
       )}
     </div>
   )

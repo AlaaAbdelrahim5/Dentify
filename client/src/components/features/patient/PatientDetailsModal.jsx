@@ -88,149 +88,199 @@ const PatientDetailsModal = ({
     <div className="space-y-6">
       {/* Basic Information */}
       <div>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
+        <h3 className={`text-lg font-semibold mb-6 ${
+          isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
-          <FaUser className="text-teal-500" />
           Basic Information
         </h3>
         
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Patient Name */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaUser className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Patient Name
-              </label>
-              <p className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              </p>
+              <p className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
                 {patientData.name || `${patientData.firstName || ''} ${patientData.lastName || ''}`.trim() || 'N/A'}
               </p>
             </div>
-            
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+          </div>
+
+          {/* Date of Birth */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaBirthdayCake className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Date of Birth
-              </label>
-              <div className="flex items-center gap-2">
-                <FaBirthdayCake className="text-teal-500 w-4 h-4" />
-                <p className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {formatDate(patientData.dateOfBirth)}
-                  {patientData.dateOfBirth && (
-                    <span className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      ({calculateAge(patientData.dateOfBirth)} years)
-                    </span>
-                  )}
-                </p>
-              </div>
+              </p>
+              <p className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {formatDate(patientData.dateOfBirth)}
+              </p>
+              <p className={`text-sm mt-1 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                {calculateAge(patientData.dateOfBirth)} years old
+              </p>
             </div>
+          </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+          {/* Gender */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaVenusMars className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Gender
-              </label>
-              <div className="flex items-center gap-2">
-                <FaVenusMars className="text-teal-500 w-4 h-4" />
-                <p className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientData.gender ? 
-                    patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : 
-                    'Not specified'
-                  }
-                </p>
-              </div>
+              </p>
+              <p className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {patientData.gender ? 
+                  patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : 
+                  'Not specified'
+                }
+              </p>
             </div>
+          </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+          {/* Status */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaCheckCircle className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Status
-              </label>
+              </p>
               <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-green-500 w-4 h-4" />
-                <span className={`text-base ${
+                <span className={`w-2 h-2 rounded-full ${
+                  patientData.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                }`}></span>
+                <p className={`font-semibold ${
                   patientData.status?.toLowerCase() === 'active' 
-                    ? 'text-green-500 dark:text-green-400'
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? isDarkMode ? 'text-green-400' : 'text-green-600'
+                    : isDarkMode ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1).toLowerCase() || 'Inactive'}
-                </span>
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Contact Information */}
-      <div>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaPhone className="text-teal-500" />
-          Contact Information
-        </h3>
-        
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
-          <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+          {/* Phone Number */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaPhone className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Phone Number
-              </label>
-              <div className="flex items-center gap-2">
-                <FaPhone className="text-teal-500 w-4 h-4" />
-                <p className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientData.phone || 'Not provided'}
-                </p>
-              </div>
+              </p>
+              <p className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {patientData.phone || 'Not provided'}
+              </p>
             </div>
+          </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${
+          {/* Email */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaEnvelope className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 Email Address
-              </label>
-              <div className="flex items-center gap-2">
-                <FaEnvelope className="text-teal-500 w-4 h-4" />
-                <p className={`text-base break-all ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {patientData.email || 'Not provided'}
-                </p>
-              </div>
+              </p>
+              <p className={`font-semibold break-words ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {patientData.email || 'Not provided'}
+              </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Location */}
-      <div>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaMapMarkerAlt className="text-teal-500" />
-          Location
-        </h3>
-        
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              City
-            </label>
-            <div className="flex items-center gap-2">
-              <FaMapMarkerAlt className="text-teal-500 w-4 h-4" />
-              <p className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          {/* City/Location */}
+          <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <FaMapMarkerAlt className="text-teal-500 mt-1 text-xl" />
+            <div className="flex-1">
+              <p className={`text-sm font-medium mb-1 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                City
+              </p>
+              <p className={`font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
                 {patientData.city || patientData.address || 'Not provided'}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Account Dates */}
+        {(patientData.user?.createdAt || patientData.userId?.createdAt) && (
+          <div className={`mt-4 p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="grid grid-cols-2 gap-4">
+              {(patientData.user?.createdAt || patientData.userId?.createdAt) && (
+                <div>
+                  <p className={`text-sm font-medium mb-1 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Registered On
+                  </p>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {formatDate(patientData.user?.createdAt || patientData.userId?.createdAt)}
+                  </p>
+                </div>
+              )}
+              {(patientData.user?.updatedAt || patientData.userId?.updatedAt) && (
+                <div>
+                  <p className={`text-sm font-medium mb-1 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Last Updated
+                  </p>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {formatDate(patientData.user?.updatedAt || patientData.userId?.updatedAt)}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -238,76 +288,76 @@ const PatientDetailsModal = ({
   const renderMedicalInfo = () => (
     <div className="space-y-6">
       {/* Medical History */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaHistory className="text-teal-600" />
-          Medical History
-        </h3>
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-            {patientData.medicalHistory && patientData.medicalHistory.length > 0 
-              ? (Array.isArray(patientData.medicalHistory) 
-                  ? patientData.medicalHistory.join(', ')
-                  : patientData.medicalHistory)
-              : 'No medical history recorded'
-            }
-          </p>
+      <div className={`p-4 rounded-lg border ${
+        isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <FaHistory className="text-teal-500 text-xl" />
+          <h3 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Medical History
+          </h3>
         </div>
+        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          {patientData.medicalHistory && patientData.medicalHistory.length > 0 
+            ? (Array.isArray(patientData.medicalHistory) 
+                ? patientData.medicalHistory.join(', ')
+                : patientData.medicalHistory)
+            : 'No medical history recorded'
+          }
+        </p>
       </div>
 
       {/* Allergies */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaExclamationTriangle className="text-red-500" />
-          Allergies
-        </h3>
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-            {patientData.allergies || 'No known allergies'}
-          </p>
+      <div className={`p-4 rounded-lg border ${
+        isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <FaExclamationTriangle className="text-red-500 text-xl" />
+          <h3 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Allergies
+          </h3>
         </div>
+        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          {patientData.allergies || 'No known allergies'}
+        </p>
       </div>
 
       {/* Current Medications */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaPills className="text-blue-500" />
-          Current Medications
-        </h3>
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-            {patientData.currentMedications || 'No current medications'}
-          </p>
+      <div className={`p-4 rounded-lg border ${
+        isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <FaPills className="text-blue-500 text-xl" />
+          <h3 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Current Medications
+          </h3>
         </div>
+        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          {patientData.currentMedications || 'No current medications'}
+        </p>
       </div>
 
       {/* Notes */}
-      <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          <FaStickyNote className="text-yellow-500" />
-          Additional Notes
-        </h3>
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-            {patientData.notes || 'No additional notes'}
-          </p>
+      <div className={`p-4 rounded-lg border ${
+        isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <FaStickyNote className="text-yellow-500 text-xl" />
+          <h3 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Additional Notes
+          </h3>
         </div>
+        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+          {patientData.notes || 'No additional notes'}
+        </p>
       </div>
     </div>
   )

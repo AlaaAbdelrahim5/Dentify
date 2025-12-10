@@ -249,7 +249,7 @@ export const secretariesAPI = {
   // Get current secretary profile (for secretary users)
   getMyProfile: () => ApiService.get('/secretaries/me'),
   
-  // Update current secretary profile
+  // Update current secretary profile (for secretary users)
   updateMyProfile: (data) => ApiService.put('/secretaries/me', data),
 };
 

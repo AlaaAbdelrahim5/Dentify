@@ -49,8 +49,7 @@ const SecretarySettings = () => {
   const [security, setSecurity] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    twoFactorEnabled: false
+    confirmPassword: ''
   })
 
   // Fetch secretary profile on mount
@@ -83,12 +82,12 @@ const SecretarySettings = () => {
       setProfile({
         firstName: secretary.firstName || '',
         lastName: secretary.lastName || '',
-        email: secretary.userId?.email || secretary.email || '',
-        phone: secretary.userId?.phone || secretary.phone || '',
+        email: secretary.user?.email || secretary.userId?.email || secretary.email || '',
+        phone: secretary.user?.phone || secretary.userId?.phone || secretary.phone || '',
         birthDate: secretary.birthDate ? toISODateString(secretary.birthDate) : '',
         gender: secretary.gender || '',
         city: secretary.city || '',
-        profileImage: secretary.userId?.profileImage || secretary.profileImage || '',
+        profileImage: secretary.user?.profileImage || secretary.userId?.profileImage || secretary.profileImage || '',
         clinic: {
           name: secretary.clinic?.clinicName || '',
           city: secretary.clinic?.city || '',
@@ -126,32 +125,17 @@ const SecretarySettings = () => {
       setError(null)
       
       const token = authUtils.getAccessToken()
-      
-      // Get the current user to extract the secretary ID
-      const currentUser = authUtils.getCurrentUser()
-      const secretaryId = currentUser?.id
-      
-      if (!secretaryId) {
-        throw new Error('Secretary ID not found')
-      }
 
       const updateData = {
-        userData: {
-          email: profile.email,
-          phone: profile.phone
-        },
-        secretaryData: {
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          birthDate: profile.birthDate,
-          gender: profile.gender,
-          address: {
-            city: profile.city
-          }
-        }
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        birthDate: profile.birthDate,
+        gender: profile.gender,
+        city: profile.city,
+        phone: profile.phone
       }
 
-      const response = await fetch(`http://localhost:5000/api/secretaries/${secretaryId}`, {
+      const response = await fetch('http://localhost:5000/api/secretaries/me', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -213,8 +197,7 @@ const SecretarySettings = () => {
       setSecurity({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: '',
-        twoFactorEnabled: security.twoFactorEnabled
+        confirmPassword: ''
       })
     } catch (err) {
       console.error('Error changing password:', err)
@@ -251,7 +234,7 @@ const SecretarySettings = () => {
           <h3 className={`text-lg font-semibold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
-            Basic Information
+            Personal Information
           </h3>
           <Button
             variant="outline"
@@ -525,35 +508,6 @@ const SecretarySettings = () => {
             disabled={saving}
           >
             {saving ? 'Updating...' : 'Update Password'}
-          </Button>
-        </div>
-      </Card>
-
-      {/* Two-Factor Authentication */}
-      <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <h3 className={`text-lg font-semibold mb-4 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          Two-Factor Authentication
-        </h3>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-              Add an extra layer of security to your account
-            </p>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {security.twoFactorEnabled ? 'Two-factor authentication is enabled' : 'Two-factor authentication is disabled'}
-            </p>
-          </div>
-          <Button
-            variant={security.twoFactorEnabled ? "outline" : "primary"}
-            onClick={() => setSecurity(prev => ({
-              ...prev,
-              twoFactorEnabled: !prev.twoFactorEnabled
-            }))}
-          >
-            {security.twoFactorEnabled ? 'Disable' : 'Enable'}
           </Button>
         </div>
       </Card>

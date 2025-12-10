@@ -540,3 +540,222 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
 }
 
 export default DentistDetailsModal
+                {(dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE' ? (
+                  <>
+                    <FaCheckCircle className="text-green-600 dark:text-green-400 text-sm" />
+                    <span className="text-green-700 dark:text-green-300 font-medium text-sm">Active</span>
+                  </>
+                ) : (dentistData.user?.status || dentistData.userId?.status) === 'PENDING' ? (
+                  <>
+                    <FaHourglassHalf className="text-yellow-600 dark:text-yellow-400 text-sm" />
+                    <span className="text-yellow-700 dark:text-yellow-300 font-medium text-sm">Pending</span>
+                  </>
+                ) : (
+                  <>
+                    <FaTimesCircle className="text-red-600 dark:text-red-400 text-sm" />
+                    <span className="text-red-700 dark:text-red-300 font-medium text-sm">Inactive</span>
+                  </>
+                )}
+              </div>
+              <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Registered on {formatDate(dentistData.user?.createdAt || dentistData.userId?.createdAt)}
+              </span>
+            </div>
+
+            {/* Deactivate Button */}
+            {onEdit && (
+              <button
+                onClick={() => {
+                  onEdit(dentistData)
+                  onClose()
+                }}
+                className="w-full px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <FaTimesCircle className="w-5 h-5" />
+                Deactivate
+              </button>
+            )}
+
+            {/* Personal Information */}
+            <div>
+              <div className={`flex items-center gap-2 mb-3 pb-2 border-b ${
+                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <FaUser className="text-teal-500" />
+                <h3 className={`text-base font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Personal Information
+                </h3>
+              </div>
+              <div className="space-y-3">
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Name
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Dr. {dentistData.firstName} {dentistData.lastName}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Email
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.user?.email || dentistData.userId?.email || 'N/A'}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Phone
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.user?.phone || dentistData.userId?.phone || 'N/A'}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Gender
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.gender || 'N/A'}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Birth Date
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {formatDate(dentistData.birthDate)}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    City
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.city || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Professional Information */}
+            <div>
+              <div className={`flex items-center gap-2 mb-3 pb-2 border-b ${
+                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <FaCertificate className="text-teal-500" />
+                <h3 className={`text-base font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Professional Information
+                </h3>
+              </div>
+              <div className="space-y-3">
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    License Number
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.licenseNumber}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Specialization
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.specialization && dentistData.specialization.length > 0
+                      ? dentistData.specialization.join(', ')
+                      : 'General Dentistry'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinic Information */}
+            {dentistData.clinic && (
+              <div>
+                <div className={`flex items-center gap-2 mb-3 pb-2 border-b ${
+                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                }`}>
+                  <FaBuilding className="text-teal-500" />
+                  <h3 className={`text-base font-semibold ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Clinic Information
+                  </h3>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  isDarkMode ? 'bg-gray-700/30' : 'bg-gray-50'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Clinic Name
+                  </p>
+                  <p className={`mt-1 font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {dentistData.clinic.clinicName || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+    </BaseModal>
+  )
+}
+
+export default DentistDetailsModal
+

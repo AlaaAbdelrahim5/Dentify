@@ -12,7 +12,8 @@ import {
   FaBell,
   FaKey,
   FaPalette,
-  FaGlobe
+  FaGlobe,
+  FaIdCard
 } from 'react-icons/fa'
 import { Card, Button, Input, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -21,32 +22,31 @@ import api from '../../../services/api'
 
 const ClinicSettings = () => {
   const { isDarkMode } = useTheme()
-  const [activeSection, setActiveSection] = useState('general')
+  const [activeTab, setActiveTab] = useState('general')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   
   const [clinicInfo, setClinicInfo] = useState({
-    name: 'Smile Dental Center', // Default fallback
-    email: 'clinic@example.com',
-    phone: '+970-123-456-789',
-    address: 'Downtown Area, Ramallah',
-    city: 'Ramallah',
-    country: 'Palestine',
-    postalCode: '12345',
-    website: 'https://smile-dental.com',
-    description: 'A modern dental clinic providing comprehensive dental care services.',
+    name: '',
+    registrationNumber: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    website: '',
+    description: '',
     profileImage: ''
   })
 
   const [workingHours, setWorkingHours] = useState({
-    sunday: { start: '10:00', end: '14:00', isOpen: false },
-    monday: { start: '09:00', end: '17:00', isOpen: true },
-    tuesday: { start: '09:00', end: '17:00', isOpen: true },
-    wednesday: { start: '09:00', end: '17:00', isOpen: true },
-    thursday: { start: '09:00', end: '17:00', isOpen: true },
-    friday: { start: '09:00', end: '17:00', isOpen: true },
-    saturday: { start: '09:00', end: '14:00', isOpen: true }
+    sunday: { start: '', end: '', isOpen: false },
+    monday: { start: '', end: '', isOpen: false },
+    tuesday: { start: '', end: '', isOpen: false },
+    wednesday: { start: '', end: '', isOpen: false },
+    thursday: { start: '', end: '', isOpen: false },
+    friday: { start: '', end: '', isOpen: false },
+    saturday: { start: '', end: '', isOpen: false }
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -75,19 +75,18 @@ const ClinicSettings = () => {
       const clinic = response.data.data || response.data // Handle both formats
       console.log('Clinic data:', clinic)
       
-      // Only update fields if they have values, keep existing fallback data otherwise
-      setClinicInfo(prev => ({
-        ...prev,
-        name: clinic.clinicName || prev.name,
-        email: clinic.user?.email || clinic.email || prev.email,
-        phone: clinic.user?.phone || clinic.phone || prev.phone,
-        address: clinic.location || clinic.address || prev.address,
-        city: clinic.city || prev.city,
-        country: clinic.country || prev.country,
-        postalCode: clinic.postalCode || prev.postalCode,
-        website: clinic.website || prev.website,
-        description: clinic.description || prev.description
-      }))
+      // Set actual values from database
+      setClinicInfo({
+        name: clinic.clinicName || '',
+        registrationNumber: clinic.registrationNumber || '',
+        email: clinic.user?.email || clinic.email || '',
+        phone: clinic.user?.phone || clinic.phone || '',
+        address: clinic.location || clinic.address || '',
+        city: clinic.city || '',
+        website: clinic.website || '',
+        description: clinic.description || '',
+        profileImage: clinic.user?.profileImage || clinic.profileImage || ''
+      })
       
       // Load working hours if they exist
       if (clinic.workingHours && clinic.workingHours.length > 0) {
@@ -100,7 +99,6 @@ const ClinicSettings = () => {
       }
     } catch (error) {
       console.error('Error loading clinic data:', error)
-      // Keep fallback data if API fails
     } finally {
       setLoading(false)
     }
@@ -118,13 +116,13 @@ const ClinicSettings = () => {
     }
     
     const result = {
-      sunday: { start: '10:00', end: '14:00', isOpen: false },
-      monday: { start: '09:00', end: '17:00', isOpen: false },
-      tuesday: { start: '09:00', end: '17:00', isOpen: false },
-      wednesday: { start: '09:00', end: '17:00', isOpen: false },
-      thursday: { start: '09:00', end: '17:00', isOpen: false },
-      friday: { start: '09:00', end: '17:00', isOpen: false },
-      saturday: { start: '09:00', end: '14:00', isOpen: false }
+      sunday: { start: '', end: '', isOpen: false },
+      monday: { start: '', end: '', isOpen: false },
+      tuesday: { start: '', end: '', isOpen: false },
+      wednesday: { start: '', end: '', isOpen: false },
+      thursday: { start: '', end: '', isOpen: false },
+      friday: { start: '', end: '', isOpen: false },
+      saturday: { start: '', end: '', isOpen: false }
     }
     
     // Fill in the actual working hours with isOpen status from database
@@ -155,7 +153,19 @@ const ClinicSettings = () => {
         description: clinicInfo.description
       }
       
-      await api.put(`/clinics/me`, updateData)
+      // Handle phone update separately if it changed (it's in User table)
+      const phoneUpdatePromises = []
+      if (clinicInfo.phone) {
+        phoneUpdatePromises.push(
+          api.put('/users/me', { phone: clinicInfo.phone })
+        )
+      }
+      
+      await Promise.all([
+        api.put(`/clinics/me`, updateData),
+        ...phoneUpdatePromises
+      ])
+      
       setIsEditing(false)
       alert('Clinic information updated successfully!')
     } catch (error) {
@@ -255,68 +265,84 @@ const ClinicSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Clinic Name"
-          icon={FaBuilding}
-          value={clinicInfo.name}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, name: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Email"
-          type="email"
-          icon={FaEnvelope}
-          value={clinicInfo.email}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, email: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Phone"
-          icon={FaPhone}
-          value={clinicInfo.phone}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, phone: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Website"
-          icon={FaGlobe}
-          value={clinicInfo.website}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, website: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Address"
-          icon={FaMapMarkerAlt}
-          value={clinicInfo.address}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="City"
-          value={clinicInfo.city}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, city: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Country"
-          value={clinicInfo.country}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, country: e.target.value })}
-          disabled={!isEditing}
-        />
-        
-        <Input
-          label="Postal Code"
-          value={clinicInfo.postalCode}
-          onChange={(e) => setClinicInfo({ ...clinicInfo, postalCode: e.target.value })}
-          disabled={!isEditing}
-        />
-      </div>
+          <div>
+            <Input
+              label="Clinic Name"
+              icon={FaBuilding}
+              value={clinicInfo.name}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, name: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div>
+            <Input
+              label="Email"
+              type="email"
+              icon={FaEnvelope}
+              value={clinicInfo.email}
+              disabled={true}
+            />
+            <p className={`text-xs mt-1 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Email cannot be changed
+            </p>
+          </div>
+          
+          <div>
+            <Input
+              label="Phone"
+              icon={FaPhone}
+              value={clinicInfo.phone}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, phone: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div>
+            <Input
+              label="Registration Number"
+              icon={FaIdCard}
+              value={clinicInfo.registrationNumber}
+              disabled={true}
+            />
+            <p className={`text-xs mt-1 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Registration number cannot be changed
+            </p>
+          </div>
+          
+          <div>
+            <Input
+              label="Website"
+              icon={FaGlobe}
+              value={clinicInfo.website}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, website: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div>
+            <Input
+              label="Address"
+              icon={FaMapMarkerAlt}
+              value={clinicInfo.address}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div>
+            <Input
+              label="City"
+              value={clinicInfo.city}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, city: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+        </div>
 
       <div className="mt-6">
         <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -513,7 +539,7 @@ const ClinicSettings = () => {
   )
 
   const renderContent = () => {
-    switch (activeSection) {
+    switch (activeTab) {
       case 'general':
         return renderGeneralSettings()
       case 'hours':
@@ -551,9 +577,9 @@ const ClinicSettings = () => {
             return (
               <button
                 key={section.id}
-                onClick={() => setActiveSection(section.id)}
+                onClick={() => setActiveTab(section.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeSection === section.id
+                  activeTab === section.id
                     ? 'bg-teal-600 text-white'
                     : isDarkMode
                       ? 'text-gray-300 hover:bg-gray-700'

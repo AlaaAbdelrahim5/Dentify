@@ -49,19 +49,19 @@ const DentistSchedule = () => {
         dentist.workingHours.forEach(daySchedule => {
           scheduleMap[daySchedule.day] = {
             isWorking: daySchedule.isWorking !== false,
-            startTime: daySchedule.start || '09:00',
-            endTime: daySchedule.end || '17:00',
+            startTime: daySchedule.start || daySchedule.startTime,
+            endTime: daySchedule.end || daySchedule.endTime,
             breaks: ensureArray(daySchedule.breaks)
           }
         })
         
-        // Fill in missing days with defaults
+        // Fill in missing days with no working hours
         daysOfWeek.forEach(day => {
           if (!scheduleMap[day]) {
             scheduleMap[day] = {
-              isWorking: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day),
-              startTime: '09:00',
-              endTime: '17:00',
+              isWorking: false,
+              startTime: '',
+              endTime: '',
               breaks: []
             }
           }
@@ -69,24 +69,24 @@ const DentistSchedule = () => {
         
         setSchedule(scheduleMap)
       } else {
-        // Initialize with default schedule if no data exists
-        const defaultSchedule = {}
+        // Initialize with empty schedule if no data exists
+        const emptySchedule = {}
         daysOfWeek.forEach(day => {
-          defaultSchedule[day] = {
-            isWorking: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day),
-            startTime: '09:00',
-            endTime: '17:00',
-            breaks: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'].includes(day) 
-              ? [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-              : []
+          emptySchedule[day] = {
+            isWorking: false,
+            startTime: '',
+            endTime: '',
+            breaks: []
           }
         })
-        setSchedule(defaultSchedule)
+        setSchedule(emptySchedule)
       }
       
-      // Load appointment duration
+      // Load appointment duration from database only
       if (dentist.appointmentDuration) {
         setDefaultDuration(dentist.appointmentDuration)
+      } else {
+        setDefaultDuration(null)
       }
     } catch (err) {
       console.error('Error fetching dentist profile:', err)
@@ -96,58 +96,15 @@ const DentistSchedule = () => {
     }
   }
 
-  // Mock schedule data (will be replaced with fetched data)
-  const [schedule, setSchedule] = useState({
-    Sunday: { 
-      
-      isWorking: false, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [] 
-    },
-    Monday: { 
-      isWorking: true, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-    },
-    Tuesday: { 
-      isWorking: true, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-    },
-    Wednesday: { 
-      isWorking: true, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-    },
-    Thursday: { 
-      isWorking: true, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [{ start: '12:00', end: '13:00', label: 'Lunch Break' }] 
-    },
-    Friday: { 
-      isWorking: true, 
-      startTime: '09:00', 
-      endTime: '15:00', 
-      breaks: [] 
-    },
-    Saturday: { 
-      isWorking: false, 
-      startTime: '09:00', 
-      endTime: '17:00', 
-      breaks: [] 
-    }
-  })
+  // Schedule data from database
+  const [schedule, setSchedule] = useState({})
 
-  const [defaultDuration, setDefaultDuration] = useState(30)
+  const [defaultDuration, setDefaultDuration] = useState(null)
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
   const formatTime = (time) => {
+    if (!time) return 'Not Set'
     const [hours, minutes] = time.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
@@ -212,16 +169,18 @@ const DentistSchedule = () => {
     
     daysOfWeek.forEach(day => {
       const daySchedule = schedule[day]
-      if (daySchedule.isWorking) {
+      if (daySchedule.isWorking && daySchedule.startTime && daySchedule.endTime) {
         const start = new Date(`2024-01-01 ${daySchedule.startTime}:00`)
         const end = new Date(`2024-01-01 ${daySchedule.endTime}:00`)
         let dayMinutes = (end - start) / (1000 * 60)
         
         // Subtract break times
         daySchedule.breaks.forEach(breakItem => {
-          const breakStart = new Date(`2024-01-01 ${breakItem.start}:00`)
-          const breakEnd = new Date(`2024-01-01 ${breakItem.end}:00`)
-          dayMinutes -= (breakEnd - breakStart) / (1000 * 60)
+          if (breakItem.start && breakItem.end) {
+            const breakStart = new Date(`2024-01-01 ${breakItem.start}:00`)
+            const breakEnd = new Date(`2024-01-01 ${breakItem.end}:00`)
+            dayMinutes -= (breakEnd - breakStart) / (1000 * 60)
+          }
         })
         
         totalMinutes += dayMinutes
@@ -230,7 +189,7 @@ const DentistSchedule = () => {
     
     const hours = Math.floor(totalMinutes / 60)
     const minutes = totalMinutes % 60
-    return `${hours}h ${minutes}m`
+    return totalMinutes > 0 ? `${hours}h ${minutes}m` : '0h 0m'
   }
 
   const getWorkingDays = () => {
@@ -350,7 +309,7 @@ const DentistSchedule = () => {
               }`}>Appointment Duration</p>
               <p className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{defaultDuration}min</p>
+              }`}>{defaultDuration ? `${defaultDuration}min` : 'Not Set'}</p>
             </div>
             <FaClock className="w-8 h-8 text-purple-500" />
           </div>
@@ -566,8 +525,9 @@ const DentistSchedule = () => {
               min="15"
               max="120"
               step="15"
-              value={defaultDuration}
-              onChange={(e) => setDefaultDuration(parseInt(e.target.value))}
+              value={defaultDuration || ''}
+              onChange={(e) => setDefaultDuration(e.target.value ? parseInt(e.target.value) : null)}
+              placeholder="Enter duration in minutes"
               className={`w-full px-3 py-2 border rounded-lg ${
                 isDarkMode
                   ? 'bg-gray-700 border-gray-600 text-white'

@@ -9,7 +9,8 @@ import {
   FaClock,
   FaCalendarPlus,
   FaEye,
-  FaStethoscope
+  FaStethoscope,
+  FaGlobe
 } from 'react-icons/fa'
 import { Card, Button, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -30,7 +31,7 @@ const ClinicDetailsModal = ({
     if (isOpen && clinic) {
       fetchDentists()
     }
-  }, [isOpen, clinic?.userId])
+  }, [isOpen, clinic?._id, clinic?.userId])
 
   const fetchDentists = async () => {
     try {
@@ -47,8 +48,8 @@ const ClinicDetailsModal = ({
       // Filter dentists for this specific clinic
       // The clinicId in dentist references the clinic's userId (which is the primary key)
       // Try multiple possible clinic ID fields
-      const clinicPrimaryKey = clinic.userId || clinic.id || clinic.user?.id
-      console.log('Clinic primary key (userId):', clinicPrimaryKey)
+      const clinicPrimaryKey = clinic._id || clinic.userId || clinic.id || clinic.user?.id
+      console.log('Clinic primary key (userId/id):', clinicPrimaryKey)
       
       if (!clinicPrimaryKey) {
         console.error('No valid clinic ID found!')
@@ -117,7 +118,7 @@ const ClinicDetailsModal = ({
               <h2 className={`text-2xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                {clinic.clinicName}
+                {clinic.name || clinic.clinicName}
               </h2>
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -130,93 +131,254 @@ const ClinicDetailsModal = ({
       </div>
 
       {/* Content */}
-      <div className="p-8 space-y-8">
+      <div className="p-8 space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Clinic Information */}
         <div>
-              <h3 className={`text-lg font-semibold mb-4 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Clinic Information
-              </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`flex items-start gap-3 p-4 rounded-lg ${
-              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+          <h3 className={`text-lg font-semibold mb-6 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Clinic Information
+          </h3>
+          
+          {/* Contact Information Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Location */}
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
-              <FaMapMarkerAlt className="text-teal-500 mt-1" />
-              <div>
-                <p className={`text-sm font-medium ${
+              <FaMapMarkerAlt className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   Location
                 </p>
-                <p className={`font-medium ${
+                <p className={`font-semibold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {clinic.city || 'N/A'}
+                  {clinic.city || clinic.address?.city || 'N/A'}
                 </p>
-                <p className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {clinic.address || 'Address not available'}
-                </p>
+                {(clinic.address?.fullAddress || clinic.location) && (
+                  <p className={`text-sm mt-1 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    {clinic.address?.fullAddress || clinic.location}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className={`flex items-start gap-3 p-4 rounded-lg ${
-              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            {/* Phone */}
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
-              <FaPhone className="text-teal-500 mt-1" />
-              <div>
-                <p className={`text-sm font-medium ${
+              <FaPhone className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   Phone Number
                 </p>
-                <p className={`font-medium ${
+                <p className={`font-semibold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {clinic.user?.phone || 'N/A'}
+                  {clinic.phone?.full || clinic.phone || 'N/A'}
                 </p>
               </div>
             </div>
 
-            <div className={`flex items-start gap-3 p-4 rounded-lg ${
-              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            {/* Email */}
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
-                  <FaEnvelope className="text-teal-500 mt-1" />
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Email
-                    </p>
-                    <p className={`font-medium ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {clinic.user?.email || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className={`flex items-start gap-3 p-4 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+              <FaEnvelope className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-              <FaClock className="text-teal-500 mt-1" />
-              <div>
-                <p className={`text-sm font-medium ${
+                  Email
+                </p>
+                <p className={`font-semibold break-words ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {clinic.email || 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaClock className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   Status
                 </p>
-                <p className={`font-medium ${
-                  clinic.isActive 
-                    ? 'text-green-500' 
-                    : 'text-red-500'
-                }`}>
-                  {clinic.isActive ? 'Active' : 'Inactive'}
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${
+                    clinic.isActive ? 'bg-green-500' : 'bg-red-500'
+                  }`}></span>
+                  <p className={`font-semibold ${
+                    clinic.isActive 
+                      ? isDarkMode ? 'text-green-400' : 'text-green-600'
+                      : isDarkMode ? 'text-red-400' : 'text-red-600'
+                  }`}>
+                    {clinic.isActive ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="space-y-4">
+            {/* Website */}
+            {clinic.website && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <FaGlobe className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Website
+                  </p>
+                </div>
+                <a 
+                  href={clinic.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`font-medium hover:underline break-words ${
+                    isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
+                  }`}
+                >
+                  {clinic.website}
+                </a>
+              </div>
+            )}
+
+            {/* Coordinates */}
+            {clinic.coordinates && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <FaMapMarkerAlt className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    GPS Coordinates
+                  </p>
+                </div>
+                <p className={`font-medium ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {clinic.coordinates}
+                </p>
+              </div>
+            )}
+
+            {/* Description */}
+            {clinic.description && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium mb-3 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Description
+                </p>
+                <p className={`leading-relaxed ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {clinic.description}
+                </p>
+              </div>
+            )}
+
+            {/* Services Available */}
+            {clinic.servicesAvailable && clinic.servicesAvailable.length > 0 && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium mb-3 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Available Services
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {clinic.servicesAvailable.map((service, index) => (
+                    <span
+                      key={index}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                        isDarkMode
+                          ? 'bg-teal-900/30 text-teal-400 border border-teal-700'
+                          : 'bg-teal-50 text-teal-700 border border-teal-200'
+                      }`}
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Working Hours */}
+            {clinic.workingHours && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <FaClock className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Working Hours
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {(() => {
+                    const hours = clinic.workingHours;
+                    if (Array.isArray(hours)) {
+                      return hours.map((schedule, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className={`font-medium ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {schedule.day}
+                          </span>
+                          <span className={`${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            {schedule.startTime} - {schedule.endTime}
+                          </span>
+                        </div>
+                      ));
+                    } else if (typeof hours === 'object') {
+                      return Object.entries(hours).map(([day, schedule]) => (
+                        <div key={day} className="flex justify-between items-center py-1">
+                          <span className={`font-medium capitalize ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {day}
+                          </span>
+                          <span className={`${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            {schedule.isOpen ? `${schedule.start} - ${schedule.end}` : 'Closed'}
+                          </span>
+                        </div>
+                      ));
+                    }
+                    return <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No hours set</p>;
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

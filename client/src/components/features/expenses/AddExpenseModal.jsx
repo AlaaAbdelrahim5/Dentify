@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { getTodayISO } from '../../../utils/helpers'
 import { Card, Button, Input, BaseModal } from '../../common'
-import { FaSave, FaMoneyBillWave } from 'react-icons/fa'
+import { FaSave, FaMoneyBillWave, FaTimes } from 'react-icons/fa'
 
 /**
  * AddExpenseModal Component

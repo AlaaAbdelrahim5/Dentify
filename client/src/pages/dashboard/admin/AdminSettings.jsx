@@ -33,8 +33,7 @@ const AdminSettings = () => {
   const [security, setSecurity] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    twoFactorEnabled: false
+    confirmPassword: ''
   })
 
   // Fetch admin profile on mount
@@ -67,7 +66,7 @@ const AdminSettings = () => {
         lastName: admin.lastName || '',
         email: admin.user?.email || admin.email || '',
         gender: admin.gender || '',
-        profileImage: admin.profileImage || ''
+        profileImage: admin.user?.profileImage || admin.profileImage || ''
       })
     } catch (err) {
       console.error('Error fetching admin profile:', err)
@@ -165,8 +164,7 @@ const AdminSettings = () => {
       setSecurity({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: '',
-        twoFactorEnabled: security.twoFactorEnabled
+        confirmPassword: ''
       })
     } catch (err) {
       console.error('Error changing password:', err)
@@ -204,7 +202,7 @@ const AdminSettings = () => {
           <h3 className={`text-lg font-semibold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
-            Basic Information
+            Personal Information
           </h3>
           <Button
             variant="outline"
@@ -430,7 +428,7 @@ const AdminSettings = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : isDarkMode
                       ? 'text-gray-300 hover:bg-gray-700'
                       : 'text-gray-700 hover:bg-gray-100'

@@ -121,8 +121,7 @@ const DentistSettings = () => {
   const [security, setSecurity] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    twoFactorEnabled: false
+    confirmPassword: ''
   })
 
   const specializations = [
@@ -232,8 +231,7 @@ const DentistSettings = () => {
       setSecurity({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: '',
-        twoFactorEnabled: security.twoFactorEnabled
+        confirmPassword: ''
       })
     } catch (err) {
       console.error('Error changing password:', err)
@@ -276,7 +274,7 @@ const DentistSettings = () => {
           <h3 className={`text-lg font-semibold ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
-            Basic Information
+            Personal Information
           </h3>
           <Button
             variant="outline"

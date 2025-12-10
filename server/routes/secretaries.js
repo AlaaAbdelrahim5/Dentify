@@ -321,6 +321,99 @@ router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
   }
 });
 
+// Update current secretary profile (for Secretary role)
+router.put('/me', authenticate, authorize('Secretary'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, birthDate, gender, city, phone } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !birthDate || !gender || !city) {
+      return errorResponse(res, 'All required fields must be provided', 400);
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user data if phone is provided
+      if (phone) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { phone }
+        });
+      }
+
+      // Update secretary data
+      const secretary = await tx.secretary.update({
+        where: { userId },
+        data: {
+          firstName,
+          lastName,
+          birthDate: new Date(birthDate),
+          gender: gender.charAt(0).toUpperCase() + gender.slice(1),
+          city
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          clinic: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  phone: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return secretary;
+    });
+
+    // Transform response
+    const transformedSecretary = {
+      _id: result.userId,
+      firstName: result.firstName,
+      lastName: result.lastName,
+      birthDate: result.birthDate,
+      gender: result.gender,
+      city: result.city,
+      clinic: {
+        id: result.clinic.userId,
+        clinicName: result.clinic.clinicName,
+        registrationNumber: result.clinic.registrationNumber,
+        city: result.clinic.city,
+        contactNumber: result.clinic.user.phone
+      },
+      userId: {
+        id: result.user.id,
+        email: result.user.email,
+        phone: result.user.phone,
+        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
+        profileImage: result.user.profileImage
+      },
+      createdAt: result.user.createdAt,
+      updatedAt: result.user.updatedAt
+    };
+
+    return successResponse(res, transformedSecretary, 'Secretary profile updated successfully');
+  } catch (error) {
+    console.error('Error updating secretary profile:', error);
+    return errorResponse(res, error.message || 'Failed to update secretary profile', 500);
+  }
+});
+
 // Update secretary
 router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
   try {

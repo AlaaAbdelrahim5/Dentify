@@ -602,17 +602,17 @@ const RadiologyManagement = () => {
 
                 {/* Services & Equipment */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Services */}
-                  {center.services && center.services.length > 0 && (
+                  {/* Services / Supported Types */}
+                  {((center.services && center.services.length > 0) || (center.supportedTypes && center.supportedTypes.length > 0)) && (
                     <div>
                       <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
                         <FaCog className="w-5 h-5 text-teal-600" />
-                        Services
+                        Supported Types
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {center.services.map((service, index) => (
+                        {(center.supportedTypes || center.services || []).map((service, index) => (
                           <span
                             key={index}
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -649,6 +649,59 @@ const RadiologyManagement = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Working Hours */}
+                {center.workingHours && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaClock className="w-5 h-5 text-teal-600" />
+                      Working Hours
+                    </h3>
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <div className="space-y-2">
+                        {(() => {
+                          const hours = center.workingHours;
+                          if (Array.isArray(hours) && hours.length > 0) {
+                            return hours.map((schedule, index) => (
+                              <div key={index} className="flex justify-between items-center">
+                                <span className={`font-medium ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>
+                                  {schedule.day}
+                                </span>
+                                <span className={`${
+                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                                }`}>
+                                  {schedule.startTime} - {schedule.endTime}
+                                </span>
+                              </div>
+                            ));
+                          } else if (typeof hours === 'object' && Object.keys(hours).length > 0) {
+                            return Object.entries(hours).map(([day, schedule]) => (
+                              <div key={day} className="flex justify-between items-center">
+                                <span className={`font-medium capitalize ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>
+                                  {day}
+                                </span>
+                                <span className={`${
+                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                                }`}>
+                                  {schedule.isOpen ? `${schedule.start} - ${schedule.end}` : 'Closed'}
+                                </span>
+                              </div>
+                            ));
+                          }
+                          return <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No hours set</p>;
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
