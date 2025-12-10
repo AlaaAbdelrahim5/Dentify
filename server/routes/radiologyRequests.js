@@ -597,9 +597,31 @@ router.patch('/:id/upload-result', authenticate, authorize('RadiologyCenter'), a
       return res.status(400).json({ error: 'Report file is required' });
     }
 
-    // Validate base64 format if it's a data URI
-    if (reportFile.startsWith('data:') && !reportFile.includes('base64')) {
-      return res.status(400).json({ error: 'Invalid image format. Must be base64 encoded.' });
+    // Validate format - accept base64, URLs, or JSON array of base64 files
+    if (reportFile.startsWith('data:')) {
+      // Single base64 file - validate it's base64 encoded
+      if (!reportFile.includes('base64')) {
+        return res.status(400).json({ error: 'Invalid file format. Must be base64 encoded.' });
+      }
+    } else if (reportFile.startsWith('[')) {
+      // Multiple files as JSON array - validate JSON format
+      try {
+        const filesArray = JSON.parse(reportFile);
+        if (!Array.isArray(filesArray) || filesArray.length === 0) {
+          return res.status(400).json({ error: 'Invalid file array format.' });
+        }
+        // Validate each file is base64
+        for (const file of filesArray) {
+          if (!file.startsWith('data:') || !file.includes('base64')) {
+            return res.status(400).json({ error: 'All files must be base64 encoded.' });
+          }
+        }
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid JSON format for file array.' });
+      }
+    } else if (!reportFile.startsWith('http://') && !reportFile.startsWith('https://')) {
+      // Not base64, not JSON array, not URL - invalid format
+      return res.status(400).json({ error: 'Invalid file format. Must be base64, URL, or JSON array of base64 files.' });
     }
 
     // Check if request exists and belongs to this radiology center

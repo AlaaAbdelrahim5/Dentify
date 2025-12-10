@@ -38,9 +38,11 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               const mimeType = fileData.match(/data:([^;]+);/)?.[1] || 'image/jpeg'
               const isImage = mimeType.startsWith('image/')
               const isPdf = mimeType === 'application/pdf'
+              const isDicom = mimeType.includes('dicom') || mimeType.includes('octet-stream')
               
               let extension = 'jpg'
               if (isPdf) extension = 'pdf'
+              else if (isDicom) extension = 'dcm'
               else if (mimeType.includes('png')) extension = 'png'
               else if (mimeType.includes('gif')) extension = 'gif'
               else if (mimeType.includes('webp')) extension = 'webp'
@@ -68,8 +70,22 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
           // Create a fake file object for display purposes
           const mimeType = request.reportFile.match(/data:([^;]+);/)?.[1] || 'image/jpeg'
           const isImage = mimeType.startsWith('image/')
+          const isPdf = mimeType === 'application/pdf'
+          const isDicom = mimeType.includes('dicom') || mimeType.includes('octet-stream')
+          
+          let extension = 'jpg'
+          if (isPdf) extension = 'pdf'
+          else if (isDicom) extension = 'dcm'
+          else if (isImage) {
+            if (mimeType.includes('png')) extension = 'png'
+            else if (mimeType.includes('gif')) extension = 'gif'
+            else if (mimeType.includes('webp')) extension = 'webp'
+            else if (mimeType.includes('bmp')) extension = 'bmp'
+            else if (mimeType.includes('tiff')) extension = 'tiff'
+          }
+          
           setSelectedFiles([{
-            name: `existing-report.${isImage ? 'jpg' : 'pdf'}`,
+            name: `existing-report.${extension}`,
             type: mimeType,
             size: 0 // We don't know the actual size
           }])

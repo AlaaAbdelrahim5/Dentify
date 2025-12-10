@@ -93,7 +93,18 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           link.href = url
           
           // Determine file extension from MIME type
-          const extension = mimeType.includes('pdf') ? 'pdf' : mimeType.split('/')[1] || 'jpg'
+          let extension = 'jpg'
+          if (mimeType.includes('pdf')) {
+            extension = 'pdf'
+          } else if (mimeType.includes('dicom') || mimeType.includes('octet-stream')) {
+            extension = 'dcm'
+          } else if (mimeType.startsWith('image/')) {
+            const ext = mimeType.split('/')[1]
+            if (['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif'].includes(ext)) {
+              extension = ext === 'jpeg' ? 'jpg' : ext
+            }
+          }
+          
           const fileName = index > 0 
             ? `radiology-report-${index + 1}-${Date.now()}.${extension}`
             : `radiology-report-${Date.now()}.${extension}`
