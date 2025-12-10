@@ -17,6 +17,7 @@ import {
 import { Card, Button, Input, LoadingSpinner, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
+import { sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
 
 const SecretaryTreatments = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()
@@ -142,10 +143,11 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
   // Calculate stats - MEMOIZED
   const stats = useMemo(() => {
     const total = displayTreatments.length
-    const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress').length
-    const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed').length
-    const totalRevenue = displayTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
-    const pendingPayments = displayTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount - t.treatmentDiscount), 0)
+    const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
+    const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
+    const totalRevenue = sumField(displayTreatments, 'paidAmount')
+    const pendingPayments = displayTreatments.reduce((sum, t) => 
+      sum + calculateRemainingBalance(t.totalAmount, t.paidAmount, t.treatmentDiscount), 0)
     
     return { total, active, completed, totalRevenue, pendingPayments }
   }, [displayTreatments])

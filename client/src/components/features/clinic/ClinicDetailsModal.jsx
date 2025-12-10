@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  FaTimes,
   FaBuilding,
   FaMapMarkerAlt,
   FaPhone,
@@ -12,7 +11,7 @@ import {
   FaEye,
   FaStethoscope
 } from 'react-icons/fa'
-import { Card, Button, LoadingSpinner } from '../../common'
+import { Card, Button, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -82,21 +81,7 @@ const ClinicDetailsModal = ({
     }
   }
 
-  if (!isOpen) return null
-
-  if (!clinic) {
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className={`w-full max-w-4xl rounded-2xl shadow-2xl ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        } p-8`}>
-          <div className="flex justify-center items-center py-12">
-            <LoadingSpinner size="lg" />
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!clinic) return null
 
   const handleBookAppointmentWithDentist = (dentist) => {
     if (onBookAppointment) {
@@ -110,108 +95,94 @@ const ClinicDetailsModal = ({
   }
 
   return (
-    <>
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        onClick={onClose}
-      >
-        <div 
-          className={`w-full max-w-5xl rounded-2xl shadow-2xl ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } max-h-[90vh] overflow-y-auto`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`sticky top-0 z-10 px-8 py-6 border-b ${
-            isDarkMode 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border-gray-200'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-                  <FaBuilding className="text-white text-2xl" />
-                </div>
-                <div>
-                  <h2 className={`text-2xl font-bold ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {clinic.clinicName}
-                  </h2>
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    Registration: {clinic.registrationNumber || 'N/A'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode
-                    ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <FaTimes className="w-6 h-6" />
-              </button>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="5xl"
+      showCloseButton={false}
+      noPadding={true}
+    >
+      {/* Header */}
+      <div className={`px-8 py-6 border-b ${
+        isDarkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+              <FaBuilding className="text-white text-2xl" />
+            </div>
+            <div>
+              <h2 className={`text-2xl font-bold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {clinic.clinicName}
+              </h2>
+              <p className={`text-sm ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                Registration: {clinic.registrationNumber || 'N/A'}
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Content */}
-          <div className="p-8 space-y-8">
-            {/* Clinic Information */}
-            <div>
+      {/* Content */}
+      <div className="p-8 space-y-8">
+        {/* Clinic Information */}
+        <div>
               <h3 className={`text-lg font-semibold mb-4 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Clinic Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`flex items-start gap-3 p-4 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`flex items-start gap-3 p-4 rounded-lg ${
+              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
+              <FaMapMarkerAlt className="text-teal-500 mt-1" />
+              <div>
+                <p className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-                  <FaMapMarkerAlt className="text-teal-500 mt-1" />
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Location
-                    </p>
-                    <p className={`font-medium ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {clinic.city || 'N/A'}
-                    </p>
-                    <p className={`text-sm ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
-                      {clinic.address || 'Address not available'}
-                    </p>
-                  </div>
-                </div>
+                  Location
+                </p>
+                <p className={`font-medium ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {clinic.city || 'N/A'}
+                </p>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {clinic.address || 'Address not available'}
+                </p>
+              </div>
+            </div>
 
-                <div className={`flex items-start gap-3 p-4 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            <div className={`flex items-start gap-3 p-4 rounded-lg ${
+              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
+              <FaPhone className="text-teal-500 mt-1" />
+              <div>
+                <p className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-                  <FaPhone className="text-teal-500 mt-1" />
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Phone Number
-                    </p>
-                    <p className={`font-medium ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {clinic.user?.phone || 'N/A'}
-                    </p>
-                  </div>
-                </div>
+                  Phone Number
+                </p>
+                <p className={`font-medium ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {clinic.user?.phone || 'N/A'}
+                </p>
+              </div>
+            </div>
 
-                <div className={`flex items-start gap-3 p-4 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                }`}>
+            <div className={`flex items-start gap-3 p-4 rounded-lg ${
+              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
                   <FaEnvelope className="text-teal-500 mt-1" />
                   <div>
                     <p className={`text-sm font-medium ${
@@ -230,69 +201,69 @@ const ClinicDetailsModal = ({
                 <div className={`flex items-start gap-3 p-4 rounded-lg ${
                   isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
                 }`}>
-                  <FaClock className="text-teal-500 mt-1" />
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Status
-                    </p>
-                    <p className={`font-medium ${
-                      clinic.isActive 
-                        ? 'text-green-500' 
-                        : 'text-red-500'
-                    }`}>
-                      {clinic.isActive ? 'Active' : 'Inactive'}
-                    </p>
-                  </div>
-                </div>
+              <FaClock className="text-teal-500 mt-1" />
+              <div>
+                <p className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Status
+                </p>
+                <p className={`font-medium ${
+                  clinic.isActive 
+                    ? 'text-green-500' 
+                    : 'text-red-500'
+                }`}>
+                  {clinic.isActive ? 'Active' : 'Inactive'}
+                </p>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Dentists Section */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
+        {/* Dentists Section */}
+        <div>
+          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            <FaUserMd className="text-teal-500" />
+            Dentists at this Clinic
+            {!isLoadingDentists && (
+              <span className={`text-sm font-normal ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
-                <FaUserMd className="text-teal-500" />
-                Dentists at this Clinic
-                {!isLoadingDentists && (
-                  <span className={`text-sm font-normal ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    ({dentists.length} {dentists.length === 1 ? 'dentist' : 'dentists'})
-                  </span>
-                )}
-              </h3>
+                ({dentists.length} {dentists.length === 1 ? 'dentist' : 'dentists'})
+              </span>
+            )}
+          </h3>
 
-              {isLoadingDentists ? (
-                <div className="flex justify-center items-center py-12">
-                  <LoadingSpinner />
-                </div>
-              ) : dentists.length === 0 ? (
-                <div className={`text-center py-12 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                }`}>
-                  <FaUserMd className={`mx-auto text-4xl mb-3 ${
-                    isDarkMode ? 'text-gray-600' : 'text-gray-400'
-                  }`} />
-                  <p className={`${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    No dentists found at this clinic
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {dentists.map((dentist) => (
-                    <div
-                      key={dentist.id}
-                      className={`p-5 rounded-lg border transition-all ${
-                        isDarkMode
-                          ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
-                          : 'bg-white border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
+          {isLoadingDentists ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : dentists.length === 0 ? (
+            <div className={`text-center py-12 rounded-lg ${
+              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
+              <FaUserMd className={`mx-auto text-4xl mb-3 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <p className={`${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                No dentists found at this clinic
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {dentists.map((dentist) => (
+                <div
+                  key={dentist.id}
+                  className={`p-5 rounded-lg border transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
+                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4 flex-1">
                           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
@@ -355,17 +326,15 @@ const ClinicDetailsModal = ({
                               Book Appointment
                             </Button>
                           )}
-                        </div>
-                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
-    </>
+    </BaseModal>
   )
 }
 

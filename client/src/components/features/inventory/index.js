@@ -1,8 +1,8 @@
-// Inventory Components
-export { default as AddItemModal } from './AddItemModal'
-export { default as EditItemModal } from './EditItemModal'
-export { default as AddSupplierModal } from './AddSupplierModal'
-export { default as EditSupplierModal } from './EditSupplierModal'
+// Inventory Components - Unified Modals
+export { default as ItemModal } from './ItemModal'
+export { default as SupplierModal } from './SupplierModal'
+
+// Other Inventory Components
 export { default as ViewSupplierModal } from './ViewSupplierModal'
 export { default as SupplierItemsModal } from './SupplierItemsModal'
 export { default as CreatePurchaseOrderModal } from './CreatePurchaseOrderModal'

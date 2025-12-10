@@ -4,7 +4,75 @@ This directory contains reusable components designed to work across all dashboar
 
 ## 📦 Components Overview
 
-### 1. **PageHeader**
+### 1. **BaseModal** ⭐ NEW
+A reusable modal wrapper component that eliminates code duplication across all modals in the application.
+
+**Props:**
+- `isOpen` (boolean, required) - Modal visibility state
+- `onClose` (function, required) - Close modal handler
+- `children` (ReactNode, required) - Modal content
+- `title` (string, optional) - Modal title
+- `showCloseButton` (boolean, default: true) - Show close button in header
+- `size` (string, default: '2xl') - Modal size: 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', 'full'
+- `closeOnBackdropClick` (boolean, default: true) - Close modal when clicking backdrop
+- `className` (string, optional) - Additional classes for modal content
+- `footer` (ReactNode, optional) - Optional footer content
+- `noPadding` (boolean, default: false) - Remove default padding from content area
+
+**Features:**
+- ✅ Centralized modal wrapper logic
+- ✅ Dark/light theme support
+- ✅ Configurable sizes
+- ✅ Accessibility features (ARIA labels, backdrop)
+- ✅ Stop propagation handled internally
+- ✅ Backdrop blur effect
+- ✅ Responsive design
+
+**Example:**
+```jsx
+import { BaseModal, Button } from '../../common'
+
+const MyModal = ({ isOpen, onClose, onSave }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSave()
+    onClose()
+  }
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="My Modal Title"
+      size="2xl"
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        {/* Your form content */}
+      </form>
+    </BaseModal>
+  )
+}
+```
+
+**Benefits:**
+- Eliminates ~50-80 lines of boilerplate per modal
+- Consistent behavior across all modals
+- Centralized theme handling
+- Easy to maintain and update
+
+---
+
+### 2. **PageHeader**
 Displays page title, description, and an optional action button.
 
 **Props:**

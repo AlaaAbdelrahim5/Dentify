@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { getTodayISO } from '../../../utils/helpers'
 import { Card, Button, Input } from '../../common'
 import { FaTimes, FaSave, FaShoppingCart } from 'react-icons/fa'
 
@@ -156,7 +157,7 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
                   type="date"
                   value={formData.expectedDate}
                   onChange={(e) => handleChange('expectedDate', e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={getTodayISO()}
                   required
                 />
               </div>

@@ -12,6 +12,7 @@ import {
 import { Card, Button, Input, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
+import { ensureArray } from '../../../utils/helpers'
 
 const DentistSchedule = () => {
   const { isDarkMode } = useTheme()
@@ -50,7 +51,7 @@ const DentistSchedule = () => {
             isWorking: daySchedule.isWorking !== false,
             startTime: daySchedule.start || '09:00',
             endTime: daySchedule.end || '17:00',
-            breaks: Array.isArray(daySchedule.breaks) ? daySchedule.breaks : []
+            breaks: ensureArray(daySchedule.breaks)
           }
         })
         

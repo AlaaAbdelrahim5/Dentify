@@ -11,8 +11,10 @@ import {
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
-import { Button, Input, LoadingSpinner } from "../../common";
+import { Button, Input, LoadingSpinner, BaseModal } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { CITY_OPTIONS, DENTAL_SPECIALIZATIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
+import { validateEmail, validatePhone, validatePassword } from "../../../utils/validation";
 
 const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
   const { isDarkMode } = useTheme();
@@ -30,66 +32,12 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     website: "",
     description: "",
     servicesAvailable: [],
-    workingHours: {
-      sunday: { isOpen: true, start: "09:00", end: "17:00" },
-      monday: { isOpen: true, start: "09:00", end: "17:00" },
-      tuesday: { isOpen: true, start: "09:00", end: "17:00" },
-      wednesday: { isOpen: true, start: "09:00", end: "17:00" },
-      thursday: { isOpen: true, start: "09:00", end: "17:00" },
-      friday: { isOpen: false, start: "09:00", end: "17:00" },
-      saturday: { isOpen: true, start: "09:00", end: "17:00" },
-    },
+    workingHours: DEFAULT_WORKING_HOURS,
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
-
-  const cities = [
-    { value: "Acre", label: "Acre" },
-    { value: "Al-Bireh", label: "Al-Bireh" },
-    { value: "Beersheba", label: "Beersheba" },
-    { value: "Beit Hanoun", label: "Beit Hanoun" },
-    { value: "Beit Jala", label: "Beit Jala" },
-    { value: "Beit Lahia", label: "Beit Lahia" },
-    { value: "Beit Sahour", label: "Beit Sahour" },
-    { value: "Bethlehem", label: "Bethlehem" },
-    { value: "Deir al-Balah", label: "Deir al-Balah" },
-    { value: "Gaza", label: "Gaza" },
-    { value: "Haifa", label: "Haifa" },
-    { value: "Hebron", label: "Hebron" },
-    { value: "Jabalya", label: "Jabalya" },
-    { value: "Jaffa", label: "Jaffa" },
-    { value: "Jenin", label: "Jenin" },
-    { value: "Jericho", label: "Jericho" },
-    { value: "Jerusalem", label: "Jerusalem" },
-    { value: "Khan Yunis", label: "Khan Yunis" },
-    { value: "Lydd", label: "Lydd" },
-    { value: "Nablus", label: "Nablus" },
-    { value: "Nazareth", label: "Nazareth" },
-    { value: "Qalqilya", label: "Qalqilya" },
-    { value: "Rafah", label: "Rafah" },
-    { value: "Ramallah", label: "Ramallah" },
-    { value: "Ramla", label: "Ramla" },
-    { value: "Safad", label: "Safad" },
-    { value: "Salfit", label: "Salfit" },
-    { value: "Tiberias", label: "Tiberias" },
-    { value: "Tubas", label: "Tubas" },
-    { value: "Tulkarm", label: "Tulkarm" },
-  ];
-
-  const availableServices = [
-    "General Dentistry",
-    "Orthodontics",
-    "Oral Surgery",
-    "Endodontics",
-    "Periodontics",
-    "Prosthodontics",
-    "Pediatric Dentistry",
-    "Cosmetic Dentistry",
-    "Oral Pathology",
-    "Dental Implants"
-  ];
 
   const dayNames = {
     sunday: "Sunday",
@@ -334,7 +282,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+    } else if (!validateEmail(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 
@@ -465,59 +413,19 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-              isDarkMode
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <FaHospital className="w-6 h-6 text-teal-600" />
-              <h2
-                className={`text-xl font-semibold ${
-                  isDarkMode ? "text-white" : "text-gray-800"
-                }`}
-              >
-                {clinic ? "Edit Clinic" : "Add New Clinic"}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode
-                  ? "hover:bg-gray-700 text-gray-400 hover:text-gray-300"
-                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <FaTimes className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Form Container with Scroll */}
-          <div className="flex-1 overflow-y-auto">
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="4xl"
+      title={
+        <div className="flex items-center gap-3">
+          <FaHospital className="w-6 h-6 text-teal-600" />
+          <span>{clinic ? "Edit Clinic" : "Add New Clinic"}</span>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* General Error */}
               {errors.general && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -597,8 +505,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                           : "border-gray-300 bg-white text-gray-900"
                       }`}
                     >
-                      <option value="">Select a city</option>
-                      {cities.map((city) => (
+                      <option value="">Select City</option>
+                      {CITY_OPTIONS.map((city) => (
                         <option key={city.value} value={city.value}>
                           {city.label}
                         </option>
@@ -830,7 +738,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                   Services Offered
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {availableServices.map((service) => (
+                  {DENTAL_SPECIALIZATIONS.map((service) => (
                     <label
                       key={service}
                       className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
@@ -988,10 +896,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BaseModal>
   );
 };
 

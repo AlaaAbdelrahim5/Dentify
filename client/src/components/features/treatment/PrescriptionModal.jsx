@@ -11,6 +11,7 @@ import {
   FaPrint
 } from 'react-icons/fa'
 import { Button, Input, Card } from '../../common'
+import { getTodayISO } from '../../../utils/helpers'
 
 const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo }) => {
   const { isDarkMode } = useTheme()
@@ -24,9 +25,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
       instructions: '' 
     }
   ])
-  const [prescriptionDate, setPrescriptionDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+  const [prescriptionDate, setPrescriptionDate] = useState(getTodayISO())
   const [notes, setNotes] = useState('')
 
   useEffect(() => {
@@ -42,7 +41,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
           instructions: '' 
         }
       ])
-      setPrescriptionDate(new Date().toISOString().split('T')[0])
+      setPrescriptionDate(getTodayISO())
       setNotes('')
     }
   }, [isOpen])

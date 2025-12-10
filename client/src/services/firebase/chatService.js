@@ -152,22 +152,26 @@ export const markMessagesAsRead = async (conversationId, userId) => {
       unreadCount
     });
 
-    // Mark all messages as read
+    // Mark all messages as read (simplified query to avoid composite index requirement)
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const q = query(
       messagesRef,
-      where('senderId', '!=', userId),
       where('read', '==', false)
     );
 
     const snapshot = await getDocs(q);
-    const updatePromises = snapshot.docs.map(document =>
-      updateDoc(doc(db, 'conversations', conversationId, 'messages', document.id), {
-        read: true
-      })
-    );
+    // Filter out messages sent by current user
+    const updatePromises = snapshot.docs
+      .filter(document => document.data().senderId !== userId)
+      .map(document =>
+        updateDoc(doc(db, 'conversations', conversationId, 'messages', document.id), {
+          read: true
+        })
+      );
 
-    await Promise.all(updatePromises);
+    if (updatePromises.length > 0) {
+      await Promise.all(updatePromises);
+    }
   } catch (error) {
     console.error('Error marking messages as read:', error);
     throw error;

@@ -20,7 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, DeleteConfirmationModal, Toast } from '../../../components'
+import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast } from '../../../components'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
@@ -722,15 +722,14 @@ const DentistRadiology = () => {
         loading={modalLoading}
       />
 
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
-        appointmentData={selectedRequest ? {
-          patient: { name: selectedRequest.patientName },
-          treatment: selectedRequest.imagingType,
-          time: ''
-        } : null}
+        item={selectedRequest}
+        action="delete"
+        itemName={selectedRequest?.imagingType || 'Request'}
+        itemType="Radiology Request"
       />
 
       {/* Toast Notification */}

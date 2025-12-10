@@ -1,10 +1,60 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { TREATMENT_STATUS_OPTIONS, PRIORITY_OPTIONS, TREATMENT_TYPES, TOOTH_CONDITION_OPTIONS } from '../../../utils/constants'
+import { getTodayISO, safeJsonParse, ensureArray } from '../../../utils/helpers'
 import { FaTimes, FaSave, FaTooth, FaCalendarAlt, FaDollarSign, FaStethoscope, FaPlus, FaTrash, FaExclamationTriangle, FaUser, FaStickyNote } from 'react-icons/fa'
 import { Button, Input, Select, Card } from '../../common'
 import ToothChart from './ToothChart'
 
-const NewTreatmentModal = ({
+// Reusable Section Card Component
+const SectionCard = ({ icon: Icon, title, iconColor, children }) => {
+  const { isDarkMode } = useTheme()
+  return (
+    <Card>
+      <Card.Header>
+        <h3 className={`font-semibold text-base flex items-center gap-2 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          <Icon className={`w-4 h-4 ${iconColor}`} />
+          {title}
+        </h3>
+      </Card.Header>
+      <Card.Content>
+        {children}
+      </Card.Content>
+    </Card>
+  )
+}
+
+// Reusable Textarea Component
+const TextArea = ({ name, value, onChange, rows = 3, placeholder, label }) => {
+  const { isDarkMode } = useTheme()
+  return (
+    <div>
+      {label && (
+        <label className={`block text-xs font-medium mb-1.5 ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+        }`}>
+          {label}
+        </label>
+      )}
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        rows={rows}
+        placeholder={placeholder}
+        className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors ${
+          isDarkMode
+            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
+            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
+        } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
+      />
+    </div>
+  )
+}
+
+const TreatmentModal = ({
   isOpen,
   onClose,
   onSave,
@@ -20,11 +70,10 @@ const NewTreatmentModal = ({
     treatmentType: '',
     description: '',
     treatmentStatus: 'In Progress',
-    creationDate: new Date().toISOString().split('T')[0],
+    creationDate: getTodayISO(),
     totalAmount: '',
     paidAmount: '0',
     notes: '',
-    priority: '',
     appointmentId: '' // Add appointmentId field
   })
   const [selectedTeeth, setSelectedTeeth] = useState([])
@@ -41,11 +90,10 @@ const NewTreatmentModal = ({
           treatmentType: initialData.treatmentType || '',
           description: initialData.description || '',
           treatmentStatus: initialData.treatmentStatus || 'In Progress',
-          creationDate: initialData.creationDate || new Date().toISOString().split('T')[0],
+          creationDate: initialData.creationDate || getTodayISO(),
           totalAmount: initialData.totalAmount?.toString() || '',
           paidAmount: initialData.paidAmount?.toString() || '0',
           notes: initialData.notes || '',
-          priority: initialData.priority || 'Medium',
           appointmentId: initialData.appointmentId || ''
         })
         setSelectedTeeth(initialData.teethStatus?.map(t => t.toothNumber) || [])
@@ -55,7 +103,7 @@ const NewTreatmentModal = ({
           conditions[tooth.toothNumber] = {
             status: tooth.conditionStatus?.toLowerCase() || 'cavity',
             priority: tooth.priority || 'Medium',
-            diagnosedDate: tooth.diagnosedDate || new Date().toISOString().split('T')[0],
+            diagnosedDate: tooth.diagnosedDate || getTodayISO(),
             notes: tooth.notes || '',
             toothStatus: tooth.status || 'In Progress' // Track if tooth is completed
           }
@@ -68,11 +116,10 @@ const NewTreatmentModal = ({
           treatmentType: '',
           description: '',
           treatmentStatus: 'In Progress',
-          creationDate: new Date().toISOString().split('T')[0],
+          creationDate: getTodayISO(),
           totalAmount: '',
           paidAmount: '0',
           notes: '',
-          priority: '',
           appointmentId: ''
         })
         setSelectedTeeth([])
@@ -104,16 +151,9 @@ const NewTreatmentModal = ({
         const historyMap = {}
         patientTreatments.forEach(treatment => {
           // Parse teethStatus
-          let teethStatus = []
-          try {
-            if (typeof treatment.teethStatus === 'string') {
-              teethStatus = JSON.parse(treatment.teethStatus)
-            } else if (Array.isArray(treatment.teethStatus)) {
-              teethStatus = treatment.teethStatus
-            }
-          } catch (e) {
-            console.error('Error parsing teethStatus:', e)
-          }
+          const teethStatus = typeof treatment.teethStatus === 'string'
+            ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+            : ensureArray(treatment.teethStatus)
 
           teethStatus.forEach(tooth => {
             if (!historyMap[tooth.toothNumber]) {
@@ -168,7 +208,7 @@ const NewTreatmentModal = ({
           [toothNumber]: {
             status: appointmentData.toothCondition || 'cavity',
             priority: 'Medium',
-            diagnosedDate: new Date().toISOString().split('T')[0],
+            diagnosedDate: getTodayISO(),
             notes: appointmentData.toothNotes || '',
             toothStatus: 'In Progress'
           }
@@ -216,7 +256,7 @@ const NewTreatmentModal = ({
           [toothNumber]: {
             status: 'cavity',
             priority: 'Medium',
-            diagnosedDate: new Date().toISOString().split('T')[0],
+            diagnosedDate: getTodayISO(),
             notes: '',
             toothStatus: 'In Progress'
           }
@@ -287,7 +327,7 @@ const NewTreatmentModal = ({
         toothNumber,
         conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
         priority: toothConditions[toothNumber]?.priority || 'Medium',
-        diagnosedDate: toothConditions[toothNumber]?.diagnosedDate || new Date().toISOString().split('T')[0],
+        diagnosedDate: toothConditions[toothNumber]?.diagnosedDate || getTodayISO(),
         notes: toothConditions[toothNumber]?.notes || '',
         status: toothConditions[toothNumber]?.toothStatus || 'In Progress' // Include tooth status
       }))
@@ -298,7 +338,6 @@ const NewTreatmentModal = ({
         ...formData,
         description: formData.description?.trim() || null,
         notes: formData.notes?.trim() || null,
-        priority: formData.priority || null,
         totalAmount: parseFloat(formData.totalAmount),
         paidAmount: parseFloat(formData.paidAmount),
         teethStatus,
@@ -323,11 +362,10 @@ const NewTreatmentModal = ({
       treatmentType: '',
       description: '',
       treatmentStatus: 'In Progress',
-      creationDate: new Date().toISOString().split('T')[0],
+      creationDate: getTodayISO(),
       totalAmount: '',
       paidAmount: '0',
       notes: '',
-      priority: '',
       appointmentId: ''
     })
     setSelectedTeeth([])
@@ -337,43 +375,6 @@ const NewTreatmentModal = ({
   }
 
   if (!isOpen) return null
-
-  const treatmentTypes = [
-    { value: 'Root Canal', label: 'Root Canal' },
-    { value: 'Extraction', label: 'Extraction' },
-    { value: 'Cleaning', label: 'Cleaning' },
-    { value: 'Filling', label: 'Filling' },
-    { value: 'Crown Installation', label: 'Crown Installation' },
-    { value: 'Bridge', label: 'Bridge' },
-    { value: 'Implant', label: 'Implant' },
-    { value: 'Whitening', label: 'Whitening' },
-    { value: 'Orthodontics', label: 'Orthodontics' },
-    { value: 'Veneer', label: 'Veneer' },
-    { value: 'Other', label: 'Other' }
-  ]
-
-  const statusOptions = [
-    { value: 'In Progress', label: 'In Progress' },
-    { value: 'Completed', label: 'Completed' },
-    { value: 'Cancelled', label: 'Cancelled' }
-  ]
-
-  const conditionOptions = [
-    { value: 'healthy', label: 'Healthy' },
-    { value: 'cavity', label: 'Cavity' },
-    { value: 'root-canal', label: 'Root Canal' },
-    { value: 'crown', label: 'Crown' },
-    { value: 'extracted', label: 'Extracted' },
-    { value: 'implant', label: 'Implant' },
-    { value: 'filling', label: 'Filling' },
-    { value: 'bridge', label: 'Bridge' }
-  ]
-
-  const priorityOptions = [
-    { value: 'Low', label: 'Low' },
-    { value: 'Medium', label: 'Medium' },
-    { value: 'High', label: 'High' }
-  ]
 
   // Main content
   const content = (
@@ -472,71 +473,53 @@ const NewTreatmentModal = ({
           {activeTab === 'basic' && (
             <div className="space-y-4">
               {/* Patient Selection */}
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-base flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
+              <SectionCard icon={FaUser} title="Patient Information" iconColor="text-teal-500">
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
-                    <FaUser className="w-4 h-4 text-teal-500" />
-                    Patient Information
-                  </h3>
-                </Card.Header>
-                <Card.Content>
-                  <div>
-                    <label className={`block text-xs font-medium mb-1.5 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Select Patient <span className="text-red-500">*</span>
-                      {(appointmentData || initialData) && (
-                        <span className={`ml-2 text-xs font-normal ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          (Cannot be changed)
-                        </span>
-                      )}
-                    </label>
-                    <Select
-                      name="patientId"
-                      value={formData.patientId}
-                      onChange={handleChange}
-                      options={[
-                        ...patients.map(p => ({ value: p.id, label: p.name }))
-                      ]}
-                      disabled={!!appointmentData || !!initialData}
-                    />
-                    {errors.patientId && (
-                      <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
-                    )}
-                    {appointmentData && formData.patientId && (
-                      <div className={`mt-2 p-2 rounded-lg text-xs ${
-                        isDarkMode ? 'bg-teal-900/20 text-teal-300' : 'bg-teal-50 text-teal-700'
+                    Select Patient <span className="text-red-500">*</span>
+                    {(appointmentData || initialData) && (
+                      <span className={`ml-2 text-xs font-normal ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
                       }`}>
-                        <div className="flex items-center gap-2">
-                          <FaUser className="w-3 h-3" />
-                          <span>Patient: {appointmentData.patientName}</span>
-                        </div>
-                        {appointmentData.patientPhone && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span>📞 {appointmentData.patientPhone}</span>
-                          </div>
-                        )}
-                      </div>
+                        (Cannot be changed)
+                      </span>
                     )}
-                  </div>
-                </Card.Content>
-              </Card>
+                  </label>
+                  <Select
+                    name="patientId"
+                    value={formData.patientId}
+                    onChange={handleChange}
+                    options={[
+                      ...patients.map(p => ({ value: p.id, label: p.name }))
+                    ]}
+                    disabled={!!appointmentData || !!initialData}
+                  />
+                  {errors.patientId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
+                  )}
+                  {appointmentData && formData.patientId && (
+                    <div className={`mt-2 p-2 rounded-lg text-xs ${
+                      isDarkMode ? 'bg-teal-900/20 text-teal-300' : 'bg-teal-50 text-teal-700'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <FaUser className="w-3 h-3" />
+                        <span>Patient: {appointmentData.patientName}</span>
+                      </div>
+                      {appointmentData.patientPhone && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span>📞 {appointmentData.patientPhone}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </SectionCard>
 
               {/* Treatment Details */}
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-base flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    <FaStethoscope className="w-4 h-4 text-teal-500" />
-                    Treatment Details
-                  </h3>
-                </Card.Header>
-                <Card.Content className="space-y-3">
+              <SectionCard icon={FaStethoscope} title="Treatment Details" iconColor="text-teal-500">
+                <div className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className={`block text-xs font-medium mb-1.5 ${
@@ -548,121 +531,65 @@ const NewTreatmentModal = ({
                         name="treatmentType"
                         value={formData.treatmentType}
                         onChange={handleChange}
-                        options={treatmentTypes}
+                        options={TREATMENT_TYPES}
                       />
                       {errors.treatmentType && (
                         <p className="text-red-500 text-sm mt-1">{errors.treatmentType}</p>
                       )}
                     </div>
-
-                    <div>
-                      <label className={`block text-xs font-medium mb-1.5 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Priority Level
-                      </label>
-                      <Select
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleChange}
-                        options={[
-                          { value: 'Low', label: '🟢 Low Priority' },
-                          { value: 'Medium', label: '🟡 Medium Priority' },
-                          { value: 'High', label: '🔴 High Priority' }
-                        ]}
-                      />
-                    </div>
                   </div>
 
-                  <div>
-                    <label className={`block text-xs font-medium mb-1.5 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows="3"
-                      placeholder="Describe the treatment plan and procedures..."
-                      className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
-                      } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
-                    />
-                  </div>
-                </Card.Content>
-              </Card>
+                  <TextArea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    label="Description"
+                    placeholder="Describe the treatment plan and procedures..."
+                  />
+                </div>
+              </SectionCard>
 
               {/* Payment Information */}
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-base flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
+              <SectionCard icon={FaDollarSign} title="Payment Information" iconColor="text-teal-500">
+                <div>
+                  <label className={`block text-xs font-medium mb-1.5 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
-                    <FaDollarSign className="w-4 h-4 text-teal-500" />
-                    Payment Information
-                  </h3>
-                </Card.Header>
-                <Card.Content className="space-y-3">
-                  <div>
-                    <label className={`block text-xs font-medium mb-1.5 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Total Amount <span className="text-red-500">*</span>
-                      {initialData && (
-                        <span className={`ml-2 text-xs font-normal ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          (Cannot be changed after creation)
-                        </span>
-                      )}
-                    </label>
-                    <Input
-                      type="number"
-                      name="totalAmount"
-                      value={formData.totalAmount}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      icon={FaDollarSign}
-                      disabled={!!initialData}
-                    />
-                    {errors.totalAmount && (
-                      <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
+                    Total Amount <span className="text-red-500">*</span>
+                    {initialData && (
+                      <span className={`ml-2 text-xs font-normal ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        (Cannot be changed after creation)
+                      </span>
                     )}
-                  </div>
-                </Card.Content>
-              </Card>
+                  </label>
+                  <Input
+                    type="number"
+                    name="totalAmount"
+                    value={formData.totalAmount}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    icon={FaDollarSign}
+                    disabled={!!initialData}
+                  />
+                  {errors.totalAmount && (
+                    <p className="text-red-500 text-sm mt-1">{errors.totalAmount}</p>
+                  )}
+                </div>
+              </SectionCard>
 
               {/* Notes */}
-              <Card>
-                <Card.Header>
-                  <h3 className={`font-semibold text-base flex items-center gap-2 ${
-                    isDarkMode ? 'text-white' : 'text-gray-800'
-                  }`}>
-                    <FaStickyNote className="w-4 h-4 text-yellow-500" />
-                    Clinical Notes
-                  </h3>
-                </Card.Header>
-                <Card.Content>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows="3"
-                    placeholder="Add any additional clinical notes or observations..."
-                    className={`w-full px-3 py-2 text-sm rounded-lg border transition-colors ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-teal-500'
-                    } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
-                  />
-                </Card.Content>
-              </Card>
+              <SectionCard icon={FaStickyNote} title="Clinical Notes" iconColor="text-yellow-500">
+                <TextArea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  placeholder="Add any additional clinical notes or observations..."
+                />
+              </SectionCard>
             </div>
           )}
 
@@ -764,7 +691,7 @@ const NewTreatmentModal = ({
                                       : 'bg-white border-gray-300 text-gray-900'
                                   }`}
                                 >
-                                  {conditionOptions.map(opt => (
+                                  {TOOTH_CONDITION_OPTIONS.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                   ))}
                                 </select>
@@ -787,7 +714,7 @@ const NewTreatmentModal = ({
                                       : 'bg-white border-gray-300 text-gray-900'
                                   }`}
                                 >
-                                  {priorityOptions.map(opt => (
+                                  {PRIORITY_OPTIONS.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                   ))}
                                 </select>
@@ -900,4 +827,4 @@ const NewTreatmentModal = ({
   )
 }
 
-export default NewTreatmentModal
+export default TreatmentModal

@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
+import { sumField, countWhere, normalizeStatus } from '../../../utils/helpers'
 
 const SecretaryPayments = () => {
   const { isDarkMode } = useTheme()
@@ -121,11 +122,11 @@ const SecretaryPayments = () => {
   // Get patient summary (all treatments and total balance)
   const getPatientSummary = (patientId) => {
     const patientTreatments = mockTreatments.filter(t => t.patientId === patientId)
-    const totalTreatmentAmount = patientTreatments.reduce((sum, t) => sum + t.totalAmount, 0)
-    const totalPaidAmount = patientTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
+    const totalTreatmentAmount = sumField(patientTreatments, 'totalAmount')
+    const totalPaidAmount = sumField(patientTreatments, 'paidAmount')
     const totalBalance = totalTreatmentAmount - totalPaidAmount
     const treatmentCount = patientTreatments.length
-    const activeTreatments = patientTreatments.filter(t => t.status === 'In Progress')
+    const activeTreatments = patientTreatments.filter(t => normalizeStatus(t.status) === 'IN_PROGRESS')
     
     return {
       treatments: patientTreatments,

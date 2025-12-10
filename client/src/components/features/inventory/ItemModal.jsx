@@ -1,15 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, Input } from '../../common'
-import { FaTimes, FaSave, FaBoxes } from 'react-icons/fa'
+import { Card, Button, Input, BaseModal } from '../../common'
+import { FaSave, FaBoxes, FaEdit } from 'react-icons/fa'
 
 /**
- * AddItemModal Component
- * Modal for adding new inventory items
+ * ItemModal Component
+ * Unified modal for adding and editing inventory items
  * Used in clinic inventory management
+ * 
+ * @param {boolean} isOpen - Modal visibility state
+ * @param {Function} onClose - Close modal handler
+ * @param {Function} onSubmit - Submit handler
+ * @param {Object} item - Item to edit (null for adding new item)
+ * @param {Array} suppliers - List of available suppliers
  */
-const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
+const ItemModal = ({ isOpen, onClose, onSubmit, item = null, suppliers = [] }) => {
   const { isDarkMode } = useTheme()
+  const isEditMode = !!item
+  
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -22,57 +30,87 @@ const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
     notes: ''
   })
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        name: item.name || '',
+        category: item.category || '',
+        quantity: item.quantity || '',
+        unit: item.unit || 'units',
+        minQuantity: item.minQuantity || '',
+        price: item.price || '',
+        supplierId: item.supplierId || '',
+        expiryDate: item.expiryDate || '',
+        notes: item.notes || ''
+      })
+    } else {
+      setFormData({
+        name: '',
+        category: '',
+        quantity: '',
+        unit: 'units',
+        minQuantity: '',
+        price: '',
+        supplierId: '',
+        expiryDate: '',
+        notes: ''
+      })
+    }
+  }, [item, isOpen])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit(formData)
-    // Reset form
-    setFormData({
-      name: '',
-      category: '',
-      quantity: '',
-      unit: 'units',
-      minQuantity: '',
-      price: '',
-      supplierId: '',
-      expiryDate: '',
-      notes: ''
-    })
+    
+    if (isEditMode) {
+      onSubmit({ ...item, ...formData })
+    } else {
+      onSubmit(formData)
+      // Reset form for new items
+      setFormData({
+        name: '',
+        category: '',
+        quantity: '',
+        unit: 'units',
+        minQuantity: '',
+        price: '',
+        supplierId: '',
+        expiryDate: '',
+        notes: ''
+      })
+    }
   }
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const Icon = isEditMode ? FaEdit : FaBoxes
+  const gradientColor = isEditMode ? 'from-blue-600 to-cyan-600' : 'from-teal-600 to-cyan-600'
+  const title = isEditMode ? 'Edit Inventory Item' : 'Add New Inventory Item'
+  const subtitle = isEditMode ? 'Update item details and quantity' : 'Add a new item to your clinic inventory'
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
-                <FaBoxes className="text-white text-lg" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Add New Inventory Item
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Add a new item to your clinic inventory
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="3xl"
+      showCloseButton={false}
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${gradientColor} flex items-center justify-center`}>
+          <Icon className="text-white text-lg" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {title}
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      
+      <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Item Name */}
@@ -143,7 +181,7 @@ const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
               {/* Quantity */}
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Initial Quantity *
+                  {isEditMode ? 'Current Quantity *' : 'Initial Quantity *'}
                 </label>
                 <Input
                   type="number"
@@ -172,29 +210,30 @@ const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
                 >
                   <option value="units">Units</option>
                   <option value="boxes">Boxes</option>
-                  <option value="kits">Kits</option>
                   <option value="bottles">Bottles</option>
+                  <option value="packs">Packs</option>
                   <option value="pieces">Pieces</option>
-                  <option value="sets">Sets</option>
+                  <option value="ml">ML</option>
+                  <option value="grams">Grams</option>
                 </select>
               </div>
 
               {/* Minimum Quantity */}
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Minimum Quantity (Alert Threshold) *
+                  Minimum Quantity *
                 </label>
                 <Input
                   type="number"
                   value={formData.minQuantity}
                   onChange={(e) => handleChange('minQuantity', e.target.value)}
-                  placeholder="0"
+                  placeholder="Alert threshold"
                   min="0"
                   required
                 />
               </div>
 
-              {/* Price per Unit */}
+              {/* Price */}
               <div>
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Price per Unit ($) *
@@ -211,9 +250,9 @@ const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
               </div>
 
               {/* Expiry Date */}
-              <div>
+              <div className="md:col-span-2">
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Expiry Date
+                  Expiry Date (Optional)
                 </label>
                 <Input
                   type="date"
@@ -230,42 +269,39 @@ const AddItemModal = ({ isOpen, onClose, onSubmit, suppliers = [] }) => {
                 <textarea
                   value={formData.notes}
                   onChange={(e) => handleChange('notes', e.target.value)}
-                  placeholder="Additional notes about this item"
+                  placeholder="Additional notes or specifications"
                   rows={3}
                   className={`w-full px-4 py-2 border rounded-lg ${
                     isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 />
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="flex-1"
               >
-                <FaTimes className="mr-2" />
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600"
+                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
               >
                 <FaSave className="mr-2" />
-                Add Item
+                {isEditMode ? 'Update Item' : 'Add Item'}
               </Button>
-            </div>
-          </form>
-        </Card.Content>
-      </Card>
-    </div>
+          </div>
+        </form>
+      </div>
+    </BaseModal>
   )
 }
 
-export default AddItemModal
+export default ItemModal

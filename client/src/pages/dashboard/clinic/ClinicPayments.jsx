@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
+import { calculateRemainingBalance } from '../../../utils/helpers'
 
 const ClinicPayments = () => {
   const { isDarkMode } = useTheme()
@@ -61,7 +62,7 @@ const ClinicPayments = () => {
       const patientMap = new Map()
       console.log('Processing treatments for patients...')
       treatmentsRes.treatments?.forEach(treatment => {
-        const remainingBalance = treatment.totalAmount - (treatment.treatmentDiscount || 0) - (treatment.paidAmount || 0)
+        const remainingBalance = calculateRemainingBalance(treatment.totalAmount, treatment.paidAmount || 0, treatment.treatmentDiscount)
         console.log(`Treatment ${treatment.id}: Total=${treatment.totalAmount}, Discount=${treatment.treatmentDiscount || 0}, Paid=${treatment.paidAmount || 0}, Remaining=${remainingBalance}`)
         // Only include patients with treatments that have unpaid balances
         if (remainingBalance > 0) {
@@ -481,7 +482,7 @@ const ClinicPayments = () => {
                   </h4>
                   <div className="space-y-2">
                     {summary.treatments.map(treatment => {
-                      const balance = treatment.totalAmount - treatment.paidAmount
+                      const balance = calculateRemainingBalance(treatment.totalAmount, treatment.paidAmount)
                       return (
                         <div
                           key={treatment.id}

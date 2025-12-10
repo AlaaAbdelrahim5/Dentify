@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { 
-  FaTimes,
   FaUser,
   FaCalendarAlt,
   FaClock,
@@ -15,8 +14,9 @@ import {
   FaCheck,
   FaCheckCircle
 } from 'react-icons/fa'
-import { Button, StatusBadge } from '../../common'
+import { Button, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper } from '../../../utils/helpers'
 
 const AppointmentDetailsModal = ({ 
   isOpen, 
@@ -29,7 +29,7 @@ const AppointmentDetailsModal = ({
 }) => {
   const { isDarkMode } = useTheme()
 
-  if (!isOpen || !appointment) return null
+  if (!appointment) return null
 
   const getStatusIcon = (status) => {
     switch (status?.toUpperCase()) {
@@ -72,64 +72,37 @@ const AppointmentDetailsModal = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-6 border-b ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      showCloseButton={true}
+    >
+      <div className="flex items-center gap-4 mb-6">
+        <div className={`p-3 rounded-full ${
+          isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+        }`}>
+          <FaCalendarAlt className={`w-6 h-6 ${
+            isDarkMode ? 'text-teal-400' : 'text-teal-600'
+          }`} />
+        </div>
+        <div>
+          <h2 className={`text-2xl font-bold ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full ${
-                isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-              }`}>
-                <FaCalendarAlt className={`w-6 h-6 ${
-                  isDarkMode ? 'text-teal-400' : 'text-teal-600'
-                }`} />
-              </div>
-              <div>
-                <h2 className={`text-2xl font-bold ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}>
-                  Appointment Details
-                </h2>
-                <div className="mt-1">
-                  <StatusBadge 
-                    status={appointment.status?.toLowerCase()}
-                    icon={getStatusIcon(appointment.status)}
-                    label={appointment.status?.charAt(0) + appointment.status?.slice(1).toLowerCase()}
-                  />
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-opacity-80 transition-colors ${
-                isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-              }`}
-            >
-              <FaTimes className={`w-5 h-5 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`} />
-            </button>
+            Appointment Details
+          </h2>
+          <div className="mt-1">
+            <StatusBadge 
+              status={appointment.status?.toLowerCase()}
+              icon={getStatusIcon(appointment.status)}
+              label={appointment.status?.charAt(0) + appointment.status?.slice(1).toLowerCase()}
+            />
           </div>
+        </div>
+      </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="space-y-6">
             
             {/* Patient Information */}
             <div className={`p-4 rounded-lg ${
@@ -392,9 +365,7 @@ const AppointmentDetailsModal = ({
               </Button>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+    </BaseModal>
   )
 }
 

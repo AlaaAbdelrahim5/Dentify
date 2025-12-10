@@ -21,6 +21,7 @@ import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast } from '
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
+import { toISODateString, ensureArray } from '../../../utils/helpers'
 import DentistSchedule from './DentistSchedule'
 
 const DentistSettings = () => {
@@ -85,8 +86,8 @@ const DentistSettings = () => {
         email: dentist.user?.email || dentist.email || '',
         phone: dentist.user?.phone || dentist.phone || '',
         licenseNumber: dentist.licenseNumber || '',
-        specialization: Array.isArray(dentist.specialization) ? dentist.specialization : [],
-        birthDate: dentist.birthDate ? new Date(dentist.birthDate).toISOString().split('T')[0] : '',
+        specialization: ensureArray(dentist.specialization),
+        birthDate: dentist.birthDate ? toISODateString(dentist.birthDate) : '',
         gender: dentist.gender || '',
         profileImage: dentist.user?.profileImage || dentist.profileImage || '',
         address: {
@@ -96,7 +97,7 @@ const DentistSettings = () => {
           name: dentist.clinic?.clinicName || '',
           address: dentist.clinic?.location || ''
         },
-        workingHours: Array.isArray(dentist.workingHours) ? dentist.workingHours : [],
+        workingHours: ensureArray(dentist.workingHours),
         socialLinks: typeof dentist.socialLinks === 'object' && dentist.socialLinks !== null ? {
           facebook: dentist.socialLinks.facebook || '',
           instagram: dentist.socialLinks.instagram || '',

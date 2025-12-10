@@ -54,8 +54,7 @@ import RadiologySettings from './radiology/RadiologySettings'
 
 // Import secretary components
 import SecretaryOverview from './secretary/SecretaryOverview'
-import SecretaryAppointments from './secretary/SecretaryAppointments'
-import SecretaryPatients from './secretary/SecretaryPatients'
+// Reuse ClinicAppointments and ClinicPatients for Secretary (identical functionality)
 import SecretaryDentists from './secretary/SecretaryDentists'
 import SecretaryTreatments from './secretary/SecretaryTreatments'
 import SecretaryPayments from './secretary/SecretaryPayments'
@@ -175,8 +174,8 @@ const UnifiedDashboard = () => {
         userType: 'secretary',
         tabs: {
           overview: { component: SecretaryOverview, label: 'Overview' },
-          appointments: { component: SecretaryAppointments, label: 'Appointments' },
-          patients: { component: SecretaryPatients, label: 'Patients' },
+          appointments: { component: ClinicAppointments, label: 'Appointments' },
+          patients: { component: ClinicPatients, label: 'Patients' },
           dentists: { component: SecretaryDentists, label: 'Dentists' },
           treatments: { component: SecretaryTreatments, label: 'Treatments' },
           payments: { component: SecretaryPayments, label: 'Payments' },

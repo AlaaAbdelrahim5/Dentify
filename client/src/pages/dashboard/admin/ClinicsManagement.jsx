@@ -32,6 +32,8 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI } from '../../../services/api'
+import { CITY_OPTIONS_LOWERCASE } from '../../../utils/constants'
+import { useDebounce } from '../../../hooks'
 
 const ClinicsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -50,25 +52,12 @@ const ClinicsManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0
   })
-
-  const cities = [
-    { value: 'ramallah', label: 'Ramallah' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'bethlehem', label: 'Bethlehem' },
-    { value: 'hebron', label: 'Hebron' },
-    { value: 'nablus', label: 'Nablus' },
-    { value: 'jenin', label: 'Jenin' },
-    { value: 'gaza', label: 'Gaza' },
-    { value: 'khan_yunis', label: 'Khan Yunis' },
-    { value: 'rafah', label: 'Rafah' }
-  ]
 
   // Fetch clinics
   const fetchClinics = async (isFiltering = false) => {
@@ -158,23 +147,6 @@ const ClinicsManagement = () => {
     setIsFirstLoad(false)
   }, [])
 
-  // Debounce search term
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300) // 300ms delay
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
-
   // Separate effect for filtering that doesn't show full page loading
   useEffect(() => {
     if (!isFirstLoad) {
@@ -229,7 +201,7 @@ const ClinicsManagement = () => {
   }
 
   const getCityLabel = (cityValue) => {
-    const city = cities.find(c => c.value === cityValue)
+    const city = CITY_OPTIONS_LOWERCASE.find(c => c.value === cityValue)
     return city ? city.label : cityValue
   }
 
@@ -317,7 +289,7 @@ const ClinicsManagement = () => {
     {
       value: filterCity,
       onChange: handleCityFilter,
-      options: cities,
+      options: CITY_OPTIONS_LOWERCASE,
       placeholder: 'All Cities'
     },
     {

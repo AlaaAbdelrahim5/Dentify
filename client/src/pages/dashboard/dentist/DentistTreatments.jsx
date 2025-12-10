@@ -20,8 +20,9 @@ import {
   FaSave,
   FaPrescriptionBottle
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, NewTreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, DeleteConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast } from '../../../components'
 import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
+import { calculateRemainingBalance, safeJsonParse, ensureArray, sumField, countWhere, normalizeStatus } from '../../../utils/helpers'
 
 const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const { isDarkMode } = useTheme()
@@ -133,17 +134,9 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const displayTreatments = useMemo(() => {
     return treatments.map(treatment => {
       // Parse teethStatus if it's a string, otherwise use as-is
-      let teethStatus = []
-      try {
-        if (typeof treatment.teethStatus === 'string') {
-          teethStatus = JSON.parse(treatment.teethStatus)
-        } else if (Array.isArray(treatment.teethStatus)) {
-          teethStatus = treatment.teethStatus
-        }
-      } catch (e) {
-        console.error('Error parsing teethStatus:', e)
-        teethStatus = []
-      }
+      const teethStatus = typeof treatment.teethStatus === 'string'
+        ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+        : ensureArray(treatment.teethStatus)
 
       // Convert database status to display format
       const statusMap = {
@@ -254,10 +247,11 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   // Calculate stats - MEMOIZED to avoid recalculating on every render
   const stats = useMemo(() => {
     const total = displayTreatments.length
-    const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress' || t.treatmentStatus === 'IN_PROGRESS').length
-    const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed' || t.treatmentStatus === 'COMPLETED').length
-    const totalRevenue = displayTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
-    const pendingPayments = displayTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
+    const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
+    const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
+    const totalRevenue = sumField(displayTreatments, 'paidAmount')
+    const pendingPayments = displayTreatments.reduce((sum, t) => 
+      sum + calculateRemainingBalance(t.totalAmount, t.paidAmount), 0)
     
     return { total, active, completed, totalRevenue, pendingPayments }
   }, [displayTreatments])
@@ -820,7 +814,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           </div>
           
           {/* New Treatment Form - Full Page */}
-          <NewTreatmentModal
+          <TreatmentModal
             isOpen={true}
             onClose={handleBackToList}
             onSave={handleSaveNewTreatment}
@@ -860,7 +854,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           </div>
           
           {/* Edit Treatment Form - Full Page */}
-          <NewTreatmentModal
+          <TreatmentModal
             isOpen={true}
             onClose={handleBackToList}
             onSave={handleUpdateTreatment}
@@ -1123,15 +1117,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         } : null}
       />
 
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
-        appointmentData={selectedTreatment ? {
-          patient: { name: selectedTreatment.patientName },
-          treatment: selectedTreatment.treatmentType,
-          time: ''
-        } : null}
+        item={selectedTreatment}
+        action="delete"
+        itemName={selectedTreatment?.treatmentType || 'Treatment'}
+        itemType="Treatment"
       />
 
       <PrescriptionModal

@@ -1,9 +1,9 @@
 // Feature-specific Components - Appointment
+// Feature-specific Components - Appointment
 export { default as AppointmentDetailsModal } from './appointment/AppointmentDetailsModal'
 export { default as AppointmentSchedule } from './appointment/AppointmentSchedule'
 export { default as AppointmentsHistoryTab } from './appointment/AppointmentsHistoryTab'
 export { default as BookAppointmentModal } from './appointment/BookAppointmentModal'
-export { default as EditAppointmentModal } from './appointment/EditAppointmentModal'
 export { default as NewAppointmentModal } from './appointment/NewAppointmentModal'
 
 // Feature-specific Components - Clinic
@@ -20,19 +20,20 @@ export { default as AddInvoiceModal } from './expenses/AddInvoiceModal'
 export { default as AddExpenseModal } from './expenses/AddExpenseModal'
 
 // Feature-specific Components - Inventory
-export { default as AddItemModal } from './inventory/AddItemModal'
-export { default as EditItemModal } from './inventory/EditItemModal'
-export { default as AddSupplierModal } from './inventory/AddSupplierModal'
-export { default as EditSupplierModal } from './inventory/EditSupplierModal'
+export { default as ItemModal } from './inventory/ItemModal'
+export { default as SupplierModal } from './inventory/SupplierModal'
 export { default as ViewSupplierModal } from './inventory/ViewSupplierModal'
 export { default as SupplierItemsModal } from './inventory/SupplierItemsModal'
 export { default as CreatePurchaseOrderModal } from './inventory/CreatePurchaseOrderModal'
 export { default as ReorderItemModal } from './inventory/ReorderItemModal'
 export { default as ViewItemModal } from './inventory/ViewItemModal'
 
+// Feature-specific Components - Notifications
+export { default as NotificationDropdown } from './notifications/NotificationDropdown'
+export { default as NotificationsList } from './notifications/NotificationsList'
+
 // Feature-specific Components - Patient
-export { default as EditPatientModal } from './patient/EditPatientModal'
-export { default as NewPatientModal } from './patient/NewPatientModal'
+export { default as PatientModal } from './patient/PatientModal'
 export { default as PatientDetailsModal } from './patient/PatientDetailsModal'
 
 // Feature-specific Components - Payment
@@ -50,7 +51,7 @@ export { default as UploadResultModal } from './radiology/UploadResultModal'
 export { default as SecretaryModal } from './secretary/SecretaryModal'
 
 // Feature-specific Components - Treatment
-export { default as NewTreatmentModal } from './treatment/NewTreatmentModal'
+export { default as TreatmentModal } from './treatment/TreatmentModal'
 export { default as PrescriptionModal } from './treatment/PrescriptionModal'
 export { default as TeethHistoryTab } from './treatment/TeethHistoryTab'
 export { default as ToothChart } from './treatment/ToothChart'

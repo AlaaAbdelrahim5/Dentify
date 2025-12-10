@@ -21,6 +21,7 @@ import {
   FaLink
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
+import { formatDate as formatDateHelper, getStatusColor } from '../../../utils/helpers'
 import { 
   Card, 
   Button, 
@@ -224,30 +225,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'REQUESTED':
-        return isDarkMode 
-          ? 'bg-yellow-900/30 text-yellow-400 border-yellow-600' 
-          : 'bg-yellow-100 text-yellow-700 border-yellow-400'
-      case 'IN_PROGRESS':
-        return isDarkMode 
-          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
-          : 'bg-blue-100 text-blue-700 border-blue-400'
-      case 'COMPLETED':
-        return isDarkMode 
-          ? 'bg-green-900/30 text-green-400 border-green-600' 
-          : 'bg-green-100 text-green-700 border-green-400'
-      case 'CANCELLED':
-        return isDarkMode 
-          ? 'bg-red-900/30 text-red-400 border-red-600' 
-          : 'bg-red-100 text-red-700 border-red-400'
-      default:
-        return isDarkMode 
-          ? 'bg-gray-800 text-gray-300 border-gray-600' 
-          : 'bg-white text-gray-700 border-gray-300'
-    }
-  }
+
 
   const getStatusLabel = (status) => {
     const statusMap = {
@@ -316,7 +294,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           </div>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 ${
-          getStatusColor(request.status)
+          getStatusColor(request.status, isDarkMode)
         }`}>
           {getStatusIcon(request.status)}
           {getStatusLabel(request.status)}
@@ -620,7 +598,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                     accessor: 'status',
                     render: (value) => (
                       <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 w-fit ${
-                        getStatusColor(value)
+                        getStatusColor(value, isDarkMode)
                       }`}>
                         {getStatusIcon(value)}
                         {getStatusLabel(value)}

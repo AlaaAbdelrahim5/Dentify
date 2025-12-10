@@ -12,6 +12,7 @@ import { Logo, Button, Input, Card, LoadingSpinner } from "../components";
 import { authAPI } from "../services/api";
 import { authUtils } from "../utils/auth";
 import { useTheme } from "../contexts/ThemeContext";
+import { validateEmail } from "../utils/validation";
 
 const Login = () => {
   const navigate = useNavigate()
@@ -82,9 +83,8 @@ const Login = () => {
 
     // Basic validation
     const newErrors = {};
-    if (!formData.email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Email is invalid";
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
     if (!formData.password) newErrors.password = "Password is required";
 
     if (Object.keys(newErrors).length > 0) {

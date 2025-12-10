@@ -19,6 +19,7 @@ import {
 import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
+import { toISODateString } from '../../../utils/helpers'
 
 const SecretarySettings = () => {
   const { isDarkMode } = useTheme()
@@ -84,7 +85,7 @@ const SecretarySettings = () => {
         lastName: secretary.lastName || '',
         email: secretary.userId?.email || secretary.email || '',
         phone: secretary.userId?.phone || secretary.phone || '',
-        birthDate: secretary.birthDate ? new Date(secretary.birthDate).toISOString().split('T')[0] : '',
+        birthDate: secretary.birthDate ? toISODateString(secretary.birthDate) : '',
         gender: secretary.gender || '',
         city: secretary.city || '',
         profileImage: secretary.userId?.profileImage || secretary.profileImage || '',

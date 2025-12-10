@@ -3,14 +3,7 @@ import { FiX, FiSearch, FiMessageCircle, FiMoreVertical, FiUserPlus, FiSend } fr
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useChat } from '../../../contexts/ChatContext';
 import { authUtils } from '../../../utils/auth';
-
-// Utility function to get image URL (handles base64 and URL paths)
-const getImageUrl = (profileImage) => {
-  if (!profileImage) return null;
-  if (profileImage.startsWith('data:')) return profileImage; // base64 image
-  if (profileImage.startsWith('http')) return profileImage; // full URL
-  return `${import.meta.env.VITE_API_URL}${profileImage}`; // relative path
-};
+import { getImageUrl } from '../../../utils/helpers';
 
 const ChatSidebar = ({ isOpen, onClose }) => {
   const { isDarkMode } = useTheme();

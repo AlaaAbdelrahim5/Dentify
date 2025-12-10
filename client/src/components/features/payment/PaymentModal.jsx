@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { calculateRemainingBalance } from '../../../utils/helpers'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { FaTimes, FaSave, FaDollarSign, FaCreditCard, FaMoneyBillWave, FaStickyNote, FaUser, FaStethoscope } from 'react-icons/fa'
-import { Button, Input, Select } from '../../common'
+import { FaSave, FaDollarSign, FaCreditCard, FaMoneyBillWave, FaStickyNote, FaUser, FaStethoscope } from 'react-icons/fa'
+import { Button, Input, Select, BaseModal } from '../../common'
 
 const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients = [], treatments = [] }) => {
   const { isDarkMode } = useTheme()
@@ -88,7 +89,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
     if (treatment) {
       const discount = formData.discount ? parseFloat(formData.discount) : 0
       const amount = formData.amount ? parseFloat(formData.amount) : 0
-      const remainingBalance = treatment.totalAmount - (treatment.treatmentDiscount || 0) - treatment.paidAmount
+      const remainingBalance = calculateRemainingBalance(treatment.totalAmount, treatment.paidAmount, treatment.treatmentDiscount)
       
       // Check if payment amount exceeds remaining balance
       if (amount > remainingBalance) {
@@ -133,117 +134,72 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
     onClose()
   }
 
-  if (!isOpen) return null
-
   const currentTreatment = treatmentInfo || treatments.find(t => t.id.toString() === selectedTreatment)
   const remainingBalance = currentTreatment 
     ? currentTreatment.totalAmount - (currentTreatment.treatmentDiscount || 0) - currentTreatment.paidAmount 
     : 0
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-          }`}>
-          <div>
-            <h2 className={`text-2xl font-bold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              Record Payment
-            </h2>
-            {currentTreatment && (
-              <p className={`text-sm mt-1 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                {currentTreatment.treatmentType} - {currentTreatment.patientName}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add Payment"
+      size="3xl"
+    >
+      {/* Treatment Info */}
+      {currentTreatment && (
+        <div className={`mx-6 mt-6 p-4 rounded-lg border-2 ${
+          isDarkMode ? 'bg-teal-900/20 border-teal-700' : 'bg-teal-50 border-teal-200'
+        }`}>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Total Amount
               </p>
-            )}
-          </div>
-          <button
-            onClick={handleClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode 
-                ? 'hover:bg-gray-700 text-gray-400' 
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable Form Content */}
-        <div className="flex-1 overflow-y-auto">
-        {/* Treatment Info */}
-        {currentTreatment && (
-          <div className={`mx-6 mt-6 p-4 rounded-lg border-2 ${
-            isDarkMode ? 'bg-teal-900/20 border-teal-700' : 'bg-teal-50 border-teal-200'
-          }`}>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+              <p className={`text-lg font-semibold ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>
+                ${currentTreatment.totalAmount.toFixed(2)}
+              </p>
+            </div>
+            {(currentTreatment.treatmentDiscount || 0) > 0 && (
               <div>
                 <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Total Amount
-                </p>
-                <p className={`text-lg font-semibold ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}>
-                  ${currentTreatment.totalAmount.toFixed(2)}
-                </p>
-              </div>
-              {(currentTreatment.treatmentDiscount || 0) > 0 && (
-                <div>
-                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Total Discount
-                  </p>
-                  <p className={`text-lg font-semibold ${
-                    isDarkMode ? 'text-orange-400' : 'text-orange-600'
-                  }`}>
-                    ${(currentTreatment.treatmentDiscount || 0).toFixed(2)}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Paid Amount
-                </p>
-                <p className={`text-lg font-semibold ${
-                  isDarkMode ? 'text-green-400' : 'text-green-600'
-                }`}>
-                  ${currentTreatment.paidAmount.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Remaining Balance
+                  Total Discount
                 </p>
                 <p className={`text-lg font-semibold ${
                   isDarkMode ? 'text-orange-400' : 'text-orange-600'
                 }`}>
-                  ${remainingBalance.toFixed(2)}
+                  ${(currentTreatment.treatmentDiscount || 0).toFixed(2)}
                 </p>
               </div>
+            )}
+            <div>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Paid Amount
+              </p>
+              <p className={`text-lg font-semibold ${
+                isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`}>
+                ${currentTreatment.paidAmount.toFixed(2)}
+              </p>
+            </div>
+            <div>
+              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Remaining Balance
+              </p>
+              <p className={`text-lg font-semibold ${
+                isDarkMode ? 'text-orange-400' : 'text-orange-600'
+              }`}>
+                ${remainingBalance.toFixed(2)}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Patient Selection - Only show if no treatment is pre-selected */}
           {!treatmentInfo && (
             <>
@@ -502,12 +458,9 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
             </Button>
           </div>
           </>
-          )}
-        </form>
-        </div>
-      </div>
-    </div>
-    </div>
+        )}
+      </form>
+    </BaseModal>
   )
 }
 

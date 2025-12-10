@@ -23,7 +23,7 @@ import {
   FaGlobe,
   FaBuilding
 } from 'react-icons/fa'
-import { Button, Card, StatusBadge } from '../../common'
+import { Button, Card, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 
 const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
@@ -323,43 +323,40 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
   }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      showCloseButton={false}
+      noPadding={true}
     >
-      <div 
-        className={`w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header with Teal Gradient */}
-        <div className="bg-gradient-to-br from-teal-500 to-cyan-500 px-8 py-6 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-2"
-          >
-            <FaTimes className="w-6 h-6" />
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
-              <FaUser className="text-white text-2xl" />
-            </div>
-            <div className="text-white">
-              <h2 className="text-2xl font-bold">
-                Dr. {dentistData.firstName} {dentistData.lastName}
-              </h2>
-              <p className="text-white/90 text-sm mt-1">
-                License: {dentistData.licenseNumber}
-              </p>
-            </div>
+      {/* Header with Teal Gradient */}
+      <div className="bg-gradient-to-br from-teal-500 to-cyan-500 px-8 py-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors p-2"
+        >
+          <FaTimes className="w-6 h-6" />
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+            <FaUser className="text-white text-2xl" />
+          </div>
+          <div className="text-white">
+            <h2 className="text-2xl font-bold">
+              Dr. {dentistData.firstName} {dentistData.lastName}
+            </h2>
+            <p className="text-white/90 text-sm mt-1">
+              License: {dentistData.licenseNumber}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className={`p-8 max-h-[calc(90vh-140px)] overflow-y-auto ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
+      {/* Content */}
+      <div className={`p-8 max-h-[calc(90vh-140px)] overflow-y-auto ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
           <div className="space-y-6">
             {/* Status Badge */}
             <div className="flex items-center gap-3">
@@ -583,8 +580,7 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </BaseModal>
   )
 }
 

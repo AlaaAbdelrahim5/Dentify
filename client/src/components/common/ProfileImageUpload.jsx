@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { FaCamera, FaTrash, FaUser } from 'react-icons/fa'
 import { useTheme } from '../../contexts/ThemeContext'
 import { authUtils } from '../../utils/auth'
+import { getImageUrl as getImageUrlHelper } from '../../utils/helpers'
 
 const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) => {
   const { isDarkMode } = useTheme()
@@ -128,13 +129,6 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
     }
   }
 
-  const getImageUrl = () => {
-    if (!imagePreview) return null
-    if (imagePreview.startsWith('data:')) return imagePreview
-    if (imagePreview.startsWith('http')) return imagePreview
-    return `http://localhost:5000${imagePreview}`
-  }
-
   return (
     <div className="flex items-center gap-6">
       <div className="relative group">
@@ -143,7 +137,7 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
         } ${uploading ? 'opacity-50' : ''}`}>
           {imagePreview ? (
             <img 
-              src={getImageUrl()} 
+              src={getImageUrlHelper(imagePreview)} 
               alt={userName}
               className="w-full h-full object-cover"
               onError={(e) => {

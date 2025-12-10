@@ -22,6 +22,8 @@ import {
   FaTwitter
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
 import { 
   Button, 
   Card,
@@ -46,7 +48,6 @@ const DentistsManagement = () => {
   const [filtering, setFiltering] = useState(false)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [filterSpecialization, setFilterSpecialization] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -57,7 +58,7 @@ const DentistsManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [dentistToToggle, setDentistToToggle] = useState(null)
-  const searchTimeoutRef = useRef(null)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -130,22 +131,7 @@ const DentistsManagement = () => {
     loadDentists()
   }, [])
 
-  // Debounce search term
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
+
 
   // Filter dentists based on search and filters
   useEffect(() => {

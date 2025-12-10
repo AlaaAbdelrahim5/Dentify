@@ -23,6 +23,7 @@ import {
 import { authAPI } from "../services/api";
 import { authUtils } from "../utils/auth";
 import { useTheme } from "../contexts/ThemeContext";
+import { validateEmail } from "../utils/validation";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -153,9 +154,8 @@ const SignUp = () => {
 
     if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Email is invalid";
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
 
     if (!formData.phoneNumber) newErrors.phone = "Phone number is required";
     else if (formData.phoneNumber.length < 7)

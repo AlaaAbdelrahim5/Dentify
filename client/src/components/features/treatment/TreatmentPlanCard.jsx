@@ -1,9 +1,10 @@
 import { useTheme } from '../../../contexts/ThemeContext'
 import { 
   FaTooth, FaCalendarAlt, FaDollarSign, FaClipboardList, 
-  FaCheck, FaClock, FaExclamationTriangle, FaTimes, FaCheckCircle, FaCalendarPlus
+  FaCheck, FaClock, FaTimes, FaCheckCircle, FaCalendarPlus
 } from 'react-icons/fa'
 import { Card, Button } from '../../common'
+import { getStatusDisplay as getStatusHelper, calculateRemainingBalance } from '../../../utils/helpers'
 
 const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
   const { isDarkMode } = useTheme()
@@ -11,21 +12,8 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
   // Calculate payments correctly accounting for discount
   const treatmentDiscount = treatment.treatmentDiscount || 0
   const effectiveTotal = treatment.totalAmount - treatmentDiscount
-  const remainingBalance = effectiveTotal - treatment.paidAmount
+  const remainingBalance = calculateRemainingBalance(treatment.totalAmount, treatment.paidAmount, treatmentDiscount)
   const paymentProgress = effectiveTotal > 0 ? (treatment.paidAmount / effectiveTotal) * 100 : 0
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'High':
-        return 'text-red-500'
-      case 'Medium':
-        return 'text-yellow-500'
-      case 'Low':
-        return 'text-green-500'
-      default:
-        return isDarkMode ? 'text-gray-400' : 'text-gray-600'
-    }
-  }
 
   const getStatusDisplay = (status) => {
     switch (status) {
@@ -140,16 +128,6 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
                 </span>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Priority Indicator */}
-        {treatment.priority && (
-          <div className="flex items-center gap-2">
-            <FaExclamationTriangle className={getPriorityColor(treatment.priority)} />
-            <span className={`text-sm font-medium ${getPriorityColor(treatment.priority)}`}>
-              {treatment.priority} Priority
-            </span>
           </div>
         )}
 

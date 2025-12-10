@@ -17,8 +17,10 @@ import {
   FaTrash
 } from 'react-icons/fa'
 import { FaTiktok } from 'react-icons/fa'
-import { Button, Input } from '../../common'
+import { Button, Input, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { PALESTINIAN_CITIES, DENTAL_SPECIALIZATIONS, DAYS_OF_WEEK } from '../../../utils/constants'
+import { validateEmail, validatePhone, validateAge, validatePassword } from '../../../utils/validation'
 
 const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   const { isDarkMode } = useTheme()
@@ -44,34 +46,6 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   })
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-
-  // Palestinian cities
-  const cities = [
-    'Acre', 'Al-Bireh', 'Beersheba', 'Beit Hanoun', 'Beit Jala', 'Beit Lahia',
-    'Beit Sahour', 'Bethlehem', 'Deir al-Balah', 'Gaza', 'Haifa', 'Hebron',
-    'Jabalya', 'Jaffa', 'Jenin', 'Jericho', 'Jerusalem', 'Khan Yunis',
-    'Lydd', 'Nablus', 'Nazareth', 'Qalqilya', 'Rafah', 'Ramallah',
-    'Ramla', 'Safad', 'Salfit', 'Tiberias', 'Tubas', 'Tulkarm'
-  ]
-
-  // Specializations
-  const specializations = [
-    'General Dentistry',
-    'Orthodontics',
-    'Endodontics',
-    'Periodontics',
-    'Oral Surgery',
-    'Prosthodontics',
-    'Pediatric Dentistry',
-    'Oral Pathology',
-    'Cosmetic Dentistry',
-    'Implantology'
-  ]
-
-  // Days of the week
-  const daysOfWeek = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-  ]
 
   useEffect(() => {
     if (dentist) {
@@ -140,15 +114,15 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address'
+    const emailError = validateEmail(formData.email)
+    if (emailError) {
+      newErrors.email = emailError
     }
 
-    // Phone validation (Palestinian format)
-    const phoneRegex = /^(\+970|0)?[0-9]{8,9}$/
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid Palestinian phone number'
+    // Phone validation
+    const phoneError = validatePhone(formData.phone)
+    if (phoneError) {
+      newErrors.phone = phoneError
     }
 
     // Age validation (minimum 22 years for dentists)
@@ -298,55 +272,19 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-              isDarkMode
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <FaUserMd className="w-6 h-6 text-teal-600" />
-              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {dentist ? 'Edit Dentist' : 'Request New Dentist'}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode
-                  ? "hover:bg-gray-700 text-gray-400 hover:text-gray-300"
-                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <FaTimes className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Form Container with Scroll */}
-          <div className="flex-1 overflow-y-auto">
-            <form onSubmit={handleSubmit} className="p-6 space-y-8">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="4xl"
+      title={
+        <div className="flex items-center gap-3">
+          <FaUserMd className="w-6 h-6 text-teal-600" />
+          <span>{dentist ? 'Edit Dentist' : 'Request New Dentist'}</span>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-8">
               {/* General Error */}
               {errors.submit && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -479,7 +417,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                       } ${errors.city ? 'border-red-500' : ''}`}
                     >
                       <option value="">Select city</option>
-                      {cities.map(city => (
+                      {PALESTINIAN_CITIES.map(city => (
                         <option key={city} value={city}>{city}</option>
                       ))}
                     </select>
@@ -628,7 +566,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                     Specializations * (Select at least one)
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {specializations.map((specialization) => (
+                    {DENTAL_SPECIALIZATIONS.map((specialization) => (
                       <label
                         key={specialization}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
@@ -718,7 +656,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                             }`}
                           >
                             <option value="">Select day</option>
-                            {daysOfWeek.map(day => (
+                            {DAYS_OF_WEEK.map(day => (
                               <option key={day} value={day}>{day}</option>
                             ))}
                           </select>
@@ -892,10 +830,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-    </div>
+    </BaseModal>
   )
 }
 

@@ -3,6 +3,7 @@ import { FaTimes, FaCalendarAlt, FaSave, FaTooth, FaNotesMedical, FaPlus, FaEdit
 import { useTheme } from '../../../contexts/ThemeContext'
 import ToothChart from './ToothChart'
 import { Button, Input } from '../../common'
+import { getTodayISO } from '../../../utils/helpers'
 
 const ToothChartModal = ({ 
   isOpen, 
@@ -22,7 +23,7 @@ const ToothChartModal = ({
   const [currentTooth, setCurrentTooth] = useState(null)
   const [showToothDetails, setShowToothDetails] = useState(false)
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayISO(),
     condition: '',
     severity: 'medium',
     notes: '',
@@ -37,7 +38,7 @@ const ToothChartModal = ({
       setToothNotes(initialData.toothNotes || {})
       setToothTreatments(initialData.toothTreatments || {})
       setFormData({
-        date: initialData.date || new Date().toISOString().split('T')[0],
+        date: initialData.date || getTodayISO(),
         condition: initialData.condition || '',
         severity: initialData.severity || 'medium',
         notes: initialData.notes || '',
@@ -151,7 +152,7 @@ const ToothChartModal = ({
     setCurrentTooth(null)
     setShowToothDetails(false)
     setFormData({
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayISO(),
       condition: '',
       severity: 'medium',
       notes: '',

@@ -12,6 +12,7 @@ import {
   FaInfoCircle
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper } from '../../../utils/helpers'
 import { Card, Select, StatusBadge, Button, DataTable } from '../../common'
 
 const AppointmentsHistoryTab = ({ appointments = [] }) => {

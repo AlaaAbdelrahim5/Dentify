@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaUser, FaClock, FaPlus } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { Button } from '../../common'
+import { convertTo12Hour } from '../../../utils/helpers'
 
 const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmentClick, dentistData = null }) => {
   const { isDarkMode } = useTheme()
@@ -89,15 +90,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     console.log('📅 Week dates:', dates.map(d => d.toDateString()))
     return dates
   }, [currentWeek, getWorkingDaysMap])
-
-  // Convert 24-hour time to 12-hour format
-  const convertTo12Hour = (time24) => {
-    const [hours, minutes] = time24.split(':')
-    const hour = parseInt(hours)
-    const period = hour >= 12 ? 'PM' : 'AM'
-    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-    return `${hour12}:${minutes} ${period}`
-  }
 
   // Generate time slots based on dentist working hours and appointment duration
   const timeSlots = useMemo(() => {

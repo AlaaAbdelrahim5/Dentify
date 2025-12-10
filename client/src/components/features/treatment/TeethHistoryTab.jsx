@@ -11,6 +11,7 @@ import {
   FaDollarSign
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper, safeJsonParse, ensureArray } from '../../../utils/helpers'
 import ToothChart from './ToothChart'
 import { Card, Select, StatusBadge, Button, DataTable } from '../../common'
 
@@ -33,16 +34,9 @@ const TeethHistoryTab = ({ treatments = [] }) => {
     const historyMap = {}
     
     treatments.forEach(treatment => {
-      let teethStatus = []
-      try {
-        if (typeof treatment.teethStatus === 'string') {
-          teethStatus = JSON.parse(treatment.teethStatus)
-        } else if (Array.isArray(treatment.teethStatus)) {
-          teethStatus = treatment.teethStatus
-        }
-      } catch (e) {
-        console.error('Error parsing teethStatus:', e)
-      }
+      const teethStatus = typeof treatment.teethStatus === 'string'
+        ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+        : ensureArray(treatment.teethStatus)
 
       console.log('Treatment teethStatus:', teethStatus)
       

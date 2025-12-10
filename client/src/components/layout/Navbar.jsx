@@ -11,14 +11,7 @@ import { useChat } from '../../contexts/ChatContext'
 import { NotificationDropdown } from '../features/notifications'
 import { ChatButton, ChatSidebar } from '../features/chat'
 import { authUtils } from '../../utils/auth'
-
-// Utility function to get image URL (handles base64 and URL paths)
-const getImageUrl = (profileImage) => {
-  if (!profileImage) return null
-  if (profileImage.startsWith('data:')) return profileImage // base64 image
-  if (profileImage.startsWith('http')) return profileImage // full URL
-  return `http://localhost:5000${profileImage}` // relative path
-}
+import { getImageUrl } from '../../utils/helpers'
 
 const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

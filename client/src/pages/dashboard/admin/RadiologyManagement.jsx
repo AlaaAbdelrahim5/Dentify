@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaXRay, 
   FaPlus, 
@@ -32,6 +32,8 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
+import { CITY_OPTIONS_UNDERSCORE, STATUS_OPTIONS } from '../../../utils/constants'
+import { useDebounce } from '../../../hooks'
 
 const RadiologyManagement = () => {
   const { isDarkMode } = useTheme()
@@ -50,46 +52,12 @@ const RadiologyManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0
   })
-
-  const cities = [
-    { value: 'acre', label: 'Acre' },
-    { value: 'al_bireh', label: 'Al-Bireh' },
-    { value: 'beersheba', label: 'Beersheba' },
-    { value: 'beit_hanoun', label: 'Beit Hanoun' },
-    { value: 'beit_jala', label: 'Beit Jala' },
-    { value: 'beit_lahia', label: 'Beit Lahia' },
-    { value: 'beit_sahour', label: 'Beit Sahour' },
-    { value: 'bethlehem', label: 'Bethlehem' },
-    { value: 'deir_al_balah', label: 'Deir al-Balah' },
-    { value: 'gaza', label: 'Gaza' },
-    { value: 'haifa', label: 'Haifa' },
-    { value: 'hebron', label: 'Hebron' },
-    { value: 'jabalya', label: 'Jabalya' },
-    { value: 'jaffa', label: 'Jaffa' },
-    { value: 'jenin', label: 'Jenin' },
-    { value: 'jericho', label: 'Jericho' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'khan_yunis', label: 'Khan Yunis' },
-    { value: 'lydd', label: 'Lydd' },
-    { value: 'nablus', label: 'Nablus' },
-    { value: 'nazareth', label: 'Nazareth' },
-    { value: 'qalqilya', label: 'Qalqilya' },
-    { value: 'rafah', label: 'Rafah' },
-    { value: 'ramallah', label: 'Ramallah' },
-    { value: 'ramla', label: 'Ramla' },
-    { value: 'safad', label: 'Safad' },
-    { value: 'salfit', label: 'Salfit' },
-    { value: 'tiberias', label: 'Tiberias' },
-    { value: 'tubas', label: 'Tubas' },
-    { value: 'tulkarm', label: 'Tulkarm' }
-  ]
 
   // Fetch centers
   const fetchCenters = async (isFiltering = false) => {
@@ -189,23 +157,6 @@ const RadiologyManagement = () => {
     setIsFirstLoad(false)
   }, [])
 
-  // Debounce search term
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300) // 300ms delay
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
-
   // Separate effect for filtering that doesn't show full page loading
   useEffect(() => {
     if (!isFirstLoad) {
@@ -237,7 +188,7 @@ const RadiologyManagement = () => {
   }
 
   const getCityLabel = (cityValue) => {
-    const city = cities.find(c => c.value === cityValue)
+    const city = CITY_OPTIONS_UNDERSCORE.find(c => c.value === cityValue)
     return city ? city.label : cityValue
   }
 
@@ -324,7 +275,7 @@ const RadiologyManagement = () => {
     {
       value: filterCity,
       onChange: handleCityFilter,
-      options: cities,
+      options: CITY_OPTIONS_UNDERSCORE,
       placeholder: 'All Cities'
     },
     {

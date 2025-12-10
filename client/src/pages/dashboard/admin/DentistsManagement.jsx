@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaUserMd, 
   FaPlus, 
@@ -34,6 +34,9 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
+import { CITY_OPTIONS_LOWERCASE, DENTAL_SPECIALIZATIONS_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
+import { useDebounce } from '../../../hooks'
+import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
 
 const DentistsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -51,45 +54,12 @@ const DentistsManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [dentistToAction, setDentistToAction] = useState(null)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     active: 0
   })
-
-  const cities = [
-    { value: 'ramallah', label: 'Ramallah' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'bethlehem', label: 'Bethlehem' },
-    { value: 'hebron', label: 'Hebron' },
-    { value: 'nablus', label: 'Nablus' },
-    { value: 'jenin', label: 'Jenin' },
-    { value: 'gaza', label: 'Gaza' },
-    { value: 'khan_yunis', label: 'Khan Yunis' },
-    { value: 'rafah', label: 'Rafah' }
-  ]
-
-  const specializations = [
-    { value: 'General Dentistry', label: 'General Dentistry' },
-    { value: 'Orthodontics', label: 'Orthodontics' },
-    { value: 'Endodontics', label: 'Endodontics' },
-    { value: 'Periodontics', label: 'Periodontics' },
-    { value: 'Oral Surgery', label: 'Oral Surgery' },
-    { value: 'Prosthodontics', label: 'Prosthodontics' },
-    { value: 'Pediatric Dentistry', label: 'Pediatric Dentistry' },
-    { value: 'Oral Pathology', label: 'Oral Pathology' },
-    { value: 'Cosmetic Dentistry', label: 'Cosmetic Dentistry' },
-    { value: 'Implantology', label: 'Implantology' }
-  ]
-
-  const statusOptions = [
-    { value: 'PENDING', label: 'Pending Approval' },
-    { value: 'ACTIVE', label: 'Active' },
-    { value: 'REJECTED', label: 'Rejected' },
-    { value: 'DEACTIVATED', label: 'Deactivated' }
-  ]
 
   // Fetch dentists with all statuses for admin
   const fetchDentists = async (isFiltering = false) => {
@@ -201,23 +171,6 @@ const DentistsManagement = () => {
     }
   }
 
-  // Debounce search
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 500)
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
-
   // Fetch data when filters change
   useEffect(() => {
     setCurrentPage(1)
@@ -236,15 +189,6 @@ const DentistsManagement = () => {
     }
     loadData()
   }, [])
-
-  // Format helpers
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   // Stats configuration
   const statsConfig = [
@@ -281,24 +225,23 @@ const DentistsManagement = () => {
         placeholder: 'All Statuses',
         value: filterStatus,
         onChange: (e) => setFilterStatus(e.target.value),
-        options: statusOptions
+        options: STATUS_OPTIONS
       },
       {
         placeholder: 'All Cities',
         value: filterCity,
         onChange: (e) => setFilterCity(e.target.value),
-        options: cities
+        options: CITY_OPTIONS_LOWERCASE
       },
       {
         placeholder: 'All Specializations',
         value: filterSpecialization,
         onChange: (e) => setFilterSpecialization(e.target.value),
-        options: specializations
+        options: DENTAL_SPECIALIZATIONS_OPTIONS
       }
     ],
     onClearFilters: () => {
       setSearchTerm('')
-      setDebouncedSearchTerm('')
       setFilterCity('')
       setFilterStatus('')
       setFilterSpecialization('')
@@ -328,7 +271,7 @@ const DentistsManagement = () => {
             {dentist.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
-                src={dentist.user.profileImage.startsWith('data:') || dentist.user.profileImage.startsWith('http') ? dentist.user.profileImage : `http://localhost:5000${dentist.user.profileImage}`}
+                src={getImageUrl(dentist.user.profileImage)}
                 alt={`${dentist.firstName} ${dentist.lastName}`}
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -390,7 +333,7 @@ const DentistsManagement = () => {
 
       {/* Registration Date */}
       <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        {formatDate(dentist.user?.createdAt)}
+        {formatDateHelper(dentist.user?.createdAt)}
       </td>
 
       {/* Actions */}

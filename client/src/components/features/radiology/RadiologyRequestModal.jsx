@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { RADIOLOGY_STATUS_OPTIONS } from '../../../utils/constants'
 import { FaTimes, FaSave, FaXRay, FaCalendarAlt, FaUser, FaHospital, FaStickyNote, FaStethoscope } from 'react-icons/fa'
-import { Button, Input, Select } from '../../common'
+import { Button, Input, Select, BaseModal } from '../../common'
 
 const RadiologyRequestModal = ({ 
   isOpen, 
@@ -161,70 +162,34 @@ const RadiologyRequestModal = ({
     ? availableImagingTypes.map(type => ({ value: type, label: type }))
     : []
 
-  const statusOptions = [
-    { value: 'Requested', label: 'Requested' },
-    { value: 'In Progress', label: 'In Progress' },
-    { value: 'Completed', label: 'Completed' },
-    { value: 'Cancelled', label: 'Cancelled' }
-  ]
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={handleClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
-            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="2xl"
+      title={
+        <div className="flex items-center gap-2">
+          <div className={`p-2 rounded-lg ${
+            isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'
           }`}>
-          <div className="flex items-center gap-2">
-            <div className={`p-2 rounded-lg ${
-              isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'
-            }`}>
-              <FaXRay className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h2 className={`text-xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {initialData ? 'Edit Radiology Request' : 'New Radiology Request'}
-              </h2>
-              <p className={`text-xs ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                Request diagnostic imaging
-              </p>
-            </div>
+            <FaXRay className="w-5 h-5 text-purple-600" />
           </div>
-          <button
-            onClick={handleClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode 
-                ? 'hover:bg-gray-700 text-gray-400' 
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
+          <div>
+            <div className={`text-xl font-bold ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              {initialData ? 'Edit Radiology Request' : 'New Radiology Request'}
+            </div>
+            <p className={`text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Request diagnostic imaging
+            </p>
+          </div>
         </div>
-
-        {/* Scrollable Form Content */}
-        <div className="flex-1 overflow-y-auto">
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+      }
+    >
+      <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Patient Selection */}
           <div>
             <label className={`block text-xs font-medium mb-1.5 ${
@@ -371,7 +336,7 @@ const RadiologyRequestModal = ({
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                options={statusOptions}
+                options={RADIOLOGY_STATUS_OPTIONS}
               />
               <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Note: Available Date and Report can only be set by Radiology Center
@@ -420,10 +385,7 @@ const RadiologyRequestModal = ({
             </Button>
           </div>
         </form>
-        </div>
-      </div>
-    </div>
-    </div>
+    </BaseModal>
   )
 }
 

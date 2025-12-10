@@ -15,6 +15,7 @@ import {
 import { Card, Input, Button, StatsOverview, PatientDetailsModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
+import { calculateAge, capitalizeFirstLetter, formatDate, getStatusDisplay, safeJsonParse, ensureArray } from '../../../utils/helpers'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
@@ -112,32 +113,7 @@ const DentistPatients = () => {
     }))
   }
 
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A'
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    if (isNaN(birthDate.getTime())) return 'N/A'
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
-  }
 
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return ''
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not scheduled'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   // Use transformed patients - memoized for performance
   const transformedPatients = useMemo(() => {
@@ -180,16 +156,9 @@ const DentistPatients = () => {
       
       // Transform treatments to match expected format
       const transformedTreatments = patientTreatmentsData.map(treatment => {
-        let teethStatus = []
-        try {
-          if (typeof treatment.teethStatus === 'string') {
-            teethStatus = JSON.parse(treatment.teethStatus)
-          } else if (Array.isArray(treatment.teethStatus)) {
-            teethStatus = treatment.teethStatus
-          }
-        } catch (e) {
-          console.error('Error parsing teethStatus:', e)
-        }
+        const teethStatus = typeof treatment.teethStatus === 'string'
+          ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+          : ensureArray(treatment.teethStatus)
 
         const statusMap = {
           'IN_PROGRESS': 'In Progress',

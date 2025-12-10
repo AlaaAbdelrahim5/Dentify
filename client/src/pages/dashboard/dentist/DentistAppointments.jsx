@@ -313,7 +313,7 @@ const DentistAppointments = ({ onTabChange }) => {
         patientEmail: appointment.patient.email,
         appointmentDate: appointment.appointmentDate,
         appointmentTime: appointment.time,
-        treatmentType: appointment.treatment,
+        treatmentType: appointment.rawData?.patientNotes || '', // Use the actual appointment reason
         notes: appointment.notes,
         fromAppointment: true
       }
@@ -348,7 +348,7 @@ const DentistAppointments = ({ onTabChange }) => {
       patientEmail: selectedAppointment.patient.email,
       appointmentDate: selectedAppointment.appointmentDate,
       appointmentTime: selectedAppointment.time,
-      treatmentType: selectedAppointment.treatment,
+      treatmentType: selectedAppointment.rawData?.patientNotes || '', // Use the actual appointment reason
       notes: selectedAppointment.notes,
       fromAppointment: true,
       toothNumber: toothData?.toothNumber, // Add the tooth number

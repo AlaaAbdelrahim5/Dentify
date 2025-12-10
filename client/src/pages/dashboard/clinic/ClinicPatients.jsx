@@ -15,6 +15,7 @@ import {
 import { Card, Button, Input, StatsOverview, PatientDetailsModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, appointmentsAPI } from '../../../services/api'
+import { calculateAge, capitalizeFirstLetter, formatDate, getStatusDisplay, calculateRemainingBalance } from '../../../utils/helpers'
 
 const ClinicPatients = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()
@@ -76,7 +77,7 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       const activeTreatments = treatments.filter(t => t.status === 'IN_PROGRESS').length
       const totalRevenue = treatments.reduce((sum, t) => sum + (t.paidAmount || 0), 0)
       const pendingPayments = treatments.reduce((sum, t) => {
-        const remaining = (t.totalAmount || 0) - (t.paidAmount || 0)
+        const remaining = calculateRemainingBalance(t.totalAmount || 0, t.paidAmount || 0)
         return sum + (remaining > 0 ? remaining : 0)
       }, 0)
       
@@ -113,32 +114,7 @@ const ClinicPatients = ({ userData, onTabChange }) => {
     }))
   }
 
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A'
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    if (isNaN(birthDate.getTime())) return 'N/A'
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
-  }
 
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return ''
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not scheduled'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   // Use transformed patients - memoized for performance
   const transformedPatients = useMemo(() => {
@@ -198,26 +174,6 @@ const ClinicPatients = ({ userData, onTabChange }) => {
   }
 
   const PatientCard = ({ patient }) => {
-    const getStatusDisplay = (status) => {
-      switch (status?.toLowerCase()) {
-        case 'active':
-          return {
-            label: 'Active',
-            className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-          }
-        case 'inactive':
-          return {
-            label: 'Inactive',
-            className: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
-          }
-        default:
-          return {
-            label: 'Active',
-            className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-          }
-      }
-    }
-
     const statusDisplay = getStatusDisplay(patient.status)
 
     return (

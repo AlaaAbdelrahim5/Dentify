@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, LoadingSpinner, PageHeader, TreatmentTeethStatus, TreatmentPlanCard } from '../../../components'
 import { treatmentsAPI } from '../../../services/api'
+import { getStatusColor, safeJsonParse, ensureArray, sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
 
 const PatientTreatments = () => {
   const { isDarkMode } = useTheme()
@@ -61,17 +62,9 @@ const PatientTreatments = () => {
   const displayTreatments = useMemo(() => {
     return treatments.map(treatment => {
       // Parse teethStatus if it's a string, otherwise use as-is
-      let teethStatus = []
-      try {
-        if (typeof treatment.teethStatus === 'string') {
-          teethStatus = JSON.parse(treatment.teethStatus)
-        } else if (Array.isArray(treatment.teethStatus)) {
-          teethStatus = treatment.teethStatus
-        }
-      } catch (e) {
-        console.error('Error parsing teethStatus:', e)
-        teethStatus = []
-      }
+      const teethStatus = typeof treatment.teethStatus === 'string'
+        ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+        : ensureArray(treatment.teethStatus)
 
       // Convert database status to display format
       const statusMap = {
@@ -96,30 +89,6 @@ const PatientTreatments = () => {
     })
   }, [treatments])
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'In Progress':
-      case 'IN_PROGRESS':
-        return isDarkMode 
-          ? 'bg-green-900/30 text-green-400 border-green-600' 
-          : 'bg-green-100 text-green-700 border-green-400'
-      case 'Completed':
-      case 'COMPLETED':
-        return isDarkMode 
-          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
-          : 'bg-blue-100 text-blue-700 border-blue-400'
-      case 'Cancelled':
-      case 'CANCELLED':
-        return isDarkMode 
-          ? 'bg-red-900/30 text-red-400 border-red-600' 
-          : 'bg-red-100 text-red-700 border-red-400'
-      default:
-        return isDarkMode 
-          ? 'bg-gray-800 text-gray-300 border-gray-600' 
-          : 'bg-white text-gray-700 border-gray-300'
-    }
-  }
-
   // Filter treatments
   const filteredTreatments = useMemo(() => {
     return displayTreatments.filter(treatment => {
@@ -141,10 +110,11 @@ const PatientTreatments = () => {
   // Calculate stats
   const stats = useMemo(() => {
     const total = displayTreatments.length
-    const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress' || t.treatmentStatus === 'IN_PROGRESS').length
-    const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed' || t.treatmentStatus === 'COMPLETED').length
-    const totalPaid = displayTreatments.reduce((sum, t) => sum + t.paidAmount, 0)
-    const pendingPayments = displayTreatments.reduce((sum, t) => sum + (t.totalAmount - t.paidAmount), 0)
+    const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
+    const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
+    const totalPaid = sumField(displayTreatments, 'paidAmount')
+    const pendingPayments = displayTreatments.reduce((sum, t) => 
+      sum + calculateRemainingBalance(t.totalAmount, t.paidAmount), 0)
     
     return { total, active, completed, totalPaid, pendingPayments }
   }, [displayTreatments])

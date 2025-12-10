@@ -24,6 +24,7 @@ import {
 import { Card, Button, Select, PageHeader } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, appointmentsAPI, paymentsAPI } from '../../../services/api'
+import { safeJsonParse, ensureArray } from '../../../utils/helpers'
 
 const DentistReports = () => {
   const { isDarkMode } = useTheme()
@@ -176,14 +177,9 @@ const DentistReports = () => {
     // Teeth analysis
     const teethTreated = {}
     filteredTreatments.forEach(t => {
-      let teethStatus = []
-      try {
-        if (typeof t.teethStatus === 'string') {
-          teethStatus = JSON.parse(t.teethStatus)
-        } else if (Array.isArray(t.teethStatus)) {
-          teethStatus = t.teethStatus
-        }
-      } catch (e) {}
+      const teethStatus = typeof t.teethStatus === 'string'
+        ? ensureArray(safeJsonParse(t.teethStatus, []))
+        : ensureArray(t.teethStatus)
       
       teethStatus.forEach(tooth => {
         const toothNum = tooth.toothNumber

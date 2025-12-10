@@ -12,6 +12,7 @@ import generatePaymentReceipt from '../payment/PaymentReceipt'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { appointmentsAPI, treatmentsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
+import { getStatusDisplay as getStatusHelper, calculateRemainingBalance } from '../../../utils/helpers'
 
 const TreatmentDetailsModal = ({ 
   isOpen, 
@@ -264,7 +265,7 @@ const TreatmentDetailsModal = ({
     printWindow.print()
   }
 
-  const remainingBalance = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0) - treatmentData.paidAmount
+  const remainingBalance = calculateRemainingBalance(treatmentData.totalAmount, treatmentData.paidAmount, treatmentData.treatmentDiscount)
   const effectiveTotal = treatmentData.totalAmount - (treatmentData.treatmentDiscount || 0)
   const paymentProgress = effectiveTotal > 0 ? (treatmentData.paidAmount / effectiveTotal) * 100 : 0
 

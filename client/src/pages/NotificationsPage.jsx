@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
-import NotificationsList from '../components/features/notifications/NotificationsList';
-import Navbar from '../components/layout/Navbar';
+import { Navbar, NotificationsList } from '../components';
 import { useTheme } from '../contexts/ThemeContext';
 
 const NotificationsPage = () => {

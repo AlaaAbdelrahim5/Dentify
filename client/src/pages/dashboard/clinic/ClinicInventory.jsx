@@ -26,10 +26,8 @@ import {
   PageHeader, 
   StatsOverview, 
   Toast,
-  AddItemModal,
-  EditItemModal,
-  AddSupplierModal,
-  EditSupplierModal,
+  ItemModal,
+  SupplierModal,
   ViewSupplierModal,
   SupplierItemsModal,
   CreatePurchaseOrderModal,
@@ -37,6 +35,7 @@ import {
   ViewItemModal,
   ConfirmationModal
 } from '../../../components'
+import { getTodayISO } from '../../../utils/helpers'
 
 const ClinicInventory = () => {
   const { isDarkMode } = useTheme()
@@ -47,10 +46,8 @@ const ClinicInventory = () => {
   const [toast, setToast] = useState(null)
   
   // Modals state
-  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false)
-  const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false)
-  const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false)
-  const [isEditSupplierModalOpen, setIsEditSupplierModalOpen] = useState(false)
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false)
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false)
   const [isViewSupplierModalOpen, setIsViewSupplierModalOpen] = useState(false)
   const [isSupplierItemsModalOpen, setIsSupplierItemsModalOpen] = useState(false)
   const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false)
@@ -275,14 +272,15 @@ const ClinicInventory = () => {
       id: inventoryItems.length + 1,
       ...itemData,
       supplier: suppliers.find(s => s.id === parseInt(itemData.supplierId))?.name || '',
-      lastRestocked: new Date().toISOString().split('T')[0],
+      lastRestocked: getTodayISO(),
       status: parseInt(itemData.quantity) <= parseInt(itemData.minQuantity) 
         ? (parseInt(itemData.quantity) < parseInt(itemData.minQuantity) / 2 ? 'critical' : 'low')
         : 'adequate'
     }
     setInventoryItems(prev => [...prev, newItem])
     setToast({ type: 'success', message: 'Item added successfully!' })
-    setIsAddItemModalOpen(false)
+    setIsItemModalOpen(false)
+    setSelectedItem(null)
   }
 
   const handleEditItem = (updatedItem) => {
@@ -299,7 +297,7 @@ const ClinicInventory = () => {
         : item
     ))
     setToast({ type: 'success', message: 'Item updated successfully!' })
-    setIsEditItemModalOpen(false)
+    setIsItemModalOpen(false)
     setSelectedItem(null)
   }
 
@@ -321,19 +319,19 @@ const ClinicInventory = () => {
       id: suppliers.length + 1,
       ...supplierData,
       itemsCount: 0,
-      lastOrder: new Date().toISOString().split('T')[0],
+      lastOrder: getTodayISO(),
       status: 'active'
     }
     // This would update suppliers state if it was in useState
     setToast({ type: 'success', message: 'Supplier added successfully!' })
-    setIsAddSupplierModalOpen(false)
+    setIsSupplierModalOpen(false)
   }
 
   const handleEditSupplier = (updatedSupplier) => {
     // Mock implementation - will be replaced with API call
     // This would update suppliers array in real implementation
     setToast({ type: 'success', message: 'Supplier updated successfully!' })
-    setIsEditSupplierModalOpen(false)
+    setIsSupplierModalOpen(false)
     setSelectedSupplier(null)
   }
 
@@ -345,7 +343,7 @@ const ClinicInventory = () => {
   const handleEditFromSupplierView = (supplier) => {
     setIsViewSupplierModalOpen(false)
     setSelectedSupplier(supplier)
-    setIsEditSupplierModalOpen(true)
+    setIsSupplierModalOpen(true)
   }
 
   const handleViewSupplierItems = (supplier) => {
@@ -361,7 +359,7 @@ const ClinicInventory = () => {
       supplier: suppliers.find(s => s.id === parseInt(orderData.supplierId))?.name || '',
       items: orderData.orderItems.length,
       totalAmount: orderData.totalAmount,
-      orderDate: new Date().toISOString().split('T')[0],
+      orderDate: getTodayISO(),
       expectedDate: orderData.expectedDate,
       status: 'pending'
     }
@@ -379,7 +377,7 @@ const ClinicInventory = () => {
       supplier: reorderData.supplierName,
       items: 1,
       totalAmount: reorderData.totalAmount,
-      orderDate: new Date().toISOString().split('T')[0],
+      orderDate: getTodayISO(),
       expectedDate: reorderData.expectedDate,
       status: 'pending'
     }
@@ -396,7 +394,7 @@ const ClinicInventory = () => {
   const handleEditFromView = (item) => {
     setIsViewItemModalOpen(false)
     setSelectedItem(item)
-    setIsEditItemModalOpen(true)
+    setIsItemModalOpen(true)
   }
 
   return (
@@ -415,7 +413,7 @@ const ClinicInventory = () => {
         description="Manage clinic-wide inventory, supplies, and materials"
         action={{
           label: 'Add New Item',
-          onClick: () => setIsAddItemModalOpen(true),
+          onClick: () => { setSelectedItem(null); setIsItemModalOpen(true); },
           icon: FaPlus,
           gradient: 'from-teal-600 to-cyan-600'
         }}
@@ -627,7 +625,7 @@ const ClinicInventory = () => {
                         className="flex-1"
                         onClick={() => {
                           setSelectedItem(item)
-                          setIsEditItemModalOpen(true)
+                          setIsItemModalOpen(true)
                         }}
                       >
                         <FaEdit className="mr-2" />
@@ -670,7 +668,7 @@ const ClinicInventory = () => {
             <Button 
               variant="primary"
               className="bg-gradient-to-r from-purple-600 to-pink-600"
-              onClick={() => setIsAddSupplierModalOpen(true)}
+              onClick={() => { setSelectedSupplier(null); setIsSupplierModalOpen(true); }}
             >
               <FaPlus className="mr-2" />
               Add Supplier
@@ -746,7 +744,7 @@ const ClinicInventory = () => {
                         className="flex-1"
                         onClick={() => {
                           setSelectedSupplier(supplier)
-                          setIsEditSupplierModalOpen(true)
+                          setIsSupplierModalOpen(true)
                         }}
                       >
                         <FaEdit className="mr-2" />
@@ -976,37 +974,24 @@ const ClinicInventory = () => {
       )}
 
       {/* Modals */}
-      <AddItemModal
-        isOpen={isAddItemModalOpen}
-        onClose={() => setIsAddItemModalOpen(false)}
-        onSubmit={handleAddItem}
-        suppliers={suppliers}
-      />
-
-      <EditItemModal
-        isOpen={isEditItemModalOpen}
+      <ItemModal
+        isOpen={isItemModalOpen}
         onClose={() => {
-          setIsEditItemModalOpen(false)
+          setIsItemModalOpen(false)
           setSelectedItem(null)
         }}
-        onSubmit={handleEditItem}
+        onSubmit={selectedItem ? handleEditItem : handleAddItem}
         item={selectedItem}
         suppliers={suppliers}
       />
 
-      <AddSupplierModal
-        isOpen={isAddSupplierModalOpen}
-        onClose={() => setIsAddSupplierModalOpen(false)}
-        onSubmit={handleAddSupplier}
-      />
-
-      <EditSupplierModal
-        isOpen={isEditSupplierModalOpen}
+      <SupplierModal
+        isOpen={isSupplierModalOpen}
         onClose={() => {
-          setIsEditSupplierModalOpen(false)
+          setIsSupplierModalOpen(false)
           setSelectedSupplier(null)
         }}
-        onSubmit={handleEditSupplier}
+        onSubmit={selectedSupplier ? handleEditSupplier : handleAddSupplier}
         supplier={selectedSupplier}
       />
 

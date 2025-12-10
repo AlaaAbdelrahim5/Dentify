@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaPlus, 
   FaSearch, 
@@ -33,6 +33,10 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
+import { CITY_OPTIONS_LOWERCASE, GENDER_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
+import { calculateAge, capitalizeFirstLetter } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
+import { formatDate as formatDateHelper } from '../../../utils/helpers'
 
 const SecretariesManagement = () => {
   const { isDarkMode } = useTheme()
@@ -50,26 +54,13 @@ const SecretariesManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [error, setError] = useState(null)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0
   })
-
-  const cities = [
-    { value: 'ramallah', label: 'Ramallah' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'bethlehem', label: 'Bethlehem' },
-    { value: 'hebron', label: 'Hebron' },
-    { value: 'nablus', label: 'Nablus' },
-    { value: 'jenin', label: 'Jenin' },
-    { value: 'gaza', label: 'Gaza' },
-    { value: 'khan_yunis', label: 'Khan Yunis' },
-    { value: 'rafah', label: 'Rafah' }
-  ]
 
   // Fetch secretaries from API
   const fetchSecretaries = async (isFiltering = false) => {
@@ -117,23 +108,6 @@ const SecretariesManagement = () => {
     fetchSecretaries()
     setIsFirstLoad(false)
   }, [])
-
-  // Debounce search term
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
 
   // Client-side filtering (like Dentists component)
   useEffect(() => {
@@ -206,17 +180,6 @@ const SecretariesManagement = () => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-GB')
-  }
-
-  const calculateAge = (birthDate) => {
-    const today = new Date()
-    const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
-    return age
   }
 
   const handleAddSecretary = () => {

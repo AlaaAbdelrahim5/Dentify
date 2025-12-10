@@ -6,10 +6,11 @@ import {
   FaClock,
   FaStickyNote
 } from 'react-icons/fa'
-import { Button, Input, LoadingSpinner } from '../../common'
+import { Button, Input, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
+import { convertTo12Hour, addMinutes, getTodayISO } from '../../../utils/helpers'
 
 const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = null, preselectedDentist = null }) => {
   const { isDarkMode } = useTheme()
@@ -65,7 +66,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
         const [slotHour, slotMinute] = slot.split(':').map(Number)
         const slotStart = new Date(date)
         slotStart.setHours(slotHour, slotMinute, 0, 0)
-        const slotEnd = new Date(slotStart.getTime() + duration * 60000)
+        const slotEnd = addMinutes(slotStart, duration)
         
         // Check if this slot overlaps with any existing appointment
         const hasOverlap = response.appointments.some(apt => {
@@ -167,14 +168,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
   }
 
   // Convert 24-hour time to 12-hour format
-  const convertTo12Hour = (time24) => {
-    const [hours, minutes] = time24.split(':')
-    const hour = parseInt(hours)
-    const period = hour >= 12 ? 'PM' : 'AM'
-    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-    return `${hour12}:${minutes} ${period}`
-  }
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -288,7 +281,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
         
         // Construct appointment data
         const startDateTime = new Date(`${formData.date}T${formData.time}`)
-        const endDateTime = new Date(startDateTime.getTime() + appointmentDuration * 60000) // Use dentist's appointment duration
+        const endDateTime = addMinutes(startDateTime, appointmentDuration) // Use dentist's appointment duration
         
         // Use preselected dentist if available (for secretary), otherwise use current user (for dentist)
         const dentistId = preselectedDentist?.id || user.id
@@ -329,58 +322,31 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
     onClose()
   }
 
-  if (!isOpen) return null
-
   return createPortal(
-    <div className="fixed inset-0 z-[9999] overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={handleClose}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div 
-          className={`relative w-full max-w-4xl transform transition-all ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
-          } rounded-xl shadow-2xl`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between p-6 border-b ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="4xl"
+      title={
+        <div>
+          <div className={`text-2xl font-bold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            <div>
-              <h2 className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Book an Appointment
-              </h2>
-              {preselectedPatient && (
-                <p className={`mt-1 text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  for {preselectedPatient.name}
-                  {preselectedDentist && ` with ${preselectedDentist.name}`}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleClose}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
-                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <FaTimes className="w-5 h-5" />
-            </button>
+            Book an Appointment
           </div>
-
-          {/* Content */}
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 max-h-[60vh] overflow-y-auto">
+          {preselectedPatient && (
+            <p className={`mt-1 text-sm ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              for {preselectedPatient.name}
+              {preselectedDentist && ` with ${preselectedDentist.name}`}
+            </p>
+          )}
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
               <div className="space-y-6">
                 <h3 className={`text-lg font-semibold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
@@ -408,7 +374,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
                     name="date"
                     value={formData.date}
                     onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getTodayISO()}
                     error={errors.date}
                   />
                 </div>
@@ -553,9 +519,7 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
               </Button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>,
+    </BaseModal>,
     document.body
   )
 }

@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, Input, PhoneInput } from '../../common'
-import { FaTimes, FaSave, FaTruck } from 'react-icons/fa'
+import { Card, Button, Input, PhoneInput, BaseModal } from '../../common'
+import { FaSave, FaTruck } from 'react-icons/fa'
 
 /**
- * EditSupplierModal Component
- * Modal for editing existing supplier information
+ * SupplierModal Component
+ * Unified modal for adding and editing suppliers
  * Used in clinic inventory supplier management
+ * 
+ * @param {boolean} isOpen - Modal visibility state
+ * @param {Function} onClose - Close modal handler
+ * @param {Function} onSubmit - Submit handler
+ * @param {Object} supplier - Supplier to edit (null for adding new supplier)
  */
-const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
+const SupplierModal = ({ isOpen, onClose, onSubmit, supplier = null }) => {
   const { isDarkMode } = useTheme()
+  const isEditMode = !!supplier
+  
   const [formData, setFormData] = useState({
     name: '',
     contact: '',
@@ -19,7 +26,6 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
     notes: ''
   })
 
-  // Populate form when supplier changes
   useEffect(() => {
     if (supplier) {
       setFormData({
@@ -30,51 +36,69 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
         address: supplier.address || '',
         notes: supplier.notes || ''
       })
+    } else {
+      setFormData({
+        name: '',
+        contact: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: ''
+      })
     }
-  }, [supplier])
-
-  if (!isOpen || !supplier) return null
+  }, [supplier, isOpen])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit({
-      id: supplier.id,
-      ...formData
-    })
+    
+    if (isEditMode) {
+      onSubmit({
+        id: supplier.id,
+        ...formData
+      })
+    } else {
+      onSubmit(formData)
+      // Reset form for new suppliers
+      setFormData({
+        name: '',
+        contact: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: ''
+      })
+    }
   }
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const title = isEditMode ? 'Edit Supplier' : 'Add New Supplier'
+  const subtitle = isEditMode ? 'Update supplier information' : 'Add a new supplier to your network'
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                <FaTruck className="text-white text-lg" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Edit Supplier
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Update supplier information
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      showCloseButton={false}
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+          <FaTruck className="text-white text-lg" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {title}
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      
+      <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Supplier Name */}
@@ -86,7 +110,7 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Enter supplier name"
+                  placeholder="e.g., Dental Supply Co."
                   required
                 />
               </div>
@@ -100,7 +124,7 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
                   type="text"
                   value={formData.contact}
                   onChange={(e) => handleChange('contact', e.target.value)}
-                  placeholder="Contact person name"
+                  placeholder="e.g., John Smith"
                   required
                 />
               </div>
@@ -139,14 +163,14 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
                 <textarea
                   value={formData.address}
                   onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="Full address"
+                  placeholder="Full address with city and postal code"
                   rows={2}
-                  required
                   className={`w-full px-4 py-2 border rounded-lg ${
                     isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
+                  required
                 />
               </div>
 
@@ -158,42 +182,39 @@ const EditSupplierModal = ({ isOpen, onClose, onSubmit, supplier }) => {
                 <textarea
                   value={formData.notes}
                   onChange={(e) => handleChange('notes', e.target.value)}
-                  placeholder="Additional notes about this supplier"
+                  placeholder="Additional notes, payment terms, or special instructions"
                   rows={3}
                   className={`w-full px-4 py-2 border rounded-lg ${
                     isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                   }`}
                 />
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="flex-1"
               >
-                <FaTimes className="mr-2" />
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 <FaSave className="mr-2" />
-                Save Changes
+                {isEditMode ? 'Update Supplier' : 'Add Supplier'}
               </Button>
             </div>
           </form>
-        </Card.Content>
-      </Card>
-    </div>
+      </div>
+    </BaseModal>
   )
 }
 
-export default EditSupplierModal
+export default SupplierModal

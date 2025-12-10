@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { FaTimes, FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaUserTie, FaMapMarkerAlt } from 'react-icons/fa'
-import { Button, Input } from '../../common'
+import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaUserTie, FaMapMarkerAlt } from 'react-icons/fa'
+import { Button, Input, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { PALESTINIAN_CITIES } from '../../../utils/constants'
+import { validateEmail, validatePhone, validateAge, validatePassword } from '../../../utils/validation'
 
 const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
   const { isDarkMode } = useTheme()
@@ -17,15 +19,6 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
   })
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-
-  // Palestinian cities
-  const cities = [
-    'Acre', 'Al-Bireh', 'Beersheba', 'Beit Hanoun', 'Beit Jala', 'Beit Lahia',
-    'Beit Sahour', 'Bethlehem', 'Deir al-Balah', 'Gaza', 'Haifa', 'Hebron',
-    'Jabalya', 'Jaffa', 'Jenin', 'Jericho', 'Jerusalem', 'Khan Yunis',
-    'Lydd', 'Nablus', 'Nazareth', 'Qalqilya', 'Rafah', 'Ramallah',
-    'Ramla', 'Safad', 'Salfit', 'Tiberias', 'Tubas', 'Tulkarm'
-  ]
 
   useEffect(() => {
     if (secretary) {
@@ -72,36 +65,27 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address'
+    const emailError = validateEmail(formData.email)
+    if (emailError) {
+      newErrors.email = emailError
     }
 
     // Phone validation (Palestinian format)
-    const phoneRegex = /^(\+970|0)?[0-9]{8,9}$/
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid Palestinian phone number'
+    const phoneError = validatePhone(formData.phone)
+    if (phoneError) {
+      newErrors.phone = phoneError
     }
 
     // Age validation (minimum 18 years)
-    if (formData.birthDate) {
-      const today = new Date()
-      const birthDate = new Date(formData.birthDate)
-      let age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-      
-      if (age < 18) {
-        newErrors.birthDate = 'Secretary must be at least 18 years old'
-      }
+    const ageError = validateAge(formData.birthDate, 18)
+    if (ageError) {
+      newErrors.birthDate = ageError
     }
 
     // Password validation for new users
-    if (!secretary && formData.password && formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long'
+    const passwordError = validatePassword(formData.password, !secretary)
+    if (passwordError) {
+      newErrors.password = passwordError
     }
 
     setErrors(newErrors)
@@ -153,55 +137,20 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-transparent transition-opacity"
-        onClick={onClose}
-      />
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <FaUserTie className="w-6 h-6 text-teal-600" />
+        <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+          {secretary ? 'Edit Secretary' : 'Add New Secretary'}
+        </h2>
+      </div>
 
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col ${
-            isDarkMode
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
-              isDarkMode
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <FaUserTie className="w-6 h-6 text-teal-600" />
-              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {secretary ? 'Edit Secretary' : 'Add New Secretary'}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode
-                  ? "hover:bg-gray-700 text-gray-400 hover:text-gray-300"
-                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <FaTimes className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Form Container with Scroll */}
-          <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
             {/* General Error */}
             {errors.submit && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -379,7 +328,7 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
                   } ${errors.city ? 'border-red-500' : ''}`}
                 >
                   <option value="">Select city</option>
-                  {cities.map(city => (
+                  {PALESTINIAN_CITIES.map(city => (
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
@@ -410,35 +359,32 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className={`flex justify-end gap-3 pt-6 border-t ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          }`}>
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="outline"
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                secretary ? 'Update Secretary' : 'Add Secretary'
-              )}
-            </Button>
-          </div>
-          </form>
+        {/* Actions */}
+        <div className={`flex justify-end gap-3 pt-6 border-t ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="outline"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              secretary ? 'Update Secretary' : 'Add Secretary'
+            )}
+          </Button>
         </div>
-        </div>
-      </div>
-    </div>
+      </form>
+    </BaseModal>
   )
 }
 

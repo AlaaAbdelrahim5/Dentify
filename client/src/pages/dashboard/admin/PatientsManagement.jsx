@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   FaUser,
   FaPlus,
@@ -25,12 +25,14 @@ import {
   StatusBadge,
   ActionButtons,
   ConfirmationModal,
-  NewPatientModal,
-  EditPatientModal,
+  PatientModal,
   PatientDetailsModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI } from '../../../services/api'
+import { CITY_OPTIONS_LOWERCASE, GENDER_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
+import { calculateAge, capitalizeFirstLetter, formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
 
 const PatientsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -50,34 +52,11 @@ const PatientsManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [patientToAction, setPatientToAction] = useState(null)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     active: 0
   })
-
-  const cities = [
-    { value: 'ramallah', label: 'Ramallah' },
-    { value: 'jerusalem', label: 'Jerusalem' },
-    { value: 'bethlehem', label: 'Bethlehem' },
-    { value: 'hebron', label: 'Hebron' },
-    { value: 'nablus', label: 'Nablus' },
-    { value: 'jenin', label: 'Jenin' },
-    { value: 'gaza', label: 'Gaza' },
-    { value: 'khan_yunis', label: 'Khan Yunis' },
-    { value: 'rafah', label: 'Rafah' }
-  ]
-
-  const genderOptions = [
-    { value: 'Male', label: 'Male' },
-    { value: 'Female', label: 'Female' }
-  ]
-
-  const statusOptions = [
-    { value: 'ACTIVE', label: 'Active' },
-    { value: 'DEACTIVATED', label: 'Deactivated' }
-  ]
 
   // Fetch patients
   const fetchPatients = async (isFiltering = false) => {
@@ -150,23 +129,6 @@ const PatientsManagement = () => {
     }
   }
 
-  // Debounce search
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 500)
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
-
   // Initial load
   useEffect(() => {
     const loadData = async () => {
@@ -200,34 +162,6 @@ const PatientsManagement = () => {
     setCurrentPage(1)
   }, [debouncedSearchTerm, filterCity, filterStatus, filterGender])
 
-  // Format helpers
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A'
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    if (isNaN(birthDate.getTime())) return 'N/A'
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
-  }
-
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return ''
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-  }
-
   // Stats configuration
   const statsConfig = [
     {
@@ -256,24 +190,23 @@ const PatientsManagement = () => {
         placeholder: 'All Statuses',
         value: filterStatus,
         onChange: (e) => setFilterStatus(e.target.value),
-        options: statusOptions
+        options: STATUS_OPTIONS.filter(opt => opt.value !== 'PENDING' && opt.value !== 'REJECTED')
       },
       {
         placeholder: 'All Cities',
         value: filterCity,
         onChange: (e) => setFilterCity(e.target.value),
-        options: cities
+        options: CITY_OPTIONS_LOWERCASE
       },
       {
         placeholder: 'All Genders',
         value: filterGender,
         onChange: (e) => setFilterGender(e.target.value),
-        options: genderOptions
+        options: GENDER_OPTIONS
       }
     ],
     onClearFilters: () => {
       setSearchTerm('')
-      setDebouncedSearchTerm('')
       setFilterCity('')
       setFilterStatus('')
       setFilterGender('')
@@ -303,7 +236,7 @@ const PatientsManagement = () => {
             {patient.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
-                src={patient.user.profileImage.startsWith('data:') || patient.user.profileImage.startsWith('http') ? patient.user.profileImage : `http://localhost:5000${patient.user.profileImage}`}
+                src={getImageUrl(patient.user.profileImage)}
                 alt={`${patient.firstName} ${patient.lastName}`}
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -368,7 +301,7 @@ const PatientsManagement = () => {
 
       {/* Registration Date */}
       <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        {formatDate(patient.user?.createdAt)}
+        {formatDateHelper(patient.user?.createdAt)}
       </td>
 
       {/* Actions */}
@@ -454,10 +387,11 @@ const PatientsManagement = () => {
         />
       )}
 
-      {/* New Patient Modal */}
-      <NewPatientModal
+      {/* Patient Modal */}
+      <PatientModal
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
+        patientData={null}
           onSave={async (patientData) => {
           try {
             // Transform data to match API expectations
@@ -485,7 +419,7 @@ const PatientsManagement = () => {
 
       {/* Edit Patient Modal */}
       {selectedPatient && (
-        <EditPatientModal
+        <PatientModal
           isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false)

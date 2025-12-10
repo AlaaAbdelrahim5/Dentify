@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FaXRay, FaUser, FaCalendarAlt, FaHospital, FaStickyNote, FaTimes } from 'react-icons/fa'
 import { Card, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper } from '../../../utils/helpers'
 
 const RequestDetailsModal = ({ request, isOpen, onClose, onStatusUpdate }) => {
   const { isDarkMode } = useTheme()

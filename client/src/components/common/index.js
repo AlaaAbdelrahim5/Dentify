@@ -1,4 +1,5 @@
 // Common Components
+export { default as BaseModal } from './BaseModal'
 export { default as Button } from './Button'
 export { default as Input } from './Input'
 export { default as Select } from './Select'
@@ -10,7 +11,6 @@ export { default as FilterBar } from './FilterBar'
 export { default as DataTable } from './DataTable'
 export { default as Pagination } from './Pagination'
 export { default as ConfirmationModal } from './ConfirmationModal'
-export { default as DeleteConfirmationModal } from './DeleteConfirmationModal'
 export { default as StatusBadge } from './StatusBadge'
 export { default as ActionButtons } from './ActionButtons'
 export { default as PageHeader } from './PageHeader'

@@ -17,6 +17,9 @@ import {
   FaTimesCircle
 } from 'react-icons/fa'
 import { MdVerified, MdBlock } from 'react-icons/md'
+import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
+import { validateEmail } from '../../../utils/validation'
+import { useDebounce } from '../../../hooks'
 import { 
   Button, 
   Input, 
@@ -49,8 +52,7 @@ const AdminsManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const searchTimeoutRef = useRef(null)
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -129,23 +131,6 @@ const AdminsManagement = () => {
       alert(`An error occurred while ${action}ing the admin`)
     }
   }
-
-  // Debounce search
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 500)
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm])
 
   // Fetch data when filters change
   useEffect(() => {
@@ -252,7 +237,7 @@ const AdminsManagement = () => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {formatDate(admin.createdAt)}
+          {formatDateHelper(admin.createdAt)}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -340,7 +325,7 @@ const AdminsManagement = () => {
                   <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
                     {admin.userId?.profileImage ? (
                       <img 
-                        src={admin.userId.profileImage.startsWith('data:') || admin.userId.profileImage.startsWith('http') ? admin.userId.profileImage : `http://localhost:5000${admin.userId.profileImage}`}
+                        src={getImageUrl(admin.userId.profileImage)}
                         alt={admin.fullName}
                         className="w-24 h-24 rounded-full object-cover"
                         onError={(e) => {
@@ -426,7 +411,7 @@ const AdminsManagement = () => {
                         Created Date
                       </p>
                       <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {formatDate(admin.createdAt)}
+                        {formatDateHelper(admin.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -541,7 +526,7 @@ const AdminsManagement = () => {
 
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required'
-      } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      } else if (!validateEmail(formData.email)) {
         newErrors.email = 'Please enter a valid email address'
       }
 

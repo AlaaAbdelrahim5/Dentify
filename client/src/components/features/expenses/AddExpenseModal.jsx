@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, Input } from '../../common'
-import { FaTimes, FaSave, FaMoneyBillWave } from 'react-icons/fa'
+import { getTodayISO } from '../../../utils/helpers'
+import { Card, Button, Input, BaseModal } from '../../common'
+import { FaSave, FaMoneyBillWave } from 'react-icons/fa'
 
 /**
  * AddExpenseModal Component
@@ -18,8 +19,6 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
     status: 'paid',
     receiptNumber: ''
   })
-
-  if (!isOpen) return null
 
   const categories = [
     'Utilities',
@@ -65,33 +64,27 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-pink-600 flex items-center justify-center">
-                <FaMoneyBillWave className="text-white text-lg" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Add Expense
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Record a new clinic expense
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      showCloseButton={false}
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-pink-600 flex items-center justify-center">
+          <FaMoneyBillWave className="text-white text-lg" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Add Expense
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Record a new clinic expense
+          </p>
+        </div>
+      </div>
+      
+      <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Category */}
@@ -157,7 +150,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleChange('date', e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
+                  max={getTodayISO()}
                   required
                 />
               </div>
@@ -264,9 +257,8 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
               </Button>
             </div>
           </form>
-        </Card.Content>
-      </Card>
-    </div>
+      </div>
+    </BaseModal>
   )
 }
 

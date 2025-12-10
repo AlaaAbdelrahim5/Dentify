@@ -30,6 +30,7 @@ import {
 } from 'react-icons/fa'
 import { Button, StatusBadge, Card } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { calculateAge, formatDate } from '../../../utils/helpers'
 import TeethHistoryTab from '../treatment/TeethHistoryTab'
 import AppointmentsHistoryTab from '../appointment/AppointmentsHistoryTab'
 
@@ -47,27 +48,6 @@ const PatientDetailsModal = ({
   const [activeTab, setActiveTab] = useState('information')
 
   if (!isOpen || !patientData) return null
-
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A'
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not available'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
 
   const getStatusColor = (status) => {
     switch (status) {
