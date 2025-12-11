@@ -175,9 +175,11 @@ router.get('/', authenticate, async (req, res) => {
     if (search) {
       whereClause.AND.push({
         OR: [
-          { registrationNumber: { contains: search } },
-          { city: { contains: search } },
-          { user: { email: { contains: search } } }
+          { centerName: { contains: search, mode: 'insensitive' } },
+          { registrationNumber: { contains: search, mode: 'insensitive' } },
+          { city: { contains: search, mode: 'insensitive' } },
+          { location: { contains: search, mode: 'insensitive' } },
+          { user: { email: { contains: search, mode: 'insensitive' } } }
         ]
       });
     }

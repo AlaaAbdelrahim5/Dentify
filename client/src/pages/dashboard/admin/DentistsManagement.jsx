@@ -263,18 +263,18 @@ const DentistsManagement = () => {
     searchPlaceholder: 'Search dentists by name, license, or email...'
   }), [searchTerm, debouncedSearchTerm, filterStatus, filterCity, filterSpecialization, filtering])
 
-  // Table columns
-  const columns = [
+  // Table columns - use useMemo for performance
+  const columns = useMemo(() => [
     { key: 'dentist', label: 'Dentist' },
     { key: 'license', label: 'License & Specialization' },
     { key: 'clinic', label: 'Clinic & Location' },
     { key: 'status', label: 'Status' },
     { key: 'registration', label: 'Registration Date' },
     { key: 'actions', label: 'Actions' }
-  ]
+  ], [])
 
-  // Render table row
-  const renderRow = (dentist) => (
+  // Render table row - use useMemo to prevent recreation on every render
+  const renderRow = useMemo(() => (dentist) => (
     <tr key={dentist.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
       {/* Dentist Info */}
       <td className="px-6 py-4 whitespace-nowrap">
@@ -412,7 +412,7 @@ const DentistsManagement = () => {
         />
       </td>
     </tr>
-  )
+  ), [isDarkMode, setSelectedDentist, setShowDetailsModal, handleApproveDentist, handleRejectDentist, handleToggleStatus])
 
   // Using the reusable DentistDetailsModal component from components folder
 

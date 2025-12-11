@@ -33,7 +33,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
-import { CITY_OPTIONS_UNDERSCORE, STATUS_OPTIONS } from '../../../utils/constants'
+import { CITY_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
 import { useDebounce } from '../../../hooks'
 
 const RadiologyManagement = () => {
@@ -165,7 +165,6 @@ const RadiologyManagement = () => {
 
   const clearFilters = () => {
     setSearchTerm('')
-    setDebouncedSearchTerm('')
     setFilterCity('')
     setFilterStatus('')
     setCurrentPage(1)
@@ -253,12 +252,12 @@ const RadiologyManagement = () => {
     }
   ], [stats, loading])
 
-  // Filter configuration for FilterBar component
-  const filters = [
+  // Filter configuration for FilterBar component - use useMemo for performance
+  const filters = useMemo(() => [
     {
       value: filterCity,
       onChange: handleCityFilter,
-      options: CITY_OPTIONS_UNDERSCORE,
+      options: CITY_OPTIONS,
       placeholder: 'All Cities'
     },
     {
@@ -270,22 +269,22 @@ const RadiologyManagement = () => {
       ],
       placeholder: 'All Status'
     }
-  ]
+  ], [filterCity, filterStatus])
 
-  // Table columns configuration
-  const columns = [
+  // Table columns configuration - use useMemo for performance
+  const columns = useMemo(() => [
     { key: 'center', label: 'Center' },
     { key: 'location', label: 'Location' },
     { key: 'contact', label: 'Contact' },
     { key: 'services', label: 'Services' },
     { key: 'status', label: 'Status' },
     { key: 'actions', label: 'Actions' }
-  ]
+  ], [])
 
-  // Render table row
-  const renderRow = (center, index) => {
+  // Render table row - use useMemo to prevent recreation on every render
+  const renderRow = useMemo(() => (center, index) => {
     const isActive = center.user?.status === 'ACTIVE'
-    const cityLabel = CITY_OPTIONS_UNDERSCORE.find(c => c.value === center.city)?.label || center.city
+    const cityLabel = center.city
     
     const actions = [
       {
@@ -357,15 +356,13 @@ const RadiologyManagement = () => {
         </td>
       </tr>
     )
-  }
+  }, [isDarkMode, handleEditCenter, handleToggleCenterStatus])
 
   // Center Details Modal Component (keeping this inline as it's specific to radiology centers)
   const CenterDetailsModal = ({ center, onClose }) => {
     if (!center) return null
     
-    const getCityLabel = (cityValue) => {
-      return CITY_OPTIONS_UNDERSCORE.find(c => c.value === cityValue)?.label || cityValue
-    }
+    const cityLabel = center.city
 
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -507,7 +504,7 @@ const RadiologyManagement = () => {
                           City
                         </p>
                         <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {getCityLabel(center.city)}
+                          {cityLabel}
                         </p>
                       </div>
                     </div>
