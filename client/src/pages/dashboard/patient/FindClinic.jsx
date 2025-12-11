@@ -15,7 +15,8 @@ import {
   FilterBar,
   DataTable,
   ClinicDetailsModal,
-  BookAppointmentModal
+  BookAppointmentModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
@@ -24,6 +25,8 @@ const FindClinic = () => {
   const { isDarkMode } = useTheme()
   const [clinics, setClinics] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
   
   // Filter states
@@ -35,15 +38,27 @@ const FindClinic = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [toast, setToast] = useState(null)
 
-  // Fetch clinics on component mount
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchClinics(true)
+    }
+  }, [searchQuery, selectedCity])
+
+  // Initial load
   useEffect(() => {
     fetchClinics()
   }, [])
 
-  const fetchClinics = async () => {
+  const fetchClinics = async (isFiltering = false) => {
     try {
-      setIsLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setIsLoading(true)
+      }
       setError(null)
       
       const response = await clinicsAPI.getAll()
@@ -56,7 +71,12 @@ const FindClinic = () => {
       setError('Failed to load clinics. Please try again later.')
       setClinics([])
     } finally {
-      setIsLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setIsLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -192,27 +212,11 @@ const FindClinic = () => {
     try {
       await appointmentsAPI.create(appointmentData)
       setShowBookingModal(false)
-      // Optionally show a success message
-      alert('Appointment booked successfully!')
+      setToast({ message: 'Appointment booked successfully!', type: 'success' })
     } catch (err) {
       console.error('Error booking appointment:', err)
       throw err // Re-throw to let modal handle the error
     }
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Find a Clinic"
-          description="Search and browse dental clinics"
-        />
-        <div className="flex justify-center items-center h-96">
-          <LoadingSpinner />
-        </div>
-      </div>
-    )
   }
 
   // Error state
@@ -260,6 +264,7 @@ const FindClinic = () => {
         searchTerm={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
         searchPlaceholder="Search by clinic name, city, or address..."
+        filtering={filtering}
         filters={filters}
         onClearFilters={handleClearFilters}
       />
@@ -269,6 +274,7 @@ const FindClinic = () => {
         columns={tableColumns}
         data={filteredClinics}
         renderRow={renderTableRow}
+        loading={isLoading || filtering}
         emptyMessage="No clinics found matching your criteria"
         emptyIcon={FaBuilding}
         emptyTitle="No Clinics Found"
@@ -289,6 +295,15 @@ const FindClinic = () => {
         onSave={handleBookingSuccess}
         preselectedDoctor={selectedDentist}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

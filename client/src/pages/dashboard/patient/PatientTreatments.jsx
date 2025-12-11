@@ -26,9 +26,18 @@ const PatientTreatments = () => {
   // Data states
   const [treatments, setTreatments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
 
-  // Fetch data on mount
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchTreatments(true)
+    }
+  }, [debouncedSearchTerm, selectedStatus, activeView])
+
+  // Initial load
   useEffect(() => {
     fetchTreatments()
   }, [])
@@ -42,9 +51,13 @@ const PatientTreatments = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  const fetchTreatments = async () => {
+  const fetchTreatments = async (isFiltering = false) => {
     try {
-      setLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setLoading(true)
+      }
       setError(null)
       console.log('Fetching patient treatments...')
       const response = await treatmentsAPI.getPatientTreatments()
@@ -54,7 +67,12 @@ const PatientTreatments = () => {
       console.error('Error fetching treatments:', err)
       setError('Failed to load treatments. Please try again.')
     } finally {
-      setLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -109,6 +127,9 @@ const PatientTreatments = () => {
 
   // Calculate stats
   const stats = useMemo(() => {
+    if (loading) {
+      return { total: 0, active: 0, completed: 0, totalPaid: 0, pendingPayments: 0 }
+    }
     const total = displayTreatments.length
     const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
     const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
@@ -117,7 +138,7 @@ const PatientTreatments = () => {
       sum + calculateRemainingBalance(t.totalAmount, t.paidAmount), 0)
     
     return { total, active, completed, totalPaid, pendingPayments }
-  }, [displayTreatments])
+  }, [displayTreatments, loading])
 
 
 
@@ -158,12 +179,6 @@ const PatientTreatments = () => {
       />
 
       {/* Stats Overview */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : (
-        <>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
@@ -172,7 +187,7 @@ const PatientTreatments = () => {
                 Total Treatments
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {stats.total}
+                {loading ? '-' : stats.total}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
@@ -188,7 +203,7 @@ const PatientTreatments = () => {
                 Active
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {stats.active}
+                {loading ? '-' : stats.active}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
@@ -204,7 +219,7 @@ const PatientTreatments = () => {
                 Completed
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {stats.completed}
+                {loading ? '-' : stats.completed}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
@@ -220,7 +235,7 @@ const PatientTreatments = () => {
                 Total Paid
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                ${stats.totalPaid.toFixed(0)}
+                {loading ? '-' : `$${stats.totalPaid.toFixed(0)}`}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
@@ -236,7 +251,7 @@ const PatientTreatments = () => {
                 Pending
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                ${stats.pendingPayments.toFixed(0)}
+                {loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
@@ -249,7 +264,7 @@ const PatientTreatments = () => {
       {/* Filters and Controls */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <Input
               type="text"
               placeholder="Search treatments, dentist, or tooth numbers..."
@@ -257,6 +272,11 @@ const PatientTreatments = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               icon={FaSearch}
             />
+            {filtering && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <LoadingSpinner size="sm" />
+              </div>
+            )}
           </div>
           <div className="flex gap-4">
             <select
@@ -278,7 +298,7 @@ const PatientTreatments = () => {
       </Card>
 
       {/* Treatments Grid/List */}
-      {filteredTreatments.length === 0 ? (
+      {!loading && !filtering && filteredTreatments.length === 0 ? (
         <Card className="p-8">
           <div className="text-center py-12">
             <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
@@ -304,16 +324,20 @@ const PatientTreatments = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTreatments.map(treatment => (
-            <TreatmentPlanCard 
-              key={treatment.id} 
-              treatment={treatment}
-              onClick={() => {}}
-            />
-          ))}
+          {(loading || filtering) && filteredTreatments.length === 0 ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            filteredTreatments.map(treatment => (
+              <TreatmentPlanCard 
+                key={treatment.id} 
+                treatment={treatment}
+                onClick={() => {}}
+              />
+            ))
+          )}
         </div>
-      )}
-      </>
       )}
     </div>
   )

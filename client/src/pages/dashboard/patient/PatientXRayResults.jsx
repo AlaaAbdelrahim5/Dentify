@@ -29,6 +29,8 @@ const PatientXRayResults = () => {
   const { isDarkMode } = useTheme()
   const [requests, setRequests] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedImagingType, setSelectedImagingType] = useState('all')
@@ -36,7 +38,14 @@ const PatientXRayResults = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
 
-  // Fetch X-ray requests for current patient
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchXRayRequests(true)
+    }
+  }, [searchTerm, selectedStatus, selectedImagingType])
+
+  // Initial load
   useEffect(() => {
     fetchXRayRequests()
   }, [])
@@ -137,17 +146,24 @@ const PatientXRayResults = () => {
 
   // Calculate stats
   const stats = useMemo(() => {
+    if (isLoading) {
+      return { total: 0, requested: 0, inProgress: 0, completed: 0 }
+    }
     const total = requests.length
     const requested = requests.filter(r => r.status === 'REQUESTED').length
     const inProgress = requests.filter(r => r.status === 'IN_PROGRESS').length
     const completed = requests.filter(r => r.status === 'COMPLETED').length
     
     return { total, requested, inProgress, completed }
-  }, [requests])
+  }, [requests, isLoading])
 
-  const fetchXRayRequests = async () => {
+  const fetchXRayRequests = async (isFiltering = false) => {
     try {
-      setIsLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setIsLoading(true)
+      }
       const response = await patientsAPI.getMyRadiologyRequests()
       console.log('Radiology requests response:', response)
       setRequests(response.data || [])
@@ -155,7 +171,12 @@ const PatientXRayResults = () => {
       console.error('Error fetching X-ray requests:', error)
       setRequests([])
     } finally {
-      setIsLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setIsLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -316,25 +337,6 @@ const PatientXRayResults = () => {
     </Card>
   )
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-          <p className={`mt-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            Loading X-ray results...
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -357,25 +359,25 @@ const PatientXRayResults = () => {
       <StatsOverview stats={[
         { 
           label: 'Total Requests', 
-          value: stats.total, 
+          value: isLoading ? '-' : stats.total, 
           icon: FaXRay, 
           gradient: 'from-blue-600 to-cyan-600' 
         },
         { 
           label: 'Requested', 
-          value: stats.requested, 
+          value: isLoading ? '-' : stats.requested, 
           icon: MdPendingActions, 
           gradient: 'from-yellow-600 to-orange-600' 
         },
         { 
           label: 'In Progress', 
-          value: stats.inProgress, 
+          value: isLoading ? '-' : stats.inProgress, 
           icon: FaClock, 
           gradient: 'from-blue-600 to-indigo-600' 
         },
         { 
           label: 'Completed', 
-          value: stats.completed, 
+          value: isLoading ? '-' : stats.completed, 
           icon: FaCheckCircle, 
           gradient: 'from-green-600 to-teal-600' 
         }
@@ -389,6 +391,7 @@ const PatientXRayResults = () => {
               searchTerm={searchTerm}
               onSearchChange={(e) => setSearchTerm(e.target.value)}
               searchPlaceholder="Search by dentist, radiology center, or imaging type..."
+              filtering={filtering}
               filters={[
                 {
                   value: selectedStatus,
@@ -449,7 +452,7 @@ const PatientXRayResults = () => {
       </Card>
 
       {/* Requests - Table or Grid View */}
-      {filteredRequests.length === 0 ? (
+      {!isLoading && !filtering && filteredRequests.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
@@ -480,6 +483,7 @@ const PatientXRayResults = () => {
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <DataTable
+                loading={isLoading || filtering}
                 columns={[
                   {
                     label: 'Imaging Type',

@@ -26,7 +26,8 @@ import {
   StatusBadge,
   LoadingSpinner,
   BookAppointmentModal,
-  ConfirmationModal
+  ConfirmationModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
@@ -42,16 +43,30 @@ const PatientAppointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
-  // Fetch appointments on mount
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchAppointments(true)
+    }
+  }, [searchTerm, selectedStatus, activeView])
+
+  // Initial load
   useEffect(() => {
     fetchAppointments()
   }, [])
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (isFiltering = false) => {
     try {
-      setLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setLoading(true)
+      }
       setError(null)
       const response = await appointmentsAPI.getMyAppointments()
       setAppointments(response.appointments || [])
@@ -59,7 +74,12 @@ const PatientAppointments = () => {
       console.error('Error fetching appointments:', err)
       setError('Failed to load appointments. Please try again.')
     } finally {
-      setLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -108,6 +128,7 @@ const PatientAppointments = () => {
       await appointmentsAPI.create(appointmentData)
       await fetchAppointments()
       setIsBookModalOpen(false)
+      setToast({ message: 'Appointment booked successfully!', type: 'success' })
     } catch (err) {
       console.error('Error creating appointment:', err)
       // Re-throw the error so the modal knows it failed
@@ -131,9 +152,10 @@ const PatientAppointments = () => {
       await fetchAppointments()
       setIsCancelModalOpen(false)
       setSelectedAppointment(null)
+      setToast({ message: 'Appointment cancelled successfully!', type: 'success' })
     } catch (err) {
       console.error('Error cancelling appointment:', err)
-      alert('Failed to cancel appointment. Please try again.')
+      setToast({ message: 'Failed to cancel appointment. Please try again.', type: 'error' })
     }
   }
 
@@ -159,32 +181,62 @@ const PatientAppointments = () => {
   const displayAppointments = activeView === 'upcoming' ? upcomingAppointments : pastAppointments
 
   // Computed stats
-  const stats = useMemo(() => [
-    {
-      label: 'Upcoming',
-      value: upcomingAppointments.length,
-      icon: FaCalendarAlt,
-      gradient: 'from-teal-600 to-cyan-600'
-    },
-    {
-      label: 'Confirmed',
-      value: upcomingAppointments.filter(a => a.status === 'CONFIRMED').length,
-      icon: FaCheckCircle,
-      gradient: 'from-green-600 to-emerald-600'
-    },
-    {
-      label: 'Pending',
-      value: upcomingAppointments.filter(a => a.status === 'PENDING').length,
-      icon: FaHourglassHalf,
-      gradient: 'from-yellow-600 to-orange-600'
-    },
-    {
-      label: 'Total Visits',
-      value: pastAppointments.filter(a => a.status === 'COMPLETED').length,
-      icon: FaCheckCircle,
-      gradient: 'from-blue-600 to-indigo-600'
+  const stats = useMemo(() => {
+    if (loading) {
+      return [
+        {
+          label: 'Upcoming',
+          value: '-',
+          icon: FaCalendarAlt,
+          gradient: 'from-teal-600 to-cyan-600'
+        },
+        {
+          label: 'Confirmed',
+          value: '-',
+          icon: FaCheckCircle,
+          gradient: 'from-green-600 to-emerald-600'
+        },
+        {
+          label: 'Pending',
+          value: '-',
+          icon: FaHourglassHalf,
+          gradient: 'from-yellow-600 to-orange-600'
+        },
+        {
+          label: 'Total Visits',
+          value: '-',
+          icon: FaCheckCircle,
+          gradient: 'from-blue-600 to-indigo-600'
+        }
+      ]
     }
-  ], [upcomingAppointments, pastAppointments])
+    return [
+      {
+        label: 'Upcoming',
+        value: upcomingAppointments.length,
+        icon: FaCalendarAlt,
+        gradient: 'from-teal-600 to-cyan-600'
+      },
+      {
+        label: 'Confirmed',
+        value: upcomingAppointments.filter(a => a.status === 'CONFIRMED').length,
+        icon: FaCheckCircle,
+        gradient: 'from-green-600 to-emerald-600'
+      },
+      {
+        label: 'Pending',
+        value: upcomingAppointments.filter(a => a.status === 'PENDING').length,
+        icon: FaHourglassHalf,
+        gradient: 'from-yellow-600 to-orange-600'
+      },
+      {
+        label: 'Total Visits',
+        value: pastAppointments.filter(a => a.status === 'COMPLETED').length,
+        icon: FaCheckCircle,
+        gradient: 'from-blue-600 to-indigo-600'
+      }
+    ]
+  }, [upcomingAppointments, pastAppointments, loading])
 
   // Filtered appointments
   const filteredAppointments = useMemo(() => {
@@ -476,22 +528,19 @@ const PatientAppointments = () => {
         searchTerm={searchTerm}
         onSearchChange={(e) => setSearchTerm(e.target.value)}
         searchPlaceholder="Search by treatment, dentist, or clinic..."
+        filtering={filtering}
         filters={filters}
         onClearFilters={handleClearFilters}
       />
 
       {/* Appointments Table */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner />
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="flex flex-col items-center justify-center py-12 space-y-4">
           <div className={`text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             <p className="text-lg font-semibold mb-2">Error Loading Appointments</p>
             <p>{error}</p>
           </div>
-          <Button onClick={fetchAppointments} className="bg-gradient-to-r from-teal-600 to-cyan-600">
+          <Button onClick={() => fetchAppointments()} className="bg-gradient-to-r from-teal-600 to-cyan-600">
             Try Again
           </Button>
         </div>
@@ -500,6 +549,7 @@ const PatientAppointments = () => {
           columns={tableColumns}
           data={filteredAppointments}
           renderRow={renderTableRow}
+          loading={loading || filtering}
           emptyMessage={
             activeView === 'upcoming' 
               ? "No upcoming appointments. Book your next dental visit!" 
@@ -531,6 +581,14 @@ const PatientAppointments = () => {
         itemName={selectedAppointment ? `appointment with Dr. ${selectedAppointment.dentist?.firstName} ${selectedAppointment.dentist?.lastName} on ${new Date(selectedAppointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
         itemType="Appointment"
       />
+
+      {/* Toast Notification */}      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

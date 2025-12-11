@@ -19,7 +19,8 @@ import {
   LoadingSpinner,
   FilterBar,
   DataTable,
-  BookAppointmentModal
+  BookAppointmentModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
@@ -28,6 +29,8 @@ const FindDoctor = () => {
   const { isDarkMode } = useTheme()
   const [doctors, setDoctors] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
   
   // Filter states
@@ -39,15 +42,27 @@ const FindDoctor = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [toast, setToast] = useState(null)
 
-  // Fetch doctors on component mount
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchDoctors(true)
+    }
+  }, [searchQuery, selectedSpecialty, selectedLocation])
+
+  // Initial load
   useEffect(() => {
     fetchDoctors()
   }, [])
 
-  const fetchDoctors = async () => {
+  const fetchDoctors = async (isFiltering = false) => {
     try {
-      setIsLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setIsLoading(true)
+      }
       setError(null)
       
       const response = await dentistsAPI.getAll({ limit: 1000, includeAll: 'true' })
@@ -60,7 +75,12 @@ const FindDoctor = () => {
       setError('Failed to load doctors. Please try again later.')
       setDoctors([])
     } finally {
-      setIsLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setIsLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -223,27 +243,11 @@ const FindDoctor = () => {
     try {
       await appointmentsAPI.create(appointmentData)
       setShowBookingModal(false)
-      // Optionally show a success message
-      alert('Appointment booked successfully!')
+      setToast({ message: 'Appointment booked successfully!', type: 'success' })
     } catch (err) {
       console.error('Error booking appointment:', err)
       throw err // Re-throw to let modal handle the error
     }
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Find a Dentist"
-          description="Search and browse qualified dentists"
-        />
-        <div className="flex justify-center items-center h-96">
-          <LoadingSpinner />
-        </div>
-      </div>
-    )
   }
 
   // Error state
@@ -291,6 +295,7 @@ const FindDoctor = () => {
         searchTerm={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
         searchPlaceholder="Search by dentist name, clinic, or specialty..."
+        filtering={filtering}
         filters={filters}
         onClearFilters={handleClearFilters}
       />
@@ -300,6 +305,7 @@ const FindDoctor = () => {
         columns={tableColumns}
         data={filteredDoctors}
         renderRow={renderTableRow}
+        loading={isLoading || filtering}
         emptyMessage="No dentists found matching your criteria"
         emptyIcon={FaUserMd}
         emptyTitle="No Dentists Found"
@@ -485,6 +491,15 @@ const FindDoctor = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

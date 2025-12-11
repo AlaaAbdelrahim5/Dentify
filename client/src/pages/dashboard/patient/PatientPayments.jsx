@@ -28,16 +28,29 @@ const PatientPayments = () => {
   const [payments, setPayments] = useState([])
   const [treatments, setTreatments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
 
-  // Fetch data on mount
+  // Fetch data when filters change
+  useEffect(() => {
+    if (!isFirstLoad) {
+      fetchAllData(true)
+    }
+  }, [searchTerm, selectedPaymentMethod, selectedDateRange, selectedTreatment])
+
+  // Initial load
   useEffect(() => {
     fetchAllData()
   }, [])
 
-  const fetchAllData = async () => {
+  const fetchAllData = async (isFiltering = false) => {
     try {
-      setLoading(true)
+      if (isFiltering) {
+        setFiltering(true)
+      } else {
+        setLoading(true)
+      }
       setError(null)
       const [paymentsRes, treatmentsRes] = await Promise.all([
         paymentsAPI.getPatientPayments(),
@@ -49,7 +62,12 @@ const PatientPayments = () => {
       console.error('Error fetching data:', err)
       setError('Failed to load data. Please try again.')
     } finally {
-      setLoading(false)
+      if (isFiltering) {
+        setFiltering(false)
+      } else {
+        setLoading(false)
+        setIsFirstLoad(false)
+      }
     }
   }
 
@@ -113,6 +131,9 @@ const PatientPayments = () => {
   })
 
   const getStats = () => {
+    if (loading) {
+      return { total: 0, cashPayments: 0, cardPayments: 0, count: 0 }
+    }
     const dateFilteredPayments = filterPaymentsByDate(mockPayments)
     const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
     const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
@@ -233,36 +254,30 @@ const PatientPayments = () => {
       />
 
       {/* Stats Overview */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-        </div>
-      ) : (
-        <>
       <StatsOverview stats={[
         {
           label: `${selectedDateRange === 'all' ? 'Total' : 
                    selectedDateRange === 'today' ? 'Today' :
                    selectedDateRange === 'week' ? 'This Week' : 'This Month'} Paid`,
-          value: `$${stats.total.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.total.toFixed(2)}`,
           icon: FaDollarSign,
           gradient: 'from-green-600 to-green-700'
         },
         {
           label: 'Cash Payments',
-          value: `$${stats.cashPayments.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.cashPayments.toFixed(2)}`,
           icon: FaMoneyBillWave,
           gradient: 'from-emerald-600 to-emerald-700'
         },
         {
           label: 'Card Payments',
-          value: `$${stats.cardPayments.toFixed(2)}`,
+          value: loading ? '-' : `$${stats.cardPayments.toFixed(2)}`,
           icon: FaCreditCard,
           gradient: 'from-blue-600 to-blue-700'
         },
         {
           label: 'Transactions',
-          value: stats.count,
+          value: loading ? '-' : stats.count,
           icon: FaChartLine,
           gradient: 'from-purple-600 to-purple-700'
         }
@@ -274,6 +289,7 @@ const PatientPayments = () => {
           searchTerm={searchTerm}
           onSearchChange={(e) => setSearchTerm(e.target.value)}
           searchPlaceholder="Search by dentist name or treatment..."
+          filtering={filtering}
           filters={[
             {
               value: selectedDateRange,
@@ -315,7 +331,7 @@ const PatientPayments = () => {
 
       {/* Payments Table */}
       <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        {filteredPayments.length === 0 ? (
+        {!loading && !filtering && filteredPayments.length === 0 ? (
           <div className="p-8 text-center">
             <FaMoneyBillWave className={`w-12 h-12 mx-auto mb-4 ${
               isDarkMode ? 'text-gray-500' : 'text-gray-400'
@@ -335,12 +351,11 @@ const PatientPayments = () => {
           <DataTable
             columns={columns}
             data={filteredPayments}
+            loading={loading || filtering}
             emptyMessage="No payments found"
           />
         )}
       </Card>
-      </>
-      )}
     </div>
   )
 }
