@@ -30,7 +30,8 @@ import {
   StatusBadge,
   ActionButtons,
   ConfirmationModal,
-  DentistDetailsModal
+  DentistDetailsModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
@@ -55,6 +56,7 @@ const DentistsManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null)
   const [dentistToAction, setDentistToAction] = useState(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
     pending: '-',
@@ -167,13 +169,14 @@ const DentistsManagement = () => {
         setShowConfirmModal(false)
         setDentistToAction(null)
         setConfirmAction(null)
+        setToast({ message: `Dentist ${action}d successfully`, type: 'success' })
       } else {
-        alert(response?.message || `Failed to ${action} dentist`)
+        setToast({ message: response?.message || `Failed to ${action} dentist`, type: 'error' })
         setShowConfirmModal(false)
       }
     } catch (error) {
       console.error(`Error ${action}ing dentist:`, error)
-      alert(`Failed to ${action} dentist`)
+      setToast({ message: `Failed to ${action} dentist`, type: 'error' })
       setShowConfirmModal(false)
     }
   }
@@ -469,6 +472,15 @@ const DentistsManagement = () => {
         itemName={dentistToAction ? `Dr. ${dentistToAction.firstName} ${dentistToAction.lastName}` : ''}
         itemType="dentist"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

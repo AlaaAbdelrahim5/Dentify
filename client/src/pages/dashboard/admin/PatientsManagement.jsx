@@ -26,7 +26,8 @@ import {
   ActionButtons,
   ConfirmationModal,
   PatientModal,
-  PatientDetailsModal
+  PatientDetailsModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI } from '../../../services/api'
@@ -53,6 +54,7 @@ const PatientsManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null)
   const [patientToAction, setPatientToAction] = useState(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
     active: '-'
@@ -129,9 +131,10 @@ const PatientsManagement = () => {
       setShowConfirmModal(false)
       setPatientToAction(null)
       setConfirmAction(null)
+      setToast({ message: `Patient ${action}d successfully`, type: 'success' })
     } catch (error) {
       console.error(`Error ${action}ing patient:`, error)
-      alert(`Failed to ${action} patient`)
+      setToast({ message: `Failed to ${action} patient`, type: 'error' })
       setShowConfirmModal(false)
     }
   }
@@ -421,10 +424,11 @@ const PatientsManagement = () => {
             setShowNewModal(false)
             fetchPatients(true)
             fetchStats()
+            setToast({ message: 'Patient created successfully', type: 'success' })
           } catch (error) {
             console.error('Error creating patient:', error)
             const errorMessage = error.response?.data?.error || error.message || 'Failed to create patient'
-            alert(errorMessage)
+            setToast({ message: errorMessage, type: 'error' })
           }
         }}
       />
@@ -459,10 +463,11 @@ const PatientsManagement = () => {
               setSelectedPatient(null)
               fetchPatients(true)
               fetchStats()
+              setToast({ message: 'Patient updated successfully', type: 'success' })
             } catch (error) {
               console.error('Error updating patient:', error)
               const errorMessage = error.response?.data?.error || error.message || 'Failed to update patient'
-              alert(errorMessage)
+              setToast({ message: errorMessage, type: 'error' })
             }
           }}
         />
@@ -510,6 +515,15 @@ const PatientsManagement = () => {
         itemName={patientToAction ? `${patientToAction.firstName} ${patientToAction.lastName}` : ''}
         itemType="patient"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
