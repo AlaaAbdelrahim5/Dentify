@@ -34,7 +34,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI } from '../../../services/api'
-import { CITY_OPTIONS_LOWERCASE } from '../../../utils/constants'
+import { CITY_OPTIONS } from '../../../utils/constants'
 import { useDebounce } from '../../../hooks'
 
 const ClinicsManagement = () => {
@@ -158,7 +158,6 @@ const ClinicsManagement = () => {
 
   const clearFilters = () => {
     setSearchTerm('')
-    setDebouncedSearchTerm('')
     setFilterCity('')
     setFilterStatus('')
     setCurrentPage(1)
@@ -274,7 +273,7 @@ const ClinicsManagement = () => {
     {
       value: filterCity,
       onChange: handleCityFilter,
-      options: CITY_OPTIONS_LOWERCASE,
+      options: CITY_OPTIONS,
       placeholder: 'All Cities'
     },
     {
@@ -301,7 +300,7 @@ const ClinicsManagement = () => {
   // Render table row
   const renderRow = (clinic, index) => {
     const isActive = clinic.user?.status === 'ACTIVE'
-    const cityLabel = CITY_OPTIONS_LOWERCASE.find(c => c.value === clinic.city)?.label || clinic.city
+    const cityLabel = clinic.city
     
     const actions = [
       {
