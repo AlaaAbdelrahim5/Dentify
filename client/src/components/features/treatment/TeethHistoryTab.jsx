@@ -20,6 +20,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
   const [selectedTooth, setSelectedTooth] = useState(null)
   const [conditionFilter, setConditionFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
+  const [expandedEntry, setExpandedEntry] = useState(null)
 
   // Aggregate all teeth history from all treatments
   const teethHistoryMap = useMemo(() => {
