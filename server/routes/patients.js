@@ -13,11 +13,20 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
         status: 'ACTIVE'
       }
     });
+    const inactive = await prisma.user.count({
+      where: {
+        role: 'Patient',
+        status: {
+          in: ['DEACTIVATED', 'PENDING', 'DELETED']
+        }
+      }
+    });
 
     res.json({ 
       data: {
         total,
-        active
+        active,
+        inactive
       }
     });
   } catch (error) {

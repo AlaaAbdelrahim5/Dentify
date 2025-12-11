@@ -57,7 +57,8 @@ const PatientsManagement = () => {
   const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
-    active: '-'
+    active: '-',
+    inactive: '-'
   })
   const [error, setError] = useState(null)
 
@@ -100,7 +101,8 @@ const PatientsManagement = () => {
       if (response.data) {
         setStats({
           total: response.data.total || 0,
-          active: response.data.active || 0
+          active: response.data.active || 0,
+          inactive: response.data.pending || response.data.inactive || response.data.deactivated || 0
         })
       }
     } catch (error) {
@@ -186,15 +188,19 @@ const PatientsManagement = () => {
       label: 'Total Patients',
       value: loading ? '-' : stats.total,
       icon: FaUsers,
-      gradient: 'from-teal-600 to-cyan-600',
-      cols: 1
+      gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Active Patients',
       value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
-      gradient: 'from-green-600 to-green-700',
-      cols: 1
+      gradient: 'from-green-600 to-green-700'
+    },
+    {
+      label: 'Inactive Patients',
+      value: loading ? '-' : stats.inactive,
+      icon: FaTimesCircle,
+      gradient: 'from-red-600 to-red-700'
     }
   ], [stats, loading])
 
