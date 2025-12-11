@@ -32,7 +32,8 @@ import {
   Pagination,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { adminAPI } from '../../../services/api'
@@ -53,6 +54,7 @@ const AdminsManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
     active: '-',
@@ -123,12 +125,13 @@ const AdminsManagement = () => {
         setShowConfirmModal(false)
         setSelectedAdmin(null)
         setConfirmAction(null)
+        setToast({ message: `Admin ${action}d successfully`, type: 'success' })
       } else {
-        alert(response.message || `Failed to ${action} admin`)
+        setToast({ message: response.message || `Failed to ${action} admin`, type: 'error' })
       }
     } catch (error) {
       console.error(`Error ${action}ing admin:`, error)
-      alert(`An error occurred while ${action}ing the admin`)
+      setToast({ message: `An error occurred while ${action}ing the admin`, type: 'error' })
     }
   }
 
@@ -848,7 +851,7 @@ const AdminsManagement = () => {
           // Refresh the admins list
           fetchAdmins()
           // Show success message
-          console.log(`Admin ${action} successfully:`, newAdmin)
+          setToast({ message: `Admin ${action} successfully`, type: 'success' })
         }}
       />
 
@@ -857,6 +860,15 @@ const AdminsManagement = () => {
         itemType="Admin"
         {...confirmProps}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

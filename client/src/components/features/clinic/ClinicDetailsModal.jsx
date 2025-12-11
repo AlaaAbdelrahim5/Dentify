@@ -10,7 +10,8 @@ import {
   FaCalendarPlus,
   FaEye,
   FaStethoscope,
-  FaGlobe
+  FaGlobe,
+  FaTimes
 } from 'react-icons/fa'
 import { Card, Button, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -26,6 +27,9 @@ const ClinicDetailsModal = ({
   const [dentists, setDentists] = useState([])
   const [isLoadingDentists, setIsLoadingDentists] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
+  
+  // Determine if clinic is active
+  const isActive = clinic?.user?.status === 'ACTIVE'
 
   useEffect(() => {
     if (isOpen && clinic) {
@@ -127,6 +131,16 @@ const ClinicDetailsModal = ({
               </p>
             </div>
           </div>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode
+                ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
+                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
@@ -219,14 +233,14 @@ const ClinicDetailsModal = ({
                 </p>
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${
-                    clinic.isActive ? 'bg-green-500' : 'bg-red-500'
+                    isActive ? 'bg-green-500' : 'bg-red-500'
                   }`}></span>
                   <p className={`font-semibold ${
-                    clinic.isActive 
+                    isActive 
                       ? isDarkMode ? 'text-green-400' : 'text-green-600'
                       : isDarkMode ? 'text-red-400' : 'text-red-600'
                   }`}>
-                    {clinic.isActive ? 'Active' : 'Inactive'}
+                    {isActive ? 'Active' : 'Inactive'}
                   </p>
                 </div>
               </div>

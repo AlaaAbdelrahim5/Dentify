@@ -29,7 +29,8 @@ import {
   Pagination,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI } from '../../../services/api'
@@ -54,6 +55,7 @@ const ClinicsManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
     active: '-',
@@ -190,12 +192,14 @@ const ClinicsManagement = () => {
       // Refresh the list to show new clinic
       fetchClinics(true) // Use filtering state instead of full loading
       fetchStats()
+      setToast({ message: 'Clinic created successfully', type: 'success' })
     } else if (action === 'updated') {
       // Update the clinic in the current list
       setClinics(prev => prev.map(clinic => 
         clinic._id === savedClinic._id ? savedClinic : clinic
       ))
       fetchStats()
+      setToast({ message: 'Clinic updated successfully', type: 'success' })
     }
   }
 
@@ -210,7 +214,8 @@ const ClinicsManagement = () => {
   }
 
   const handleToggleClinicStatus = async (clinic) => {
-    const action = clinic.isActive ? 'deactivate' : 'activate'
+    const isActive = clinic.user?.status === 'ACTIVE'
+    const action = isActive ? 'deactivate' : 'activate'
     
     setSelectedClinic(clinic)
     setConfirmAction(action)
@@ -222,8 +227,8 @@ const ClinicsManagement = () => {
     const action = confirmAction
 
     try {
-      console.log('Toggling clinic status for clinic ID:', clinic._id)
-      const response = await clinicsAPI.toggleStatus(clinic._id)
+      console.log('Toggling clinic status for clinic ID:', clinic.userId)
+      const response = await clinicsAPI.toggleStatus(clinic.userId)
       console.log('Toggle status response:', response)
 
       if (response.success) {
@@ -232,13 +237,13 @@ const ClinicsManagement = () => {
         setConfirmAction(null)
         fetchClinics(true)
         fetchStats()
-        // You can add a success toast notification here instead of alert
+        setToast({ message: `Clinic ${action}d successfully`, type: 'success' })
       } else {
-        alert(`Failed to ${action} clinic: ` + (response.error || response.message || 'Unknown error'))
+        setToast({ message: `Failed to ${action} clinic: ` + (response.error || response.message || 'Unknown error'), type: 'error' })
       }
     } catch (error) {
       console.error(`Error ${action}ing clinic:`, error)
-      alert(`Network error. Please try again. Details: ${error.message}`)
+      setToast({ message: `Network error. Please try again.`, type: 'error' })
     }
   }
 
@@ -465,6 +470,15 @@ const ClinicsManagement = () => {
         itemName={selectedClinic?.name}
         itemType="Clinic"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

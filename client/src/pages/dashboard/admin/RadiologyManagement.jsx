@@ -28,7 +28,8 @@ import {
   Pagination,
   StatusBadge,
   ActionButtons,
-  ConfirmationModal
+  ConfirmationModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
@@ -53,6 +54,7 @@ const RadiologyManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: '-',
     active: '-',
@@ -174,12 +176,14 @@ const RadiologyManagement = () => {
       // Refresh the list to show new center
       fetchCenters(true) // Use filtering state instead of full loading
       fetchStats()
+      setToast({ message: 'Radiology center created successfully', type: 'success' })
     } else if (action === 'updated') {
       // Update the center in the current list
       setCenters(prev => prev.map(center => 
         center._id === savedCenter._id ? savedCenter : center
       ))
       fetchStats()
+      setToast({ message: 'Radiology center updated successfully', type: 'success' })
     }
   }
 
@@ -217,12 +221,13 @@ const RadiologyManagement = () => {
         setConfirmAction(null)
         fetchCenters(true)
         fetchStats()
+        setToast({ message: `Radiology center ${action}d successfully`, type: 'success' })
       } else {
-        alert(`Failed to ${action} center: ` + (response.error || response.message || 'Unknown error'))
+        setToast({ message: `Failed to ${action} center: ` + (response.error || response.message || 'Unknown error'), type: 'error' })
       }
     } catch (error) {
       console.error(`Error ${action}ing center:`, error)
-      alert(`Network error. Please try again. Details: ${error.message}`)
+      setToast({ message: `Network error. Please try again.`, type: 'error' })
     }
   }
 
@@ -763,6 +768,15 @@ const RadiologyManagement = () => {
         itemName={selectedCenter?.name}
         itemType="Radiology Center"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
