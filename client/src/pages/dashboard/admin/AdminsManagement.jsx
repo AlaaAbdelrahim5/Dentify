@@ -526,8 +526,11 @@ const AdminsManagement = () => {
 
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required'
-      } else if (!validateEmail(formData.email)) {
-        newErrors.email = 'Please enter a valid email address'
+      } else {
+        const emailError = validateEmail(formData.email)
+        if (emailError) {
+          newErrors.email = emailError
+        }
       }
 
       if (!formData.password.trim()) {
