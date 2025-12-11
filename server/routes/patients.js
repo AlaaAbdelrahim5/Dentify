@@ -341,4 +341,53 @@ router.put('/:id', authenticate, async (req, res) => {
   }
 });
 
+// Toggle patient status (activate/deactivate)
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if patient exists
+    const existingPatient = await prisma.patient.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingPatient) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Patient not found' 
+      });
+    }
+
+    // Toggle status: ACTIVE <-> DEACTIVATED
+    const currentStatus = existingPatient.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    const message = newStatus === 'ACTIVE' ? 'Patient activated successfully' : 'Patient deactivated successfully';
+    return res.json({ 
+      success: true,
+      data: { status: newStatus },
+      message 
+    });
+  } catch (error) {
+    console.error('Error toggling patient status:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to toggle patient status' 
+    });
+  }
+});
+
 module.exports = router;

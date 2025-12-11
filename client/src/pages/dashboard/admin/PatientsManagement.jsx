@@ -122,16 +122,19 @@ const PatientsManagement = () => {
     const action = confirmAction
 
     try {
-      // Here you would call an API to toggle patient status
-      // For now, we'll just refresh the list
-      // const response = await patientsAPI.toggleStatus(patient.userId)
+      const response = await patientsAPI.toggleStatus(patient.userId)
       
-      // Refresh the list and stats
-      await Promise.all([fetchPatients(true), fetchStats()])
-      setShowConfirmModal(false)
-      setPatientToAction(null)
-      setConfirmAction(null)
-      setToast({ message: `Patient ${action}d successfully`, type: 'success' })
+      if (response && response.success) {
+        // Refresh the list and stats
+        await Promise.all([fetchPatients(true), fetchStats()])
+        setShowConfirmModal(false)
+        setPatientToAction(null)
+        setConfirmAction(null)
+        setToast({ message: `Patient ${action}d successfully`, type: 'success' })
+      } else {
+        setToast({ message: response?.message || `Failed to ${action} patient`, type: 'error' })
+        setShowConfirmModal(false)
+      }
     } catch (error) {
       console.error(`Error ${action}ing patient:`, error)
       setToast({ message: `Failed to ${action} patient`, type: 'error' })

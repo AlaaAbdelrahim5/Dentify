@@ -273,6 +273,9 @@ export const patientsAPI = {
   // Delete patient
   delete: (id) => ApiService.delete(`/patients/${id}`),
   
+  // Toggle patient status (activate/deactivate)
+  toggleStatus: (id) => ApiService.patch(`/patients/${id}/toggle-status`),
+  
   // Get current patient profile (for patient users)
   getMyProfile: () => ApiService.get('/patients/me'),
   
