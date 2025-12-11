@@ -489,6 +489,9 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
     }
   }
 
+  const statusInfo = getStatusInfo(dentistData.user?.status || dentistData.userId?.status)
+  const StatusIcon = statusInfo.icon
+
   return (
     <BaseModal
       isOpen={isOpen}
@@ -497,29 +500,49 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
       showCloseButton={false}
       noPadding={true}
     >
-      {/* Header */}
-      <div className={`px-8 py-6 border-b ${
-        isDarkMode 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white border-gray-200'
-      }`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-              <FaUser className="text-white text-2xl" />
+      {/* Header with gradient */}
+      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-6">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-lg transition-colors hover:bg-white/10 text-white"
+        >
+          <FaTimes className="w-4 h-4" />
+        </button>
+
+        {/* Profile section */}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+              <FaUser className="text-teal-600 text-2xl" />
             </div>
-            <div>
-              <h2 className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                Dr. {dentistData.firstName} {dentistData.lastName}
-              </h2>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                License: {dentistData.licenseNumber}
-              </p>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+              <StatusIcon className={`w-3 h-3 ${
+                dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE' 
+                  ? 'text-green-600' 
+                  : dentistData.user?.status === 'PENDING' || dentistData.userId?.status === 'PENDING'
+                  ? 'text-yellow-600'
+                  : 'text-red-600'
+              }`} />
             </div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-white">
+              Dr. {dentistData.firstName} {dentistData.lastName}
+            </h2>
+            <p className="text-white/90 text-sm">
+              Dentist
+            </p>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+              dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE'
+                ? 'bg-green-100 text-green-800'
+                : dentistData.user?.status === 'PENDING' || dentistData.userId?.status === 'PENDING'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              <StatusIcon className="w-2.5 h-2.5" />
+              {statusInfo.label}
+            </span>
           </div>
         </div>
       </div>

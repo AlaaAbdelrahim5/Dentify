@@ -11,7 +11,9 @@ import {
   FaEye,
   FaStethoscope,
   FaGlobe,
-  FaTimes
+  FaTimes,
+  FaCheckCircle,
+  FaTimesCircle
 } from 'react-icons/fa'
 import { Card, Button, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -107,40 +109,49 @@ const ClinicDetailsModal = ({
       showCloseButton={false}
       noPadding={true}
     >
-      {/* Header */}
-      <div className={`px-8 py-6 border-b ${
-        isDarkMode 
-          ? 'bg-gray-800 border-gray-700' 
-          : 'bg-white border-gray-200'
-      }`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-              <FaBuilding className="text-white text-2xl" />
+      {/* Header with gradient */}
+      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-6">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-lg transition-colors hover:bg-white/10 text-white"
+        >
+          <FaTimes className="w-4 h-4" />
+        </button>
+
+        {/* Profile section */}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+              <FaBuilding className="text-teal-600 text-2xl" />
             </div>
-            <div>
-              <h2 className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                {clinic.name || clinic.clinicName}
-              </h2>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                Registration: {clinic.registrationNumber || 'N/A'}
-              </p>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+              {isActive ? (
+                <FaCheckCircle className="w-3 h-3 text-green-600" />
+              ) : (
+                <FaTimesCircle className="w-3 h-3 text-red-600" />
+              )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
-                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-white">
+              {clinic.name || clinic.clinicName}
+            </h2>
+            <p className="text-white/90 text-sm">
+              Dental Clinic
+            </p>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+              isActive
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {isActive ? (
+                <><FaCheckCircle className="w-2.5 h-2.5" /> Active</>
+              ) : (
+                <><FaTimesCircle className="w-2.5 h-2.5" /> Inactive</>
+              )}
+            </span>
+          </div>
         </div>
       </div>
 
