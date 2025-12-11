@@ -323,7 +323,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         sessionStorage.getItem("dentify_access_token");
 
       const url = clinic
-        ? `http://localhost:5000/api/clinics/${clinic._id}`
+        ? `http://localhost:5000/api/clinics/${clinic.userId}`
         : "http://localhost:5000/api/clinics";
 
       const method = clinic ? "PUT" : "POST";

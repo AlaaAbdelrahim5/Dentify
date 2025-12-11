@@ -195,7 +195,7 @@ const ClinicsManagement = () => {
     } else if (action === 'updated') {
       // Update the clinic in the current list
       setClinics(prev => prev.map(clinic => 
-        clinic._id === savedClinic._id ? savedClinic : clinic
+        clinic.userId === savedClinic.userId ? savedClinic : clinic
       ))
       fetchStats()
       setToast({ message: 'Clinic updated successfully', type: 'success' })
