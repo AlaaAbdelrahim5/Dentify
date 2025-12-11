@@ -9,9 +9,10 @@ import {
   FaEnvelope,
   FaUserShield
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
+import { getImageUrl } from '../../../utils/helpers'
 
 const AdminSettings = () => {
   const { isDarkMode } = useTheme()
@@ -20,6 +21,7 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Admin profile data
   const [profile, setProfile] = useState({
@@ -60,6 +62,10 @@ const AdminSettings = () => {
 
       const data = await response.json()
       const admin = data.data || data
+      
+      console.log('Admin profile data:', admin)
+      console.log('Profile image from user:', admin.user?.profileImage)
+      console.log('Profile image from admin:', admin.profileImage)
 
       setProfile({
         firstName: admin.firstName || '',
@@ -117,12 +123,12 @@ const AdminSettings = () => {
       }
 
       setIsEditing(false)
-      alert('Profile updated successfully!')
+      setToast({ message: 'Profile updated successfully!', type: 'success' })
       await fetchAdminProfile()
     } catch (err) {
       console.error('Error saving profile:', err)
       setError(err.message || 'Failed to save profile. Please try again.')
-      alert(err.message || 'Failed to save profile. Please try again.')
+      setToast({ message: err.message || 'Failed to save profile. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -130,12 +136,12 @@ const AdminSettings = () => {
 
   const handleChangePassword = async () => {
     if (security.newPassword !== security.confirmPassword) {
-      alert('New passwords do not match!')
+      setToast({ message: 'New passwords do not match!', type: 'error' })
       return
     }
 
     if (security.newPassword.length < 6) {
-      alert('Password must be at least 6 characters long!')
+      setToast({ message: 'Password must be at least 6 characters long!', type: 'error' })
       return
     }
 
@@ -160,7 +166,7 @@ const AdminSettings = () => {
         throw new Error(errorData.error || 'Failed to change password')
       }
 
-      alert('Password changed successfully!')
+      setToast({ message: 'Password changed successfully!', type: 'success' })
       setSecurity({
         currentPassword: '',
         newPassword: '',
@@ -168,7 +174,7 @@ const AdminSettings = () => {
       })
     } catch (err) {
       console.error('Error changing password:', err)
-      alert(err.message || 'Failed to change password. Please try again.')
+      setToast({ message: err.message || 'Failed to change password. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -186,6 +192,7 @@ const AdminSettings = () => {
             setProfile(prev => ({ ...prev, profileImage: imageUrl }))
           }}
           userName={`${profile.firstName} ${profile.lastName}`}
+          onToast={setToast}
         />
         <div className="mt-4">
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
@@ -452,6 +459,15 @@ const AdminSettings = () => {
           {activeTab === 'profile' && renderProfileTab()}
           {activeTab === 'security' && renderSecurityTab()}
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

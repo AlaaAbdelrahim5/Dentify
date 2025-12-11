@@ -15,7 +15,8 @@ router.get('/me', authenticate, authorize('Admin'), async (req, res) => {
           select: {
             email: true,
             phone: true,
-            status: true
+            status: true,
+            profileImage: true
           }
         }
       }

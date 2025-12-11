@@ -1,14 +1,23 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { FaCamera, FaTrash, FaUser } from 'react-icons/fa'
 import { useTheme } from '../../contexts/ThemeContext'
 import { authUtils } from '../../utils/auth'
 import { getImageUrl as getImageUrlHelper } from '../../utils/helpers'
+import ConfirmationModal from './ConfirmationModal'
 
-const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) => {
+const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", onToast }) => {
   const { isDarkMode } = useTheme()
   const [uploading, setUploading] = useState(false)
   const [imagePreview, setImagePreview] = useState(currentImage)
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const fileInputRef = useRef(null)
+
+  // Update imagePreview when currentImage prop changes
+  useEffect(() => {
+    console.log('ProfileImageUpload - currentImage prop:', currentImage)
+    console.log('ProfileImageUpload - Full URL:', getImageUrlHelper(currentImage))
+    setImagePreview(currentImage)
+  }, [currentImage])
 
   const handleImageClick = () => {
     fileInputRef.current?.click()
@@ -21,13 +30,21 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a valid image file (JPEG, PNG, GIF, or WebP)')
+      if (onToast) {
+        onToast({ message: 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)', type: 'error' })
+      } else {
+        alert('Please upload a valid image file (JPEG, PNG, GIF, or WebP)')
+      }
       return
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB')
+      if (onToast) {
+        onToast({ message: 'Image size must be less than 5MB', type: 'error' })
+      } else {
+        alert('Image size must be less than 5MB')
+      }
       return
     }
 
@@ -73,22 +90,30 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
       // Trigger a custom event to notify Navbar to refresh
       window.dispatchEvent(new Event('profileImageUpdated'))
 
-      alert('Profile image updated successfully!')
+      if (onToast) {
+        onToast({ message: 'Profile image updated successfully!', type: 'success' })
+      } else {
+        alert('Profile image updated successfully!')
+      }
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert(error.message || 'Failed to upload image. Please try again.')
+      if (onToast) {
+        onToast({ message: error.message || 'Failed to upload image. Please try again.', type: 'error' })
+      } else {
+        alert(error.message || 'Failed to upload image. Please try again.')
+      }
       setImagePreview(currentImage) // Revert preview on error
     } finally {
       setUploading(false)
     }
   }
 
-  const handleDeleteImage = async () => {
+  const handleDeleteClick = () => {
     if (!imagePreview) return
+    setShowConfirmDelete(true)
+  }
 
-    if (!confirm('Are you sure you want to delete your profile image?')) {
-      return
-    }
+  const handleDeleteImage = async () => {
 
     try {
       setUploading(true)
@@ -120,10 +145,18 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
       // Trigger a custom event to notify Navbar to refresh
       window.dispatchEvent(new Event('profileImageUpdated'))
 
-      alert('Profile image deleted successfully!')
+      if (onToast) {
+        onToast({ message: 'Profile image deleted successfully!', type: 'success' })
+      } else {
+        alert('Profile image deleted successfully!')
+      }
     } catch (error) {
       console.error('Error deleting image:', error)
-      alert(error.message || 'Failed to delete image. Please try again.')
+      if (onToast) {
+        onToast({ message: error.message || 'Failed to delete image. Please try again.', type: 'error' })
+      } else {
+        alert(error.message || 'Failed to delete image. Please try again.')
+      }
     } finally {
       setUploading(false)
     }
@@ -141,8 +174,17 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
               alt={userName}
               className="w-full h-full object-cover"
               onError={(e) => {
+                console.error('Image load error for URL:', getImageUrlHelper(imagePreview))
+                e.target.onerror = null // Prevent infinite loop
+                e.target.src = '' // Clear src
                 e.target.style.display = 'none'
-                e.target.parentElement.innerHTML = '<svg class="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>'
+                const parent = e.target.parentElement
+                if (parent && !parent.querySelector('.fallback-icon')) {
+                  const fallback = document.createElement('div')
+                  fallback.className = 'fallback-icon w-10 h-10 text-teal-600 flex items-center justify-center'
+                  fallback.innerHTML = '<svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>'
+                  parent.appendChild(fallback)
+                }
               }}
             />
           ) : (
@@ -165,7 +207,7 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
         {/* Delete button - only show if there's an image */}
         {imagePreview && (
           <button
-            onClick={handleDeleteImage}
+            onClick={handleDeleteClick}
             disabled={uploading}
             className={`absolute top-0 right-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100 ${
               uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
@@ -200,6 +242,20 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User" }) 
           Max size: 5MB (JPEG, PNG, GIF, WebP)
         </p>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        onConfirm={() => {
+          setShowConfirmDelete(false)
+          handleDeleteImage()
+        }}
+        item={{ name: 'profile image' }}
+        action="delete"
+        itemName="profile image"
+        itemType="Profile Image"
+      />
     </div>
   )
 }
