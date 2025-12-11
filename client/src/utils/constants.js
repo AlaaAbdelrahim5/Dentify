@@ -53,6 +53,15 @@ export const CITY_OPTIONS_UNDERSCORE = PALESTINIAN_CITIES.map(city => ({
 // Dental Specializations
 export const DENTAL_SPECIALIZATIONS = [
   'General Dentistry',
+  'Orthodontist',
+  'Endodontist',
+  'Periodontist',
+  'Oral Surgeon',
+  'Prosthodontist',
+  'Pediatric Dentist',
+  'Oral Pathologist',
+  'Cosmetic Dentist',
+  'Implantologist',
   'Orthodontics',
   'Endodontics',
   'Periodontics',

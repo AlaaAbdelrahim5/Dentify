@@ -442,9 +442,9 @@ const ClinicDetailsModal = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {dentists.map((dentist) => (
+              {dentists.map((dentist, index) => (
                 <div
-                  key={dentist.id}
+                  key={dentist.userId || dentist.id || dentist._id || index}
                   className={`p-5 rounded-lg border transition-all ${
                     isDarkMode
                       ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'

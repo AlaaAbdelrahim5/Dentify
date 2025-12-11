@@ -35,7 +35,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
-import { CITY_OPTIONS_LOWERCASE, DENTAL_SPECIALIZATIONS_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
+import { CITY_OPTIONS, DENTAL_SPECIALIZATIONS_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
 import { useDebounce } from '../../../hooks'
 import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
 
@@ -85,7 +85,9 @@ const DentistsManagement = () => {
         ...(filterSpecialization && { specialization: filterSpecialization })
       }
 
+      console.log('Dentist filter params:', params)
       const queryString = new URLSearchParams(params).toString()
+      console.log('Query string:', queryString)
       const response = await dentistsAPI.getAll(queryString)
 
       if (response.success && response.data) {
@@ -241,7 +243,7 @@ const DentistsManagement = () => {
         placeholder: 'All Cities',
         value: filterCity,
         onChange: (e) => setFilterCity(e.target.value),
-        options: CITY_OPTIONS_LOWERCASE
+        options: CITY_OPTIONS
       },
       {
         placeholder: 'All Specializations',
