@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   FaUsers,
   FaUserShield,
@@ -54,9 +54,9 @@ const AdminsManagement = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0
+    total: '-',
+    active: '-',
+    inactive: '-'
   })
 
   // Fetch admins
@@ -161,28 +161,28 @@ const AdminsManagement = () => {
   }
 
   // Component configurations
-  const statsConfig = [
+  const statsConfig = useMemo(() => [
     {
       label: 'Total Admins',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaUsers,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Active Admins',
-      value: stats.active,
+      value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700'
     },
     {
       label: 'Inactive Admins',
-      value: stats.inactive,
+      value: loading ? '-' : stats.inactive,
       icon: FaTimesCircle,
       gradient: 'from-red-600 to-red-700'
     }
-  ]
+  ], [stats, loading])
 
-  const filterProps = {
+  const filterProps = useMemo(() => ({
     searchTerm,
     onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
@@ -193,7 +193,7 @@ const AdminsManagement = () => {
     },
     filtering,
     searchPlaceholder: 'Search admins by name or email...'
-  }
+  }), [searchTerm, debouncedSearchTerm, filtering])
 
   const columns = [
     { key: 'admin', label: 'Admin' },
@@ -268,7 +268,7 @@ const AdminsManagement = () => {
     columns,
     data: admins,
     renderRow,
-    loading: filtering,
+    loading: loading || filtering,
     emptyMessage: searchTerm ? 'Try adjusting your search criteria' : 'No administrators yet',
     emptyIcon: FaUserShield,
     hasFilters: !!searchTerm
@@ -817,13 +817,7 @@ const AdminsManagement = () => {
       <FilterBar {...filterProps} />
 
       {/* Admins Table */}
-      {loading && isFirstLoad ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      ) : (
-        <DataTable {...tableProps} />
-      )}
+      <DataTable {...tableProps} />
 
       {/* Pagination */}
       <Pagination

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { 
   FaUser,
   FaPlus,
@@ -54,9 +54,10 @@ const PatientsManagement = () => {
   const [patientToAction, setPatientToAction] = useState(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
-    total: 0,
-    active: 0
+    total: '-',
+    active: '-'
   })
+  const [error, setError] = useState(null)
 
   // Fetch patients
   const fetchPatients = async (isFiltering = false) => {
@@ -67,13 +68,19 @@ const PatientsManagement = () => {
         setLoading(true)
       }
       
+      setError(null)
+      
       const response = await patientsAPI.getAll()
 
       if (response.patients) {
+        console.log('Patients loaded:', response.patients?.length || 0)
         setPatients(response.patients)
+      } else {
+        setError('Failed to load patients. Please try again.')
       }
     } catch (error) {
       console.error('❌ Error fetching patients:', error)
+      setError('Failed to load patients. Please try again.')
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -137,51 +144,56 @@ const PatientsManagement = () => {
     loadData()
   }, [])
 
-  // Filter patients
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = 
-      !debouncedSearchTerm ||
-      `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      patient.user?.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      patient.user?.phone?.includes(debouncedSearchTerm)
+  // Filter patients - use useMemo for performance
+  const filteredPatients = useMemo(() => {
+    return patients.filter(patient => {
+      const matchesSearch = 
+        !debouncedSearchTerm ||
+        `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        patient.user?.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        patient.user?.phone?.includes(debouncedSearchTerm)
 
-    const matchesCity = !filterCity || patient.city?.toLowerCase() === filterCity.toLowerCase()
-    const matchesStatus = !filterStatus || patient.user?.status === filterStatus
-    const matchesGender = !filterGender || patient.gender === filterGender
+      const matchesCity = !filterCity || patient.city?.toLowerCase() === filterCity.toLowerCase()
+      const matchesStatus = !filterStatus || patient.user?.status === filterStatus
+      const matchesGender = !filterGender || patient.gender === filterGender
 
-    return matchesSearch && matchesCity && matchesStatus && matchesGender
-  })
+      return matchesSearch && matchesCity && matchesStatus && matchesGender
+    })
+  }, [patients, debouncedSearchTerm, filterCity, filterStatus, filterGender])
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedPatients = filteredPatients.slice(startIndex, startIndex + itemsPerPage)
+  // Pagination - use useMemo for performance
+  const { totalPages, paginatedPatients } = useMemo(() => {
+    const total = Math.ceil(filteredPatients.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const paginated = filteredPatients.slice(startIndex, startIndex + itemsPerPage)
+    return { totalPages: total, paginatedPatients: paginated }
+  }, [filteredPatients, currentPage, itemsPerPage])
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [debouncedSearchTerm, filterCity, filterStatus, filterGender])
 
-  // Stats configuration
-  const statsConfig = [
+  // Stats configuration - use useMemo for performance
+  const statsConfig = useMemo(() => [
     {
       label: 'Total Patients',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaUsers,
       gradient: 'from-teal-600 to-cyan-600',
       cols: 1
     },
     {
       label: 'Active Patients',
-      value: stats.active,
+      value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700',
       cols: 1
     }
-  ]
+  ], [stats, loading])
 
-  // Filter configuration
-  const filterProps = {
+  // Filter configuration - use useMemo for performance
+  const filterProps = useMemo(() => ({
     searchTerm,
     onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
@@ -214,7 +226,7 @@ const PatientsManagement = () => {
     },
     filtering,
     searchPlaceholder: 'Search patients by name, email, or phone...'
-  }
+  }), [searchTerm, debouncedSearchTerm, filterStatus, filterCity, filterGender, filtering])
 
   // Table columns
   const columns = [

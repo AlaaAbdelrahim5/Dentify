@@ -51,6 +51,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
+  const [error, setError] = useState(null)
 
   // Check if reportFile is a URL (not base64)
   const isReportFileUrl = (reportFile) => {
@@ -147,36 +148,10 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     fetchRequests()
   }, [])
 
-  // Filter requests - use useMemo for performance
-  const filteredRequests = useMemo(() => {
-    return requests.filter(request => {
-      const matchesSearch = request.patient?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           request.patient?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           request.dentist?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           request.dentist?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           request.imagingType.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
-      const matchesImagingType = selectedImagingType === 'all' || 
-                                 request.imagingType?.trim() === selectedImagingType.trim()
-      
-      return matchesSearch && matchesStatus && matchesImagingType
-    })
-  }, [requests, searchTerm, selectedStatus, selectedImagingType])
-
-  // Calculate stats - use useMemo for performance
-  const stats = useMemo(() => {
-    const total = requests.length
-    const requested = requests.filter(r => r.status === 'REQUESTED').length
-    const inProgress = requests.filter(r => r.status === 'IN_PROGRESS').length
-    const completed = requests.filter(r => r.status === 'COMPLETED').length
-    
-    return { total, requested, inProgress, completed }
-  }, [requests])
-
   const fetchRequests = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       const token = authUtils.getAccessToken()
       
       const response = await fetch('http://localhost:5000/api/radiology-requests/center/my-requests', {
@@ -188,17 +163,67 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Fetched radiology requests:', data)
+        console.log('Radiology requests loaded:', data.radiologyRequests?.length || data.data?.length || data.requests?.length || 0)
         setRequests(data.radiologyRequests || data.data || data.requests || [])
       } else {
         console.error('Failed to fetch requests')
+        setError('Failed to load requests. Please try again.')
       }
     } catch (error) {
       console.error('Error fetching requests:', error)
+      setError('Failed to load requests. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
+
+  // Transform requests for display - use useMemo for performance
+  const transformedRequests = useMemo(() => 
+    requests.map(r => ({
+      ...r,
+      patientName: `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.trim(),
+      dentistName: `Dr. ${r.dentist?.firstName || ''} ${r.dentist?.lastName || ''}`.trim(),
+      formattedRequestDate: new Date(r.requestDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }),
+      formattedAvailableDate: r.availableDate ? new Date(r.availableDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }) : null
+    }))
+  , [requests])
+
+  // Filter requests - use useMemo for performance
+  const filteredRequests = useMemo(() => {
+    return transformedRequests.filter(request => {
+      const matchesSearch = request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           request.dentistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           request.imagingType.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
+      const matchesImagingType = selectedImagingType === 'all' || 
+                                 request.imagingType?.trim() === selectedImagingType.trim()
+      
+      return matchesSearch && matchesStatus && matchesImagingType
+    })
+  }, [transformedRequests, searchTerm, selectedStatus, selectedImagingType])
+
+  // Calculate stats - use useMemo for performance
+  const stats = useMemo(() => {
+    if (isLoading) {
+      return { total: '-', requested: '-', inProgress: '-', completed: '-' }
+    }
+    
+    const total = requests.length
+    const requested = requests.filter(r => r.status === 'REQUESTED').length
+    const inProgress = requests.filter(r => r.status === 'IN_PROGRESS').length
+    const completed = requests.filter(r => r.status === 'COMPLETED').length
+    
+    return { total, requested, inProgress, completed }
+  }, [requests, isLoading])
 
   const handleViewDetails = (request) => {
     setSelectedRequest(request)
@@ -261,14 +286,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     }
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
   const RequestCard = ({ request }) => (
     <Card className={`p-6 ${
       isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -289,7 +306,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              {request.patient?.firstName} {request.patient?.lastName}
+              {request.patientName}
             </p>
           </div>
         </div>
@@ -305,20 +322,20 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         <div className="flex items-center gap-2 text-sm">
           <FaStethoscope className="text-gray-500 w-4 h-4" />
           <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Dr. {request.dentist?.firstName} {request.dentist?.lastName}
+            {request.dentistName}
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <FaCalendarAlt className="text-gray-500 w-4 h-4" />
           <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Requested: {formatDate(request.requestDate)}
+            Requested: {request.formattedRequestDate}
           </span>
         </div>
-        {request.availableDate && (
+        {request.formattedAvailableDate && (
           <div className="flex items-center gap-2 text-sm">
             <FaClock className="text-teal-500 w-4 h-4" />
             <span className={isDarkMode ? 'text-teal-400' : 'text-teal-600'}>
-              Available: {formatDate(request.availableDate)}
+              Available: {request.formattedAvailableDate}
             </span>
           </div>
         )}
@@ -381,25 +398,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       </div>
     </Card>
   )
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-          <p className={`mt-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            Loading radiology requests...
-          </p>
-        </Card>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -515,7 +513,20 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       </Card>
 
       {/* Requests - Table or Grid View */}
-      {filteredRequests.length === 0 ? (
+      {isLoading ? (
+        <Card className={`p-8 text-center ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <div className="flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Loading radiology requests...
+          </p>
+        </Card>
+      ) : filteredRequests.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
@@ -549,22 +560,17 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                 columns={[
                   {
                     label: 'Patient',
-                    accessor: 'patient',
-                    render: (value, row) => (
+                    accessor: 'patientName',
+                    render: (value) => (
                       <div className="flex items-center gap-2">
                         <FaUser className="text-gray-500 w-4 h-4" />
-                        <span className="font-medium">
-                          {row.patient?.firstName} {row.patient?.lastName}
-                        </span>
+                        <span className="font-medium">{value}</span>
                       </div>
                     )
                   },
                   {
                     label: 'Dentist',
-                    accessor: 'dentist',
-                    render: (value, row) => (
-                      <span>Dr. {row.dentist?.firstName} {row.dentist?.lastName}</span>
-                    )
+                    accessor: 'dentistName'
                   },
                   {
                     label: 'Imaging Type',
@@ -578,16 +584,15 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   },
                   {
                     label: 'Request Date',
-                    accessor: 'requestDate',
-                    render: (value) => formatDate(value)
+                    accessor: 'formattedRequestDate'
                   },
                   {
                     label: 'Available Date',
-                    accessor: 'availableDate',
+                    accessor: 'formattedAvailableDate',
                     render: (value) => value ? (
                       <div className="flex items-center gap-2 text-teal-500">
                         <FaClock className="w-4 h-4" />
-                        <span>{formatDate(value)}</span>
+                        <span>{value}</span>
                       </div>
                     ) : (
                       <span className="text-gray-400">Pending</span>

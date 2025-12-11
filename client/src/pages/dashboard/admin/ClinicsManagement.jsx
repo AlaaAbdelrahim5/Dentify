@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { 
   FaHospital, 
   FaPlus, 
@@ -55,10 +55,11 @@ const ClinicsManagement = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0
+    total: '-',
+    active: '-',
+    inactive: '-'
   })
+  const [error, setError] = useState(null)
 
   // Fetch clinics
   const fetchClinics = async (isFiltering = false) => {
@@ -68,6 +69,8 @@ const ClinicsManagement = () => {
       } else {
         setLoading(true)
       }
+      
+      setError(null)
       
       const params = {
         page: currentPage,
@@ -88,38 +91,15 @@ const ClinicsManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        // Transform backend data to match frontend expectations
-        const transformedClinics = data.data.map(clinic => ({
-          _id: clinic.userId,
-          userId: clinic.userId,
-          name: clinic.clinicName,
-          clinicName: clinic.clinicName,
-          description: clinic.description || '',
-          address: {
-            fullAddress: clinic.location || '',
-            city: clinic.city
-          },
-          city: clinic.city,
-          location: clinic.location,
-          phone: {
-            full: clinic.user?.phone || ''
-          },
-          email: clinic.user?.email || '',
-          workingHours: clinic.workingHours || {},
-          doctors: clinic.dentists || [],
-          secretaries: clinic.secretaries || [],
-          isActive: clinic.user?.status === 'ACTIVE',
-          registrationNumber: clinic.registrationNumber,
-          website: clinic.website,
-          coordinates: clinic.coordinates,
-          servicesAvailable: clinic.servicesAvailable || []
-        }))
-        
-        setClinics(transformedClinics)
+        console.log('Clinics loaded:', data.data?.length || 0)
+        setClinics(data.data)
         setTotalPages(data.pagination.pages)
+      } else {
+        setError('Failed to load clinics. Please try again.')
       }
     } catch (error) {
       console.error('Error fetching clinics:', error)
+      setError('Failed to load clinics. Please try again.')
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -205,11 +185,6 @@ const ClinicsManagement = () => {
     return `${firstDayHours.start} - ${firstDayHours.end}`
   }
 
-  const getCityLabel = (cityValue) => {
-    const city = CITY_OPTIONS_LOWERCASE.find(c => c.value === cityValue)
-    return city ? city.label : cityValue
-  }
-
   const handleClinicSave = (savedClinic, action) => {
     if (action === 'created') {
       // Refresh the list to show new clinic
@@ -267,27 +242,27 @@ const ClinicsManagement = () => {
     }
   }
 
-  // Stats configuration for StatsOverview component
-  const statsConfig = [
+  // Stats configuration for StatsOverview component - use useMemo for performance
+  const statsConfig = useMemo(() => [
     {
       label: 'Total Clinics',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaHospital,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Active Clinics',
-      value: stats.active,
+      value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700'
     },
     {
       label: 'Inactive Clinics',
-      value: stats.inactive,
+      value: loading ? '-' : stats.inactive,
       icon: FaTimesCircle,
       gradient: 'from-red-600 to-red-700'
     }
-  ]
+  ], [stats, loading])
 
   // Filter configuration for FilterBar component
   const filters = [
@@ -320,6 +295,9 @@ const ClinicsManagement = () => {
 
   // Render table row
   const renderRow = (clinic, index) => {
+    const isActive = clinic.user?.status === 'ACTIVE'
+    const cityLabel = CITY_OPTIONS_LOWERCASE.find(c => c.value === clinic.city)?.label || clinic.city
+    
     const actions = [
       {
         icon: FaEye,
@@ -337,15 +315,15 @@ const ClinicsManagement = () => {
         variant: 'default'
       },
       {
-        icon: clinic.isActive ? FaTimesCircle : FaCheckCircle,
+        icon: isActive ? FaTimesCircle : FaCheckCircle,
         onClick: () => handleToggleClinicStatus(clinic),
-        title: clinic.isActive ? 'Deactivate' : 'Activate',
-        variant: clinic.isActive ? 'warning' : 'success'
+        title: isActive ? 'Deactivate' : 'Activate',
+        variant: isActive ? 'warning' : 'success'
       }
     ]
 
     return (
-      <tr key={clinic._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+      <tr key={clinic.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
@@ -353,7 +331,7 @@ const ClinicsManagement = () => {
             </div>
             <div className="ml-3">
               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {clinic.name}
+                {clinic.clinicName}
               </div>
               <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {clinic.registrationNumber || 'N/A'}
@@ -363,41 +341,33 @@ const ClinicsManagement = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {getCityLabel(clinic.address.city)}
+            {cityLabel}
           </div>
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {clinic.address.fullAddress}
+            {clinic.location || 'N/A'}
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {clinic.email}
+            {clinic.user?.email || 'N/A'}
           </div>
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {clinic.phone.full}
+            {clinic.user?.phone || 'N/A'}
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            <div>Doctors: {clinic.doctors?.length || 0}</div>
+            <div>Doctors: {clinic.dentists?.length || 0}</div>
             <div>Secretaries: {clinic.secretaries?.length || 0}</div>
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <StatusBadge isActive={clinic.isActive} />
+          <StatusBadge isActive={isActive} />
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
           <ActionButtons actions={actions} />
         </td>
       </tr>
-    )
-  }
-
-  if (loading && clinics.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
-      </div>
     )
   }
 

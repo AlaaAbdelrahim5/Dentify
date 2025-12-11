@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { 
   FaXRay, 
   FaPlus, 
@@ -54,10 +54,11 @@ const RadiologyManagement = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0
+    total: '-',
+    active: '-',
+    inactive: '-'
   })
+  const [error, setError] = useState(null)
 
   // Fetch centers
   const fetchCenters = async (isFiltering = false) => {
@@ -67,6 +68,8 @@ const RadiologyManagement = () => {
       } else {
         setLoading(true)
       }
+      
+      setError(null)
       
       const token = localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')
       
@@ -92,38 +95,17 @@ const RadiologyManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        // Transform backend data to match frontend expectations
-        const transformedCenters = data.data.map(center => ({
-          _id: center.userId,
-          name: center.centerName || center.registrationNumber, // Use centerName from database
-          registrationNumber: center.registrationNumber,
-          description: center.description || '',
-          address: {
-            street: center.location || '',
-            city: center.city
-          },
-          phone: {
-            full: center.user?.phone || '',
-            countryCode: '',
-            number: center.user?.phone || ''
-          },
-          email: center.user?.email || '',
-          workingHours: center.workingHours || {},
-          services: center.supportedTypes || [],
-          equipment: [], // Not in schema, set empty array
-          isActive: center.user?.status === 'ACTIVE',
-          website: center.website,
-          coordinates: center.coordinates
-        }))
-        
-        setCenters(transformedCenters)
+        console.log('Radiology centers loaded:', data.data?.length || 0)
+        setCenters(data.data)
         setTotalPages(data.pagination?.pages || 1)
       } else {
         console.error('Failed to fetch centers:', data.message)
+        setError('Failed to load radiology centers. Please try again.')
         setCenters([])
       }
     } catch (error) {
       console.error('Error fetching centers:', error)
+      setError('Failed to load radiology centers. Please try again.')
       setCenters([])
     } finally {
       if (isFiltering) {
@@ -187,11 +169,6 @@ const RadiologyManagement = () => {
     setCurrentPage(1)
   }
 
-  const getCityLabel = (cityValue) => {
-    const city = CITY_OPTIONS_UNDERSCORE.find(c => c.value === cityValue)
-    return city ? city.label : cityValue
-  }
-
   const handleCenterSave = (savedCenter, action) => {
     if (action === 'created') {
       // Refresh the list to show new center
@@ -217,7 +194,8 @@ const RadiologyManagement = () => {
   }
 
   const handleToggleCenterStatus = async (center) => {
-    const action = center.isActive ? 'deactivate' : 'activate'
+    const isActive = center.user?.status === 'ACTIVE'
+    const action = isActive ? 'deactivate' : 'activate'
     
     setSelectedCenter(center)
     setConfirmAction(action)
@@ -229,8 +207,8 @@ const RadiologyManagement = () => {
     const action = confirmAction
 
     try {
-      console.log('Toggling center status for center ID:', center._id)
-      const response = await radiologyAPI.toggleStatus(center._id)
+      console.log('Toggling center status for center ID:', center.userId)
+      const response = await radiologyAPI.toggleStatus(center.userId)
       console.log('Toggle status response:', response)
 
       if (response.success) {
@@ -248,27 +226,27 @@ const RadiologyManagement = () => {
     }
   }
 
-  // Stats configuration for StatsOverview component
-  const statsConfig = [
+  // Stats configuration for StatsOverview component - use useMemo for performance
+  const statsConfig = useMemo(() => [
     {
       label: 'Total Centers',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaXRay,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Active Centers',
-      value: stats.active,
+      value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700'
     },
     {
       label: 'Inactive Centers',
-      value: stats.inactive,
+      value: loading ? '-' : stats.inactive,
       icon: FaTimesCircle,
       gradient: 'from-red-600 to-red-700'
     }
-  ]
+  ], [stats, loading])
 
   // Filter configuration for FilterBar component
   const filters = [
@@ -301,6 +279,9 @@ const RadiologyManagement = () => {
 
   // Render table row
   const renderRow = (center, index) => {
+    const isActive = center.user?.status === 'ACTIVE'
+    const cityLabel = CITY_OPTIONS_UNDERSCORE.find(c => c.value === center.city)?.label || center.city
+    
     const actions = [
       {
         icon: FaEye,
@@ -318,15 +299,15 @@ const RadiologyManagement = () => {
         variant: 'default'
       },
       {
-        icon: center.isActive ? FaTimesCircle : FaCheckCircle,
+        icon: isActive ? FaTimesCircle : FaCheckCircle,
         onClick: () => handleToggleCenterStatus(center),
-        title: center.isActive ? 'Deactivate' : 'Activate',
-        variant: center.isActive ? 'warning' : 'success'
+        title: isActive ? 'Deactivate' : 'Activate',
+        variant: isActive ? 'warning' : 'success'
       }
     ]
 
     return (
-      <tr key={center._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+      <tr key={center.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
@@ -334,7 +315,7 @@ const RadiologyManagement = () => {
             </div>
             <div className="ml-3">
               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {center.name}
+                {center.centerName || center.registrationNumber}
               </div>
               <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {center.registrationNumber || 'N/A'}
@@ -344,27 +325,27 @@ const RadiologyManagement = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {getCityLabel(center.address?.city)}
+            {cityLabel}
           </div>
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {center.address?.street}
+            {center.location || 'N/A'}
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {center.email}
+            {center.user?.email || 'N/A'}
           </div>
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {center.phone?.full}
+            {center.user?.phone || 'N/A'}
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {center.services?.length || 0} services
+            {center.supportedTypes?.length || 0} services
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <StatusBadge isActive={center.isActive} />
+          <StatusBadge isActive={isActive} />
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
           <ActionButtons actions={actions} />
@@ -376,6 +357,10 @@ const RadiologyManagement = () => {
   // Center Details Modal Component (keeping this inline as it's specific to radiology centers)
   const CenterDetailsModal = ({ center, onClose }) => {
     if (!center) return null
+    
+    const getCityLabel = (cityValue) => {
+      return CITY_OPTIONS_UNDERSCORE.find(c => c.value === cityValue)?.label || cityValue
+    }
 
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -412,9 +397,9 @@ const RadiologyManagement = () => {
                   </div>
                   {/* Status indicator on avatar */}
                   <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
-                    center.isActive ? 'bg-green-500' : 'bg-red-500'
+                    center.user?.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
                   }`}>
-                    {center.isActive ? (
+                    {center.user?.status === 'ACTIVE' ? (
                       <FaCheck className="w-3 h-3 text-white" />
                     ) : (
                       <FaTimes className="w-3 h-3 text-white" />
@@ -424,18 +409,18 @@ const RadiologyManagement = () => {
                 
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-white mb-1">
-                    {center.name}
+                    {center.centerName || center.registrationNumber}
                   </h2>
                   <p className="text-teal-100 text-sm mb-2">
                     Radiology Center
                   </p>
                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-                    center.isActive
+                    center.user?.status === 'ACTIVE'
                       ? 'bg-green-900/20 text-green-300 border-green-700'
                       : 'bg-red-900/20 text-red-300 border-red-700'
                   }`}>
-                    {center.isActive ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
-                    {center.isActive ? 'Active' : 'Inactive'}
+                    {center.user?.status === 'ACTIVE' ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+                    {center.user?.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
@@ -460,7 +445,7 @@ const RadiologyManagement = () => {
                         Center Name
                       </p>
                       <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {center.name}
+                        {center.centerName || center.registrationNumber}
                       </p>
                     </div>
                     <div>
@@ -517,7 +502,7 @@ const RadiologyManagement = () => {
                           City
                         </p>
                         <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {getCityLabel(center.address?.city)}
+                          {getCityLabel(center.city)}
                         </p>
                       </div>
                     </div>
@@ -532,7 +517,7 @@ const RadiologyManagement = () => {
                           Street Address
                         </p>
                         <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {center.address?.street}
+                          {center.location || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -578,7 +563,7 @@ const RadiologyManagement = () => {
                           Email Address
                         </p>
                         <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {center.email}
+                          {center.user?.email || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -593,7 +578,7 @@ const RadiologyManagement = () => {
                           Phone Number
                         </p>
                         <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {center.phone?.full}
+                          {center.user?.phone || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -603,7 +588,7 @@ const RadiologyManagement = () => {
                 {/* Services & Equipment */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Services / Supported Types */}
-                  {((center.services && center.services.length > 0) || (center.supportedTypes && center.supportedTypes.length > 0)) && (
+                  {center.supportedTypes && center.supportedTypes.length > 0 && (
                     <div>
                       <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
@@ -612,7 +597,7 @@ const RadiologyManagement = () => {
                         Supported Types
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {(center.supportedTypes || center.services || []).map((service, index) => (
+                        {center.supportedTypes.map((service, index) => (
                           <span
                             key={index}
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -620,29 +605,6 @@ const RadiologyManagement = () => {
                             }`}
                           >
                             {service}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Equipment */}
-                  {center.equipment && center.equipment.length > 0 && (
-                    <div>
-                      <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        Equipment
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {center.equipment.map((item, index) => (
-                          <span
-                            key={index}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {item}
                           </span>
                         ))}
                       </div>
@@ -706,14 +668,6 @@ const RadiologyManagement = () => {
             </div>
           </div>
         </div>
-      </div>
-    )
-  }
-
-  if (loading && centers.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
       </div>
     )
   }

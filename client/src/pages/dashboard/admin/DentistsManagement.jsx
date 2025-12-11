@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { 
   FaUserMd, 
   FaPlus, 
@@ -56,10 +56,11 @@ const DentistsManagement = () => {
   const [dentistToAction, setDentistToAction] = useState(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    active: 0
+    total: '-',
+    pending: '-',
+    active: '-'
   })
+  const [error, setError] = useState(null)
 
   // Fetch dentists with all statuses for admin
   const fetchDentists = async (isFiltering = false) => {
@@ -69,6 +70,8 @@ const DentistsManagement = () => {
       } else {
         setLoading(true)
       }
+      
+      setError(null)
       
       const params = {
         page: currentPage.toString(),
@@ -84,12 +87,16 @@ const DentistsManagement = () => {
       const response = await dentistsAPI.getAll(queryString)
 
       if (response.success && response.data) {
+        console.log('Dentists loaded:', response.data?.length || 0)
         setDentists(response.data)
         setTotalPages(response.pagination?.pages || 1)
         setCurrentPage(response.pagination?.page || 1)
+      } else {
+        setError('Failed to load dentists. Please try again.')
       }
     } catch (error) {
       console.error('❌ Error fetching dentists:', error)
+      setError('Failed to load dentists. Please try again.')
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -190,33 +197,33 @@ const DentistsManagement = () => {
     loadData()
   }, [])
 
-  // Stats configuration
-  const statsConfig = [
+  // Stats configuration - use useMemo for performance
+  const statsConfig = useMemo(() => [
     {
       label: 'Total Dentists',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaUserMd,
       gradient: 'from-teal-600 to-cyan-600',
       cols: 1
     },
     {
       label: 'Pending Approval',
-      value: stats.pending,
+      value: loading ? '-' : stats.pending,
       icon: FaClock,
       gradient: 'from-orange-500 to-orange-600',
       cols: 1
     },
     {
       label: 'Active Dentists',
-      value: stats.active,
+      value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700',
       cols: 1
     }
-  ]
+  ], [stats, loading])
 
-  // Filter configuration
-  const filterProps = {
+  // Filter configuration - use useMemo for performance
+  const filterProps = useMemo(() => ({
     searchTerm,
     onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
@@ -249,7 +256,7 @@ const DentistsManagement = () => {
     },
     filtering,
     searchPlaceholder: 'Search dentists by name, license, or email...'
-  }
+  }), [searchTerm, debouncedSearchTerm, filterStatus, filterCity, filterSpecialization, filtering])
 
   // Table columns
   const columns = [
