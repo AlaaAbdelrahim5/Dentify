@@ -179,7 +179,7 @@ const RadiologyManagement = () => {
     } else if (action === 'updated') {
       // Update the center in the current list
       setCenters(prev => prev.map(center => 
-        center._id === savedCenter._id ? savedCenter : center
+        center.userId === savedCenter.userId ? savedCenter : center
       ))
       fetchStats()
       setToast({ message: 'Radiology center updated successfully', type: 'success' })

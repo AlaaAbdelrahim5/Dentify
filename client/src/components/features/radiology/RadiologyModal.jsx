@@ -109,18 +109,18 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         }
 
         setFormData({
-          // User fields - get from transformed data structure
-          email: center.email || "",
-          phone: center.phone?.full || center.phone || "",
+          // User fields - get from backend structure (center.user.*)
+          email: center.user?.email || center.email || "",
+          phone: center.user?.phone || center.phone || "",
           password: "", // Password field should be empty when editing
-          // RadiologyCenter fields - get from transformed data structure
-          centerName: center.name || center.registrationNumber || "",
+          // RadiologyCenter fields - get from backend structure
+          centerName: center.centerName || center.registrationNumber || "",
           registrationNumber: center.registrationNumber || "",
-          city: center.address?.city || center.city || "",
-          location: center.address?.street || center.location || "",
+          city: center.city || "",
+          location: center.location || "",
           website: center.website || "",
           description: center.description || "",
-          supportedTypes: center.services || center.supportedTypes || [],
+          supportedTypes: center.supportedTypes || [],
           coordinates: center.coordinates || "",
           workingHours: workingHoursObj,
         });
@@ -325,7 +325,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         sessionStorage.getItem("dentify_access_token");
 
       const url = center
-        ? `http://localhost:5000/api/radiology-centers/${center._id}`
+        ? `http://localhost:5000/api/radiology-centers/${center.userId}`
         : "http://localhost:5000/api/radiology-centers";
 
       const method = center ? "PUT" : "POST";
