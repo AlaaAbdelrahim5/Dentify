@@ -43,14 +43,20 @@ export const parseCoordinates = (coords) => {
 }
 
 /**
- * Sort locations by distance from user location
+ * Sort locations by distance from user location, then alphabetically
  * @param {Array} locations - Array of locations with coordinates property
  * @param {Array} userLocation - User's location [lat, lng]
+ * @param {string} nameField - Field name to use for alphabetical sorting (default: 'name')
  * @returns {Array} Sorted array with distance property added
  */
-export const sortByDistance = (locations, userLocation) => {
+export const sortByDistance = (locations, userLocation, nameField = 'name') => {
   if (!userLocation || !Array.isArray(userLocation) || userLocation.length !== 2) {
-    return locations
+    // If no user location, sort alphabetically only
+    return locations.sort((a, b) => {
+      const nameA = (a[nameField] || '').toLowerCase()
+      const nameB = (b[nameField] || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
   }
 
   const [userLat, userLng] = userLocation
@@ -67,7 +73,16 @@ export const sortByDistance = (locations, userLocation) => {
       
       return { ...location, distance }
     })
-    .sort((a, b) => a.distance - b.distance)
+    .sort((a, b) => {
+      // First sort by distance
+      if (a.distance !== b.distance) {
+        return a.distance - b.distance
+      }
+      // If distances are equal (or both Infinity), sort alphabetically
+      const nameA = (a[nameField] || '').toLowerCase()
+      const nameB = (b[nameField] || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
 }
 
 /**

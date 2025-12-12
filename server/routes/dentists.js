@@ -59,7 +59,10 @@ router.get('/clinic', authenticate, authorize('Clinic', 'Secretary'), async (req
     // Get all dentists belonging to this clinic
     const dentists = await prisma.dentist.findMany({
       where: {
-        clinicId: clinicUserId
+        clinicId: clinicUserId,
+        user: {
+          status: 'ACTIVE'
+        }
       },
       include: {
         user: {

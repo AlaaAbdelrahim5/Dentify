@@ -207,7 +207,7 @@ const ClinicDetailsModal = ({
                 <p className={`font-semibold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {clinic.phone?.full || clinic.phone || 'N/A'}
+                  {clinic.user?.phone || clinic.phone?.full || clinic.phone || 'N/A'}
                 </p>
               </div>
             </div>
@@ -226,7 +226,7 @@ const ClinicDetailsModal = ({
                 <p className={`font-semibold break-words ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {clinic.email || 'N/A'}
+                  {clinic.user?.email || clinic.email || 'N/A'}
                 </p>
               </div>
             </div>

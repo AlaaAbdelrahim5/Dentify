@@ -20,7 +20,8 @@ import {
   FilterBar,
   DataTable,
   BookAppointmentModal,
-  Toast
+  Toast,
+  ClinicDetailsModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
@@ -42,8 +43,10 @@ const FindDoctor = () => {
   
   // Modal states
   const [selectedDoctor, setSelectedDoctor] = useState(null)
+  const [selectedClinic, setSelectedClinic] = useState(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showClinicDetailsModal, setShowClinicDetailsModal] = useState(false)
   const [toast, setToast] = useState(null)
 
   // Fetch data when filters change
@@ -84,7 +87,7 @@ const FindDoctor = () => {
       }
       setError(null)
       
-      const response = await dentistsAPI.getAll({ limit: 1000, includeAll: 'true' })
+      const response = await dentistsAPI.getAll({ limit: 1000, status: 'active' })
       console.log('Fetched doctors:', response)
       
       const dentistsData = response.dentists || response.data || response || []
@@ -137,30 +140,36 @@ const FindDoctor = () => {
       return matchesSearch && matchesSpecialty && matchesLocation
     })
     
-    // Sort by clinic distance from user if location is available
+    // Sort by clinic distance from user if location is available, then alphabetically
     if (userLocation) {
       console.log('User location for sorting:', userLocation)
-      // Map doctors to include clinic coordinates and sort
+      // Map doctors to include clinic coordinates and full name for sorting
       const doctorsWithClinicLocations = filtered.map(doctor => ({
         ...doctor,
-        coordinates: doctor.clinic?.coordinates
+        coordinates: doctor.clinic?.coordinates,
+        fullName: `${doctor.firstName} ${doctor.lastName}`
       }))
       
       console.log('Doctors with clinic coordinates:', doctorsWithClinicLocations.map(d => ({ 
-        name: `${d.firstName} ${d.lastName}`, 
+        name: d.fullName, 
         coordinates: d.coordinates 
       })))
       
-      const sorted = sortByDistance(doctorsWithClinicLocations, userLocation)
+      const sorted = sortByDistance(doctorsWithClinicLocations, userLocation, 'fullName')
       console.log('Sorted doctors with distances:', sorted.map(d => ({ 
-        name: `${d.firstName} ${d.lastName}`, 
+        name: d.fullName, 
         distance: d.distance 
       })))
       
       return sorted
     }
     
-    return filtered
+    // If no user location, sort alphabetically by dentist name
+    return filtered.sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
+      const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
   }, [doctors, searchQuery, selectedSpecialty, selectedLocation, userLocation])
 
   const handleClearFilters = () => {
@@ -492,9 +501,16 @@ const FindDoctor = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clinic Name</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <button
+                          onClick={() => {
+                            setSelectedClinic(selectedDoctor.clinic)
+                            setShowDetailsModal(false)
+                            setShowClinicDetailsModal(true)
+                          }}
+                          className="font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:underline transition-colors text-left"
+                        >
                           {selectedDoctor.clinic.clinicName || 'N/A'}
-                        </p>
+                        </button>
                       </div>
                       {selectedDoctor.clinic.address && (
                         <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -546,6 +562,18 @@ const FindDoctor = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Clinic Details Modal */}
+      {showClinicDetailsModal && selectedClinic && (
+        <ClinicDetailsModal
+          isOpen={showClinicDetailsModal}
+          onClose={() => {
+            setShowClinicDetailsModal(false)
+            setSelectedClinic(null)
+          }}
+          clinic={selectedClinic}
+        />
       )}
 
       {/* Toast Notification */}

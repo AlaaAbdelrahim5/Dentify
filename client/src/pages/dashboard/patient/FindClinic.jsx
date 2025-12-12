@@ -123,16 +123,21 @@ const FindClinic = () => {
       return matchesSearch && matchesCity
     })
 
-    // Sort by distance if user location is available
+    // Sort by distance if user location is available, then alphabetically
     if (userLocation) {
       console.log('User location for clinic sorting:', userLocation)
       console.log('Clinics to sort:', filtered.map(c => ({ name: c.clinicName, coordinates: c.coordinates })))
-      const sorted = sortByDistance(filtered, userLocation)
+      const sorted = sortByDistance(filtered, userLocation, 'clinicName')
       console.log('Sorted clinics with distances:', sorted.map(c => ({ name: c.clinicName, distance: c.distance })))
       return sorted
     }
 
-    return filtered
+    // If no user location, sort alphabetically by clinic name
+    return filtered.sort((a, b) => {
+      const nameA = (a.clinicName || '').toLowerCase()
+      const nameB = (b.clinicName || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
   }, [clinics, searchQuery, selectedCity, userLocation])
 
   const handleClearFilters = () => {
