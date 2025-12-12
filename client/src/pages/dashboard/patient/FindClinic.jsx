@@ -83,6 +83,8 @@ const FindClinic = () => {
       console.log('Fetched clinics:', response)
       
       const clinicsData = response.clinics || response.data || response || []
+      console.log('Clinics data:', clinicsData)
+      console.log('Sample clinic coordinates:', clinicsData[0]?.coordinates)
       setClinics(clinicsData)
     } catch (err) {
       console.error('Error fetching clinics:', err)
@@ -123,7 +125,11 @@ const FindClinic = () => {
 
     // Sort by distance if user location is available
     if (userLocation) {
-      return sortByDistance(filtered, userLocation)
+      console.log('User location for clinic sorting:', userLocation)
+      console.log('Clinics to sort:', filtered.map(c => ({ name: c.clinicName, coordinates: c.coordinates })))
+      const sorted = sortByDistance(filtered, userLocation)
+      console.log('Sorted clinics with distances:', sorted.map(c => ({ name: c.clinicName, distance: c.distance })))
+      return sorted
     }
 
     return filtered
@@ -189,7 +195,7 @@ const FindClinic = () => {
           <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {clinic.address || 'N/A'}
           </div>
-          {clinic.distance !== undefined && (
+          {clinic.distance !== undefined && clinic.distance !== Infinity && (
             <div className="mt-1">
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 isDarkMode ? 'bg-teal-500/20 text-teal-300' : 'bg-teal-50 text-teal-700'

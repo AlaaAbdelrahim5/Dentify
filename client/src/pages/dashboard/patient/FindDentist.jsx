@@ -88,6 +88,8 @@ const FindDoctor = () => {
       console.log('Fetched doctors:', response)
       
       const dentistsData = response.dentists || response.data || response || []
+      console.log('Dentists data:', dentistsData)
+      console.log('Sample clinic coordinates:', dentistsData[0]?.clinic?.coordinates)
       setDoctors(dentistsData)
     } catch (err) {
       console.error('Error fetching doctors:', err)
@@ -137,13 +139,25 @@ const FindDoctor = () => {
     
     // Sort by clinic distance from user if location is available
     if (userLocation) {
+      console.log('User location for sorting:', userLocation)
       // Map doctors to include clinic coordinates and sort
       const doctorsWithClinicLocations = filtered.map(doctor => ({
         ...doctor,
         coordinates: doctor.clinic?.coordinates
       }))
       
-      return sortByDistance(doctorsWithClinicLocations, userLocation)
+      console.log('Doctors with clinic coordinates:', doctorsWithClinicLocations.map(d => ({ 
+        name: `${d.firstName} ${d.lastName}`, 
+        coordinates: d.coordinates 
+      })))
+      
+      const sorted = sortByDistance(doctorsWithClinicLocations, userLocation)
+      console.log('Sorted doctors with distances:', sorted.map(d => ({ 
+        name: `${d.firstName} ${d.lastName}`, 
+        distance: d.distance 
+      })))
+      
+      return sorted
     }
     
     return filtered
@@ -220,7 +234,7 @@ const FindDoctor = () => {
           <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {doctor.clinic?.city || 'N/A'}
           </div>
-          {doctor.distance !== undefined && (
+          {doctor.distance !== undefined && doctor.distance !== Infinity && (
             <div className="mt-1">
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 isDarkMode ? 'bg-teal-500/20 text-teal-300' : 'bg-teal-50 text-teal-700'
