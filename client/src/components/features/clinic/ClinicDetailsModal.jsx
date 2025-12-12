@@ -15,7 +15,7 @@ import {
   FaCheckCircle,
   FaTimesCircle
 } from 'react-icons/fa'
-import { Card, Button, LoadingSpinner, BaseModal } from '../../common'
+import { Card, Button, LoadingSpinner, BaseModal, LocationMap } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -286,27 +286,6 @@ const ClinicDetailsModal = ({
               </div>
             )}
 
-            {/* Coordinates */}
-            {clinic.coordinates && (
-              <div className={`p-4 rounded-lg border ${
-                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <FaMapMarkerAlt className="text-teal-500" />
-                  <p className={`text-sm font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    GPS Coordinates
-                  </p>
-                </div>
-                <p className={`font-medium ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {clinic.coordinates}
-                </p>
-              </div>
-            )}
-
             {/* Description */}
             {clinic.description && (
               <div className={`p-4 rounded-lg border ${
@@ -402,6 +381,34 @@ const ClinicDetailsModal = ({
                     return <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No hours set</p>;
                   })()}
                 </div>
+              </div>
+            )}
+
+            {/* Map View */}
+            {clinic.coordinates && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <FaMapMarkerAlt className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Location Map
+                  </p>
+                </div>
+                <LocationMap
+                  coordinates={clinic.coordinates}
+                  title={clinic.name || clinic.clinicName}
+                  address={clinic.address?.fullAddress || clinic.location || clinic.city}
+                  height={300}
+                  isDarkMode={isDarkMode}
+                />
+                <p className={`text-xs mt-2 ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`}>
+                  Coordinates: {clinic.coordinates}
+                </p>
               </div>
             )}
           </div>

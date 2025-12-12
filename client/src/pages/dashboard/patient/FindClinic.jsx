@@ -6,7 +6,9 @@ import {
   FaPhone,
   FaEnvelope,
   FaEye,
-  FaCalendarPlus
+  FaCalendarPlus,
+  FaMap,
+  FaList
 } from 'react-icons/fa'
 import { 
   PageHeader, 
@@ -16,7 +18,9 @@ import {
   DataTable,
   ClinicDetailsModal,
   BookAppointmentModal,
-  Toast
+  Toast,
+  Card,
+  MultiLocationMap
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
@@ -39,6 +43,7 @@ const FindClinic = () => {
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
   const [toast, setToast] = useState(null)
+  const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
 
   // Fetch data when filters change
   useEffect(() => {
@@ -259,27 +264,93 @@ const FindClinic = () => {
         description="Search and browse dental clinics"
       />
 
-      {/* Filters */}
-      <FilterBar
-        searchTerm={searchQuery}
-        onSearchChange={(e) => setSearchQuery(e.target.value)}
-        searchPlaceholder="Search by clinic name, city, or address..."
-        filtering={filtering}
-        filters={filters}
-        onClearFilters={handleClearFilters}
-      />
+      {/* Filters and View Toggle */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex-1 w-full md:w-auto">
+            <FilterBar
+              searchTerm={searchQuery}
+              onSearchChange={(e) => setSearchQuery(e.target.value)}
+              searchPlaceholder="Search by clinic name, city, or address..."
+              filtering={filtering}
+              filters={filters}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              title="List View"
+            >
+              <FaList className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              title="Map View"
+            >
+              <FaMap className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
 
-      {/* Clinics Table */}
-      <DataTable
-        columns={tableColumns}
-        data={filteredClinics}
-        renderRow={renderTableRow}
-        loading={isLoading || filtering}
-        emptyMessage="No clinics found matching your criteria"
-        emptyIcon={FaBuilding}
-        emptyTitle="No Clinics Found"
-        hasFilters={searchQuery !== '' || selectedCity !== 'all'}
-      />
+      {/* List View */}
+      {viewMode === 'list' && (
+        <DataTable
+          columns={tableColumns}
+          data={filteredClinics}
+          renderRow={renderTableRow}
+          loading={isLoading || filtering}
+          emptyMessage="No clinics found matching your criteria"
+          emptyIcon={FaBuilding}
+          emptyTitle="No Clinics Found"
+          hasFilters={searchQuery !== '' || selectedCity !== 'all'}
+        />
+      )}
+
+      {/* Map View */}
+      {viewMode === 'map' && (
+        <Card className="p-4">
+          {isLoading || filtering ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <h3 className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Clinic Locations
+                </h3>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {filteredClinics.length} {filteredClinics.length === 1 ? 'clinic' : 'clinics'} found
+                </p>
+              </div>
+              <MultiLocationMap
+                locations={filteredClinics.map(clinic => ({
+                  id: clinic.userId || clinic.id,
+                  name: clinic.clinicName,
+                  coordinates: clinic.coordinates,
+                  address: clinic.location || clinic.city,
+                  data: clinic
+                }))}
+                onMarkerClick={(location) => handleViewDetails(location.data)}
+                height={500}
+                isDarkMode={isDarkMode}
+              />
+            </>
+          )}
+        </Card>
+      )}
 
       {/* Modals */}
       <ClinicDetailsModal

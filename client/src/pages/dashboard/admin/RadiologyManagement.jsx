@@ -14,7 +14,9 @@ import {
   FaEye,
   FaTimes,
   FaCog,
-  FaCheck
+  FaCheck,
+  FaMap,
+  FaList
 } from 'react-icons/fa'
 import { 
   Card, 
@@ -29,7 +31,9 @@ import {
   StatusBadge,
   ActionButtons,
   ConfirmationModal,
-  Toast
+  Toast,
+  LocationMap,
+  MultiLocationMap
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
@@ -55,6 +59,7 @@ const RadiologyManagement = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [toast, setToast] = useState(null)
+  const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
   const [stats, setStats] = useState({
     total: '-',
     active: '-',
@@ -523,25 +528,36 @@ const RadiologyManagement = () => {
                         </p>
                       </div>
                     </div>
-                    {center.coordinates && (
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          isDarkMode ? 'bg-gray-600' : 'bg-white'
-                        }`}>
-                          <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Coordinates
-                          </p>
-                          <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {center.coordinates}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+
+                {/* Location Map */}
+                {center.coordinates && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
+                      Location Map
+                    </h3>
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                      <LocationMap
+                        coordinates={center.coordinates}
+                        title={center.centerName}
+                        address={center.location || center.city}
+                        height={300}
+                        isDarkMode={isDarkMode}
+                      />
+                      <p className={`text-xs mt-2 ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                      }`}>
+                        Coordinates: {center.coordinates}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Contact Information */}
                 <div>
@@ -691,30 +707,97 @@ const RadiologyManagement = () => {
       {/* Statistics Overview */}
       <StatsOverview stats={statsConfig} />
 
-      {/* Search and Filters */}
+      {/* Search and Filters with View Toggle */}
       <Card className="p-6">
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          debouncedSearchTerm={debouncedSearchTerm}
-          filters={filters}
-          onClearFilters={clearFilters}
-          filtering={filtering}
-          searchPlaceholder="Search for center..."
-        />
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex-1 w-full md:w-auto">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={handleSearch}
+              debouncedSearchTerm={debouncedSearchTerm}
+              filters={filters}
+              onClearFilters={clearFilters}
+              filtering={filtering}
+              searchPlaceholder="Search for center..."
+            />
+          </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              title="List View"
+            >
+              <FaList className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              title="Map View"
+            >
+              <FaMap className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </Card>
 
-      {/* Centers Table */}
-      <DataTable
-        columns={columns}
-        data={centers}
-        renderRow={renderRow}
-        loading={filtering}
-        emptyMessage="No radiology centers yet"
-        emptyIcon={FaXRay}
-        emptyTitle="No radiology centers found"
-        hasFilters={!!(searchTerm || filterCity || filterStatus)}
-      />
+      {/* List View */}
+      {viewMode === 'list' && (
+        <DataTable
+          columns={columns}
+          data={centers}
+          renderRow={renderRow}
+          loading={filtering}
+          emptyMessage="No radiology centers yet"
+          emptyIcon={FaXRay}
+          emptyTitle="No radiology centers found"
+          hasFilters={!!(searchTerm || filterCity || filterStatus)}
+        />
+      )}
+
+      {/* Map View */}
+      {viewMode === 'map' && (
+        <Card className="p-4">
+          {filtering ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <h3 className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Radiology Center Locations
+                </h3>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {centers.length} {centers.length === 1 ? 'center' : 'centers'} found
+                </p>
+              </div>
+              <MultiLocationMap
+                locations={centers.map(center => ({
+                  id: center.userId,
+                  name: center.centerName,
+                  coordinates: center.coordinates,
+                  address: center.location || center.city,
+                  data: center
+                }))}
+                onMarkerClick={(location) => {
+                  setSelectedCenter(location.data)
+                  setShowDetailsModal(true)
+                }}
+                height={500}
+                isDarkMode={isDarkMode}
+              />
+            </>
+          )}
+        </Card>
+      )}
 
       {/* Pagination */}
       <Card>
