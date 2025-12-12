@@ -24,6 +24,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
+import { sortByDistance, formatDistance } from '../../../utils/geoUtils'
 
 const FindClinic = () => {
   const { isDarkMode } = useTheme()
@@ -44,6 +45,7 @@ const FindClinic = () => {
   const [selectedDentist, setSelectedDentist] = useState(null)
   const [toast, setToast] = useState(null)
   const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
+  const [userLocation, setUserLocation] = useState(null)
 
   // Fetch data when filters change
   useEffect(() => {
@@ -55,6 +57,17 @@ const FindClinic = () => {
   // Initial load
   useEffect(() => {
     fetchClinics()
+    // Get user location
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude])
+        },
+        (error) => {
+          console.log('Geolocation error:', error)
+        }
+      )
+    }
   }, [])
 
   const fetchClinics = async (isFiltering = false) => {
@@ -91,9 +104,9 @@ const FindClinic = () => {
     return cityList.sort()
   }, [clinics])
 
-  // Filtered clinics
+  // Filtered and sorted clinics
   const filteredClinics = useMemo(() => {
-    return clinics.filter(clinic => {
+    const filtered = clinics.filter(clinic => {
       const clinicName = clinic.clinicName?.toLowerCase() || ''
       const city = clinic.city?.toLowerCase() || ''
       const address = clinic.address?.toLowerCase() || ''
@@ -107,7 +120,14 @@ const FindClinic = () => {
 
       return matchesSearch && matchesCity
     })
-  }, [clinics, searchQuery, selectedCity])
+
+    // Sort by distance if user location is available
+    if (userLocation) {
+      return sortByDistance(filtered, userLocation)
+    }
+
+    return filtered
+  }, [clinics, searchQuery, selectedCity, userLocation])
 
   const handleClearFilters = () => {
     setSearchQuery('')
@@ -169,6 +189,15 @@ const FindClinic = () => {
           <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {clinic.address || 'N/A'}
           </div>
+          {clinic.distance !== undefined && (
+            <div className="mt-1">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                isDarkMode ? 'bg-teal-500/20 text-teal-300' : 'bg-teal-50 text-teal-700'
+              }`}>
+                📍 {formatDistance(clinic.distance)}
+              </span>
+            </div>
+          )}
         </div>
       </td>
       <td className="px-6 py-4">

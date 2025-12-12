@@ -24,6 +24,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
+import { sortByDistance, formatDistance } from '../../../utils/geoUtils'
 
 const FindDoctor = () => {
   const { isDarkMode } = useTheme()
@@ -32,6 +33,7 @@ const FindDoctor = () => {
   const [filtering, setFiltering] = useState(false)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
+  const [userLocation, setUserLocation] = useState(null)
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('')
@@ -54,6 +56,23 @@ const FindDoctor = () => {
   // Initial load
   useEffect(() => {
     fetchDoctors()
+    
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude])
+        },
+        (error) => {
+          console.log('Location access denied:', error)
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      )
+    }
   }, [])
 
   const fetchDoctors = async (isFiltering = false) => {
@@ -98,7 +117,7 @@ const FindDoctor = () => {
 
   // Filtered dentists
   const filteredDoctors = useMemo(() => {
-    return doctors.filter(doctor => {
+    const filtered = doctors.filter(doctor => {
       const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase()
       const clinicName = doctor.clinic?.clinicName?.toLowerCase() || ''
       const specialty = doctor.specialty || ''
@@ -115,7 +134,20 @@ const FindDoctor = () => {
 
       return matchesSearch && matchesSpecialty && matchesLocation
     })
-  }, [doctors, searchQuery, selectedSpecialty, selectedLocation])
+    
+    // Sort by clinic distance from user if location is available
+    if (userLocation) {
+      // Map doctors to include clinic coordinates and sort
+      const doctorsWithClinicLocations = filtered.map(doctor => ({
+        ...doctor,
+        coordinates: doctor.clinic?.coordinates
+      }))
+      
+      return sortByDistance(doctorsWithClinicLocations, userLocation)
+    }
+    
+    return filtered
+  }, [doctors, searchQuery, selectedSpecialty, selectedLocation, userLocation])
 
   const handleClearFilters = () => {
     setSearchQuery('')
@@ -188,6 +220,15 @@ const FindDoctor = () => {
           <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {doctor.clinic?.city || 'N/A'}
           </div>
+          {doctor.distance !== undefined && (
+            <div className="mt-1">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                isDarkMode ? 'bg-teal-500/20 text-teal-300' : 'bg-teal-50 text-teal-700'
+              }`}>
+                📍 {formatDistance(doctor.distance)}
+              </span>
+            </div>
+          )}
         </div>
       </td>
       <td className="px-6 py-4">

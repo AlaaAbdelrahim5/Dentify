@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'
 import { FaMapMarkerAlt } from 'react-icons/fa'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -12,15 +12,34 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
-// Component to handle map centering
-const MapCenter = ({ center, zoom }) => {
+// Create custom icon for user location
+const userLocationIcon = new L.DivIcon({
+  html: `<div style="background-color: #3B82F6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
+  className: 'user-location-marker',
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -13]
+})
+
+// Component to handle map centering and bounds
+const MapCenter = ({ locationPosition, userLocation }) => {
   const map = useMap()
   
   useEffect(() => {
-    if (center) {
-      map.setView(center, zoom)
+    const positions = []
+    
+    if (locationPosition) positions.push(locationPosition)
+    if (userLocation) positions.push(userLocation)
+    
+    if (positions.length === 0) return
+    
+    if (positions.length === 1) {
+      map.setView(positions[0], 13)
+    } else {
+      const bounds = L.latLngBounds(positions)
+      map.fitBounds(bounds, { padding: [50, 50] })
     }
-  }, [center, zoom, map])
+  }, [locationPosition, userLocation, map])
   
   return null
 }
@@ -48,6 +67,29 @@ const LocationMap = ({
   isDarkMode = false,
   showPopup = false
 }) => {
+  const [userLocation, setUserLocation] = useState(null)
+  
+  // Get user's current location
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userPos = [position.coords.latitude, position.coords.longitude]
+          console.log('User location obtained:', userPos)
+          setUserLocation(userPos)
+        },
+        (error) => {
+          console.error('Geolocation error:', error)
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      )
+    }
+  }, [])
+  
   // Parse coordinates
   const parseCoordinates = (coords) => {
     if (!coords) return null
@@ -99,6 +141,39 @@ const LocationMap = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        
+        {/* User Location Marker */}
+        {userLocation && Array.isArray(userLocation) && userLocation.length === 2 && (
+          <>
+            <Marker 
+              position={userLocation} 
+              icon={userLocationIcon}
+              key="user-location"
+            >
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-semibold text-blue-600 mb-1">📍 Your Location</h3>
+                  <p className="text-xs text-gray-600">You are here</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {userLocation[0].toFixed(4)}, {userLocation[1].toFixed(4)}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+            <Circle
+              center={userLocation}
+              radius={100}
+              pathOptions={{
+                color: '#3B82F6',
+                fillColor: '#3B82F6',
+                fillOpacity: 0.1,
+                weight: 2
+              }}
+            />
+          </>
+        )}
+        
+        {/* Location Marker */}
         <Marker position={position}>
           {showPopup && (
             <Popup>
@@ -111,7 +186,8 @@ const LocationMap = ({
             </Popup>
           )}
         </Marker>
-        <MapCenter center={position} zoom={zoom} />
+        
+        <MapCenter locationPosition={position} userLocation={userLocation} />
       </MapContainer>
     </div>
   )
