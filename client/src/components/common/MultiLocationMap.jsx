@@ -62,18 +62,25 @@ const FitBounds = ({ locations, userLocation }) => {
  * @param {Function} props.onMarkerClick - Callback when marker is clicked
  * @param {number} props.height - Height of the map in pixels (default: 400)
  * @param {boolean} props.isDarkMode - Dark mode flag
+ * @param {Array} props.userLocationProp - Optional user location [lat, lng] to avoid refetching
  */
 const MultiLocationMap = ({ 
   locations = [], 
   onMarkerClick,
   height = 400,
-  isDarkMode = false 
+  isDarkMode = false,
+  userLocationProp = null
 }) => {
-  const [userLocation, setUserLocation] = useState(null)
+  const [userLocation, setUserLocation] = useState(userLocationProp)
   const [locationError, setLocationError] = useState(null)
 
-  // Get user's current location
+  // Get user's current location only if not provided as prop
   useEffect(() => {
+    if (userLocationProp) {
+      setUserLocation(userLocationProp)
+      return
+    }
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -86,15 +93,22 @@ const MultiLocationMap = ({
           setLocationError(error.message)
         },
         {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         }
       )
     } else {
       console.log('Geolocation not available')
     }
-  }, [])
+  }, [userLocationProp])
+
+  // Update user location when prop changes
+  useEffect(() => {
+    if (userLocationProp) {
+      setUserLocation(userLocationProp)
+    }
+  }, [userLocationProp])
 
   // Parse coordinates and prepare locations data
   const parseCoordinates = (coords) => {

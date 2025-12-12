@@ -46,29 +46,74 @@ const FindClinic = () => {
   const [toast, setToast] = useState(null)
   const [viewMode, setViewMode] = useState('list') // 'list' or 'map'
   const [userLocation, setUserLocation] = useState(null)
+  const [locationChecked, setLocationChecked] = useState(false)
 
-  // Fetch data when filters change
+  // Get user location on mount with shorter timeout
+  useEffect(() => {
+    let mounted = true
+
+    const getLocation = async () => {
+      if ('geolocation' in navigator) {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Location timeout')), 3000) // 3 second timeout
+        })
+
+        // Create the geolocation promise
+        const geoPromise = new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => resolve([position.coords.latitude, position.coords.longitude]),
+            (error) => reject(error),
+            {
+              enableHighAccuracy: true,
+              timeout: 3000,
+              maximumAge: 0
+            }
+          )
+        })
+
+        try {
+          const location = await Promise.race([geoPromise, timeoutPromise])
+          if (mounted) {
+            console.log('User location obtained:', location)
+            setUserLocation(location)
+            setLocationChecked(true)
+          }
+        } catch (error) {
+          console.log('Geolocation error or timeout:', error)
+          if (mounted) {
+            setUserLocation('failed')
+            setLocationChecked(true)
+          }
+        }
+      } else {
+        if (mounted) {
+          setUserLocation('failed')
+          setLocationChecked(true)
+        }
+      }
+    }
+
+    getLocation()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  // Fetch clinics after location is determined
+  useEffect(() => {
+    if (locationChecked && isFirstLoad) {
+      fetchClinics()
+    }
+  }, [locationChecked])
+
+  // Fetch data when filters change (after first load)
   useEffect(() => {
     if (!isFirstLoad) {
       fetchClinics(true)
     }
   }, [searchQuery, selectedCity])
-
-  // Initial load
-  useEffect(() => {
-    fetchClinics()
-    // Get user location
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude])
-        },
-        (error) => {
-          console.log('Geolocation error:', error)
-        }
-      )
-    }
-  }, [])
 
   const fetchClinics = async (isFiltering = false) => {
     try {
@@ -123,8 +168,8 @@ const FindClinic = () => {
       return matchesSearch && matchesCity
     })
 
-    // Sort by distance if user location is available, then alphabetically
-    if (userLocation) {
+    // Sort by distance if user location is available (and not failed)
+    if (userLocation && Array.isArray(userLocation)) {
       console.log('User location for clinic sorting:', userLocation)
       console.log('Clinics to sort:', filtered.map(c => ({ name: c.clinicName, coordinates: c.coordinates })))
       const sorted = sortByDistance(filtered, userLocation, 'clinicName')
@@ -176,7 +221,7 @@ const FindClinic = () => {
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
             <FaBuilding className="text-white text-sm" />
           </div>
           <div>
@@ -262,6 +307,28 @@ const FindClinic = () => {
       console.error('Error booking appointment:', err)
       throw err // Re-throw to let modal handle the error
     }
+  }
+
+  // Show loading while getting location
+  if (!locationChecked) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Find a Clinic"
+          description="Search and browse dental clinics"
+        />
+        <div className={`p-12 text-center rounded-lg ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <LoadingSpinner />
+          <p className={`mt-4 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Getting your location...
+          </p>
+        </div>
+      </div>
+    )
   }
 
   // Error state
@@ -386,6 +453,7 @@ const FindClinic = () => {
                 onMarkerClick={(location) => handleViewDetails(location.data)}
                 height={500}
                 isDarkMode={isDarkMode}
+                userLocationProp={Array.isArray(userLocation) ? userLocation : null}
               />
             </>
           )}
