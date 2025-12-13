@@ -15,8 +15,8 @@ const Button = ({
   const getSizeClasses = () => {
     const sizes = {
       sm: 'py-2 px-4',
-      md: 'py-4 px-6',
-      lg: 'py-5 px-8',
+      md: 'py-5 px-6',
+      lg: 'py-6 px-8',
     };
     return sizes[size] || sizes.md;
   };
@@ -32,7 +32,7 @@ const Button = ({
       {isLoading ? (
         <ActivityIndicator color="white" />
       ) : (
-        <Text className={`text-center text-lg font-semibold ${getTextColor()}`}>
+        <Text className={`text-center text-xl font-semibold ${getTextColor()}`}>
           {children}
         </Text>
       )}

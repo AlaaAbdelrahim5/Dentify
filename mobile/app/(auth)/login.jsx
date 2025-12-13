@@ -153,7 +153,7 @@ export default function Login() {
           <AuthBackground />
 
           <View className="flex-1 justify-center px-6 py-12">
-            <AuthHeader />
+            <AuthHeader message="Welcome back! Please sign in to continue." />
 
             <AuthCard
               title="Sign In"

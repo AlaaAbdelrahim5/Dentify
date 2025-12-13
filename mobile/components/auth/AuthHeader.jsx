@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import Logo from '../common/Logo';
 
-const AuthHeader = ({ className = '' }) => {
+const AuthHeader = ({ message, className = '' }) => {
   return (
     <View className={`items-center mb-8 ${className}`}>
-      <Text className="text-4xl font-bold text-primary-600">🦷 Dentify</Text>
-      <Text className="mt-4 text-lg text-gray-600 text-center">
-        Welcome back! Please sign in to continue.
-      </Text>
+      <Logo size="lg" />
+      {message && (
+        <Text className="mt-4 text-lg text-gray-600 text-center">
+          {message}
+        </Text>
+      )}
     </View>
   );
 };

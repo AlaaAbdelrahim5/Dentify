@@ -23,6 +23,7 @@ import {
   Select,
   Checkbox,
   AuthCard,
+  AuthHeader,
   AuthFooter,
   AuthInfoBar,
   AuthBackground
@@ -201,15 +202,9 @@ export default function SignUp() {
           <AuthBackground />
 
           <View className="flex-1 px-6 py-8">
-            {/* Logo Section */}
-            <View className="items-center mb-6">
-              <Text className="text-4xl font-bold text-primary-600">🦷 Dentify</Text>
-              <Text className="mt-3 text-lg text-gray-600 text-center">
-                Create your patient account to get started
-              </Text>
-            </View>
+            <AuthHeader message="Create your patient account to get started" />
 
-          <AuthCard
+            <AuthCard
             title="Patient Registration"
             subtitle="Join our dental care community today"
             className="mb-6"
