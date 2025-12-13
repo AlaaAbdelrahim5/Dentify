@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { authAPI } from '../../services/api';
 import { authUtils } from '../../utils/auth';
 import { validateEmail, validatePhone, validatePassword, validateAge, validateRequired } from '../../utils/validation';
 import { PALESTINIAN_CITIES, GENDER_OPTIONS, COUNTRY_CODES } from '../../utils/constants';
+import {
+  Input,
+  Button,
+  PasswordInput,
+  PhoneInput,
+  Select,
+  Checkbox,
+  AuthCard,
+  AuthFooter,
+  AuthInfoBar,
+  AuthBackground
+} from '../../components';
 
 export default function SignUp() {
   const router = useRouter();
@@ -36,8 +45,6 @@ export default function SignUp() {
   const [errors, setErrors] = useState({});
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     authUtils.clearLogoutFlag();
@@ -180,32 +187,8 @@ export default function SignUp() {
     }
   };
 
-  const passwordStrength = () => {
-    const password = formData.password;
-    if (!password) return { strength: 0, text: '', color: '' };
-
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-    const levels = [
-      { text: 'Very Weak', color: 'bg-red-500' },
-      { text: 'Weak', color: 'bg-orange-500' },
-      { text: 'Fair', color: 'bg-yellow-500' },
-      { text: 'Good', color: 'bg-blue-500' },
-      { text: 'Strong', color: 'bg-green-500' },
-    ];
-
-    return { strength, ...levels[strength] };
-  };
-
-  const passwordInfo = passwordStrength();
-
   return (
-    <SafeAreaView className="flex-1 bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0fdfa' }}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -215,384 +198,158 @@ export default function SignUp() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-        {/* Decorative background */}
-        <View className="absolute top-20 right-20 w-72 h-72 rounded-full bg-teal-300 opacity-20 blur-3xl" />
-        <View className="absolute bottom-20 left-20 w-96 h-96 rounded-full bg-cyan-300 opacity-20 blur-3xl" />
+          <AuthBackground />
 
-        <View className="flex-1 px-6 py-8">
-          {/* Logo Section */}
-          <View className="items-center mb-6">
-            <Text className="text-4xl font-bold text-teal-600">🦷 Dentify</Text>
-            <Text className="mt-3 text-lg text-gray-600 text-center">
-              Create your patient account to get started
-            </Text>
-          </View>
-
-          {/* Signup Card */}
-          <View className="bg-white rounded-2xl shadow-2xl overflow-hidden mb-6">
-            {/* Header */}
-            <View className="bg-gradient-to-r from-teal-500 to-cyan-500 p-6">
-              <Text className="text-3xl font-bold text-center text-white">
-                Patient Registration
-              </Text>
-              <Text className="text-sm text-center mt-2 text-white opacity-90">
-                Join our dental care community today
+          <View className="flex-1 px-6 py-8">
+            {/* Logo Section */}
+            <View className="items-center mb-6">
+              <Text className="text-4xl font-bold text-primary-600">🦷 Dentify</Text>
+              <Text className="mt-3 text-lg text-gray-600 text-center">
+                Create your patient account to get started
               </Text>
             </View>
 
-            {/* Content */}
-            <View className="p-6">
-              {/* First Name */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.firstName ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="person-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="Enter your first name"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.firstName}
-                    onChangeText={(value) => handleInputChange('firstName', value)}
-                    className="flex-1 py-3 pr-3 text-gray-900"
-                  />
-                </View>
-                {errors.firstName && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.firstName}</Text>
-                )}
-              </View>
+          <AuthCard
+            title="Patient Registration"
+            subtitle="Join our dental care community today"
+            className="mb-6"
+          >
+            <Input
+              label="First Name"
+              placeholder="Enter your first name"
+              value={formData.firstName}
+              onChangeText={(value) => handleInputChange('firstName', value)}
+              icon="person-outline"
+              error={errors.firstName}
+            />
 
-              {/* Last Name */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.lastName ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="person-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="Enter your last name"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.lastName}
-                    onChangeText={(value) => handleInputChange('lastName', value)}
-                    className="flex-1 py-3 pr-3 text-gray-900"
-                  />
-                </View>
-                {errors.lastName && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.lastName}</Text>
-                )}
-              </View>
+            <Input
+              label="Last Name"
+              placeholder="Enter your last name"
+              value={formData.lastName}
+              onChangeText={(value) => handleInputChange('lastName', value)}
+              icon="person-outline"
+              error={errors.lastName}
+            />
 
-              {/* Email */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="Enter your email"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.email}
-                    onChangeText={(value) => handleInputChange('email', value)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    className="flex-1 py-3 pr-3 text-gray-900"
-                  />
-                </View>
-                {errors.email && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.email}</Text>
-                )}
-              </View>
+            <Input
+              label="Email Address"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChangeText={(value) => handleInputChange('email', value)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon="mail-outline"
+              error={errors.email}
+            />
 
-              {/* Phone Number */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </Text>
-                <View className="flex-row space-x-2">
-                  <View className="w-32 rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
-                    <Picker
-                      selectedValue={formData.countryCode}
-                      onValueChange={(value) => handleInputChange('countryCode', value)}
-                      style={{ height: 50 }}
-                    >
-                      {COUNTRY_CODES.map((code) => (
-                        <Picker.Item key={code.value} label={code.value} value={code.value} />
-                      ))}
-                    </Picker>
-                  </View>
-                  <View className={`flex-1 flex-row items-center rounded-lg border ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  } bg-white shadow-sm`}>
-                    <View className="pl-3 pr-2">
-                      <Ionicons name="call-outline" size={20} color="#9CA3AF" />
-                    </View>
-                    <TextInput
-                      placeholder="Phone number"
-                      placeholderTextColor="#9CA3AF"
-                      value={formData.phoneNumber}
-                      onChangeText={(value) => handleInputChange('phoneNumber', value.replace(/\D/g, ''))}
-                      keyboardType="phone-pad"
-                      className="flex-1 py-3 pr-3 text-gray-900"
-                    />
-                  </View>
-                </View>
-                {errors.phone && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.phone}</Text>
-                )}
-              </View>
+            <PhoneInput
+              label="Phone Number"
+              countryCode={formData.countryCode}
+              phoneNumber={formData.phoneNumber}
+              onCountryChange={(value) => handleInputChange('countryCode', value)}
+              onPhoneChange={(value) => handleInputChange('phoneNumber', value.replace(/\D/g, ''))}
+              error={errors.phone}
+            />
 
-              {/* Date of Birth */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Date of Birth
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.dateOfBirth ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="calendar-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.dateOfBirth}
-                    onChangeText={(value) => handleInputChange('dateOfBirth', value)}
-                    className="flex-1 py-3 pr-3 text-gray-900"
-                  />
-                </View>
-                {errors.dateOfBirth && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</Text>
-                )}
-              </View>
+            <Input
+              label="Date of Birth"
+              placeholder="YYYY-MM-DD"
+              value={formData.dateOfBirth}
+              onChangeText={(value) => handleInputChange('dateOfBirth', value)}
+              icon="calendar-outline"
+              error={errors.dateOfBirth}
+            />
 
-              {/* Gender */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Gender
-                </Text>
-                <View className={`rounded-lg border ${
-                  errors.gender ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm overflow-hidden`}>
-                  <Picker
-                    selectedValue={formData.gender}
-                    onValueChange={(value) => handleInputChange('gender', value)}
-                    style={{ height: 50 }}
-                  >
-                    <Picker.Item label="Select your gender" value="" />
-                    {GENDER_OPTIONS.map((option) => (
-                      <Picker.Item key={option.value} label={option.label} value={option.value} />
-                    ))}
-                  </Picker>
-                </View>
-                {errors.gender && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.gender}</Text>
-                )}
-              </View>
+            <Select
+              label="Gender"
+              value={formData.gender}
+              onValueChange={(value) => handleInputChange('gender', value)}
+              options={GENDER_OPTIONS}
+              placeholder="Select your gender"
+              error={errors.gender}
+            />
 
-              {/* City */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  City
-                </Text>
-                <View className={`rounded-lg border ${
-                  errors.city ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm overflow-hidden`}>
-                  <Picker
-                    selectedValue={formData.city}
-                    onValueChange={(value) => handleInputChange('city', value)}
-                    style={{ height: 50 }}
-                  >
-                    <Picker.Item label="Select your city" value="" />
-                    {PALESTINIAN_CITIES.map((city) => (
-                      <Picker.Item key={city} label={city} value={city} />
-                    ))}
-                  </Picker>
-                </View>
-                {errors.city && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.city}</Text>
-                )}
-              </View>
+            <Select
+              label="City"
+              value={formData.city}
+              onValueChange={(value) => handleInputChange('city', value)}
+              options={PALESTINIAN_CITIES.map(city => ({ label: city, value: city }))}
+              placeholder="Select your city"
+              error={errors.city}
+            />
 
-              {/* Password */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="Create a strong password"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.password}
-                    onChangeText={(value) => handleInputChange('password', value)}
-                    secureTextEntry={!showPassword}
-                    className="flex-1 py-3 text-gray-900"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    className="px-3 py-3"
-                  >
-                    <Ionicons 
-                      name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                      size={20} 
-                      color="#9CA3AF" 
-                    />
-                  </TouchableOpacity>
-                </View>
-                {formData.password && (
-                  <View className="mt-2">
+            <PasswordInput
+              label="Password"
+              placeholder="Create a strong password"
+              value={formData.password}
+              onChangeText={(value) => handleInputChange('password', value)}
+              error={errors.password}
+              showStrength={true}
+            />
+
+            <View className="mb-4">
+              <PasswordInput
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                error={errors.confirmPassword}
+                className="mb-0"
+              />
+              {formData.confirmPassword && formData.password && (
+                <View className="mt-2">
+                  {formData.password === formData.confirmPassword ? (
                     <View className="flex-row items-center">
-                      <View className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <View 
-                          className={`h-2 ${passwordInfo.color}`}
-                          style={{ width: `${(passwordInfo.strength / 5) * 100}%` }}
-                        />
-                      </View>
-                      <Text className="ml-2 text-xs text-gray-600">
-                        {passwordInfo.text}
-                      </Text>
+                      <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                      <Text className="ml-1 text-sm text-green-600">Passwords match</Text>
                     </View>
-                  </View>
-                )}
-                {errors.password && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.password}</Text>
-                )}
-              </View>
-
-              {/* Confirm Password */}
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
-                </Text>
-                <View className={`flex-row items-center rounded-lg border ${
-                  errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                } bg-white shadow-sm`}>
-                  <View className="pl-3 pr-2">
-                    <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
-                  </View>
-                  <TextInput
-                    placeholder="Confirm your password"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.confirmPassword}
-                    onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                    secureTextEntry={!showConfirmPassword}
-                    className="flex-1 py-3 text-gray-900"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="px-3 py-3"
-                  >
-                    <Ionicons 
-                      name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} 
-                      size={20} 
-                      color="#9CA3AF" 
-                    />
-                  </TouchableOpacity>
+                  ) : (
+                    <Text className="text-sm text-red-600">Passwords do not match</Text>
+                  )}
                 </View>
-                {formData.confirmPassword && formData.password && (
-                  <View className="mt-2">
-                    {formData.password === formData.confirmPassword ? (
-                      <View className="flex-row items-center">
-                        <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                        <Text className="ml-1 text-sm text-green-600">Passwords match</Text>
-                      </View>
-                    ) : (
-                      <Text className="text-sm text-red-600">Passwords do not match</Text>
-                    )}
-                  </View>
-                )}
-                {errors.confirmPassword && (
-                  <Text className="mt-1 text-sm text-red-600">{errors.confirmPassword}</Text>
-                )}
-              </View>
+              )}
+            </View>
 
-              {/* Terms and Conditions */}
-              <View className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <TouchableOpacity 
-                  onPress={() => setAcceptedTerms(!acceptedTerms)}
-                  className="flex-row items-start"
-                >
-                  <View className={`w-5 h-5 rounded border-2 mr-3 mt-1 items-center justify-center ${
-                    acceptedTerms ? 'bg-teal-600 border-teal-600' : 'border-gray-300'
-                  }`}>
-                    {acceptedTerms && (
-                      <Ionicons name="checkmark" size={14} color="white" />
-                    )}
-                  </View>
-                  <Text className="flex-1 text-sm text-gray-600 leading-relaxed">
-                    I accept the{' '}
-                    <Text className="text-teal-600 font-medium">Terms and Conditions</Text>
-                    {' '}and{' '}
-                    <Text className="text-teal-600 font-medium">Privacy Policy</Text>
-                  </Text>
-                </TouchableOpacity>
-                {errors.terms && (
-                  <Text className="mt-2 text-sm text-red-600">{errors.terms}</Text>
-                )}
-              </View>
-
-              {/* Submit Button */}
-              <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={isLoading}
-                className={`rounded-lg py-4 shadow-lg ${
-                  isLoading 
-                    ? 'bg-gray-400' 
-                    : 'bg-gradient-to-r from-teal-500 to-blue-500'
-                }`}
+            <View className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Checkbox
+                checked={acceptedTerms}
+                onPress={() => setAcceptedTerms(!acceptedTerms)}
+                error={errors.terms}
+              />
+              <TouchableOpacity 
+                onPress={() => setAcceptedTerms(!acceptedTerms)}
+                className="ml-7 -mt-5"
               >
-                {isLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-white text-center text-lg font-semibold">
-                    Create Account
-                  </Text>
-                )}
+                <Text className="text-sm text-gray-600 leading-relaxed">
+                  I accept the{' '}
+                  <Text className="text-primary-600 font-medium">Terms and Conditions</Text>
+                  {' '}and{' '}
+                  <Text className="text-primary-600 font-medium">Privacy Policy</Text>
+                </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Footer */}
-            <View className="bg-gray-50 p-6 border-t border-gray-100">
-              <View className="flex-row justify-center items-center">
-                <Text className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                </Text>
-                <Link href="/(auth)/login" asChild>
-                  <TouchableOpacity>
-                    <Text className="text-sm font-semibold text-teal-600">
-                      Sign in here
-                    </Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
-            </View>
+            <Button
+              onPress={handleSubmit}
+              isLoading={isLoading}
+              disabled={isLoading}
+            >
+              Create Account
+            </Button>
+          </AuthCard>
+
+          <View className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+            <AuthFooter
+              text="Already have an account?"
+              linkText="Sign in here"
+              linkHref="/(auth)/login"
+            />
           </View>
 
-          {/* Additional Info */}
           <View className="mb-8 items-center">
             <View className="flex-row bg-white bg-opacity-80 px-6 py-3 rounded-full shadow-md">
-              <Link href="/" asChild>
-                <TouchableOpacity className="flex-row items-center">
-                  <Text className="text-xs text-gray-500">🏠 Home</Text>
-                </TouchableOpacity>
-              </Link>
+              <Text className="text-xs text-gray-500">🏠 Home</Text>
               <Text className="text-xs text-gray-500 mx-3">•</Text>
               <Text className="text-xs text-gray-500">🔒 Secure & Private</Text>
               <Text className="text-xs text-gray-500 mx-3">•</Text>
