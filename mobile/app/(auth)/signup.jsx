@@ -61,6 +61,15 @@ export default function SignUp() {
 
     const isAuth = await authUtils.isAuthenticated();
     if (isAuth) {
+      const user = await authUtils.getCurrentUser();
+      
+      // Check if user role is allowed on mobile
+      if (!authUtils.isRoleAllowed(user?.role)) {
+        // Logout user with disallowed role
+        await authUtils.logout();
+        return;
+      }
+
       const dashboardRoute = await authUtils.getDashboardRoute();
       router.replace(dashboardRoute);
     }
@@ -203,6 +212,14 @@ export default function SignUp() {
 
           <View className="flex-1 px-6 py-8">
             <AuthHeader message="Create your patient account to get started" />
+
+            {/* Info Message */}
+            <View className="mb-4 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+              <Text className="text-sm text-teal-800 text-center">
+                ℹ️ This registration is for <Text className="font-semibold">Patients</Text> only.{"\n"}
+                Dentists and Staff should contact administration.
+              </Text>
+            </View>
 
             <AuthCard
             title="Patient Registration"

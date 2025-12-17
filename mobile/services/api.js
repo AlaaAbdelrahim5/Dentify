@@ -1,7 +1,10 @@
 import { authUtils } from '../utils/auth';
 
-// API configuration - Change this to your actual API URL
-const API_BASE_URL = 'http://localhost:5000/api';
+// API configuration from environment variables
+// Update the .env file to change the API URL
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000/api';
+
+console.log('📡 API Base URL:', API_BASE_URL);
 
 // API service for making HTTP requests with JWT support
 class ApiService {
@@ -67,7 +70,7 @@ class ApiService {
 
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      // Silent error handling - errors will be displayed in UI, not console
       if (!error.response && error.message.includes('HTTP error')) {
         error.response = { data: { message: error.message }, status: 400 };
       }

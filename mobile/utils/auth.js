@@ -183,20 +183,20 @@ export const authUtils = {
     return token ? { Authorization: `Bearer ${token}` } : {};
   },
 
+  // Check if user role is allowed on mobile (patient, dentist, secretary only)
+  isRoleAllowed: (role) => {
+    if (!role) return false;
+    const allowedRoles = ['patient', 'dentist', 'secretary'];
+    return allowedRoles.includes(role.toLowerCase());
+  },
+
   // Get dashboard route based on user role
   getDashboardRoute: async () => {
     const user = await authUtils.getCurrentUser();
     if (!user || !user.role) return '/';
 
-    const roleRoutes = {
-      'admin': '/dashboard/admin',
-      'dentist': '/dashboard/dentist',
-      'patient': '/dashboard/patient',
-      'secretary': '/dashboard/secretary',
-      'clinic': '/dashboard/clinic',
-      'radiology': '/dashboard/radiology'
-    };
-
-    return roleRoutes[user.role.toLowerCase()] || '/';
+    // Mobile routes - all roles use the same dashboard entry point
+    // which will render the appropriate overview based on role
+    return '/dashboard';
   }
 };

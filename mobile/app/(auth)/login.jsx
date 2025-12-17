@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { authAPI } from '../../services/api';
 import { authUtils } from '../../utils/auth';
 import { validateEmail } from '../../utils/validation';
@@ -31,6 +32,7 @@ export default function Login() {
     password: '',
   });
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -50,6 +52,15 @@ export default function Login() {
 
     const isAuth = await authUtils.isAuthenticated();
     if (isAuth) {
+      const user = await authUtils.getCurrentUser();
+      
+      // Check if user role is allowed on mobile
+      if (!authUtils.isRoleAllowed(user?.role)) {
+        // Logout user with disallowed role
+        await authUtils.logout();
+        return;
+      }
+
       const dashboardRoute = await authUtils.getDashboardRoute();
       router.replace(dashboardRoute);
     }
@@ -61,11 +72,15 @@ export default function Login() {
       [name]: value,
     }));
 
+    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: '',
       }));
+    }
+    if (apiError) {
+      setApiError('');
     }
   };
 
@@ -82,6 +97,7 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    setApiError('');
 
     try {
       console.log('Attempting login with email:', formData.email);
@@ -99,6 +115,16 @@ export default function Login() {
 
       // Backend returns { message, user, token, refreshToken } directly
       if (response && response.token && response.user) {
+        // Check if user role is allowed on mobile app (patient, dentist, secretary only)
+        if (!authUtils.isRoleAllowed(response.user.role)) {
+          Alert.alert(
+            'Access Restricted',
+            `This mobile app is only available for Patients, Dentists, and Secretaries. Your account type (${response.user.role}) cannot access the mobile app. Please use the web application instead.`,
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
         // Store user data and tokens using auth utils
         await authUtils.login(
           response.user, 
@@ -118,9 +144,7 @@ export default function Login() {
         throw new Error('Invalid response from server');
       }
     } catch (error) {
-      console.error('Login error:', error);
-
-      // Handle specific error messages from backend
+      // Handle specific error messages from backend (without console.error to avoid error logs)
       let errorMessage = 'An error occurred during login. Please try again.';
       
       if (error.message.includes('Invalid credentials')) {
@@ -133,7 +157,7 @@ export default function Login() {
         errorMessage = error.message;
       }
 
-      Alert.alert('Login Failed', errorMessage);
+      setApiError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +182,19 @@ export default function Login() {
               title="Sign In"
               subtitle="Access your Dentify account"
             >
+              {/* API Error Message */}
+              {apiError && (
+                <View className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <View className="flex-row items-start">
+                    <Ionicons name="warning" size={20} color="#DC2626" />
+                    <View className="flex-1 ml-3">
+                      <Text className="font-semibold text-red-800">Login Failed</Text>
+                      <Text className="text-sm text-red-600 mt-1">{apiError}</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
               <Input
                 label="Email Address"
                 placeholder="Enter your email"

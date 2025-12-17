@@ -53,3 +53,13 @@ export const COUNTRY_CODES = [
   { value: '+961', label: '+961 (Lebanon)' },
   { value: '+963', label: '+963 (Syria)' }
 ];
+
+// Allowed user roles for mobile app (Patient, Dentist, Secretary only)
+export const ALLOWED_MOBILE_ROLES = ['patient', 'dentist', 'secretary'];
+
+// Role display names
+export const ROLE_DISPLAY_NAMES = {
+  patient: 'Patient',
+  dentist: 'Dentist',
+  secretary: 'Secretary'
+};
