@@ -26,7 +26,6 @@ import {
   AuthCard,
   AuthHeader,
   AuthFooter,
-  AuthInfoBar,
   AuthBackground
 } from '../../components';
 
@@ -341,16 +340,6 @@ export default function SignUp() {
               linkText="Sign in here"
               linkHref="/(auth)/login"
             />
-          </View>
-
-          <View className="mb-8 items-center">
-            <View className="flex-row bg-white bg-opacity-80 px-6 py-3 rounded-full shadow-md">
-              <Text className="text-xs text-gray-500">🏠 Home</Text>
-              <Text className="text-xs text-gray-500 mx-3">•</Text>
-              <Text className="text-xs text-gray-500">🔒 Secure & Private</Text>
-              <Text className="text-xs text-gray-500 mx-3">•</Text>
-              <Text className="text-xs text-gray-500">⚡ Fast & Easy</Text>
-            </View>
           </View>
         </View>
         </ScrollView>

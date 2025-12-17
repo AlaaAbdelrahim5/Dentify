@@ -21,7 +21,6 @@ import {
   AuthCard,
   AuthHeader,
   AuthFooter,
-  AuthInfoBar,
   AuthBackground
 } from '../../components';
 
@@ -211,8 +210,6 @@ export default function Login() {
                 linkHref="/(auth)/signup"
               />
             </View>
-
-            <AuthInfoBar />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
