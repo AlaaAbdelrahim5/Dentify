@@ -22,6 +22,7 @@ import {
   PhoneInput,
   Select,
   Checkbox,
+  DatePicker,
   AuthCard,
   AuthHeader,
   AuthFooter,
@@ -247,13 +248,13 @@ export default function SignUp() {
               error={errors.phone}
             />
 
-            <Input
+            <DatePicker
               label="Date of Birth"
               placeholder="YYYY-MM-DD"
               value={formData.dateOfBirth}
-              onChangeText={(value) => handleInputChange('dateOfBirth', value)}
-              icon="calendar-outline"
+              onChange={(value) => handleInputChange('dateOfBirth', value)}
               error={errors.dateOfBirth}
+              maximumDate={new Date()}
             />
 
             <Select

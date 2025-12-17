@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const Select = ({ 
@@ -13,36 +13,86 @@ const Select = ({
   ...props 
 }) => {
   return (
-    <View className={`mb-4 ${className}`}>
+    <View style={styles.container}>
       {label && (
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+        <Text style={styles.label}>
           {label}
         </Text>
       )}
-      <View className={`rounded-lg border ${
-        error ? 'border-red-300' : 'border-gray-300'
-      } bg-white shadow-sm overflow-hidden`}>
+      <View style={[
+        styles.pickerContainer,
+        error ? styles.pickerError : styles.pickerNormal
+      ]}>
         <Picker
           selectedValue={value}
           onValueChange={onValueChange}
-          style={{ height: 50 }}
+          style={styles.picker}
+          itemStyle={styles.pickerItem}
+          dropdownIconColor="#6b7280"
           {...props}
         >
-          <Picker.Item label={placeholder} value="" />
+          <Picker.Item label={placeholder} value="" enabled={false} color="#9CA3AF" />
           {options.map((option) => (
             <Picker.Item 
               key={option.value} 
               label={option.label} 
-              value={option.value} 
+              value={option.value}
+              color="#111827"
             />
           ))}
         </Picker>
       </View>
       {error && (
-        <Text className="mt-2 text-sm text-red-600">{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#111827',
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: 50,
+    color: '#111827',
+  },
+  pickerNormal: {
+    borderColor: '#d1d5db',
+  },
+  pickerError: {
+    borderColor: '#fca5a5',
+  },
+  errorText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#dc2626',
+  },
+});
 
 export default Select;

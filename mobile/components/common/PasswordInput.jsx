@@ -15,7 +15,7 @@ const PasswordInput = ({
   const [showPassword, setShowPassword] = useState(false);
 
   const calculatePasswordStrength = () => {
-    if (!value) return { strength: 0, text: '', color: 'bg-gray-200' };
+    if (!value) return { strength: 0, text: '', color: '#e5e7eb' };
     
     let strength = 0;
     if (value.length >= 8) strength++;
@@ -25,11 +25,11 @@ const PasswordInput = ({
     if (/[^A-Za-z0-9]/.test(value)) strength++;
 
     const levels = [
-      { strength: 1, text: 'Very Weak', color: 'bg-red-500' },
-      { strength: 2, text: 'Weak', color: 'bg-orange-500' },
-      { strength: 3, text: 'Fair', color: 'bg-yellow-500' },
-      { strength: 4, text: 'Good', color: 'bg-blue-500' },
-      { strength: 5, text: 'Strong', color: 'bg-green-500' },
+      { strength: 1, text: 'Very Weak', color: '#ef4444' },
+      { strength: 2, text: 'Weak', color: '#f97316' },
+      { strength: 3, text: 'Fair', color: '#eab308' },
+      { strength: 4, text: 'Good', color: '#3b82f6' },
+      { strength: 5, text: 'Strong', color: '#10b981' },
     ];
 
     return levels.find(level => level.strength === strength) || levels[0];
@@ -38,9 +38,9 @@ const PasswordInput = ({
   const strengthInfo = calculatePasswordStrength();
 
   return (
-    <View className={`mb-4 ${className}`}>
+    <View style={styles.container}>
       {label && (
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+        <Text style={styles.label}>
           {label}
         </Text>
       )}
@@ -49,9 +49,8 @@ const PasswordInput = ({
           styles.inputContainer,
           error ? styles.inputError : styles.inputNormal
         ]}
-        className="flex-row items-center rounded-lg bg-white"
       >
-        <View className="pl-3 pr-2">
+        <View style={styles.iconContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
         </View>
         <TextInput
@@ -60,13 +59,12 @@ const PasswordInput = ({
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={!showPassword}
-          className="flex-1 py-3 text-gray-900"
           style={styles.input}
           {...props}
         />
         <TouchableOpacity
           onPress={() => setShowPassword(!showPassword)}
-          className="px-3 py-3"
+          style={styles.eyeButton}
         >
           <Ionicons 
             name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
@@ -77,18 +75,20 @@ const PasswordInput = ({
       </View>
       
       {showStrength && value && (
-        <View className="mt-2">
-          <View className="flex-row items-center">
-            <View className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <View style={styles.strengthContainer}>
+          <View style={styles.strengthRow}>
+            <View style={styles.strengthBarContainer}>
               <View 
                 style={[
                   styles.strengthBar,
-                  { width: `${(strengthInfo.strength / 5) * 100}%` },
-                  { backgroundColor: getStrengthColor(strengthInfo.strength) }
+                  { 
+                    width: `${(strengthInfo.strength / 5) * 100}%`,
+                    backgroundColor: strengthInfo.color 
+                  }
                 ]}
               />
             </View>
-            <Text className="ml-2 text-xs text-gray-600">
+            <Text style={styles.strengthText}>
               {strengthInfo.text}
             </Text>
           </View>
@@ -96,25 +96,27 @@ const PasswordInput = ({
       )}
       
       {error && (
-        <Text className="mt-2 text-sm text-red-600">{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       )}
     </View>
   );
 };
 
-const getStrengthColor = (strength) => {
-  const colors = {
-    1: '#ef4444', // red
-    2: '#f97316', // orange
-    3: '#eab308', // yellow
-    4: '#3b82f6', // blue
-    5: '#10b981', // green
-  };
-  return colors[strength] || '#e5e7eb';
-};
-
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -128,11 +130,46 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: '#fca5a5',
   },
+  iconContainer: {
+    paddingLeft: 12,
+    paddingRight: 8,
+  },
   input: {
+    flex: 1,
+    paddingVertical: 12,
     fontSize: 16,
+    color: '#111827',
+  },
+  eyeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  strengthContainer: {
+    marginTop: 8,
+  },
+  strengthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  strengthBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 9999,
+    overflow: 'hidden',
   },
   strengthBar: {
     height: 8,
+  },
+  strengthText: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#4b5563',
+  },
+  errorText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#dc2626',
   },
 });
 

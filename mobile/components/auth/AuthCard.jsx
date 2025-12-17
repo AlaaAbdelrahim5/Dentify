@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const AuthCard = ({ title, subtitle, children, className = '' }) => {
   return (
-    <View style={styles.card} className={className}>
+    <View style={styles.card}>
       {/* Header */}
       <LinearGradient
         colors={['#14b8a6', '#0ea5e9']}
@@ -12,18 +12,18 @@ const AuthCard = ({ title, subtitle, children, className = '' }) => {
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
-        <Text className="text-3xl font-bold text-center text-white">
+        <Text style={styles.title}>
           {title}
         </Text>
         {subtitle && (
-          <Text className="text-sm text-center mt-2 text-white opacity-90">
+          <Text style={styles.subtitle}>
             {subtitle}
           </Text>
         )}
       </LinearGradient>
 
       {/* Content */}
-      <View className="p-6 bg-white">
+      <View style={styles.content}>
         {children}
       </View>
     </View>
@@ -32,7 +32,7 @@ const AuthCard = ({ title, subtitle, children, className = '' }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -43,6 +43,23 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 24,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#ffffff',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+    color: '#ffffff',
+    opacity: 0.9,
+  },
+  content: {
+    padding: 24,
+    backgroundColor: '#ffffff',
   },
 });
 

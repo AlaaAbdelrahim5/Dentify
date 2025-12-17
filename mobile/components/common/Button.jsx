@@ -12,19 +12,19 @@ const Button = ({
   className = '',
   ...props 
 }) => {
-  const getSizeClasses = () => {
+  const getSizePadding = () => {
     const sizes = {
-      sm: 'py-2 px-4',
-      md: 'py-5 px-6',
-      lg: 'py-6 px-8',
+      sm: { paddingVertical: 12, paddingHorizontal: 24 },
+      md: { paddingVertical: 20, paddingHorizontal: 32 },
+      lg: { paddingVertical: 24, paddingHorizontal: 40 },
     };
     return sizes[size] || sizes.md;
   };
 
   const getTextColor = () => {
     return variant === 'outline' || variant === 'ghost' 
-      ? 'text-primary-600' 
-      : 'text-white';
+      ? '#0d9488' 
+      : '#ffffff';
   };
 
   const renderContent = () => (
@@ -32,7 +32,7 @@ const Button = ({
       {isLoading ? (
         <ActivityIndicator color="white" />
       ) : (
-        <Text className={`text-center text-xl font-semibold ${getTextColor()}`}>
+        <Text style={[styles.text, { color: getTextColor() }]}>
           {children}
         </Text>
       )}
@@ -44,15 +44,15 @@ const Button = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={disabled || isLoading}
-        style={styles.button}
-        className={className}
+        style={styles.shadow}
+        activeOpacity={0.8}
         {...props}
       >
         <LinearGradient
           colors={['#14b8a6', '#0ea5e9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className={`rounded-lg ${getSizeClasses()}`}
+          style={[styles.button, getSizePadding()]}
         >
           {renderContent()}
         </LinearGradient>
@@ -60,14 +60,14 @@ const Button = ({
     );
   }
 
-  const getVariantClasses = () => {
+  const getVariantStyle = () => {
     const variants = {
-      primary: 'bg-primary-500',
-      secondary: 'bg-gray-500',
-      outline: 'border-2 border-primary-500 bg-transparent',
-      ghost: 'bg-transparent',
-      success: 'bg-green-500',
-      danger: 'bg-red-500',
+      primary: { backgroundColor: '#14b8a6' },
+      secondary: { backgroundColor: '#6b7280' },
+      outline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: '#14b8a6' },
+      ghost: { backgroundColor: 'transparent' },
+      success: { backgroundColor: '#10b981' },
+      danger: { backgroundColor: '#ef4444' },
     };
     return variants[variant] || variants.primary;
   };
@@ -76,10 +76,13 @@ const Button = ({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || isLoading}
-      style={styles.button}
-      className={`rounded-lg ${getSizeClasses()} ${
-        disabled || isLoading ? 'bg-gray-400' : getVariantClasses()
-      } ${className}`}
+      style={[
+        styles.button,
+        styles.shadow,
+        getSizePadding(),
+        disabled || isLoading ? styles.disabled : getVariantStyle()
+      ]}
+      activeOpacity={0.8}
       {...props}
     >
       {renderContent()}
@@ -89,11 +92,24 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  shadow: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 4,
+  },
+  disabled: {
+    backgroundColor: '#9ca3af',
   },
 });
 

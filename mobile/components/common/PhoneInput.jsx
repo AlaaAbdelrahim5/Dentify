@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -25,28 +25,31 @@ const PhoneInput = ({
   ...props 
 }) => {
   return (
-    <View className={`mb-4 ${className}`}>
+    <View style={styles.container}>
       {label && (
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+        <Text style={styles.label}>
           {label}
         </Text>
       )}
-      <View className="flex-row space-x-2">
-        <View className="w-32 rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
+      <View style={styles.row}>
+        <View style={styles.pickerContainer}>
           <Picker
             selectedValue={countryCode}
             onValueChange={onCountryChange}
-            style={{ height: 50 }}
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+            dropdownIconColor="#6b7280"
           >
             {COUNTRY_CODES.map((code) => (
-              <Picker.Item key={code.value} label={code.label} value={code.value} />
+              <Picker.Item key={code.value} label={code.label} value={code.value} color="#111827" />
             ))}
           </Picker>
         </View>
-        <View className={`flex-1 flex-row items-center rounded-lg border ${
-          error ? 'border-red-300' : 'border-gray-300'
-        } bg-white shadow-sm`}>
-          <View className="pl-3 pr-2">
+        <View style={[
+          styles.inputContainer,
+          error ? styles.inputError : styles.inputNormal
+        ]}>
+          <View style={styles.iconContainer}>
             <Ionicons name="call-outline" size={20} color="#9CA3AF" />
           </View>
           <TextInput
@@ -55,16 +58,92 @@ const PhoneInput = ({
             value={phoneNumber}
             onChangeText={onPhoneChange}
             keyboardType="phone-pad"
-            className="flex-1 py-3 pr-3 text-gray-900"
+            style={styles.input}
             {...props}
           />
         </View>
       </View>
       {error && (
-        <Text className="mt-2 text-sm text-red-600">{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pickerContainer: {
+    width: 128,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#111827',
+  },
+  pickerItem: {
+    fontSize: 14,
+    height: 50,
+    color: '#111827',
+  },
+  inputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputNormal: {
+    borderColor: '#d1d5db',
+  },
+  inputError: {
+    borderColor: '#fca5a5',
+  },
+  iconContainer: {
+    paddingLeft: 12,
+    paddingRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingRight: 12,
+    fontSize: 16,
+    color: '#111827',
+  },
+  errorText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#dc2626',
+  },
+});
 
 export default PhoneInput;

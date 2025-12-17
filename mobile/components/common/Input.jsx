@@ -16,9 +16,9 @@ const Input = ({
   ...props 
 }) => {
   return (
-    <View className={`mb-4 ${className}`}>
+    <View style={styles.container}>
       {label && (
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+        <Text style={styles.label}>
           {label}
         </Text>
       )}
@@ -27,10 +27,9 @@ const Input = ({
           styles.inputContainer,
           error ? styles.inputError : styles.inputNormal
         ]}
-        className="flex-row items-center rounded-lg bg-white"
       >
         {icon && (
-          <View className="pl-3 pr-2">
+          <View style={styles.iconContainer}>
             <Ionicons name={icon} size={20} color="#9CA3AF" />
           </View>
         )}
@@ -42,20 +41,32 @@ const Input = ({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          className="flex-1 py-3 pr-3 text-gray-900"
           style={styles.input}
           {...props}
         />
       </View>
       {error && (
-        <Text className="mt-2 text-sm text-red-600">{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -69,8 +80,21 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: '#fca5a5',
   },
+  iconContainer: {
+    paddingLeft: 12,
+    paddingRight: 8,
+  },
   input: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingRight: 12,
     fontSize: 16,
+    color: '#111827',
+  },
+  errorText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#dc2626',
   },
 });
 
