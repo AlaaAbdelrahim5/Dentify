@@ -1,21 +1,31 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Dentify",
+    "slug": "dentify-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "mobile",
+    "scheme": "dentify",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#14B8A6"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dentify.mobile"
     },
     "android": {
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.dentify.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#14B8A6"
+      }
     },
     "web": {
-      "output": "static"
+      "output": "static",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -74,21 +75,28 @@ const DentistOverview = () => {
   return (
     <View className="p-4 space-y-4">
           {/* Welcome Card */}
-          <Card className="bg-gradient-to-br from-teal-600 to-cyan-600 p-6">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="text-2xl font-bold text-white mb-2">
-                  Welcome, Dr. {userData?.firstName || 'Doctor'}!
-                </Text>
-                <Text className="text-sm text-white/90">
-                  {userData?.clinic?.clinicName || 'Private Practice'}
-                </Text>
+          <View className="rounded-xl overflow-hidden shadow-md">
+            <LinearGradient
+              colors={isDarkMode ? ['#0D9488', '#0891B2'] : ['#0D9488', '#0891B2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ padding: 24 }}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Text className="text-2xl font-bold text-white mb-2">
+                    Welcome, Dr. {userData?.firstName || 'Doctor'}!
+                  </Text>
+                  <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.9)' }}>
+                    {userData?.clinic?.clinicName || 'Private Practice'}
+                  </Text>
+                </View>
+                <View className="w-16 h-16 rounded-full bg-white/20 items-center justify-center">
+                  <Ionicons name="medkit" size={32} color="white" />
+                </View>
               </View>
-              <View className="w-16 h-16 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="medkit" size={32} color="white" />
-              </View>
-            </View>
-          </Card>
+            </LinearGradient>
+          </View>
 
           {/* Stats Overview */}
           <View>

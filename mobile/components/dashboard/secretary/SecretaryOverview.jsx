@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -93,19 +94,26 @@ const SecretaryOverview = () => {
   return (
     <View className="p-4 space-y-4">
       {/* Welcome Card */}
-      <Card className="bg-gradient-to-br from-purple-600 to-pink-600 p-6">
-            <View>
-              <Text className="text-2xl font-bold text-white mb-2">
-                Welcome, {userData?.firstName || 'Secretary'}!
-              </Text>
-              <Text className="text-sm text-white/90">
-                {userData?.clinic?.clinicName || 'Clinic'}
-              </Text>
-              <Text className="text-xs text-white/80 mt-1">
-                {getTodayDate()}
-              </Text>
-            </View>
-          </Card>
+      <View className="rounded-xl overflow-hidden shadow-md">
+        <LinearGradient
+          colors={isDarkMode ? ['#7C3AED', '#DB2777'] : ['#9333EA', '#DB2777']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ padding: 24 }}
+        >
+          <View>
+            <Text className="text-2xl font-bold text-white mb-2">
+              Welcome, {userData?.firstName || 'Secretary'}!
+            </Text>
+            <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.9)' }}>
+              {userData?.clinic?.clinicName || 'Clinic'}
+            </Text>
+            <Text style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.8)', marginTop: 4 }}>
+              {getTodayDate()}
+            </Text>
+          </View>
+        </LinearGradient>
+      </View>
 
           {/* Stats Overview */}
           <View>

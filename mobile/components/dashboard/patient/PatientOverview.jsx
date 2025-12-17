@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
 import { useTheme } from '../../../contexts/ThemeContext';
@@ -69,24 +70,31 @@ const PatientOverview = () => {
   return (
     <View className="p-4 space-y-4">
           {/* Welcome Card */}
-          <Card className="bg-gradient-to-br from-teal-500 to-cyan-500 p-6">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="text-2xl font-bold text-white mb-2">
-                  Welcome back, {getUserFirstName()}!
-                </Text>
-                {userData?.city && (
-                  <View className="flex-row items-center mt-1">
-                    <Ionicons name="location-outline" size={14} color="white" />
-                    <Text className="text-sm text-white ml-1">{userData.city}</Text>
-                  </View>
-                )}
+          <View className="rounded-xl overflow-hidden shadow-md">
+            <LinearGradient
+              colors={isDarkMode ? ['#0D9488', '#0891B2'] : ['#14B8A6', '#06B6D4']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ padding: 24 }}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Text className="text-2xl font-bold text-white mb-2">
+                    Welcome back, {getUserFirstName()}!
+                  </Text>
+                  {userData?.city && (
+                    <View className="flex-row items-center mt-1">
+                      <Ionicons name="location-outline" size={14} color="white" />
+                      <Text className="text-sm text-white ml-1">{userData.city}</Text>
+                    </View>
+                  )}
+                </View>
+                <View className="w-16 h-16 rounded-full bg-white/20 items-center justify-center">
+                  <Ionicons name="person" size={32} color="white" />
+                </View>
               </View>
-              <View className="w-16 h-16 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="person" size={32} color="white" />
-              </View>
-            </View>
-          </Card>
+            </LinearGradient>
+          </View>
 
           {/* Upcoming Appointments */}
           <Card>

@@ -1,34 +1,37 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const MobileNavigation = ({ userRole = 'patient' }) => {
-  const router = useRouter();
-  const pathname = usePathname();
+const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabChange = () => {} }) => {
   const { isDarkMode } = useTheme();
+
+  const handleTabPress = (tabId) => {
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
+  };
 
   // Navigation configuration based on user role (similar to web Sidebar)
   const getNavigationItems = () => {
     const navConfigs = {
       patient: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', route: '/dashboard' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', route: '/dashboard/patient/appointments' },
-        { name: 'Search', icon: 'search', iconOutline: 'search-outline', route: '/dashboard/patient/search' },
-        { name: 'Profile', icon: 'person', iconOutline: 'person-outline', route: '/dashboard/patient/profile' },
+        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
+        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
+        { name: 'Search', icon: 'search', iconOutline: 'search-outline', id: 'search' },
+        { name: 'Profile', icon: 'person', iconOutline: 'person-outline', id: 'settings' },
       ],
       dentist: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', route: '/dashboard' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', route: '/dashboard/dentist/appointments' },
-        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', route: '/dashboard/dentist/patients' },
-        { name: 'Profile', icon: 'person', iconOutline: 'person-outline', route: '/dashboard/dentist/profile' },
+        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
+        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
+        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', id: 'patients' },
+        { name: 'Reports', icon: 'document-text', iconOutline: 'document-text-outline', id: 'reports' },
       ],
       secretary: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', route: '/dashboard' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', route: '/dashboard/secretary/appointments' },
-        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', route: '/dashboard/secretary/patients' },
-        { name: 'Profile', icon: 'person', iconOutline: 'person-outline', route: '/dashboard/secretary/profile' },
+        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
+        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
+        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', id: 'patients' },
+        { name: 'Reports', icon: 'bar-chart', iconOutline: 'bar-chart-outline', id: 'reports' },
       ],
     };
     return navConfigs[userRole] || navConfigs.patient;
@@ -36,59 +39,67 @@ const MobileNavigation = ({ userRole = 'patient' }) => {
 
   const navItems = getNavigationItems();
 
-  const isActive = (route) => {
-    if (route === '/dashboard') {
-      return pathname === route || pathname === '/dashboard/';
-    }
-    return pathname.startsWith(route);
+  const isActive = (tabId) => {
+    return activeTab === tabId;
   };
 
   return (
-    <View 
-      className={`border-t ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
-      style={{ 
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: -4 }, 
-        shadowOpacity: isDarkMode ? 0.3 : 0.08, 
-        shadowRadius: 12,
-        elevation: 20
-      }}
-    >
-      <View className="flex-row justify-around items-center px-4 py-2">
+    <View className="absolute bottom-0 left-0 right-0" style={{ paddingBottom: 12, paddingHorizontal: 16 }}>
+      <View 
+        className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
+        style={{ 
+          shadowColor: '#000', 
+          shadowOffset: { width: 0, height: -4 }, 
+          shadowOpacity: isDarkMode ? 0.4 : 0.1, 
+          shadowRadius: 12,
+          elevation: 12,
+          borderRadius: 24,
+          borderWidth: 1,
+          borderColor: isDarkMode ? '#1F2937' : '#E5E7EB'
+        }}
+      >
+        <View className="flex-row justify-around items-center px-2" style={{ paddingTop: 12, paddingBottom: 12 }}>
         {navItems.map((item) => {
-          const active = isActive(item.route);
+          const active = isActive(item.id);
           return (
             <TouchableOpacity
               key={item.name}
-              onPress={() => router.push(item.route)}
+              onPress={() => handleTabPress(item.id)}
               className="flex-1 items-center"
-              activeOpacity={0.7}
+              activeOpacity={0.6}
             >
-              <View className="items-center py-2">
+              <View className="items-center" style={{ paddingVertical: 8 }}>
+                {/* Icon container with active state */}
                 <View 
-                  className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                    active ? 'bg-gradient-to-br from-teal-500 to-teal-600' : ''
+                  className={`items-center justify-center ${
+                    active ? 'bg-teal-500' : ''
                   }`}
-                  style={active ? {
-                    shadowColor: '#14B8A6',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 8,
-                    backgroundColor: '#14B8A6'
-                  } : {}}
+                  style={[
+                    { width: 48, height: 48, borderRadius: 24 },
+                    active && {
+                      shadowColor: '#14B8A6',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 6,
+                      elevation: 6
+                    }
+                  ]}
                 >
                   <Ionicons 
                     name={active ? item.icon : item.iconOutline} 
-                    size={26} 
-                    color={active ? '#FFFFFF' : '#9CA3AF'} 
+                    size={24} 
+                    color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
                   />
                 </View>
+                
+                {/* Label */}
                 <Text 
-                  className={`text-xs mt-1.5 font-semibold ${
-                    active ? 'text-teal-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  className={`text-xs mt-1 ${
+                    active 
+                      ? 'text-teal-600 font-semibold' 
+                      : (isDarkMode ? 'text-gray-400' : 'text-gray-500')
                   }`}
-                  style={{ letterSpacing: 0.2 }}
+                  style={{ letterSpacing: 0.1 }}
                 >
                   {item.name}
                 </Text>
@@ -96,6 +107,7 @@ const MobileNavigation = ({ userRole = 'patient' }) => {
             </TouchableOpacity>
           );
         })}
+        </View>
       </View>
     </View>
   );

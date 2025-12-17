@@ -1,73 +1,92 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { authUtils } from '../../utils/auth';
 import { useTheme } from '../../contexts/ThemeContext';
-import ThemeToggle from './ThemeToggle';
 
-const DashboardHeader = ({ title = 'Dashboard', subtitle = 'Patient Portal', showNotifications = true }) => {
+const DashboardHeader = ({ title = 'Dashboard', subtitle = 'Patient Portal', showNotifications = true, onMenuPress, userData }) => {
   const router = useRouter();
   const { isDarkMode } = useTheme();
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authUtils.logout();
-            router.replace('/(auth)/login');
-          }
-        }
-      ]
-    );
-  };
 
   const handleNotifications = () => {
     router.push('/notifications');
   };
 
+  const handleMessages = () => {
+    router.push('/messages');
+  };
+
   return (
-    <View className={`shadow-sm pt-12 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
-        <View className="flex-1">
-          <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.5 }}>
-            {title}
-          </Text>
-          <Text className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</Text>
-        </View>
+    <>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <View className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        {/* Status bar spacing */}
+        <View />
         
-        <View className="flex-row items-center gap-2">
-          {showNotifications && (
+        {/* Header content */}
+        <View className="px-5 pb-3 pt-2">
+        {/* Top row: Menu and Icons */}
+        <View className="flex-row items-center justify-between mb-3">
+          {/* Left: Menu button */}
+          {onMenuPress && (
             <TouchableOpacity
-              onPress={handleNotifications}
-              className={`w-11 h-11 rounded-xl items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-teal-50'}`}
-              style={{ shadowColor: '#14B8A6', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } }}
+              onPress={onMenuPress}
+              className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+              activeOpacity={0.7}
             >
-              <Ionicons name="notifications-outline" size={24} color="#14B8A6" />
-              {/* Notification badge - uncomment when you have notification count */}
-              {/* <View className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" /> */}
+              <Ionicons name="menu" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
             </TouchableOpacity>
           )}
           
-          <ThemeToggle />
-          
-          <TouchableOpacity
-            onPress={handleLogout}
-            className={`flex-row items-center px-4 py-2.5 rounded-xl ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'}`}
-            style={{ shadowColor: '#DC2626', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } }}
+          {/* Right: Action icons */}
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            {showNotifications && (
+              <TouchableOpacity
+                onPress={handleNotifications}
+                className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="notifications-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+                {/* Notification badge */}
+                {/* <View className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" /> */}
+              </TouchableOpacity>
+            )}
+            
+            {/* Messages button */}
+            <TouchableOpacity
+              onPress={handleMessages}
+              className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              {/* Message badge - uncomment when you have unread count */}
+              {/* <View className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" /> */}
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Bottom row: Title and subtitle */}
+        <View>
+          <Text 
+            className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+            style={{ letterSpacing: -0.5 }}
           >
-            <Ionicons name="log-out-outline" size={20} color="#DC2626" />
-            <Text className="text-red-600 font-bold ml-2 text-sm">Logout</Text>
-          </TouchableOpacity>
+            {title}
+          </Text>
+          <Text className={`text-sm mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {subtitle}
+          </Text>
         </View>
       </View>
-    </View>
+      
+      {/* Bottom border */}
+      <View className={`h-px ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`} />
+      </View>
+    </>
   );
 };
 
