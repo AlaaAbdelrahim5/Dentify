@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Select = ({ 
   label, 
@@ -12,23 +13,25 @@ const Select = ({
   className = '',
   ...props 
 }) => {
+  const { isDarkMode } = useTheme();
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, isDarkMode && styles.labelDark]}>
           {label}
         </Text>
       )}
       <View style={[
         styles.pickerContainer,
+        isDarkMode && styles.pickerContainerDark,
         error ? styles.pickerError : styles.pickerNormal
       ]}>
         <Picker
           selectedValue={value}
           onValueChange={onValueChange}
-          style={styles.picker}
+          style={[styles.picker, isDarkMode && styles.pickerDark]}
           itemStyle={styles.pickerItem}
-          dropdownIconColor="#6b7280"
+          dropdownIconColor={isDarkMode ? '#9CA3AF' : '#6b7280'}
           {...props}
         >
           <Picker.Item label={placeholder} value="" enabled={false} color="#9CA3AF" />
@@ -37,7 +40,7 @@ const Select = ({
               key={option.value} 
               label={option.label} 
               value={option.value}
-              color="#111827"
+              color={isDarkMode ? '#F3F4F6' : '#111827'}
             />
           ))}
         </Picker>
@@ -59,6 +62,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
+  labelDark: {
+    color: '#D1D5DB',
+  },
   pickerContainer: {
     height: 50,
     borderRadius: 12,
@@ -72,10 +78,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
+  pickerContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
+  },
   picker: {
     height: 50,
     width: '100%',
     color: '#111827',
+  },
+  pickerDark: {
+    color: '#F3F4F6',
   },
   pickerItem: {
     fontSize: 16,

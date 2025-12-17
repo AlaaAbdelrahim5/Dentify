@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const PasswordInput = ({ 
   label, 
@@ -13,6 +14,7 @@ const PasswordInput = ({
   ...props 
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { isDarkMode } = useTheme();
 
   const calculatePasswordStrength = () => {
     if (!value) return { strength: 0, text: '', color: '#e5e7eb' };
@@ -40,26 +42,27 @@ const PasswordInput = ({
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, isDarkMode && styles.labelDark]}>
           {label}
         </Text>
       )}
       <View 
         style={[
           styles.inputContainer,
+          isDarkMode && styles.inputContainerDark,
           error ? styles.inputError : styles.inputNormal
         ]}
       >
         <View style={styles.iconContainer}>
-          <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
+          <Ionicons name="lock-closed-outline" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
         </View>
         <TextInput
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={isDarkMode ? '#6B7280' : '#9CA3AF'}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={!showPassword}
-          style={styles.input}
+          style={[styles.input, isDarkMode && styles.inputDark]}
           {...props}
         />
         <TouchableOpacity
@@ -69,7 +72,7 @@ const PasswordInput = ({
           <Ionicons 
             name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
             size={20} 
-            color="#9CA3AF" 
+            color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
           />
         </TouchableOpacity>
       </View>
@@ -88,7 +91,7 @@ const PasswordInput = ({
                 ]}
               />
             </View>
-            <Text style={styles.strengthText}>
+            <Text style={[styles.strengthText, isDarkMode && styles.strengthTextDark]}>
               {strengthInfo.text}
             </Text>
           </View>
@@ -112,6 +115,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
+  labelDark: {
+    color: '#D1D5DB',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -123,6 +129,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  inputContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
   },
   inputNormal: {
     borderColor: '#d1d5db',
@@ -139,6 +149,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: '#111827',
+  },
+  inputDark: {
+    color: '#F3F4F6',
   },
   eyeButton: {
     paddingHorizontal: 12,
@@ -165,6 +178,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 12,
     color: '#4b5563',
+  },
+  strengthTextDark: {
+    color: '#D1D5DB',
   },
   errorText: {
     marginTop: 8,

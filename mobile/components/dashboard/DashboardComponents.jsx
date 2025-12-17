@@ -1,12 +1,14 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 /**
  * Card component for mobile dashboard
  */
 export const Card = ({ children, className = '' }) => {
+  const { isDarkMode } = useTheme();
   return (
-    <View className={`bg-white rounded-xl shadow-sm p-4 ${className}`}>
+    <View className={`rounded-xl shadow-sm p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} ${className}`}>
       {children}
     </View>
   );
@@ -16,6 +18,7 @@ export const Card = ({ children, className = '' }) => {
  * StatsCard component to display statistics
  */
 export const StatsCard = ({ icon, label, value, gradient = 'from-teal-500 to-cyan-500' }) => {
+  const { isDarkMode } = useTheme();
   const gradientColors = {
     'from-blue-600 to-cyan-600': ['#2563EB', '#0891B2'],
     'from-yellow-600 to-orange-600': ['#CA8A04', '#EA580C'],
@@ -26,14 +29,14 @@ export const StatsCard = ({ icon, label, value, gradient = 'from-teal-500 to-cya
   };
 
   return (
-    <View className="bg-white rounded-xl shadow-sm p-4 flex-1 min-w-[150px]">
+    <View className={`rounded-xl shadow-sm p-4 flex-1 min-w-[150px] ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
       <View className={`w-12 h-12 rounded-full items-center justify-center mb-3 bg-gradient-to-br ${gradient}`}
         style={{ backgroundColor: gradientColors[gradient]?.[0] || '#14B8A6' }}
       >
         <Ionicons name={icon} size={24} color="white" />
       </View>
-      <Text className="text-2xl font-bold text-gray-800 mb-1">{value}</Text>
-      <Text className="text-sm text-gray-600">{label}</Text>
+      <Text className={`text-2xl font-bold mb-1 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>{value}</Text>
+      <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{label}</Text>
     </View>
   );
 };
@@ -62,11 +65,12 @@ export const StatusBadge = ({ status }) => {
  * EmptyState component
  */
 export const EmptyState = ({ icon, title, message, actionText, onAction }) => {
+  const { isDarkMode } = useTheme();
   return (
     <View className="items-center justify-center py-12">
-      <Ionicons name={icon} size={48} color="#9CA3AF" />
-      <Text className="text-lg font-semibold text-gray-700 mt-4">{title}</Text>
-      <Text className="text-sm text-gray-500 mt-2 text-center">{message}</Text>
+      <Ionicons name={icon} size={48} color={isDarkMode ? '#6B7280' : '#9CA3AF'} />
+      <Text className={`text-lg font-semibold mt-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>{title}</Text>
+      <Text className={`text-sm mt-2 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{message}</Text>
       {actionText && onAction && (
         <TouchableOpacity
           onPress={onAction}

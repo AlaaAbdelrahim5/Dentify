@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
+import { useTheme } from '../../../contexts/ThemeContext';
 // import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'; // Uncomment when API is ready
 
 const SecretaryOverview = () => {
-  const router = useRouter();
+  const { isDarkMode } = useTheme();
   const [userData, setUserData] = useState(null);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [stats, setStats] = useState({
@@ -19,7 +18,6 @@ const SecretaryOverview = () => {
     totalDentists: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -75,13 +73,7 @@ const SecretaryOverview = () => {
       console.error('Error fetching secretary data:', error);
     } finally {
       setIsLoading(false);
-      setRefreshing(false);
     }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchAllData();
   };
 
   const formatTime = (dateString) => {
@@ -98,50 +90,10 @@ const SecretaryOverview = () => {
     });
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authUtils.logout();
-            router.replace('/(auth)/login');
-          }
-        }
-      ]
-    );
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header with Logout */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <View>
-          <Text className="text-xl font-bold text-gray-800">Dashboard</Text>
-          <Text className="text-xs text-gray-500">Secretary Portal</Text>
-        </View>
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="flex-row items-center bg-red-50 px-4 py-2 rounded-lg"
-        >
-          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
-          <Text className="text-red-600 font-semibold ml-2">Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#14B8A6']} />
-        }
-      >
-        <View className="p-4 space-y-4">
-          {/* Welcome Card */}
-          <Card className="bg-gradient-to-br from-purple-600 to-pink-600 p-6">
+    <View className="p-4 space-y-4">
+      {/* Welcome Card */}
+      <Card className="bg-gradient-to-br from-purple-600 to-pink-600 p-6">
             <View>
               <Text className="text-2xl font-bold text-white mb-2">
                 Welcome, {userData?.firstName || 'Secretary'}!
@@ -157,7 +109,7 @@ const SecretaryOverview = () => {
 
           {/* Stats Overview */}
           <View>
-            <Text className="text-lg font-bold text-gray-800 mb-3 px-1">Clinic Overview</Text>
+            <Text className={`text-lg font-bold mb-3 px-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Clinic Overview</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="space-x-3">
               <StatsCard
                 icon="calendar"
@@ -259,68 +211,7 @@ const SecretaryOverview = () => {
               />
             )}
           </Card>
-
-          {/* Quick Actions */}
-          <View className="space-y-3">
-            <Text className="text-lg font-bold text-gray-800 px-1">Quick Actions</Text>
-            
-            <View className="space-y-3">
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center mr-4">
-                    <Ionicons name="calendar-outline" size={24} color="#3B82F6" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Manage Appointments</Text>
-                    <Text className="text-sm text-gray-600">Schedule and organize</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-purple-100 items-center justify-center mr-4">
-                    <Ionicons name="people-outline" size={24} color="#9333EA" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Patient Records</Text>
-                    <Text className="text-sm text-gray-600">View and manage patients</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-green-100 items-center justify-center mr-4">
-                    <Ionicons name="cash-outline" size={24} color="#16A34A" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Payments</Text>
-                    <Text className="text-sm text-gray-600">Process and track payments</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-teal-100 items-center justify-center mr-4">
-                    <Ionicons name="medkit-outline" size={24} color="#14B8A6" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Dentists</Text>
-                    <Text className="text-sm text-gray-600">View dentist schedules</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

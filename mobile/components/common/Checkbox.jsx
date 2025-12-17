@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Checkbox = ({ 
   checked,
@@ -9,6 +10,7 @@ const Checkbox = ({
   error,
   className = '',
 }) => {
+  const { isDarkMode } = useTheme();
   return (
     <View>
       <TouchableOpacity 
@@ -18,14 +20,14 @@ const Checkbox = ({
       >
         <View style={[
           styles.checkbox,
-          checked ? styles.checkboxChecked : styles.checkboxUnchecked
+          checked ? styles.checkboxChecked : (isDarkMode ? styles.checkboxUncheckedDark : styles.checkboxUnchecked)
         ]}>
           {checked && (
             <Ionicons name="checkmark" size={14} color="white" />
           )}
         </View>
         {label && (
-          <Text style={styles.label}>{label}</Text>
+          <Text style={[styles.label, isDarkMode && styles.labelDark]}>{label}</Text>
         )}
       </TouchableOpacity>
       {error && (
@@ -57,9 +59,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderColor: '#d1d5db',
   },
+  checkboxUncheckedDark: {
+    backgroundColor: 'transparent',
+    borderColor: '#6B7280',
+  },
   label: {
     fontSize: 14,
     color: '#4b5563',
+  },
+  labelDark: {
+    color: '#D1D5DB',
   },
   errorText: {
     marginTop: 8,

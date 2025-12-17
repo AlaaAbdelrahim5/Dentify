@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
+import { useTheme } from '../../../contexts/ThemeContext';
 // import { appointmentsAPI } from '../../../services/api'; // Uncomment when API is ready
 
 const DentistOverview = () => {
-  const router = useRouter();
+  const { isDarkMode } = useTheme();
   const [userData, setUserData] = useState(null);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [stats, setStats] = useState({
@@ -17,7 +16,6 @@ const DentistOverview = () => {
     confirmed: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -60,7 +58,6 @@ const DentistOverview = () => {
       console.error('Error fetching appointments:', error);
     } finally {
       setIsLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -74,48 +71,8 @@ const DentistOverview = () => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authUtils.logout();
-            router.replace('/(auth)/login');
-          }
-        }
-      ]
-    );
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header with Logout */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <View>
-          <Text className="text-xl font-bold text-gray-800">Dashboard</Text>
-          <Text className="text-xs text-gray-500">Dentist Portal</Text>
-        </View>
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="flex-row items-center bg-red-50 px-4 py-2 rounded-lg"
-        >
-          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
-          <Text className="text-red-600 font-semibold ml-2">Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#14B8A6']} />
-        }
-      >
-        <View className="p-4 space-y-4">
+    <View className="p-4 space-y-4">
           {/* Welcome Card */}
           <Card className="bg-gradient-to-br from-teal-600 to-cyan-600 p-6">
             <View className="flex-row items-center justify-between">
@@ -135,7 +92,7 @@ const DentistOverview = () => {
 
           {/* Stats Overview */}
           <View>
-            <Text className="text-lg font-bold text-gray-800 mb-3 px-1">Today's Overview</Text>
+            <Text className={`text-lg font-bold mb-3 px-1 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Today's Overview</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="space-x-3">
               <StatsCard
                 icon="calendar"
@@ -214,55 +171,7 @@ const DentistOverview = () => {
               />
             )}
           </Card>
-
-          {/* Quick Actions */}
-          <View className="space-y-3">
-            <Text className="text-lg font-bold text-gray-800 px-1">Quick Actions</Text>
-            
-            <View className="space-y-3">
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-teal-100 items-center justify-center mr-4">
-                    <Ionicons name="people" size={24} color="#14B8A6" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">My Patients</Text>
-                    <Text className="text-sm text-gray-600">View patient records</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center mr-4">
-                    <Ionicons name="medkit" size={24} color="#3B82F6" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Treatments</Text>
-                    <Text className="text-sm text-gray-600">Manage treatment plans</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity>
-                <Card className="flex-row items-center p-4">
-                  <View className="w-12 h-12 rounded-full bg-purple-100 items-center justify-center mr-4">
-                    <Ionicons name="stats-chart" size={24} color="#9333EA" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">Analytics</Text>
-                    <Text className="text-sm text-gray-600">View performance metrics</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </Card>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

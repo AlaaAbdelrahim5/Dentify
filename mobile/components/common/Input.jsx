@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Input = ({ 
   label, 
@@ -15,33 +16,35 @@ const Input = ({
   className = '',
   ...props 
 }) => {
+  const { isDarkMode } = useTheme();
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, isDarkMode && styles.labelDark]}>
           {label}
         </Text>
       )}
       <View 
         style={[
           styles.inputContainer,
+          isDarkMode && styles.inputContainerDark,
           error ? styles.inputError : styles.inputNormal
         ]}
       >
         {icon && (
           <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={20} color="#9CA3AF" />
+            <Ionicons name={icon} size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
           </View>
         )}
         <TextInput
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={isDarkMode ? '#6B7280' : '#9CA3AF'}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          style={styles.input}
+          style={[styles.input, isDarkMode && styles.inputDark]}
           {...props}
         />
       </View>
@@ -62,6 +65,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
+  labelDark: {
+    color: '#D1D5DB',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -73,6 +79,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+  },
+  inputContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
   },
   inputNormal: {
     borderColor: '#d1d5db',
@@ -90,6 +100,9 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     fontSize: 16,
     color: '#111827',
+  },
+  inputDark: {
+    color: '#F3F4F6',
   },
   errorText: {
     marginTop: 8,

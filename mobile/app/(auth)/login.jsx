@@ -18,15 +18,16 @@ import {
   Input, 
   Button, 
   PasswordInput, 
-  Checkbox,
   AuthCard,
   AuthHeader,
   AuthFooter,
   AuthBackground
 } from '../../components';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function Login() {
   const router = useRouter();
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -34,7 +35,6 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   // Clear logout flag when component mounts
   useEffect(() => {
@@ -131,8 +131,7 @@ export default function Login() {
           {
             token: response.token,
             refreshToken: response.refreshToken
-          }, 
-          rememberMe
+          }
         );
 
         console.log('Login successful, navigating to dashboard...');
@@ -164,7 +163,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0fdfa' }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -216,12 +215,7 @@ export default function Login() {
                 className="mb-2"
               />
 
-              <View className="flex-row justify-between items-center mb-6">
-                <Checkbox
-                  checked={rememberMe}
-                  onPress={() => setRememberMe(!rememberMe)}
-                  label="Remember me"
-                />
+              <View className="flex-row justify-end items-center mb-6">
                 <Link href="/forgot-password" asChild>
                   <TouchableOpacity>
                     <Text className="text-sm text-primary-600 font-medium">

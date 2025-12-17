@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const DatePicker = ({ 
   label, 
@@ -16,6 +17,7 @@ const DatePicker = ({
 }) => {
   const [show, setShow] = useState(false);
   const [date, setDate] = useState(value ? new Date(value) : new Date());
+  const { isDarkMode } = useTheme();
 
   const onChangeDate = (event, selectedDate) => {
     // On Android, the picker closes after any interaction
@@ -63,7 +65,7 @@ const DatePicker = ({
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, isDarkMode && styles.labelDark]}>
           {label}
         </Text>
       )}
@@ -71,21 +73,23 @@ const DatePicker = ({
         onPress={showDatepicker}
         style={[
           styles.inputContainer,
+          isDarkMode && styles.inputContainerDark,
           error ? styles.inputError : styles.inputNormal
         ]}
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <Ionicons name="calendar-outline" size={20} color="#9CA3AF" />
+          <Ionicons name="calendar-outline" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
         </View>
         <Text style={[
           styles.inputText,
+          isDarkMode && styles.inputTextDark,
           !value && styles.placeholder
         ]}>
           {value ? formatDisplayDate(value) : placeholder}
         </Text>
         <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+          <Ionicons name="chevron-down" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
         </View>
       </TouchableOpacity>
       
@@ -98,7 +102,7 @@ const DatePicker = ({
           onChange={onChangeDate}
           maximumDate={maximumDate || new Date()}
           minimumDate={minimumDate || new Date(1900, 0, 1)}
-          themeVariant="light"
+          themeVariant={isDarkMode ? 'dark' : 'light'}
           {...props}
         />
       )}
@@ -120,6 +124,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
+  labelDark: {
+    color: '#D1D5DB',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -134,6 +141,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
   },
+  inputContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
+  },
   inputNormal: {
     borderColor: '#d1d5db',
   },
@@ -147,6 +158,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#111827',
+  },
+  inputTextDark: {
+    color: '#F3F4F6',
   },
   placeholder: {
     color: '#9CA3AF',

@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
+import { useTheme } from '../../../contexts/ThemeContext';
 // import { appointmentsAPI } from '../../../services/api'; // Uncomment when API is ready
 
 const PatientOverview = () => {
-  const router = useRouter();
+  const { isDarkMode } = useTheme();
   const [userData, setUserData] = useState(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -50,13 +48,7 @@ const PatientOverview = () => {
       console.error('Error fetching appointments:', error);
     } finally {
       setIsLoading(false);
-      setRefreshing(false);
     }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchAppointments();
   };
 
   const getUserFirstName = () => {
@@ -64,24 +56,6 @@ const PatientOverview = () => {
       return userData.firstName;
     }
     return 'there';
-  };
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authUtils.logout();
-            router.replace('/(auth)/login');
-          }
-        }
-      ]
-    );
   };
 
   const formatDateTime = (dateString) => {
@@ -93,29 +67,7 @@ const PatientOverview = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header with Logout */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <View>
-          <Text className="text-xl font-bold text-gray-800">Dashboard</Text>
-          <Text className="text-xs text-gray-500">Patient Portal</Text>
-        </View>
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="flex-row items-center bg-red-50 px-4 py-2 rounded-lg"
-        >
-          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
-          <Text className="text-red-600 font-semibold ml-2">Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#14B8A6']} />
-        }
-      >
-        <View className="p-4 space-y-4">
+    <View className="p-4 space-y-4">
           {/* Welcome Card */}
           <Card className="bg-gradient-to-br from-teal-500 to-cyan-500 p-6">
             <View className="flex-row items-center justify-between">
@@ -139,7 +91,7 @@ const PatientOverview = () => {
           {/* Upcoming Appointments */}
           <Card>
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-bold text-gray-800">Next Appointments</Text>
+              <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Next Appointments</Text>
               <TouchableOpacity>
                 <Text className="text-sm text-teal-600 font-medium">View All</Text>
               </TouchableOpacity>
@@ -205,46 +157,7 @@ const PatientOverview = () => {
               />
             )}
           </Card>
-
-          {/* Quick Actions */}
-          <View className="space-y-3">
-            <Text className="text-lg font-bold text-gray-800 px-1">Quick Actions</Text>
-            
-            <View className="flex-row space-x-3">
-              <TouchableOpacity className="flex-1">
-                <Card className="items-center py-4">
-                  <View className="w-12 h-12 rounded-full bg-teal-100 items-center justify-center mb-2">
-                    <Ionicons name="calendar" size={24} color="#14B8A6" />
-                  </View>
-                  <Text className="text-sm font-medium text-gray-700">Book</Text>
-                  <Text className="text-xs text-gray-500">Appointment</Text>
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity className="flex-1">
-                <Card className="items-center py-4">
-                  <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center mb-2">
-                    <Ionicons name="search" size={24} color="#3B82F6" />
-                  </View>
-                  <Text className="text-sm font-medium text-gray-700">Find</Text>
-                  <Text className="text-xs text-gray-500">Dentist</Text>
-                </Card>
-              </TouchableOpacity>
-
-              <TouchableOpacity className="flex-1">
-                <Card className="items-center py-4">
-                  <View className="w-12 h-12 rounded-full bg-purple-100 items-center justify-center mb-2">
-                    <Ionicons name="document-text" size={24} color="#9333EA" />
-                  </View>
-                  <Text className="text-sm font-medium text-gray-700">My</Text>
-                  <Text className="text-xs text-gray-500">Records</Text>
-                </Card>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

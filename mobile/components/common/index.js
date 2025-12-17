@@ -6,3 +6,6 @@ export { default as Select } from './Select';
 export { default as Checkbox } from './Checkbox';
 export { default as Logo } from './Logo';
 export { default as DatePicker } from './DatePicker';
+export { default as MobileNavigation } from './MobileNavigation';
+export { default as DashboardHeader } from './DashboardHeader';
+export { default as ThemeToggle } from './ThemeToggle';

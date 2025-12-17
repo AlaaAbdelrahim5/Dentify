@@ -28,9 +28,11 @@ import {
   AuthFooter,
   AuthBackground
 } from '../../components';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function SignUp() {
   const router = useRouter();
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -198,7 +200,7 @@ export default function SignUp() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f0fdfa' }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"

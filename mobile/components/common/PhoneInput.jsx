@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const COUNTRY_CODES = [
   { value: '+970', label: '🇵🇸 +970' },
@@ -24,41 +25,43 @@ const PhoneInput = ({
   className = '',
   ...props 
 }) => {
+  const { isDarkMode } = useTheme();
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, isDarkMode && styles.labelDark]}>
           {label}
         </Text>
       )}
       <View style={styles.row}>
-        <View style={styles.pickerContainer}>
+        <View style={[styles.pickerContainer, isDarkMode && styles.pickerContainerDark]}>
           <Picker
             selectedValue={countryCode}
             onValueChange={onCountryChange}
-            style={styles.picker}
+            style={[styles.picker, isDarkMode && styles.pickerDark]}
             itemStyle={styles.pickerItem}
-            dropdownIconColor="#6b7280"
+            dropdownIconColor={isDarkMode ? '#9CA3AF' : '#6b7280'}
           >
             {COUNTRY_CODES.map((code) => (
-              <Picker.Item key={code.value} label={code.label} value={code.value} color="#111827" />
+              <Picker.Item key={code.value} label={code.label} value={code.value} color={isDarkMode ? '#F3F4F6' : '#111827'} />
             ))}
           </Picker>
         </View>
         <View style={[
           styles.inputContainer,
+          isDarkMode && styles.inputContainerDark,
           error ? styles.inputError : styles.inputNormal
         ]}>
           <View style={styles.iconContainer}>
-            <Ionicons name="call-outline" size={20} color="#9CA3AF" />
+            <Ionicons name="call-outline" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
           </View>
           <TextInput
             placeholder="Phone number"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={isDarkMode ? '#6B7280' : '#9CA3AF'}
             value={phoneNumber}
             onChangeText={onPhoneChange}
             keyboardType="phone-pad"
-            style={styles.input}
+            style={[styles.input, isDarkMode && styles.inputDark]}
             {...props}
           />
         </View>
@@ -80,6 +83,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
   },
+  labelDark: {
+    color: '#D1D5DB',
+  },
   row: {
     flexDirection: 'row',
     gap: 8,
@@ -99,10 +105,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
+  pickerContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
+  },
   picker: {
     height: 50,
     width: '100%',
     color: '#111827',
+  },
+  pickerDark: {
+    color: '#F3F4F6',
   },
   pickerItem: {
     fontSize: 14,
@@ -122,6 +135,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  inputContainerDark: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
+  },
   inputNormal: {
     borderColor: '#d1d5db',
   },
@@ -138,6 +155,9 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     fontSize: 16,
     color: '#111827',
+  },
+  inputDark: {
+    color: '#F3F4F6',
   },
   errorText: {
     marginTop: 8,
