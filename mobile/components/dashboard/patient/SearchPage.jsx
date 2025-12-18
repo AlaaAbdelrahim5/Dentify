@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, EmptyState, LoadingSpinner } from '../../../components/dashboard';
+// import { EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { Select } from '../../../components/common';
 import { useTheme } from '../../../contexts/ThemeContext';
 // import { dentistsAPI, clinicsAPI } from '../../../services/api';
@@ -84,8 +84,24 @@ const SearchPage = () => {
     // Navigate to booking page
   };
 
+  if (loading && searchQuery.length >= 2) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Searching...</Text>
+      </View>
+    );
+  }
+
   const renderDentistCard = (dentist) => (
-    <Card key={dentist.id}>
+    <View key={dentist.id} className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+      style={{
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3
+      }}
+    >
       <View className="flex-row items-start">
         <View className="w-16 h-16 rounded-full bg-teal-100 items-center justify-center mr-3">
           <Text className="text-2xl font-bold text-teal-600">
@@ -142,11 +158,19 @@ const SearchPage = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </Card>
+    </View>
   );
 
   const renderClinicCard = (clinic) => (
-    <Card key={clinic.id}>
+    <View key={clinic.id} className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+      style={{
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3
+      }}
+    >
       <View className="flex-row items-start">
         <View className="w-16 h-16 rounded-lg bg-blue-100 items-center justify-center mr-3">
           <Ionicons name="business" size={32} color="#3B82F6" />
@@ -201,25 +225,13 @@ const SearchPage = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </Card>
+    </View>
   );
 
   return (
-    <View className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <ScrollView>
-        <View className="p-4 space-y-4">
-          {/* Header */}
-          <View>
-            <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Search
-            </Text>
-            <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Find dentists and dental clinics
-            </Text>
-          </View>
-
-          {/* Search Type Tabs */}
-          <View className={`flex-row rounded-xl p-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+    <View className="flex-1 p-4">
+      {/* Search Type Tabs */}
+      <View className="flex-row mb-4" style={{ gap: 8 }}>
             <TouchableOpacity
               onPress={() => setSearchType('dentists')}
               className={`flex-1 py-2 rounded-lg ${
@@ -255,7 +267,15 @@ const SearchPage = () => {
           </View>
 
           {/* Search Bar */}
-          <View className={`flex-row items-center px-4 py-3 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <View className={`flex-row items-center px-4 py-3 rounded-xl mb-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3
+            }}
+          >
             <Ionicons name="search" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
             <TextInput
               placeholder={`Search ${searchType}...`}
@@ -271,75 +291,51 @@ const SearchPage = () => {
             )}
           </View>
 
-          {/* Filters */}
-          <View className="space-y-3">
-            {searchType === 'dentists' && (
-              <Select
-                label="Specialization"
-                value={filters.specialization}
-                onValueChange={(value) => setFilters({ ...filters, specialization: value })}
-                options={specializations}
-              />
-            )}
-
-            <Select
-              label="City"
-              value={filters.city}
-              onValueChange={(value) => setFilters({ ...filters, city: value })}
-              options={cities}
-            />
-
-            {searchType === 'dentists' && (
-              <Select
-                label="Availability"
-                value={filters.availability}
-                onValueChange={(value) => setFilters({ ...filters, availability: value })}
-                options={availabilityOptions}
-              />
-            )}
-
-            {(filters.specialization || filters.city || filters.availability) && (
-              <TouchableOpacity
-                onPress={clearFilters}
-                className="flex-row items-center justify-center py-2"
-              >
-                <Ionicons name="close-circle" size={16} color="#EF4444" />
-                <Text className="text-red-500 ml-2 font-medium">Clear Filters</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          {/* Filters - Optional collapsed section */}
+          {(filters.specialization || filters.city || filters.availability) && (
+            <TouchableOpacity
+              onPress={clearFilters}
+              className="flex-row items-center justify-center py-2 mb-4"
+            >
+              <Ionicons name="close-circle" size={16} color="#EF4444" />
+              <Text className="text-red-500 ml-2 font-medium">Clear Filters</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Results */}
-          {loading ? (
-            <LoadingSpinner />
-          ) : searchQuery.length >= 2 ? (
-            results.length > 0 ? (
-              <View className="space-y-3">
-                <Text className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {results.length} {results.length === 1 ? 'result' : 'results'} found
-                </Text>
-                {results.map((item) =>
-                  searchType === 'dentists' ? renderDentistCard(item) : renderClinicCard(item)
-                )}
-              </View>
-            ) : (
-              <EmptyState
-                icon="search-outline"
-                title="No results found"
-                message={`Try adjusting your search or filters`}
-              />
-            )
-          ) : (
-            <View className={`p-8 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <View className="items-center">
-                <Ionicons name="search" size={48} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
-                <Text className={`text-center mt-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Enter at least 2 characters to start searching
-                </Text>
-              </View>
+          <ScrollView>
+        {searchQuery.length >= 2 ? (
+          results.length > 0 ? (
+            <View>
+              <Text className={`text-base font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {results.length} {results.length === 1 ? 'result' : 'results'} found
+              </Text>
+              {results.map((item) =>
+                searchType === 'dentists' ? renderDentistCard(item) : renderClinicCard(item)
+              )}
             </View>
-          )}
-        </View>
+          ) : (
+            <View className="items-center justify-center py-12">
+              <Ionicons name="search-outline" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
+              <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                No results found
+              </Text>
+              <Text className={`mt-2 text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                Try adjusting your search
+              </Text>
+            </View>
+          )
+        ) : (
+          <View className="items-center justify-center py-12">
+            <Ionicons name="search" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
+            <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Start searching
+            </Text>
+            <Text className={`mt-2 text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+              Enter at least 2 characters
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );

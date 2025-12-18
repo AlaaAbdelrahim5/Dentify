@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Card, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
+import { StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
 import { useTheme } from '../../../contexts/ThemeContext';
 // import { appointmentsAPI } from '../../../services/api'; // Uncomment when API is ready
@@ -97,9 +97,17 @@ const PatientOverview = () => {
           </View>
 
           {/* Upcoming Appointments */}
-          <Card>
+          <View className={`rounded-xl p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3
+            }}
+          >
             <View className="flex-row items-center justify-between mb-4">
-              <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Next Appointments</Text>
+              <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Next Appointments</Text>
               <TouchableOpacity>
                 <Text className="text-sm text-teal-600 font-medium">View All</Text>
               </TouchableOpacity>
@@ -115,10 +123,10 @@ const PatientOverview = () => {
                   return (
                     <View
                       key={appointment.id}
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}
                     >
                       <View className="flex-row items-start justify-between mb-2">
-                        <Text className="font-semibold text-gray-800 flex-1">
+                        <Text className={`font-semibold flex-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                           {appointment.treatment?.treatmentType || 'Appointment'}
                         </Text>
                         <StatusBadge status={appointment.status.toLowerCase()} />
@@ -126,23 +134,23 @@ const PatientOverview = () => {
                       
                       <View className="space-y-1">
                         <View className="flex-row items-center">
-                          <Ionicons name="person-outline" size={16} color="#6B7280" />
-                          <Text className="text-sm text-gray-600 ml-2">
+                          <Ionicons name="person-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                          <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             Dr. {appointment.dentist?.firstName} {appointment.dentist?.lastName}
                           </Text>
                         </View>
                         
                         <View className="flex-row items-center">
-                          <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-                          <Text className="text-sm text-gray-600 ml-2">
+                          <Ionicons name="calendar-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                          <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             {date} at {time}
                           </Text>
                         </View>
                         
                         {appointment.clinic && (
                           <View className="flex-row items-center">
-                            <Ionicons name="location-outline" size={16} color="#6B7280" />
-                            <Text className="text-sm text-gray-600 ml-2">
+                            <Ionicons name="location-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                            <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               {appointment.clinic.clinicName}
                             </Text>
                           </View>
@@ -164,7 +172,7 @@ const PatientOverview = () => {
                 }}
               />
             )}
-          </Card>
+          </View>
     </View>
   );
 };

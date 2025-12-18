@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Card, StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
+import { StatsCard, StatusBadge, EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { authUtils } from '../../../utils/auth';
 import { useTheme } from '../../../contexts/ThemeContext';
 // import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'; // Uncomment when API is ready
@@ -153,9 +153,17 @@ const SecretaryOverview = () => {
           </View>
 
           {/* Today's Schedule */}
-          <Card>
+          <View className={`rounded-xl p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+            style={{
+              shadowColor: '#000',
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3
+            }}
+          >
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-bold text-gray-800">Today's Schedule</Text>
+              <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Today's Schedule</Text>
               <TouchableOpacity>
                 <Text className="text-sm text-teal-600 font-medium">View All</Text>
               </TouchableOpacity>
@@ -168,7 +176,7 @@ const SecretaryOverview = () => {
                 {todayAppointments.slice(0, 5).map((appointment) => (
                   <TouchableOpacity
                     key={appointment.id}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}
                   >
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center flex-1">
@@ -177,20 +185,20 @@ const SecretaryOverview = () => {
                         </View>
                         <View className="flex-1">
                           <View className="flex-row items-center mb-1">
-                            <Text className="font-semibold text-gray-800">
+                            <Text className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                               {appointment.patient?.firstName} {appointment.patient?.lastName}
                             </Text>
                             <View className="ml-2">
                               <StatusBadge status={appointment.status.toLowerCase()} />
                             </View>
                           </View>
-                          <Text className="text-sm text-gray-600">
+                          <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             with Dr. {appointment.dentist?.firstName} {appointment.dentist?.lastName}
                           </Text>
                           {appointment.patient?.user?.phone && (
                             <View className="flex-row items-center mt-1">
-                              <Ionicons name="call-outline" size={12} color="#6B7280" />
-                              <Text className="text-xs text-gray-500 ml-1">
+                              <Ionicons name="call-outline" size={12} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                              <Text className={`text-xs ml-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {appointment.patient.user.phone}
                               </Text>
                             </View>
@@ -202,7 +210,7 @@ const SecretaryOverview = () => {
                           {formatTime(appointment.startTime)}
                         </Text>
                         {appointment.reason && (
-                          <Text className="text-xs text-gray-500 mt-1">
+                          <Text className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             {appointment.reason}
                           </Text>
                         )}
@@ -218,7 +226,7 @@ const SecretaryOverview = () => {
                 message="No appointments scheduled for today"
               />
             )}
-          </Card>
+          </View>
     </View>
   );
 };

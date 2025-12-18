@@ -85,16 +85,13 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
           </View>
         </View>
         
-        {/* Bottom row: Title and subtitle */}
+        {/* Bottom row: Title */}
         <View>
           <Text 
             className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
             style={{ letterSpacing: -0.5 }}
           >
             {title}
-          </Text>
-          <Text className={`text-sm mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {getDefaultSubtitle()}
           </Text>
         </View>
       </View>

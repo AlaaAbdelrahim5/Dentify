@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, EmptyState, LoadingSpinner } from '../../../components/dashboard';
+// import { EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { useTheme } from '../../../contexts/ThemeContext';
 // import { radiologyAPI } from '../../../services/api';
 
@@ -59,103 +59,64 @@ const PatientXRayResults = () => {
     setModalVisible(true);
   };
 
-  const getStats = () => {
-    const total = xrays.length;
-    const reviewed = xrays.filter(x => x.status === 'REVIEWED').length;
-    const pending = xrays.filter(x => x.status === 'PENDING').length;
-    
-    return { total, reviewed, pending };
-  };
-
-  const stats = getStats();
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Loading x-ray results...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <View className="flex-1">
+      <View className="p-4">
+        <View className="flex-row mb-4" style={{ gap: 8 }}>
+        <TouchableOpacity
+          onPress={() => setSelectedFilter('all')}
+          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'all' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
+        >
+          <Text className={`text-center font-semibold ${selectedFilter === 'all' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
+            All ({xrays.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSelectedFilter('reviewed')}
+          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'reviewed' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
+        >
+          <Text className={`text-center font-semibold ${selectedFilter === 'reviewed' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
+            Reviewed
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSelectedFilter('pending')}
+          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'pending' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
+        >
+          <Text className={`text-center font-semibold ${selectedFilter === 'pending' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
+            Pending
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View className="p-4 space-y-4">
-          {/* Header */}
+        {xrays.length > 0 ? (
           <View>
-            <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              X-Ray Results
-            </Text>
-            <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              View your dental x-ray images and reports
-            </Text>
-          </View>
-
-          {/* Stats Cards */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="space-x-3">
-            <View className={`rounded-xl p-4 min-w-[140px] ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="images" size={24} color="#3B82F6" />
-                <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.total}
-                </Text>
-              </View>
-              <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total X-Rays</Text>
-            </View>
-
-            <View className={`rounded-xl p-4 min-w-[140px] ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="checkmark-circle" size={24} color="#10B981" />
-                <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.reviewed}
-                </Text>
-              </View>
-              <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Reviewed</Text>
-            </View>
-
-            <View className={`rounded-xl p-4 min-w-[140px] ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="time" size={24} color="#F59E0B" />
-                <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {stats.pending}
-                </Text>
-              </View>
-              <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Pending Review</Text>
-            </View>
-          </ScrollView>
-
-          {/* Filter Tabs */}
-          <View className={`flex-row rounded-xl p-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            {['all', 'reviewed', 'pending'].map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                onPress={() => setSelectedFilter(filter)}
-                className={`flex-1 py-2 rounded-lg ${
-                  selectedFilter === filter
-                    ? 'bg-teal-600'
-                    : 'bg-transparent'
-                }`}
-              >
-                <Text
-                  className={`text-center font-medium capitalize ${
-                    selectedFilter === filter
-                      ? 'text-white'
-                      : isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}
-                >
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* X-Rays List */}
-          {loading ? (
-            <LoadingSpinner />
-          ) : xrays.length > 0 ? (
-            <View className="space-y-3">
               {xrays.map((xray) => (
                 <TouchableOpacity
                   key={xray.id}
                   onPress={() => openImageViewer(xray)}
+                  className={`p-4 rounded-xl mb-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
+                  style={{
+                    shadowColor: '#000',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 3
+                  }}
                 >
-                  <Card>
                     <View className="flex-row">
                       {/* Thumbnail */}
                       <View className="w-20 h-20 rounded-lg bg-gray-200 mr-4 overflow-hidden">
@@ -230,19 +191,19 @@ const PatientXRayResults = () => {
                       <Ionicons name="eye" size={18} color="#FFF" />
                       <Text className="text-white font-medium ml-2">View Full Image</Text>
                     </TouchableOpacity>
-                  </Card>
                 </TouchableOpacity>
               ))}
-            </View>
-          ) : (
-            <EmptyState
-              icon="images-outline"
-              title="No x-ray results found"
-              message="Your x-ray images and reports will appear here"
-            />
-          )}
-        </View>
+          </View>
+        ) : (
+          <View className="items-center justify-center py-12">
+            <Ionicons name="images-outline" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
+            <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              No x-ray results
+            </Text>
+          </View>
+        )}
       </ScrollView>
+      </View>
 
       {/* Image Viewer Modal */}
       <Modal

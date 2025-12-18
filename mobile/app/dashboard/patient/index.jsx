@@ -63,6 +63,27 @@ export default function PatientDashboard() {
     setRefreshing(false);
   };
 
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'overview':
+        return 'Home';
+      case 'appointments':
+        return 'Appointments';
+      case 'treatments':
+        return 'Treatments';
+      case 'xray':
+        return 'X-Ray Results';
+      case 'payments':
+        return 'Payments';
+      case 'search':
+        return 'Search';
+      case 'settings':
+        return 'Settings';
+      default:
+        return 'Dashboard';
+    }
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -97,6 +118,7 @@ export default function PatientDashboard() {
   return (
     <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <DashboardHeader
+        title={getPageTitle()}
         userData={userData}
         onMenuPress={() => setSidebarVisible(true)}
       />

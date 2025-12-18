@@ -66,6 +66,29 @@ export default function DentistDashboard() {
     setRefreshing(false);
   };
 
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'overview':
+        return 'Home';
+      case 'appointments':
+        return 'Appointments';
+      case 'patients':
+        return 'Patients';
+      case 'treatments':
+        return 'Treatments';
+      case 'payments':
+        return 'Payments';
+      case 'radiology':
+        return 'Radiology';
+      case 'schedule':
+        return 'Schedule';
+      case 'settings':
+        return 'Settings';
+      default:
+        return 'Dashboard';
+    }
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -102,6 +125,7 @@ export default function DentistDashboard() {
   return (
     <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <DashboardHeader
+        title={getPageTitle()}
         userData={userData}
         onMenuPress={() => setSidebarVisible(true)}
       />
