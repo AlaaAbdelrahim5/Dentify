@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Switch, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../utils/colors';
 import { dentistsAPI } from '../../../services/api';
 import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
 import { LoadingState } from '../shared';
@@ -245,7 +246,7 @@ const DentistSchedule = () => {
                 <Ionicons 
                   name={isExpanded ? "chevron-up" : "pencil"} 
                   size={20} 
-                  color="#14B8A6" 
+                  color={UI_COLORS.primary} 
                 />
               </TouchableOpacity>
             )}
@@ -275,7 +276,7 @@ const DentistSchedule = () => {
                     value={dayData.startTime}
                     onChangeText={(text) => handleTimeChange(day, 'startTime', text)}
                     placeholder="09:00"
-                    placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+                    placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
                     className={`px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
                   />
                   {dayData.startTime && (
@@ -292,7 +293,7 @@ const DentistSchedule = () => {
                     value={dayData.endTime}
                     onChangeText={(text) => handleTimeChange(day, 'endTime', text)}
                     placeholder="17:00"
-                    placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+                    placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
                     className={`px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
                   />
                   {dayData.endTime && (
@@ -334,7 +335,7 @@ const DentistSchedule = () => {
                           value={breakItem.label}
                           onChangeText={(text) => updateBreak(day, index, 'label', text)}
                           placeholder="Break"
-                          placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+                          placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
                           className={`px-2 py-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'}`}
                         />
                       </View>
@@ -347,7 +348,7 @@ const DentistSchedule = () => {
                             value={breakItem.start}
                             onChangeText={(text) => updateBreak(day, index, 'start', text)}
                             placeholder="12:00"
-                            placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+                            placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
                             className={`px-2 py-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'}`}
                           />
                           {breakItem.start && (
@@ -364,7 +365,7 @@ const DentistSchedule = () => {
                             value={breakItem.end}
                             onChangeText={(text) => updateBreak(day, index, 'end', text)}
                             placeholder="13:00"
-                            placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+                            placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
                             className={`px-2 py-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-900'}`}
                           />
                           {breakItem.end && (
@@ -406,7 +407,7 @@ const DentistSchedule = () => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor="#14B8A6"
+            tintColor={UI_COLORS.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -466,7 +467,7 @@ const DentistSchedule = () => {
         {/* Appointment Settings */}
         <View className={`rounded-xl p-4 mb-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 2 }}>
           <View className="flex-row items-center mb-4">
-            <Ionicons name="settings" size={20} color="#14B8A6" />
+            <Ionicons name="settings" size={20} color={UI_COLORS.primary} />
             <Text className={`text-lg font-bold ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Appointment Settings
             </Text>
@@ -480,7 +481,7 @@ const DentistSchedule = () => {
               value={defaultDuration || ''}
               onChangeText={setDefaultDuration}
               placeholder="Enter duration in minutes (e.g., 30)"
-              placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+              placeholderTextColor={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray}
               keyboardType="numeric"
               className={`px-3 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
             />

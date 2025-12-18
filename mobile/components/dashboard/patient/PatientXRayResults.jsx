@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Image, Modal } from 'react-native';
+import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS, getStatusColors } from '../../../utils/colors';
 import { formatDate } from '../../../utils/dateUtils';
 import { LoadingState, EmptyState, FilterTabs } from '../shared';
 import { patientsAPI } from '../../../services/api';
@@ -11,28 +12,17 @@ const PatientXRayResults = () => {
   const [xrays, setXrays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedXray, setSelectedXray] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all'); // all, reviewed, pending
 
   useEffect(() => {
     fetchXRays();
-  }, [selectedFilter]);
+  }, []);
 
   const fetchXRays = async () => {
     try {
       setLoading(true);
       const response = await patientsAPI.getMyRadiologyRequests();
-      let allXRays = response.data || [];
-      
-      // Filter based on selection
-      if (selectedFilter === 'reviewed') {
-        allXRays = allXRays.filter(x => x.status === 'REVIEWED');
-      } else if (selectedFilter === 'pending') {
-        allXRays = allXRays.filter(x => x.status === 'PENDING');
-      }
-      
-      setXrays(allXRays);
+      setXrays(response.data || response.radiologyRequests || []);
     } catch (error) {
       console.error('Error fetching x-rays:', error);
     } finally {
@@ -46,46 +36,48 @@ const PatientXRayResults = () => {
     fetchXRays();
   };
 
-  const openImageViewer = (xray) => {
-    setSelectedXray(xray);
-    setModalVisible(true);
-  };
+  const filteredXrays = xrays.filter(xray => {
+    if (selectedFilter === 'all') return true;
+    return xray.status === selectedFilter;
+  });
 
-  const tabs = [
-    { key: 'all', label: 'All', count: xrays.length },
-    { key: 'reviewed', label: 'Reviewed' },
-    { key: 'pending', label: 'Pending' }
+  const filterTabs = [
+    { id: 'all', label: `All (${xrays.length})` },
+    { id: 'REQUESTED', label: `Requested (${xrays.filter(x => x.status === 'REQUESTED').length})` },
+    { id: 'COMPLETED', label: `Completed (${xrays.filter(x => x.status === 'COMPLETED').length})` }
   ];
 
   if (loading) {
-    return <LoadingState isDarkMode={isDarkMode} message="Loading x-ray results..." />;
+    return (
+      <View className="flex-1 p-4">
+        <LoadingState isDarkMode={isDarkMode} />
+      </View>
+    );
   }
 
   return (
-    <View className="flex-1">
-      <View className="p-4">
-        <FilterTabs 
-          tabs={tabs}
-          selectedTab={selectedFilter}
-          onSelectTab={setSelectedFilter}
-          isDarkMode={isDarkMode}
-        />
+    <View className="flex-1 p-4">
+      <FilterTabs 
+        tabs={filterTabs}
+        activeTab={selectedFilter}
+        onTabChange={setSelectedFilter}
+        isDarkMode={isDarkMode}
+      />
 
       <ScrollView
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor="#14B8A6"
+            tintColor={UI_COLORS.primary}
           />
         }
       >
-        {xrays.length > 0 ? (
+        {filteredXrays.length > 0 ? (
           <View>
-              {xrays.map((xray) => (
-                <TouchableOpacity
+              {filteredXrays.map((xray) => (
+                <View
                   key={xray.id}
-                  onPress={() => openImageViewer(xray)}
                   className={`p-4 rounded-xl mb-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
                   style={{
                     shadowColor: '#000',
@@ -95,62 +87,55 @@ const PatientXRayResults = () => {
                     elevation: 3
                   }}
                 >
-                    <View className="flex-row">
-                      {/* Thumbnail */}
-                      <View className="w-20 h-20 rounded-lg bg-gray-200 mr-4 overflow-hidden">
-                        {xray.imageUrl ? (
-                          <Image 
-                            source={{ uri: xray.imageUrl }} 
-                            className="w-full h-full"
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View className="w-full h-full items-center justify-center">
-                            <Ionicons name="image-outline" size={32} color="#9CA3AF" />
-                          </View>
-                        )}
+                    <View className="flex-row items-start justify-between mb-2">
+                      <Text className={`font-semibold text-base flex-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {xray.type || 'Dental X-Ray'}
+                      </Text>
+                      <View 
+                        className="px-2 py-1 rounded-full"
+                        style={{
+                          backgroundColor: getStatusColors(xray.status, isDarkMode).bg,
+                          borderWidth: 1,
+                          borderColor: getStatusColors(xray.status, isDarkMode).border
+                        }}
+                      >
+                        <Text 
+                          className="text-xs font-medium"
+                          style={{ color: getStatusColors(xray.status, isDarkMode).text }}
+                        >
+                          {xray.status}
+                        </Text>
                       </View>
+                    </View>
 
-                      {/* Content */}
-                      <View className="flex-1">
-                        <View className="flex-row items-start justify-between mb-2">
-                          <Text className={`font-semibold text-base flex-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {xray.type || 'Dental X-Ray'}
-                          </Text>
-                          <View className={`px-2 py-1 rounded-full ${
-                            xray.status === 'REVIEWED' ? 'bg-green-100' : 'bg-yellow-100'
-                          }`}>
-                            <Text className={`text-xs font-medium ${
-                              xray.status === 'REVIEWED' ? 'text-green-800' : 'text-yellow-800'
-                            }`}>
-                              {xray.status}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {xray.toothNumber && (
-                          <View className="flex-row items-center mb-1">
-                            <Ionicons name="tooth" size={12} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-                            <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Tooth #{xray.toothNumber}
-                            </Text>
-                          </View>
-                        )}
-
-                        <View className="flex-row items-center mb-1">
-                          <Ionicons name="person" size={12} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-                          <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Dr. {xray.dentist?.firstName} {xray.dentist?.lastName}
-                          </Text>
-                        </View>
-
-                        <View className="flex-row items-center">
-                          <Ionicons name="calendar" size={12} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-                          <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {formatDate(xray.createdAt)}
-                          </Text>
-                        </View>
+                    {xray.toothNumber && (
+                      <View className="flex-row items-center mb-1">
+                        <Ionicons name="tooth" size={12} color={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray} />
+                        <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Tooth #{xray.toothNumber}
+                        </Text>
                       </View>
+                    )}
+
+                    <View className="flex-row items-center mb-1">
+                      <Ionicons name="person" size={12} color={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray} />
+                      <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Dr. {xray.dentist?.firstName} {xray.dentist?.lastName}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center mb-1">
+                      <Ionicons name="business-outline" size={12} color={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray} />
+                      <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {xray.radiologyCenter?.centerName || xray.radiology?.centerName || 'N/A'}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center">
+                      <Ionicons name="calendar" size={12} color={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray} />
+                      <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {formatDate(xray.requestDate)}
+                      </Text>
                     </View>
 
                     {xray.notes && (
@@ -161,79 +146,17 @@ const PatientXRayResults = () => {
                         </Text>
                       </View>
                     )}
-
-                    <TouchableOpacity
-                      onPress={() => openImageViewer(xray)}
-                      className="mt-3 flex-row items-center justify-center py-2 bg-teal-600 rounded-lg"
-                    >
-                      <Ionicons name="eye" size={18} color="#FFF" />
-                      <Text className="text-white font-medium ml-2">View Full Image</Text>
-                    </TouchableOpacity>
-                </TouchableOpacity>
+                </View>
               ))}
           </View>
         ) : (
-          <View className="items-center justify-center py-12">
-            <Ionicons name="images-outline" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
-            <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              No x-ray results
-            </Text>
-          </View>
+          <EmptyState 
+            isDarkMode={isDarkMode}
+            icon="images-outline"
+            message="No x-ray results"
+          />
         )}
       </ScrollView>
-      </View>
-
-      {/* Image Viewer Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View className="flex-1 bg-black">
-          {/* Header */}
-          <View className="flex-row items-center justify-between p-4 bg-black/50">
-            <View>
-              <Text className="text-white font-semibold text-lg">
-                {selectedXray?.type || 'X-Ray Image'}
-              </Text>
-              <Text className="text-gray-300 text-sm">
-                {selectedXray && formatDate(selectedXray.createdAt)}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="w-10 h-10 items-center justify-center rounded-full bg-white/20"
-            >
-              <Ionicons name="close" size={24} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Image */}
-          <View className="flex-1 items-center justify-center">
-            {selectedXray?.imageUrl ? (
-              <Image
-                source={{ uri: selectedXray.imageUrl }}
-                className="w-full h-full"
-                resizeMode="contain"
-              />
-            ) : (
-              <View className="items-center">
-                <Ionicons name="image-outline" size={64} color="#9CA3AF" />
-                <Text className="text-gray-400 mt-4">No image available</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Details */}
-          {selectedXray?.notes && (
-            <View className="p-4 bg-black/50">
-              <Text className="text-white font-medium mb-2">Dentist Notes:</Text>
-              <Text className="text-gray-300">{selectedXray.notes}</Text>
-            </View>
-          )}
-        </View>
-      </Modal>
     </View>
   );
 };

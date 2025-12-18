@@ -181,6 +181,7 @@ export const dentistsAPI = {
   toggleStatus: (id) => ApiService.patch(`/dentists/${id}/toggle-status`),
   getMyProfile: () => ApiService.get('/dentists/me'),
   updateMyProfile: (data) => ApiService.put('/dentists/me', data),
+  changePassword: (data) => ApiService.post('/auth/change-password', data),
   search: (params) => {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/dentists/search?${queryString}`);
@@ -201,6 +202,7 @@ export const secretariesAPI = {
   toggleStatus: (id) => ApiService.patch(`/secretaries/${id}/toggle-status`),
   getMyProfile: () => ApiService.get('/secretaries/me'),
   updateMyProfile: (data) => ApiService.put('/secretaries/me', data),
+  changePassword: (data) => ApiService.post('/auth/change-password', data),
 };
 
 // Patients API functions
@@ -214,6 +216,7 @@ export const patientsAPI = {
   toggleStatus: (id) => ApiService.patch(`/patients/${id}/toggle-status`),
   getMyProfile: () => ApiService.get('/patients/me'),
   updateMyProfile: (data) => ApiService.put('/patients/me', data),
+  changePassword: (data) => ApiService.post('/auth/change-password', data),
   getMyRadiologyRequests: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/patients/my-radiology-requests${queryString ? `?${queryString}` : ''}`);

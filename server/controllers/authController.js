@@ -140,8 +140,16 @@ exports.login = async (req, res) => {
       include: {
         admin: true,
         clinic: true,
-        dentist: true,
-        secretary: true,
+        dentist: {
+          include: {
+            clinic: true
+          }
+        },
+        secretary: {
+          include: {
+            clinic: true
+          }
+        },
         patient: true,
         radiology: true
       }

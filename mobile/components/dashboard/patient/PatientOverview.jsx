@@ -20,16 +20,20 @@ const PatientOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
+      console.log('PatientOverview - User data:', user);
       setUserData(user);
 
       const response = await appointmentsAPI.getMyAppointments();
-      const appointments = response.data || [];
+      const appointments = response.data || response.appointments || [];
 
       const now = new Date();
       const upcoming = appointments
-        .filter(apt => new Date(apt.appointmentDate) >= now && apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED')
+        .filter(apt => {
+          const aptDate = new Date(apt.appointmentDate);
+          return aptDate >= now && apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED';
+        })
         .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
-        .slice(0, 3);
+        .slice(0, 2);
 
       setUpcomingAppointments(upcoming);
     } catch (error) {
@@ -39,13 +43,21 @@ const PatientOverview = () => {
     }
   };
 
+  if (!userData) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <LoadingState isDarkMode={isDarkMode} message="Loading overview..." />
+      </View>
+    );
+  }
+
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="p-4" style={{ gap: 16 }}>
         {/* Welcome Card */}
         <WelcomeCard
-          greeting={`Welcome back, ${userData?.firstName || 'there'}!`}
-          subtitle={userData?.city || 'Manage your dental health'}
+          greeting={`Welcome back, ${userData?.patient?.firstName || 'there'}!`}
+          subtitle={userData?.patient?.city ? `📍 ${userData.patient.city}` : 'Manage your dental health'}
           isDarkMode={isDarkMode}
         />
 
@@ -56,9 +68,7 @@ const PatientOverview = () => {
         >
           <SectionHeader title="Next Appointments" onViewAll={true} isDarkMode={isDarkMode} />
 
-          {isLoading ? (
-            <LoadingState isDarkMode={isDarkMode} />
-          ) : upcomingAppointments.length > 0 ? (
+          {upcomingAppointments.length > 0 ? (
             <View style={{ gap: 12 }}>
               {upcomingAppointments.map((appointment) => {
                 const { date, time } = formatDateTime(appointment.startTime);

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../utils/colors';
 import { secretariesAPI } from '../../../services/api';
 import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
 import { Input, Select, DatePicker } from '../../../components/common';
-import { ProfileHeader, LoadingState } from '../shared';
+import { ProfileHeader, LoadingState, PasswordChangeSection } from '../shared';
 import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants';
 
 const SecretarySettings = ({ onProfileUpdate }) => {
@@ -46,12 +47,12 @@ const SecretarySettings = ({ onProfileUpdate }) => {
       setProfile({
         firstName: secretary.firstName || '',
         lastName: secretary.lastName || '',
-        email: secretary.user?.email || '',
-        phone: secretary.user?.phone || '',
+        email: secretary.userId?.email || secretary.user?.email || '',
+        phone: secretary.userId?.phone || secretary.user?.phone || '',
         birthDate: secretary.birthDate ? secretary.birthDate.split('T')[0] : '',
         gender: secretary.gender || '',
         city: secretary.city || '',
-        profileImage: secretary.user?.profileImage || '',
+        profileImage: secretary.userId?.profileImage || secretary.user?.profileImage || '',
         clinic: {
           name: secretary.clinic?.clinicName || '',
           city: secretary.clinic?.city || '',
@@ -102,6 +103,8 @@ const SecretarySettings = ({ onProfileUpdate }) => {
     }
   };
 
+
+
   if (loading) {
     return (
       <View className="flex-1 p-4">
@@ -117,7 +120,7 @@ const SecretarySettings = ({ onProfileUpdate }) => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor="#14B8A6"
+            tintColor={UI_COLORS.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -202,7 +205,7 @@ const SecretarySettings = ({ onProfileUpdate }) => {
         {/* Clinic Information */}
         <View className={`rounded-xl p-4 mb-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 2 }}>
           <View className="flex-row items-center mb-4">
-            <Ionicons name="business" size={20} color="#14B8A6" />
+            <Ionicons name="business" size={20} color={UI_COLORS.primary} />
             <Text className={`text-lg font-bold ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Clinic Information
             </Text>
@@ -235,6 +238,12 @@ const SecretarySettings = ({ onProfileUpdate }) => {
             </View>
           </View>
         </View>
+
+        {/* Change Password Section */}
+        <PasswordChangeSection
+          isDarkMode={isDarkMode}
+          apiChangePassword={secretariesAPI.changePassword}
+        />
 
         {/* Action Buttons */}
         <View style={{ gap: 12, marginBottom: 20 }}>

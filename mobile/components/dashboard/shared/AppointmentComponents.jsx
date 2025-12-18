@@ -2,25 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDateTime } from '../../../utils/dateUtils';
-
-// Status color helper
-export const getStatusColor = (status) => {
-  switch (status?.toUpperCase()) {
-    case 'CONFIRMED':
-      return 'bg-green-500';
-    case 'PENDING':
-      return 'bg-yellow-500';
-    case 'COMPLETED':
-      return 'bg-blue-500';
-    case 'CANCELLED':
-      return 'bg-red-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
+import { getStatusColors, COLORS, UI_COLORS } from '../../../utils/colors';
 
 // Appointment Card Component
-export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient' }) => {
+export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onCancel, onComplete, onConfirm, onViewDetails }) => {
   const { date, time } = formatDateTime(appointment.appointmentDateTime || appointment.startTime);
 
   // Determine what to display based on role
@@ -37,6 +22,11 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient' }) =
     }
     return appointment.treatmentType || appointment.treatment?.treatmentType || 'General Checkup';
   };
+
+  const canConfirm = role === 'dentist' && appointment.status === 'PENDING' && onConfirm;
+  const canCancel = (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && onCancel;
+  const canComplete = role === 'dentist' && (appointment.status === 'CONFIRMED' || appointment.status === 'PENDING') && onComplete;
+  const isPastAppointment = new Date(appointment.endTime) < new Date();
 
   return (
     <View
@@ -58,8 +48,20 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient' }) =
             {getSecondaryText()}
           </Text>
         </View>
-        <View className={`px-3 py-1 rounded-full ${getStatusColor(appointment.status)}`}>
-          <Text className="text-white text-xs font-medium">{appointment.status}</Text>
+        <View 
+          className="px-3 py-1 rounded-full" 
+          style={{ 
+            backgroundColor: getStatusColors(appointment.status, isDarkMode).bg,
+            borderWidth: 1,
+            borderColor: getStatusColors(appointment.status, isDarkMode).border
+          }}
+        >
+          <Text 
+            className="text-xs font-medium" 
+            style={{ color: getStatusColors(appointment.status, isDarkMode).text }}
+          >
+            {appointment.status}
+          </Text>
         </View>
       </View>
 
@@ -87,45 +89,101 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient' }) =
           </View>
         )}
 
-        {appointment.notes && (
+        {(appointment.notes || appointment.patientNotes || appointment.sessionNotes) && (
           <View className="flex-row items-start mt-1">
             <Ionicons name="document-text-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
             <Text className={`ml-2 text-sm flex-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {appointment.notes}
+              {appointment.notes || appointment.patientNotes || appointment.sessionNotes}
             </Text>
           </View>
         )}
       </View>
+
+      {/* Action Buttons */}
+      {(canConfirm || canCancel || canComplete || onViewDetails) && (
+        <View className="flex-row mt-3" style={{ gap: 8 }}>
+          {onViewDetails && (
+            <TouchableOpacity
+              onPress={() => onViewDetails(appointment)}
+              className={`flex-1 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
+            >
+              <Text className={`text-center text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                View
+              </Text>
+            </TouchableOpacity>
+          )}
+          {canConfirm && !isPastAppointment && (
+            <TouchableOpacity
+              onPress={() => onConfirm(appointment)}
+              className="flex-1 py-2 rounded-lg"
+              style={{ backgroundColor: COLORS.green[600] }}
+            >
+              <Text className="text-center text-sm font-medium text-white">
+                Confirm
+              </Text>
+            </TouchableOpacity>
+          )}
+          {canComplete && !isPastAppointment && (
+            <TouchableOpacity
+              onPress={() => onComplete(appointment)}
+              className="flex-1 py-2 rounded-lg"
+              style={{ backgroundColor: COLORS.blue[600] }}
+            >
+              <Text className="text-center text-sm font-medium text-white">
+                Complete
+              </Text>
+            </TouchableOpacity>
+          )}
+          {canCancel && !isPastAppointment && (
+            <TouchableOpacity
+              onPress={() => onCancel(appointment)}
+              className="flex-1 py-2 rounded-lg"
+              style={{ backgroundColor: COLORS.red[600] }}
+            >
+              <Text className="text-center text-sm font-medium text-white">
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 };
 
 // Filter Tabs Component
-export const FilterTabs = ({ tabs, activeTab, onTabChange, isDarkMode }) => (
-  <View className="flex-row mb-4" style={{ gap: 8 }}>
-    {tabs.map((tab) => (
-      <TouchableOpacity
-        key={tab.id}
-        onPress={() => onTabChange(tab.id)}
-        className={`flex-1 py-3 rounded-xl ${
-          activeTab === tab.id
-            ? isDarkMode
+export const FilterTabs = ({ tabs, activeTab, onTabChange, isDarkMode }) => {
+  const { ScrollView } = require('react-native');
+  
+  return (
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      className="mb-4"
+      contentContainerStyle={{ gap: 8 }}
+    >
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab.id}
+          onPress={() => onTabChange(tab.id)}
+          className={`py-3 px-4 rounded-xl ${
+            activeTab === tab.id
               ? 'bg-teal-500'
-              : 'bg-teal-500'
-            : isDarkMode
-            ? 'bg-gray-800'
-            : 'bg-gray-100'
-        }`}
-        style={{ elevation: activeTab === tab.id ? 2 : 0 }}
-      >
-        <Text
-          className={`text-center font-semibold ${
-            activeTab === tab.id ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              : isDarkMode
+              ? 'bg-gray-800'
+              : 'bg-gray-100'
           }`}
+          style={{ elevation: activeTab === tab.id ? 2 : 0 }}
         >
-          {tab.label}
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+          <Text
+            className={`text-center font-semibold text-sm ${
+              activeTab === tab.id ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}
+          >
+            {tab.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+};

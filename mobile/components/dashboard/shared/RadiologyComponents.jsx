@@ -1,15 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-export const getRadiologyStatusColor = (status) => {
-  switch (status) {
-    case 'Requested': return 'bg-yellow-500';
-    case 'Available': return 'bg-green-500';
-    case 'Not_Available': return 'bg-red-500';
-    default: return 'bg-gray-500';
-  }
-};
+import { getStatusColors } from '../../../utils/colors';
 
 export const RadiologyRequestCard = ({ request, isDarkMode }) => (
   <View className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
@@ -30,17 +22,31 @@ export const RadiologyRequestCard = ({ request, isDarkMode }) => (
           {request.patient?.firstName} {request.patient?.lastName}
         </Text>
       </View>
-      <View className={`px-2 py-1 rounded-full ${getRadiologyStatusColor(request.status)}`}>
-        <Text className="text-white text-xs font-medium">{request.status.replace('_', ' ')}</Text>
+      <View 
+        className="px-2 py-1 rounded-full" 
+        style={{ 
+          backgroundColor: getStatusColors(request.status, isDarkMode).bg,
+          borderWidth: 1,
+          borderColor: getStatusColors(request.status, isDarkMode).border
+        }}
+      >
+        <Text 
+          className="text-xs font-medium"
+          style={{ color: getStatusColors(request.status, isDarkMode).text }}
+        >
+          {request.status.replace('_', ' ')}
+        </Text>
       </View>
     </View>
 
-    <View className="flex-row items-center mt-2">
-      <Ionicons name="business-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-      <Text className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-        {request.radiology?.centerName}
-      </Text>
-    </View>
+    {(request.radiologyCenter?.centerName || request.radiology?.centerName) && (
+      <View className="flex-row items-center mt-2">
+        <Ionicons name="business-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+        <Text className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {request.radiologyCenter?.centerName || request.radiology?.centerName}
+        </Text>
+      </View>
+    )}
 
     <View className="flex-row items-center mt-1">
       <Ionicons name="calendar-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, TextInput } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../utils/colors';
 import { appointmentsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterTodayAppointments, filterUpcomingAppointments } from '../../../utils/filterUtils';
 import { AppointmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
+import NewAppointmentModal from '../shared/NewAppointmentModal';
+import SessionCostModal from '../shared/SessionCostModal';
+import { Select } from '../../common';
 
 const DentistAppointments = () => {
   const { isDarkMode } = useTheme();
@@ -14,6 +18,10 @@ const DentistAppointments = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [isNewAppointmentModalVisible, setIsNewAppointmentModalVisible] = useState(false);
+  const [isSessionCostModalVisible, setIsSessionCostModalVisible] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -21,8 +29,8 @@ const DentistAppointments = () => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await api.getDentistAppointments();
-      setAppointments(response.data || []);
+      const response = await appointmentsAPI.getDentistAppointments();
+      setAppointments(response.appointments || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       showErrorAlert(error, 'Failed to load appointments');
@@ -37,13 +45,152 @@ const DentistAppointments = () => {
     fetchAppointments();
   };
 
+  const handleConfirmAppointment = (appointment) => {
+    Alert.alert(
+      'Confirm Appointment',
+      `Confirm appointment with ${appointment.patient?.firstName} ${appointment.patient?.lastName}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            try {
+              await appointmentsAPI.update(appointment.id, { status: 'CONFIRMED' });
+              Alert.alert('Success', 'Appointment confirmed successfully');
+              fetchAppointments();
+            } catch (error) {
+              console.error('Error confirming appointment:', error);
+              showErrorAlert(error, 'Failed to confirm appointment');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCompleteAppointment = (appointment) => {
+    // Check if appointment is linked to a treatment
+    if (!appointment.treatmentId) {
+      Alert.alert(
+        'No Treatment Linked',
+        'This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
+    // Open session cost modal
+    setSelectedAppointment(appointment);
+    setIsSessionCostModalVisible(true);
+  };
+
+  const handleSaveSessionCost = async (sessionCost) => {
+    try {
+      await appointmentsAPI.complete(selectedAppointment.id, { sessionCost });
+      setIsSessionCostModalVisible(false);
+      setSelectedAppointment(null);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error completing appointment:', error);
+      throw error; // Let modal handle the error
+    }
+  };
+
+  const handleCancelAppointment = (appointment) => {
+    Alert.alert(
+      'Cancel Appointment',
+      `Are you sure you want to cancel the appointment with ${appointment.patient?.firstName} ${appointment.patient?.lastName}?`,
+      [
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await appointmentsAPI.cancel(appointment.id);
+              Alert.alert('Success', 'Appointment cancelled successfully');
+              fetchAppointments();
+            } catch (error) {
+              console.error('Error cancelling appointment:', error);
+              showErrorAlert(error, 'Failed to cancel appointment');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleViewDetails = (appointment) => {
+    const patientName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`;
+    const treatmentType = appointment.treatment?.treatmentType || 'General Checkup';
+    const notes = appointment.patientNotes || appointment.sessionNotes || 'No notes';
+    const phone = appointment.patient?.user?.phone || 'N/A';
+    
+    Alert.alert(
+      'Appointment Details',
+      `Patient: ${patientName}\nPhone: ${phone}\nTreatment: ${treatmentType}\nNotes: ${notes}`,
+      [{ text: 'OK' }]
+    );
+  };
+
   const todayAppointments = useMemo(() => filterTodayAppointments(appointments), [appointments]);
-
   const upcomingAppointments = useMemo(() => filterUpcomingAppointments(appointments), [appointments]);
+  const pendingAppointments = useMemo(() => {
+    return appointments.filter(apt => apt.status === 'PENDING').sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
+  }, [appointments]);
 
+  const pastAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments
+      .filter(apt => {
+        const aptEndTime = new Date(apt.endTime);
+        return aptEndTime < now || apt.status === 'COMPLETED';
+      })
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  }, [appointments]);
 
+  const allAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  }, [appointments]);
 
-  const currentAppointments = activeView === 'today' ? todayAppointments : upcomingAppointments;
+  const displayAppointments = useMemo(() => {
+    switch (activeView) {
+      case 'today':
+        return todayAppointments;
+      case 'upcoming':
+        return upcomingAppointments;
+      case 'pending':
+        return pendingAppointments;
+      case 'past':
+        return pastAppointments;
+      case 'all':
+        return allAppointments;
+      default:
+        return todayAppointments;
+    }
+  }, [activeView, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments]);
+
+  // Filter appointments by search and status
+  const filteredAppointments = useMemo(() => {
+    return displayAppointments.filter(appointment => {
+      const patientName = `${appointment.patient?.firstName || ''} ${appointment.patient?.lastName || ''}`;
+      const treatment = appointment.treatment?.treatmentType || '';
+      
+      const matchesSearch = searchTerm === '' || 
+        treatment.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patientName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = selectedStatus === 'all' || appointment.status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [displayAppointments, searchTerm, selectedStatus]);
 
   if (loading) {
     return (
@@ -55,11 +202,32 @@ const DentistAppointments = () => {
 
   const filterTabs = [
     { id: 'today', label: `Today (${todayAppointments.length})` },
-    { id: 'upcoming', label: `Upcoming (${upcomingAppointments.length})` }
+    { id: 'pending', label: `Pending (${pendingAppointments.length})` },
+    { id: 'upcoming', label: `Upcoming (${upcomingAppointments.length})` },
+    { id: 'past', label: `Past (${pastAppointments.length})` },
+    { id: 'all', label: `All (${allAppointments.length})` }
+  ];
+
+  const statusOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'CONFIRMED', label: 'Confirmed' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'CANCELLED', label: 'Cancelled' }
+  ];
+
+  // Calculate stats
+  const stats = [
+    { label: 'Today', value: todayAppointments.length },
+    { label: 'Pending', value: pendingAppointments.length },
+    { label: 'Upcoming', value: upcomingAppointments.length },
+    { label: 'Past', value: pastAppointments.length },
+    { label: 'All', value: allAppointments.length }
   ];
 
   return (
     <View className="flex-1 p-4">
+      {/* Filter Tabs */}
       <FilterTabs
         tabs={filterTabs}
         activeTab={activeView}
@@ -67,28 +235,76 @@ const DentistAppointments = () => {
         isDarkMode={isDarkMode}
       />
 
+      {/* Search Bar */}
+      <View className={`mb-3 p-3 rounded-xl flex-row items-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 1 }}>
+        <Ionicons name="search" size={20} color={isDarkMode ? UI_COLORS.iconGrayLight : UI_COLORS.iconGray} />
+        <TextInput
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          placeholder="Search by patient or treatment..."
+          placeholderTextColor={isDarkMode ? UI_COLORS.iconGray : UI_COLORS.placeholderLight}
+          className={`flex-1 ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+        />
+      </View>
+
+      {/* Status Filter */}
+      <View className="mb-3">
+        <Select
+          value={selectedStatus}
+          onValueChange={setSelectedStatus}
+          options={statusOptions}
+          placeholder="Filter by Status"
+        />
+      </View>
+
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={UI_COLORS.primary} />
         }
       >
-        {currentAppointments.length === 0 ? (
+        {filteredAppointments.length === 0 ? (
           <EmptyState
             icon="calendar-outline"
-            title={`No appointments ${activeView === 'today' ? 'today' : 'upcoming'}`}
+            title={`No appointments ${activeView === 'today' ? 'today' : activeView === 'upcoming' ? 'upcoming' : 'pending'}`}
+            message={searchTerm || selectedStatus !== 'all' ? 'Try adjusting your filters' : undefined}
             isDarkMode={isDarkMode}
           />
         ) : (
-          currentAppointments.map((appointment) => (
+          filteredAppointments.map((appointment) => (
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
               isDarkMode={isDarkMode}
               role="dentist"
+              onConfirm={appointment.status === 'PENDING' ? handleConfirmAppointment : undefined}
+              onComplete={handleCompleteAppointment}
+              onCancel={handleCancelAppointment}
+              onViewDetails={handleViewDetails}
             />
           ))
         )}
       </ScrollView>
+
+      {/* Modals */}
+      <NewAppointmentModal
+        visible={isNewAppointmentModalVisible}
+        onClose={() => setIsNewAppointmentModalVisible(false)}
+        onSuccess={fetchAppointments}
+        userRole="dentist"
+      />
+
+      <SessionCostModal
+        visible={isSessionCostModalVisible}
+        onClose={() => {
+          setIsSessionCostModalVisible(false);
+          setSelectedAppointment(null);
+        }}
+        onSave={handleSaveSessionCost}
+        appointmentInfo={selectedAppointment ? {
+          patientName: `${selectedAppointment.patient?.firstName} ${selectedAppointment.patient?.lastName}`,
+          treatment: selectedAppointment.treatment?.treatmentType || 'General Consultation'
+        } : null}
+      />
     </View>
   );
 };

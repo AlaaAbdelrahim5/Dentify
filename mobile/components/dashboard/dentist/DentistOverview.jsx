@@ -22,10 +22,11 @@ const DentistOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
+      console.log('DentistOverview - User data:', user);
       setUserData(user);
 
       const response = await appointmentsAPI.getDentistAppointments();
-      const appointments = response.data || [];
+      const appointments = response.appointments || [];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -51,13 +52,21 @@ const DentistOverview = () => {
     }
   };
 
+  if (!userData) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <LoadingState isDarkMode={isDarkMode} message="Loading overview..." />
+      </View>
+    );
+  }
+
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="p-4" style={{ gap: 16 }}>
         {/* Welcome Card */}
         <WelcomeCard
-          greeting={`Welcome, Dr. ${userData?.firstName || 'Doctor'}!`}
-          subtitle={userData?.clinic?.clinicName || 'Private Practice'}
+          greeting={`Welcome, Dr. ${userData?.dentist?.firstName || 'Doctor'}!`}
+          subtitle={userData?.dentist?.clinic?.clinicName || 'Private Practice'}
           isDarkMode={isDarkMode}
         />
 
@@ -77,9 +86,7 @@ const DentistOverview = () => {
         <View className={`rounded-xl p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 3 }}>
           <SectionHeader title="Today's Schedule" onViewAll={true} isDarkMode={isDarkMode} />
 
-          {isLoading ? (
-            <LoadingState isDarkMode={isDarkMode} />
-          ) : todayAppointments.length > 0 ? (
+          {todayAppointments.length > 0 ? (
             <View style={{ gap: 12 }}>
               {todayAppointments.slice(0, 5).map((appointment) => (
                 <TouchableOpacity

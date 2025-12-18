@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../utils/colors';
 import { radiologyRequestsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterByStatus, countByStatus } from '../../../utils/filterUtils';
@@ -20,7 +21,7 @@ const DentistRadiology = () => {
   const fetchRadiologyRequests = async () => {
     try {
       const response = await radiologyRequestsAPI.getDentistRequests();
-      setRequests(response.data || []);
+      setRequests(response.radiologyRequests || []);
     } catch (error) {
       console.error('Error fetching radiology requests:', error);
       showErrorAlert(error, 'Failed to load radiology requests');
@@ -35,23 +36,31 @@ const DentistRadiology = () => {
     fetchRadiologyRequests();
   };
 
-  const filteredRequests = useMemo(() => filterByStatus(requests, selectedStatus), [requests, selectedStatus]);
+  const filteredRequests = useMemo(() => {
+    if (selectedStatus === 'all') return requests;
+    return requests.filter(req => req.status === selectedStatus);
+  }, [requests, selectedStatus]);
 
-  const tabs = [
-    { key: 'all', label: 'All', count: requests.length },
-    { key: 'Available', label: 'Available', count: countByStatus(requests, 'Available') }
+  const filterTabs = [
+    { id: 'all', label: `All (${requests.length})` },
+    { id: 'REQUESTED', label: `Requested (${requests.filter(r => r.status === 'REQUESTED').length})` },
+    { id: 'COMPLETED', label: `Completed (${requests.filter(r => r.status === 'COMPLETED').length})` }
   ];
 
   if (loading) {
-    return <LoadingState isDarkMode={isDarkMode} message="Loading radiology requests..." />;
+    return (
+      <View className="flex-1 p-4">
+        <LoadingState isDarkMode={isDarkMode} />
+      </View>
+    );
   }
 
   return (
     <View className="flex-1 p-4">
       <FilterTabs 
-        tabs={tabs}
-        selectedTab={selectedStatus}
-        onSelectTab={setSelectedStatus}
+        tabs={filterTabs}
+        activeTab={selectedStatus}
+        onTabChange={setSelectedStatus}
         isDarkMode={isDarkMode}
       />
 
@@ -60,7 +69,7 @@ const DentistRadiology = () => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor="#14B8A6"
+            tintColor={UI_COLORS.primary}
           />
         }
       >

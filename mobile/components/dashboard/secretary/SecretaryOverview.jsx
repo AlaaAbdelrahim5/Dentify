@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
+import { formatTime } from '../../../utils/dateUtils';
 import { WelcomeCard, StatCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
 import { appointmentsAPI, dentistsAPI } from '../../../services/api';
 
@@ -21,14 +22,17 @@ const SecretaryOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
+      console.log('SecretaryOverview - User data:', user);
+      console.log('SecretaryOverview - Secretary data:', user?.secretary);
+      console.log('SecretaryOverview - Clinic data:', user?.secretary?.clinic);
       setUserData(user);
 
       const [appointmentsRes, dentistsRes] = await Promise.allSettled([
         appointmentsAPI.getClinicAppointments(),
         dentistsAPI.getForClinic()
       ]);
-      const appointments = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value.data || [] : [];
-      const dentists = dentistsRes.status === 'fulfilled' ? dentistsRes.value.data || [] : [];
+      const appointments = appointmentsRes.status === 'fulfilled' ? (appointmentsRes.value.appointments || []) : [];
+      const dentists = dentistsRes.status === 'fulfilled' ? (dentistsRes.value.data || []) : [];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -59,13 +63,21 @@ const SecretaryOverview = () => {
     }
   };
 
+  if (!userData) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <LoadingState isDarkMode={isDarkMode} message="Loading overview..." />
+      </View>
+    );
+  }
+
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <View className="p-4" style={{ gap: 16 }}>
         {/* Welcome Card */}
         <WelcomeCard
-          greeting={`Welcome, ${userData?.firstName || 'Secretary'}!`}
-          subtitle={userData?.clinic?.clinicName || 'Clinic'}
+          greeting={`Welcome, ${userData?.secretary?.firstName || 'Secretary'}!`}
+          subtitle={`${userData?.secretary?.clinic?.clinicName || 'Clinic'} • ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
           isDarkMode={isDarkMode}
         />
 

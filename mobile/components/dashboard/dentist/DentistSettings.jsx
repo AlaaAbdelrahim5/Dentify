@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../utils/colors';
 import { dentistsAPI } from '../../../services/api';
 import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
 import { Input, Select, DatePicker } from '../../../components/common';
-import { ProfileHeader, LoadingState } from '../shared';
+import { ProfileHeader, LoadingState, PasswordChangeSection } from '../shared';
 import { CITY_OPTIONS, GENDER_OPTIONS, SPECIALIZATION_OPTIONS } from '../../../utils/constants';
 
 const DentistSettings = ({ onProfileUpdate }) => {
@@ -144,6 +145,8 @@ const DentistSettings = ({ onProfileUpdate }) => {
     }
   };
 
+
+
   if (loading) {
     return (
       <View className="flex-1 p-4">
@@ -159,7 +162,7 @@ const DentistSettings = ({ onProfileUpdate }) => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor="#14B8A6"
+            tintColor={UI_COLORS.primary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -345,6 +348,12 @@ const DentistSettings = ({ onProfileUpdate }) => {
             placeholder="https://tiktok.com/@..."
           />
         </View>
+
+        {/* Change Password Section */}
+        <PasswordChangeSection
+          isDarkMode={isDarkMode}
+          apiChangePassword={dentistsAPI.changePassword}
+        />
 
         {/* Action Buttons */}
         <View style={{ gap: 12, marginBottom: 20 }}>

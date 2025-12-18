@@ -70,9 +70,6 @@ export const SectionHeader = ({ title, onViewAll, isDarkMode }) => (
     <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
       {title}
     </Text>
-    {onViewAll && (
-      <Text className="text-sm text-teal-600 font-medium">View All</Text>
-    )}
   </View>
 );
 

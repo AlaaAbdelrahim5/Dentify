@@ -1,16 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-
-// Get status color for treatments
-export const getTreatmentStatusColor = (status) => {
-  switch (status) {
-    case 'IN_PROGRESS': return 'bg-blue-500';
-    case 'COMPLETED': return 'bg-green-500';
-    case 'ON_HOLD': return 'bg-yellow-500';
-    case 'CANCELLED': return 'bg-red-500';
-    default: return 'bg-gray-500';
-  }
-};
+import { getStatusColors } from '../../../utils/colors';
 
 // Universal treatment card component that adapts to role
 export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient' }) => {
@@ -43,8 +33,18 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient' }) => {
             </Text>
           )}
         </View>
-        <View className={`px-2 py-1 rounded-full ${getTreatmentStatusColor(treatment.status)}`}>
-          <Text className="text-white text-xs font-medium">
+        <View 
+          className="px-2 py-1 rounded-full" 
+          style={{ 
+            backgroundColor: getStatusColors(treatment.status, isDarkMode).bg,
+            borderWidth: 1,
+            borderColor: getStatusColors(treatment.status, isDarkMode).border
+          }}
+        >
+          <Text 
+            className="text-xs font-medium"
+            style={{ color: getStatusColors(treatment.status, isDarkMode).text }}
+          >
             {treatment.status.replace('_', ' ')}
           </Text>
         </View>
