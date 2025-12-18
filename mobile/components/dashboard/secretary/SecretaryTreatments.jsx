@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { treatmentsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterByStatus } from '../../../utils/filterUtils';
 import { TreatmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
@@ -19,8 +19,8 @@ const SecretaryTreatments = () => {
 
   const fetchTreatments = async () => {
     try {
-      const response = await api.get('/treatments');
-      setTreatments(response.data.treatments || []);
+      const response = await treatmentsAPI.getClinicTreatments();
+      setTreatments(response.data || []);
     } catch (error) {
       console.error('Error fetching treatments:', error);
       showErrorAlert(error, 'Failed to load treatments');

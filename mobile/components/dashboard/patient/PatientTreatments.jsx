@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { TreatmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
-// import api from '../../../services/api';
+import { treatmentsAPI } from '../../../services/api';
 
 const PatientTreatments = () => {
   const { isDarkMode } = useTheme();
@@ -17,10 +17,8 @@ const PatientTreatments = () => {
 
   const fetchTreatments = async () => {
     try {
-      // TODO: Uncomment when API is ready
-      // const response = await api.get('/treatments/patient/mine');
-      // setTreatments(response.data.treatments || []);
-      setTreatments([]);
+      const response = await treatmentsAPI.getPatientTreatments();
+      setTreatments(response.data || []);
     } catch (error) {
       console.error('Error fetching treatments:', error);
     } finally {

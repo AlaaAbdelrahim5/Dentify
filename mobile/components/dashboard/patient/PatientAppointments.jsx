@@ -3,7 +3,7 @@ import { View, ScrollView, RefreshControl } from 'react-native';
 import { AppointmentCard, FilterTabs } from '../shared';
 import { LoadingState, EmptyState } from '../shared';
 import { useTheme } from '../../../contexts/ThemeContext';
-// import { appointmentsAPI } from '../../../services/api';
+import { appointmentsAPI } from '../../../services/api';
 
 const PatientAppointments = () => {
   const { isDarkMode } = useTheme();
@@ -19,12 +19,8 @@ const PatientAppointments = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      // TODO: Uncomment when API is ready
-      // const response = await appointmentsAPI.getMyAppointments();
-      // const allAppointments = response.appointments || [];
-      
-      // Mock data
-      const allAppointments = [];
+      const response = await appointmentsAPI.getMyAppointments();
+      const allAppointments = response.data || [];
       
       // Filter based on active tab
       const now = new Date();

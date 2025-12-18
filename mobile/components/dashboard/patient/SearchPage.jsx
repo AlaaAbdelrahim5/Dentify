@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Select } from '../../../components/common';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { LoadingState, EmptyState } from '../shared';
+import { dentistsAPI, clinicsAPI } from '../../../services/api';
 
 const SearchPage = () => {
   const { isDarkMode } = useTheme();
@@ -54,14 +55,10 @@ const SearchPage = () => {
   const performSearch = async () => {
     try {
       setLoading(true);
-      // TODO: Uncomment when API is ready
-      // const response = searchType === 'dentists'
-      //   ? await dentistsAPI.search({ query: searchQuery, ...filters })
-      //   : await clinicsAPI.search({ query: searchQuery, ...filters });
-      // setResults(response.results || []);
-      
-      // Mock data
-      setResults([]);
+      const response = searchType === 'dentists'
+        ? await dentistsAPI.search({ query: searchQuery, ...filters })
+        : await clinicsAPI.search({ query: searchQuery, ...filters });
+      setResults(response.data || []);
     } catch (error) {
       console.error('Error performing search:', error);
     } finally {

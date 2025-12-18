@@ -4,7 +4,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { formatDateTime } from '../../../utils/dateUtils';
 import { WelcomeCard, LoadingState, EmptyState, StatusBadge, SectionHeader, InfoRow } from '../shared/OverviewComponents';
-// import { appointmentsAPI } from '../../../services/api';
+import { appointmentsAPI } from '../../../services/api';
 
 const PatientOverview = () => {
   const { isDarkMode } = useTheme();
@@ -22,10 +22,8 @@ const PatientOverview = () => {
       const user = await authUtils.getCurrentUser();
       setUserData(user);
 
-      // TODO: Uncomment when API is ready
-      // const response = await appointmentsAPI.getMyAppointments();
-      // const appointments = response.data || [];
-      const appointments = [];
+      const response = await appointmentsAPI.getMyAppointments();
+      const appointments = response.data || [];
 
       const now = new Date();
       const upcoming = appointments

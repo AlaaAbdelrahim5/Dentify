@@ -3,7 +3,7 @@ import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { calculatePaymentStats } from '../../../utils/paymentUtils';
 import { PaymentCard, PaymentStatsCard, LoadingState, EmptyState } from '../shared';
-// import api from '../../../services/api';
+import { paymentsAPI } from '../../../services/api';
 
 const PatientPayments = () => {
   const { isDarkMode } = useTheme();
@@ -17,10 +17,8 @@ const PatientPayments = () => {
 
   const fetchPayments = async () => {
     try {
-      // TODO: Uncomment when API is ready
-      // const response = await api.get('/payments/patient/mine');
-      // setPayments(response.data.payments || []);
-      setPayments([]);
+      const response = await paymentsAPI.getPatientPayments();
+      setPayments(response.data || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
     } finally {

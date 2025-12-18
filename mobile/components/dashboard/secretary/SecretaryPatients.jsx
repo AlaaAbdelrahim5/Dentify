@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { patientsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterPatients } from '../../../utils/searchUtils';
 import { PatientCard, LoadingState, EmptyState, SearchBar } from '../shared';
@@ -19,8 +19,8 @@ const SecretaryPatients = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await api.get('/patients');
-      setPatients(response.data.patients || []);
+      const response = await patientsAPI.getAll();
+      setPatients(response.data || []);
     } catch (error) {
       console.error('Error fetching patients:', error);
       showErrorAlert(error, 'Failed to load patients');

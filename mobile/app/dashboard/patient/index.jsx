@@ -43,7 +43,7 @@ export default function PatientDashboard() {
         return;
       }
 
-      setUserData(user);
+      setUserData({ ...user, _refreshTimestamp: Date.now() });
     } catch (error) {
       console.error('Auth check error:', error);
       router.replace('/(auth)/login');
@@ -109,7 +109,7 @@ export default function PatientDashboard() {
       case 'search':
         return <SearchPage />;
       case 'settings':
-        return <PatientSettings />;
+        return <PatientSettings onProfileUpdate={initializeDashboard} />;
       default:
         return <PatientOverview />;
     }

@@ -46,7 +46,7 @@ export default function DentistDashboard() {
         return;
       }
 
-      setUserData(user);
+      setUserData({ ...user, _refreshTimestamp: Date.now() });
     } catch (error) {
       console.error('Auth check error:', error);
       router.replace('/(auth)/login');
@@ -116,7 +116,7 @@ export default function DentistDashboard() {
       case 'schedule':
         return <DentistSchedule />;
       case 'settings':
-        return <DentistSettings />;
+        return <DentistSettings onProfileUpdate={initializeDashboard} />;
       default:
         return <DentistOverview />;
     }

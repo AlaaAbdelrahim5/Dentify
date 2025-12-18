@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { formatDate } from '../../../utils/dateUtils';
 import { LoadingState, EmptyState, FilterTabs } from '../shared';
+import { patientsAPI } from '../../../services/api';
 
 const PatientXRayResults = () => {
   const { isDarkMode } = useTheme();
@@ -21,12 +22,8 @@ const PatientXRayResults = () => {
   const fetchXRays = async () => {
     try {
       setLoading(true);
-      // TODO: Uncomment when API is ready
-      // const response = await radiologyAPI.getPatientXRays();
-      // let allXRays = response.xrays || [];
-      
-      // Mock data
-      let allXRays = [];
+      const response = await patientsAPI.getMyRadiologyRequests();
+      let allXRays = response.data || [];
       
       // Filter based on selection
       if (selectedFilter === 'reviewed') {

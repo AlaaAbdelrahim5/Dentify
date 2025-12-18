@@ -63,3 +63,22 @@ export const ROLE_DISPLAY_NAMES = {
   dentist: 'Dentist',
   secretary: 'Secretary'
 };
+// Dental Specializations
+export const SPECIALIZATIONS = [
+  'General Dentistry',
+  'Orthodontics',
+  'Endodontics',
+  'Periodontics',
+  'Oral Surgery',
+  'Prosthodontics',
+  'Pediatric Dentistry',
+  'Oral Pathology',
+  'Cosmetic Dentistry',
+  'Implantology'
+];
+
+// Specializations as select options (for dropdowns)
+export const SPECIALIZATION_OPTIONS = SPECIALIZATIONS.map(spec => ({
+  value: spec,
+  label: spec
+}));

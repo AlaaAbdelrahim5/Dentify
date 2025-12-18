@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { paymentsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { calculatePaymentStats } from '../../../utils/paymentUtils';
 import { PaymentCard, PaymentStatsCard, LoadingState, EmptyState } from '../shared';
@@ -18,8 +18,8 @@ const SecretaryPayments = () => {
 
   const fetchPayments = async () => {
     try {
-      const response = await api.get('/payments');
-      setPayments(response.data.payments || []);
+      const response = await paymentsAPI.getClinicPayments();
+      setPayments(response.data || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
       showErrorAlert(error, 'Failed to load payments');

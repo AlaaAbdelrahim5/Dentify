@@ -5,7 +5,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { formatTime } from '../../../utils/dateUtils';
 import { WelcomeCard, StatCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
-// import { appointmentsAPI } from '../../../services/api';
+import { appointmentsAPI } from '../../../services/api';
 
 const DentistOverview = () => {
   const { isDarkMode } = useTheme();
@@ -24,10 +24,8 @@ const DentistOverview = () => {
       const user = await authUtils.getCurrentUser();
       setUserData(user);
 
-      // TODO: Uncomment when API is ready
-      // const response = await appointmentsAPI.getMyAppointments();
-      // const appointments = response.data || [];
-      const appointments = [];
+      const response = await appointmentsAPI.getDentistAppointments();
+      const appointments = response.data || [];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

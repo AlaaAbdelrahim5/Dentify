@@ -45,7 +45,7 @@ export default function SecretaryDashboard() {
         return;
       }
 
-      setUserData(user);
+      setUserData({ ...user, _refreshTimestamp: Date.now() });
     } catch (error) {
       console.error('Auth check error:', error);
       router.replace('/(auth)/login');
@@ -111,7 +111,7 @@ export default function SecretaryDashboard() {
       case 'payments':
         return <SecretaryPayments />;
       case 'settings':
-        return <SecretarySettings />;
+        return <SecretarySettings onProfileUpdate={initializeDashboard} />;
       default:
         return <SecretaryOverview />;
     }

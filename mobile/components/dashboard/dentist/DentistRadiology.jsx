@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { radiologyRequestsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterByStatus, countByStatus } from '../../../utils/filterUtils';
 import { RadiologyRequestCard, LoadingState, EmptyState, FilterTabs } from '../shared';
@@ -19,8 +19,8 @@ const DentistRadiology = () => {
 
   const fetchRadiologyRequests = async () => {
     try {
-      const response = await api.get('/radiology-requests/dentist');
-      setRequests(response.data.radiologyRequests || []);
+      const response = await radiologyRequestsAPI.getDentistRequests();
+      setRequests(response.data || []);
     } catch (error) {
       console.error('Error fetching radiology requests:', error);
       showErrorAlert(error, 'Failed to load radiology requests');

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { WelcomeCard, StatCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
-// import { appointmentsAPI, dentistsAPI } from '../../../services/api';
+import { appointmentsAPI, dentistsAPI } from '../../../services/api';
 
 const SecretaryOverview = () => {
   const { isDarkMode } = useTheme();
@@ -23,13 +23,12 @@ const SecretaryOverview = () => {
       const user = await authUtils.getCurrentUser();
       setUserData(user);
 
-      // TODO: Uncomment when API is ready
-      // const [appointmentsRes, dentistsRes] = await Promise.allSettled([
-      //   appointmentsAPI.getClinicAppointments(),
-      //   dentistsAPI.getForClinic()
-      // ]);
-      const appointments = [];
-      const dentists = [];
+      const [appointmentsRes, dentistsRes] = await Promise.allSettled([
+        appointmentsAPI.getClinicAppointments(),
+        dentistsAPI.getForClinic()
+      ]);
+      const appointments = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value.data || [] : [];
+      const dentists = dentistsRes.status === 'fulfilled' ? dentistsRes.value.data || [] : [];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

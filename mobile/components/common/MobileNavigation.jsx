@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabChange = () => {}, userData = null }) => {
   const { isDarkMode } = useTheme();
@@ -77,7 +78,11 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
                   >
                     {userData?.profileImage ? (
                       <Image
-                        source={{ uri: userData.profileImage }}
+                        key={userData.profileImage?.substring(0, 50)}
+                        source={{ 
+                          uri: getImageUrl(userData.profileImage),
+                          cache: 'reload'
+                        }}
                         style={{ 
                           width: 30, 
                           height: 30, 

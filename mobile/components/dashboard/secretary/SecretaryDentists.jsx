@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { dentistsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterDentists } from '../../../utils/searchUtils';
 import { DentistCard, LoadingState, EmptyState, SearchBar } from '../shared';
@@ -19,8 +19,8 @@ const SecretaryDentists = () => {
 
   const fetchDentists = async () => {
     try {
-      const response = await api.get('/dentists');
-      setDentists(response.data.dentists || []);
+      const response = await dentistsAPI.getForClinic();
+      setDentists(response.data || []);
     } catch (error) {
       console.error('Error fetching dentists:', error);
       showErrorAlert(error, 'Failed to load dentists');

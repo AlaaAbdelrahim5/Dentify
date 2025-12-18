@@ -31,6 +31,7 @@ export {
 
 // Settings Components
 export {
+  ProfileHeader,
   ProfileInfoRow,
   SettingsActionButton,
   SettingsSectionHeader,

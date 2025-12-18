@@ -1,25 +1,153 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadAPI } from '../../../services/api';
+import { getImageUrl } from '../../../utils/imageUtils';
 
-// Profile Header Component (Avatar + Name)
-export const ProfileHeader = ({ firstName, lastName, subtitle, isDarkMode, prefix = '' }) => (
-  <View className="items-center mb-6">
-    <View className="w-24 h-24 rounded-full bg-teal-500 items-center justify-center">
-      <Text className="text-white font-bold text-3xl">
-        {firstName?.charAt(0)}{lastName?.charAt(0)}
+// Profile Header Component (Avatar + Name with Image Upload)
+export const ProfileHeader = ({ firstName, lastName, subtitle, isDarkMode, prefix = '', profileImage, onImageUpdate, isEditing = false }) => {
+  const [uploading, setUploading] = useState(false);
+
+  const pickImage = async () => {
+    if (!isEditing) return;
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'We need camera roll permissions to update your profile picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadImage(result.assets[0]);
+    }
+  };
+
+  const uploadImage = async (asset) => {
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append('profileImage', {
+        uri: asset.uri,
+        type: asset.type || 'image/jpeg',
+        name: asset.fileName || 'profile.jpg',
+      });
+
+      const response = await uploadAPI.uploadProfileImage(formData);
+      
+      if (onImageUpdate) {
+        onImageUpdate(response.imageUrl);
+      }
+
+      Alert.alert('Success', 'Profile image updated successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', error.message || 'Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteImage = async () => {
+    if (!isEditing) return;
+
+    Alert.alert(
+      'Delete Profile Image',
+      'Are you sure you want to delete your profile image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setUploading(true);
+              await uploadAPI.deleteProfileImage();
+              
+              if (onImageUpdate) {
+                onImageUpdate(null);
+              }
+
+              Alert.alert('Success', 'Profile image deleted successfully!');
+            } catch (error) {
+              console.error('Error deleting image:', error);
+              Alert.alert('Error', 'Failed to delete image. Please try again.');
+            } finally {
+              setUploading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const imageUrl = getImageUrl(profileImage);
+
+  return (
+    <View className="items-center mb-6">
+      <View className="relative">
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            className="w-24 h-24 rounded-full"
+            style={{ backgroundColor: '#14B8A6', width: 96, height: 96, borderRadius: 48 }}
+          />
+        ) : (
+          <View className="w-24 h-24 rounded-full bg-teal-500 items-center justify-center">
+            <Text className="text-white font-bold text-3xl">
+              {firstName?.charAt(0)}{lastName?.charAt(0)}
+            </Text>
+          </View>
+        )}
+        
+        {uploading && (
+          <View className="absolute inset-0 w-24 h-24 rounded-full bg-black/50 items-center justify-center">
+            <ActivityIndicator color="white" />
+          </View>
+        )}
+
+        {isEditing && !uploading && (
+          <View className="absolute -bottom-1 -right-1 flex-row" style={{ gap: 4 }}>
+            <TouchableOpacity
+              onPress={pickImage}
+              className="w-8 h-8 rounded-full bg-teal-500 items-center justify-center"
+              style={{ elevation: 3 }}
+            >
+              <Ionicons name="camera" size={16} color="white" />
+            </TouchableOpacity>
+            
+            {profileImage && (
+              <TouchableOpacity
+                onPress={deleteImage}
+                className="w-8 h-8 rounded-full bg-red-500 items-center justify-center"
+                style={{ elevation: 3 }}
+              >
+                <Ionicons name="trash" size={16} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </View>
+
+      <Text className={`mt-3 text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        {prefix}{firstName} {lastName}
       </Text>
+      {subtitle && (
+        <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {subtitle}
+        </Text>
+      )}
     </View>
-    <Text className={`mt-3 text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-      {prefix}{firstName} {lastName}
-    </Text>
-    {subtitle && (
-      <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-        {subtitle}
-      </Text>
-    )}
-  </View>
-);
+  );
+};
 
 // Profile Info Row Component
 export const ProfileInfoRow = ({ icon, label, value, editable = false, onChangeText, isEditing, isDarkMode, multiline = false }) => (

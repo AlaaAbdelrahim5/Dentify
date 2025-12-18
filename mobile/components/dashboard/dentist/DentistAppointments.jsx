@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
-import api from '../../../services/api';
+import { appointmentsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterTodayAppointments, filterUpcomingAppointments } from '../../../utils/filterUtils';
 import { AppointmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
@@ -21,8 +21,8 @@ const DentistAppointments = () => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await api.get('/appointments/dentist/mine');
-      setAppointments(response.data.appointments || []);
+      const response = await api.getDentistAppointments();
+      setAppointments(response.data || []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       showErrorAlert(error, 'Failed to load appointments');
