@@ -4,9 +4,25 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const DashboardHeader = ({ title = 'Dashboard', subtitle = 'Patient Portal', showNotifications = true, onMenuPress, userData }) => {
+const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, userData }) => {
   const router = useRouter();
   const { isDarkMode } = useTheme();
+
+  const getDefaultSubtitle = () => {
+    if (subtitle) return subtitle;
+    
+    const role = userData?.role?.toUpperCase();
+    switch (role) {
+      case 'DENTIST':
+        return 'Dentist Portal';
+      case 'SECRETARY':
+        return 'Secretary Portal';
+      case 'PATIENT':
+        return 'Patient Portal';
+      default:
+        return 'Patient Portal';
+    }
+  };
 
   const handleNotifications = () => {
     router.push('/notifications');
@@ -78,7 +94,7 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle = 'Patient Portal', sho
             {title}
           </Text>
           <Text className={`text-sm mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {subtitle}
+            {getDefaultSubtitle()}
           </Text>
         </View>
       </View>

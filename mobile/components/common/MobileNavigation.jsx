@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabChange = () => {} }) => {
+const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabChange = () => {}, userData = null }) => {
   const { isDarkMode } = useTheme();
 
   const handleTabPress = (tabId) => {
@@ -12,29 +12,15 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
     }
   };
 
-  // Navigation configuration based on user role (similar to web Sidebar)
+  // Navigation configuration - common tabs for all user types
   const getNavigationItems = () => {
-    const navConfigs = {
-      patient: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
-        { name: 'Search', icon: 'search', iconOutline: 'search-outline', id: 'search' },
-        { name: 'Profile', icon: 'person', iconOutline: 'person-outline', id: 'settings' },
-      ],
-      dentist: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
-        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', id: 'patients' },
-        { name: 'Reports', icon: 'document-text', iconOutline: 'document-text-outline', id: 'reports' },
-      ],
-      secretary: [
-        { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
-        { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
-        { name: 'Patients', icon: 'people', iconOutline: 'people-outline', id: 'patients' },
-        { name: 'Reports', icon: 'bar-chart', iconOutline: 'bar-chart-outline', id: 'reports' },
-      ],
-    };
-    return navConfigs[userRole] || navConfigs.patient;
+    return [
+      { name: 'Home', icon: 'home', iconOutline: 'home-outline', id: 'overview' },
+      { name: 'Appointments', icon: 'calendar', iconOutline: 'calendar-outline', id: 'appointments' },
+      { name: 'Treatments', icon: 'medical', iconOutline: 'medical-outline', id: 'treatments' },
+      { name: 'Payments', icon: 'card', iconOutline: 'card-outline', id: 'payments' },
+      { name: 'Settings', icon: 'settings', iconOutline: 'settings-outline', id: 'settings' },
+    ];
   };
 
   const navItems = getNavigationItems();
@@ -61,6 +47,8 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
         <View className="flex-row justify-around items-center px-2" style={{ paddingTop: 12, paddingBottom: 12 }}>
         {navItems.map((item) => {
           const active = isActive(item.id);
+          const isProfile = item.id === 'settings';
+          
           return (
             <TouchableOpacity
               key={item.name}
@@ -70,39 +58,66 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
             >
               <View className="items-center" style={{ paddingVertical: 8 }}>
                 {/* Icon container with active state */}
-                <View 
-                  className={`items-center justify-center ${
-                    active ? 'bg-teal-500' : ''
-                  }`}
-                  style={[
-                    { width: 48, height: 48, borderRadius: 24 },
-                    active && {
-                      shadowColor: '#14B8A6',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 6,
-                      elevation: 6
-                    }
-                  ]}
-                >
-                  <Ionicons 
-                    name={active ? item.icon : item.iconOutline} 
-                    size={24} 
-                    color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
-                  />
-                </View>
-                
-                {/* Label */}
-                <Text 
-                  className={`text-xs mt-1 ${
-                    active 
-                      ? 'text-teal-600 font-semibold' 
-                      : (isDarkMode ? 'text-gray-400' : 'text-gray-500')
-                  }`}
-                  style={{ letterSpacing: 0.1 }}
-                >
-                  {item.name}
-                </Text>
+                {isProfile ? (
+                  // Profile Image
+                  <View 
+                    className={`items-center justify-center ${
+                      active ? 'bg-teal-500' : ''
+                    }`}
+                    style={[
+                      { width: 48, height: 48, borderRadius: 24 },
+                      active && {
+                        shadowColor: '#14B8A6',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 6,
+                        elevation: 6
+                      }
+                    ]}
+                  >
+                    {userData?.profileImage ? (
+                      <Image
+                        source={{ uri: userData.profileImage }}
+                        style={{ 
+                          width: 30, 
+                          height: 30, 
+                          borderRadius: 15,
+                          borderWidth: 2,
+                          borderColor: '#FFF'
+                        }}
+                      />
+                    ) : (
+                      <Ionicons 
+                        name="person" 
+                        size={24} 
+                        color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
+                      />
+                    )}
+                  </View>
+                ) : (
+                  // Regular Icon
+                  <View 
+                    className={`items-center justify-center ${
+                      active ? 'bg-teal-500' : ''
+                    }`}
+                    style={[
+                      { width: 48, height: 48, borderRadius: 24 },
+                      active && {
+                        shadowColor: '#14B8A6',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 6,
+                        elevation: 6
+                      }
+                    ]}
+                  >
+                    <Ionicons 
+                      name={active ? item.icon : item.iconOutline} 
+                      size={24} 
+                      color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
+                    />
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           );

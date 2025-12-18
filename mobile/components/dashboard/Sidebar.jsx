@@ -11,7 +11,7 @@ import ThemeToggle from '../common/ThemeToggle';
 const { width } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 288; // w-72 = 288px
 
-const Sidebar = ({ visible, onClose, userRole, activeTab, onTabChange }) => {
+const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) => {
   const { isDarkMode } = useTheme();
   const translateX = React.useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const overlayOpacity = React.useRef(new Animated.Value(0)).current;
@@ -56,7 +56,7 @@ const Sidebar = ({ visible, onClose, userRole, activeTab, onTabChange }) => {
     { label: 'Overview', icon: 'apps', id: 'overview' },
     { label: 'Appointments', icon: 'calendar', id: 'appointments' },
     { label: 'Treatments', icon: 'medical', id: 'treatments' },
-    { label: 'X-Ray Results', icon: 'images', id: 'xrays' },
+    { label: 'X-Ray Results', icon: 'images', id: 'xray' },
     { label: 'Payments', icon: 'card', id: 'payments' },
     { label: 'Find Providers', icon: 'search', id: 'search' },
     { label: 'Settings', icon: 'settings', id: 'settings' },
@@ -67,39 +67,47 @@ const Sidebar = ({ visible, onClose, userRole, activeTab, onTabChange }) => {
     { label: 'Appointments', icon: 'calendar', id: 'appointments' },
     { label: 'My Patients', icon: 'people', id: 'patients' },
     { label: 'Treatments', icon: 'medical', id: 'treatments' },
+    { label: 'Payments', icon: 'card', id: 'payments' },
     { label: 'Radiology', icon: 'scan', id: 'radiology' },
-    { label: 'Inventory', icon: 'cube', id: 'inventory' },
-    { label: 'Reports', icon: 'document-text', id: 'reports' },
-    { label: 'Analytics', icon: 'bar-chart', id: 'analytics' },
+    { label: 'Schedule', icon: 'time', id: 'schedule' },
+    { label: 'Settings', icon: 'settings', id: 'settings' },
   ];
 
   const secretaryMenuItems = [
     { label: 'Overview', icon: 'apps', id: 'overview' },
     { label: 'Appointments', icon: 'calendar', id: 'appointments' },
     { label: 'Patients', icon: 'people', id: 'patients' },
+    { label: 'Dentists', icon: 'medkit', id: 'dentists' },
     { label: 'Treatments', icon: 'medical', id: 'treatments' },
     { label: 'Payments', icon: 'card', id: 'payments' },
-    { label: 'Dentists', icon: 'medkit', id: 'dentists' },
-    { label: 'Reports', icon: 'bar-chart', id: 'reports' },
+    { label: 'Settings', icon: 'settings', id: 'settings' },
   ];
 
   const getMenuItems = () => {
-    switch (userRole) {
+    const userRole = role || userData?.role;
+    const normalizedRole = userRole?.toUpperCase();
+    switch (normalizedRole) {
       case 'DENTIST':
         return dentistMenuItems;
       case 'SECRETARY':
         return secretaryMenuItems;
+      case 'PATIENT':
+        return patientMenuItems;
       default:
         return patientMenuItems;
     }
   };
 
   const getDashboardTitle = () => {
-    switch (userRole) {
+    const userRole = role || userData?.role;
+    const normalizedRole = userRole?.toUpperCase();
+    switch (normalizedRole) {
       case 'DENTIST':
         return 'Dentist';
       case 'SECRETARY':
         return 'Secretary';
+      case 'PATIENT':
+        return 'Patient';
       default:
         return 'Patient';
     }
@@ -306,6 +314,8 @@ const Sidebar = ({ visible, onClose, userRole, activeTab, onTabChange }) => {
                           onPress: async () => {
                             onClose();
                             await authUtils.logout();
+                            const router = require('expo-router').router;
+                            router.replace('/(auth)/login');
                           }
                         }
                       ]

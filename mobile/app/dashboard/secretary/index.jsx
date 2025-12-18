@@ -6,6 +6,14 @@ import { authUtils } from '../../../utils/auth';
 import { DashboardHeader, MobileNavigation } from '../../../components/common';
 import { LoadingSpinner, Sidebar } from '../../../components/dashboard';
 import SecretaryOverview from '../../../components/dashboard/secretary/SecretaryOverview';
+import {
+  SecretaryAppointments,
+  SecretaryDentists,
+  SecretaryPatients,
+  SecretaryPayments,
+  SecretarySettings,
+  SecretaryTreatments
+} from '../../../components/dashboard';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 /**
@@ -71,7 +79,18 @@ export default function SecretaryDashboard() {
     switch (activeTab) {
       case 'overview':
         return <SecretaryOverview />;
-      // Add more secretary-specific tabs here as needed
+      case 'appointments':
+        return <SecretaryAppointments />;
+      case 'patients':
+        return <SecretaryPatients />;
+      case 'dentists':
+        return <SecretaryDentists />;
+      case 'treatments':
+        return <SecretaryTreatments />;
+      case 'payments':
+        return <SecretaryPayments />;
+      case 'settings':
+        return <SecretarySettings />;
       default:
         return <SecretaryOverview />;
     }
@@ -100,6 +119,7 @@ export default function SecretaryDashboard() {
         userRole="secretary"
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        userData={userData}
       />
 
       <Sidebar

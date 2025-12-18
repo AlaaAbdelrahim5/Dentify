@@ -117,6 +117,7 @@ export default function PatientDashboard() {
         userRole="patient"
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        userData={userData}
       />
 
       <Sidebar

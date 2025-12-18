@@ -6,6 +6,15 @@ import { authUtils } from '../../../utils/auth';
 import { DashboardHeader, MobileNavigation } from '../../../components/common';
 import { LoadingSpinner, Sidebar } from '../../../components/dashboard';
 import DentistOverview from '../../../components/dashboard/dentist/DentistOverview';
+import { 
+  DentistAppointments, 
+  DentistPatients, 
+  DentistPayments,
+  DentistRadiology,
+  DentistSchedule,
+  DentistSettings,
+  DentistTreatments
+} from '../../../components/dashboard';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 /**
@@ -71,7 +80,20 @@ export default function DentistDashboard() {
     switch (activeTab) {
       case 'overview':
         return <DentistOverview />;
-      // Add more dentist-specific tabs here as needed
+      case 'appointments':
+        return <DentistAppointments />;
+      case 'patients':
+        return <DentistPatients />;
+      case 'treatments':
+        return <DentistTreatments />;
+      case 'payments':
+        return <DentistPayments />;
+      case 'radiology':
+        return <DentistRadiology />;
+      case 'schedule':
+        return <DentistSchedule />;
+      case 'settings':
+        return <DentistSettings />;
       default:
         return <DentistOverview />;
     }
@@ -100,6 +122,7 @@ export default function DentistDashboard() {
         userRole="dentist"
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        userData={userData}
       />
 
       <Sidebar
