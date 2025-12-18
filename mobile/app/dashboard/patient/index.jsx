@@ -121,6 +121,7 @@ export default function PatientDashboard() {
         title={getPageTitle()}
         userData={userData}
         onMenuPress={() => setSidebarVisible(true)}
+        onSearch={() => setActiveTab('search')}
       />
 
       <View className="flex-1">

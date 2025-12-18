@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
 import api from '../../../services/api';
+import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
+import { ProfileHeader, ProfileInfoRow, SettingsActionButton, LoadingState } from '../shared';
 
 const SecretarySettings = () => {
   const { isDarkMode } = useTheme();
@@ -43,8 +44,7 @@ const SecretarySettings = () => {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to load profile';
-      Alert.alert('Error', errorMsg);
+      showErrorAlert(error, 'Failed to load profile');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -64,44 +64,20 @@ const SecretarySettings = () => {
         lastName: profile.lastName,
         city: profile.city
       });
-      Alert.alert('Success', 'Profile updated successfully');
+      showSuccessAlert('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving profile:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to save profile';
-      Alert.alert('Error', errorMsg);
+      showErrorAlert(error, 'Failed to save profile');
     } finally {
       setSaving(false);
     }
   };
 
-  const InfoRow = ({ icon, label, value, editable = false, onChangeText }) => (
-    <View className={`mb-4 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-      <View className="flex-row items-center mb-2">
-        <Ionicons name={icon} size={18} color="#14b8a6" />
-        <Text className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          {label}
-        </Text>
-      </View>
-      {isEditing && editable ? (
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} rounded-lg p-2`}
-          placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
-        />
-      ) : (
-        <Text className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          {value || 'N/A'}
-        </Text>
-      )}
-    </View>
-  );
-
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Loading profile...</Text>
+      <View className="flex-1 p-4">
+        <LoadingState isDarkMode={isDarkMode} />
       </View>
     );
   }
@@ -110,102 +86,101 @@ const SecretarySettings = () => {
     <View className="flex-1 p-4">
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#14B8A6"
+          />
         }
       >
-        <View className="items-center mb-6">
-          <View className="w-24 h-24 rounded-full bg-teal-500 items-center justify-center">
-            <Text className="text-white font-bold text-3xl">
-              {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
-            </Text>
-          </View>
-          <Text className={`mt-3 text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {profile.firstName} {profile.lastName}
-          </Text>
-          <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Secretary at {profile.clinic.name}
-          </Text>
-        </View>
+        <ProfileHeader
+          firstName={profile.firstName}
+          lastName={profile.lastName}
+          subtitle={`Secretary at ${profile.clinic.name}`}
+          isDarkMode={isDarkMode}
+        />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="person-outline"
           label="First Name"
           value={profile.firstName}
-          editable
+          editable={isEditing}
           onChangeText={(text) => setProfile({ ...profile, firstName: text })}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="person-outline"
           label="Last Name"
           value={profile.lastName}
-          editable
+          editable={isEditing}
           onChangeText={(text) => setProfile({ ...profile, lastName: text })}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="mail-outline"
           label="Email"
           value={profile.email}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="call-outline"
           label="Phone"
           value={profile.phone}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="location-outline"
           label="City"
           value={profile.city}
-          editable
+          editable={isEditing}
           onChangeText={(text) => setProfile({ ...profile, city: text })}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="business-outline"
           label="Clinic"
           value={profile.clinic.name}
+          isDarkMode={isDarkMode}
         />
 
-        <InfoRow
+        <ProfileInfoRow
           icon="location-outline"
           label="Clinic City"
           value={profile.clinic.city}
+          isDarkMode={isDarkMode}
         />
 
         <View className="flex-row" style={{ gap: 8 }}>
           {!isEditing ? (
-            <TouchableOpacity
+            <SettingsActionButton
               onPress={() => setIsEditing(true)}
-              className="flex-1 bg-teal-500 py-4 rounded-xl items-center"
-            >
-              <Text className="text-white font-semibold text-base">Edit Profile</Text>
-            </TouchableOpacity>
+              label="Edit Profile"
+              variant="primary"
+              isDarkMode={isDarkMode}
+            />
           ) : (
             <>
-              <TouchableOpacity
+              <SettingsActionButton
                 onPress={handleSave}
                 disabled={saving}
-                className="flex-1 bg-teal-500 py-4 rounded-xl items-center"
-                style={{ opacity: saving ? 0.6 : 1 }}
-              >
-                <Text className="text-white font-semibold text-base">
-                  {saving ? 'Saving...' : 'Save'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                label={saving ? 'Saving...' : 'Save'}
+                variant="primary"
+                isDarkMode={isDarkMode}
+              />
+              <SettingsActionButton
                 onPress={() => {
                   setIsEditing(false);
                   fetchProfile();
                 }}
-                className={`flex-1 py-4 rounded-xl items-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
-              >
-                <Text className={`font-semibold text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+                label="Cancel"
+                variant="secondary"
+                isDarkMode={isDarkMode}
+              />
             </>
           )}
         </View>

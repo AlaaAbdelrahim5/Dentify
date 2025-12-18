@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// import { EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { useTheme } from '../../../contexts/ThemeContext';
-// import { radiologyAPI } from '../../../services/api';
+import { formatDate } from '../../../utils/dateUtils';
+import { LoadingState, EmptyState, FilterTabs } from '../shared';
 
 const PatientXRayResults = () => {
   const { isDarkMode } = useTheme();
@@ -49,57 +49,38 @@ const PatientXRayResults = () => {
     fetchXRays();
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
   const openImageViewer = (xray) => {
     setSelectedXray(xray);
     setModalVisible(true);
   };
 
+  const tabs = [
+    { key: 'all', label: 'All', count: xrays.length },
+    { key: 'reviewed', label: 'Reviewed' },
+    { key: 'pending', label: 'Pending' }
+  ];
+
   if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Loading x-ray results...</Text>
-      </View>
-    );
+    return <LoadingState isDarkMode={isDarkMode} message="Loading x-ray results..." />;
   }
 
   return (
     <View className="flex-1">
       <View className="p-4">
-        <View className="flex-row mb-4" style={{ gap: 8 }}>
-        <TouchableOpacity
-          onPress={() => setSelectedFilter('all')}
-          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'all' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
-        >
-          <Text className={`text-center font-semibold ${selectedFilter === 'all' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
-            All ({xrays.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setSelectedFilter('reviewed')}
-          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'reviewed' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
-        >
-          <Text className={`text-center font-semibold ${selectedFilter === 'reviewed' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
-            Reviewed
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setSelectedFilter('pending')}
-          className={`flex-1 py-3 rounded-xl ${selectedFilter === 'pending' ? 'bg-teal-500' : (isDarkMode ? 'bg-gray-800' : 'bg-gray-100')}`}
-        >
-          <Text className={`text-center font-semibold ${selectedFilter === 'pending' ? 'text-white' : (isDarkMode ? 'text-gray-400' : 'text-gray-600')}`}>
-            Pending
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <FilterTabs 
+          tabs={tabs}
+          selectedTab={selectedFilter}
+          onSelectTab={setSelectedFilter}
+          isDarkMode={isDarkMode}
+        />
 
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#14B8A6"
+          />
         }
       >
         {xrays.length > 0 ? (

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// import { EmptyState, LoadingSpinner } from '../../../components/dashboard';
 import { Select } from '../../../components/common';
 import { useTheme } from '../../../contexts/ThemeContext';
-// import { dentistsAPI, clinicsAPI } from '../../../services/api';
+import { LoadingState, EmptyState } from '../shared';
 
 const SearchPage = () => {
   const { isDarkMode } = useTheme();
@@ -85,11 +84,7 @@ const SearchPage = () => {
   };
 
   if (loading && searchQuery.length >= 2) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Searching...</Text>
-      </View>
-    );
+    return <LoadingState isDarkMode={isDarkMode} message="Searching..." />;
   }
 
   const renderDentistCard = (dentist) => (
@@ -315,26 +310,20 @@ const SearchPage = () => {
               )}
             </View>
           ) : (
-            <View className="items-center justify-center py-12">
-              <Ionicons name="search-outline" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
-              <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                No results found
-              </Text>
-              <Text className={`mt-2 text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                Try adjusting your search
-              </Text>
-            </View>
+            <EmptyState 
+              isDarkMode={isDarkMode}
+              icon="search-outline"
+              message="No results found"
+              subtitle="Try adjusting your search"
+            />
           )
         ) : (
-          <View className="items-center justify-center py-12">
-            <Ionicons name="search" size={64} color={isDarkMode ? '#4B5563' : '#D1D5DB'} />
-            <Text className={`mt-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Start searching
-            </Text>
-            <Text className={`mt-2 text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              Enter at least 2 characters
-            </Text>
-          </View>
+          <EmptyState 
+            isDarkMode={isDarkMode}
+            icon="search"
+            message="Start searching"
+            subtitle="Enter at least 2 characters"
+          />
         )}
       </ScrollView>
     </View>

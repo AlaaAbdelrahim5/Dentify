@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import api from '../../../services/api';
+import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
+import { LoadingState } from '../shared';
 
 const DentistSchedule = () => {
   const { isDarkMode } = useTheme();
@@ -36,8 +38,7 @@ const DentistSchedule = () => {
       setSchedule(scheduleMap);
     } catch (error) {
       console.error('Error fetching schedule:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to load schedule';
-      Alert.alert('Error', errorMsg);
+      showErrorAlert(error, 'Failed to load schedule');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,10 +64,10 @@ const DentistSchedule = () => {
         }));
 
       await api.put('/dentists/profile', { workingHours });
-      Alert.alert('Success', 'Schedule updated successfully');
+      showSuccessAlert('Schedule updated successfully');
     } catch (error) {
       console.error('Error saving schedule:', error);
-      Alert.alert('Error', 'Failed to save schedule');
+      showErrorAlert(error, 'Failed to save schedule');
     } finally {
       setSaving(false);
     }
@@ -130,18 +131,18 @@ const DentistSchedule = () => {
   };
 
   if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Loading schedule...</Text>
-      </View>
-    );
+    return <LoadingState isDarkMode={isDarkMode} message="Loading schedule..." />;
   }
 
   return (
     <View className="flex-1 p-4">
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#14B8A6"
+          />
         }
       >
         {daysOfWeek.map((day) => (

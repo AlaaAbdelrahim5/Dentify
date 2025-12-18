@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, userData }) => {
+const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, onSearch, userData }) => {
   const router = useRouter();
   const { isDarkMode } = useTheme();
 
@@ -31,6 +31,14 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
   const handleMessages = () => {
     router.push('/messages');
   };
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch();
+    }
+  };
+
+  const isPatient = userData?.role?.toUpperCase() === 'PATIENT';
 
   return (
     <>
@@ -60,6 +68,17 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
           
           {/* Right: Action icons */}
           <View className="flex-row items-center" style={{ gap: 10 }}>
+            {/* Search button - Only for patients */}
+            {isPatient && (
+              <TouchableOpacity
+                onPress={handleSearch}
+                className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              </TouchableOpacity>
+            )}
+
             {showNotifications && (
               <TouchableOpacity
                 onPress={handleNotifications}
@@ -78,7 +97,7 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
               className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
               activeOpacity={0.7}
             >
-              <Ionicons name="chatbubble-ellipses-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              <Ionicons name="chatbubbles-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
               {/* Message badge - uncomment when you have unread count */}
               {/* <View className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" /> */}
             </TouchableOpacity>
