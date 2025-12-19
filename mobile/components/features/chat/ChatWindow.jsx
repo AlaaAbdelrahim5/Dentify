@@ -76,18 +76,18 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
     const isOwnMessage = item.senderId === userId;
     const showTime = index === 0 || 
       (messages[index - 1] && 
-       Math.abs(item.createdAt?.toMillis() - messages[index - 1].createdAt?.toMillis()) > 300000); // 5 minutes
+       Math.abs(item.createdAt?.toMillis() - messages[index - 1].createdAt?.toMillis()) > 300000);
 
     return (
-      <View className="px-5 mb-2.5">
+      <View className="px-4 mb-1.5">
         {showTime && item.createdAt && (
           <View 
-            className={`self-center px-4 py-2 rounded-full mb-5 ${
+            className={`self-center px-3 py-1 rounded-full mb-3 ${
               isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
             }`}
           >
-            <Text className={`text-xs font-semibold ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            <Text className={`text-[10px] font-medium ${
+              isDarkMode ? 'text-gray-500' : 'text-gray-600'
             }`}>
               {formatDistanceToNow(item.createdAt.toDate())}
             </Text>
@@ -95,23 +95,23 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
         )}
         <View className={`flex-row ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
           <View 
-            className={`max-w-[78%] px-5 py-3.5 ${
+            className={`max-w-[75%] px-4 py-2.5 ${
               isOwnMessage 
-                ? 'rounded-3xl rounded-br-md' 
-                : 'rounded-3xl rounded-bl-md'
+                ? 'rounded-2xl rounded-br-sm' 
+                : 'rounded-2xl rounded-bl-sm'
             }`}
             style={{
               backgroundColor: isOwnMessage 
                 ? '#14B8A6' 
                 : (isDarkMode ? '#374151' : '#FFFFFF'),
-              shadowColor: isOwnMessage ? '#14B8A6' : '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isOwnMessage ? 0.35 : 0.08,
-              shadowRadius: 4,
-              elevation: 3
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1
             }}
           >
-            <Text className={`text-[15px] leading-6 ${
+            <Text className={`text-sm leading-5 ${
               isOwnMessage 
                 ? 'text-white' 
                 : (isDarkMode ? 'text-white' : 'text-gray-900')
@@ -164,93 +164,83 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingVertical: 16,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.12,
-            shadowRadius: 6,
-            elevation: 8
+            borderBottomWidth: 1,
+            borderBottomColor: isDarkMode ? '#374151' : '#E5E7EB'
           }}
         >
-          <View className="flex-row items-center flex-1">
-            {onBack && (
-              <TouchableOpacity 
-                onPress={onBack} 
-                className="mr-3 p-2.5 rounded-full"
-                style={{ backgroundColor: isDarkMode ? '#374151' : '#F3F4F6' }}
-              >
-                <Ionicons name="arrow-back" size={22} color={isDarkMode ? '#fff' : '#000'} />
-              </TouchableOpacity>
-            )}
-            {/* Profile Image or Avatar */}
-            <View className="mr-4 relative">
-              {imageUrl && !imageError ? (
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={{ 
-                    width: 52, 
-                    height: 52, 
-                    borderRadius: 26,
-                    borderWidth: 3,
-                    borderColor: '#14B8A6'
-                  }}
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <View 
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#14B8A6',
-                    borderWidth: 3,
-                    borderColor: '#0D9488'
-                  }}
-                >
-                  <Text className="text-white font-bold text-xl">
-                    {otherUser?.name?.[0]?.toUpperCase() || '?'}
-                  </Text>
-                </View>
-              )}
+          {onBack && (
+            <TouchableOpacity 
+              onPress={onBack} 
+              style={{
+                marginRight: 12,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6'
+              }}
+            >
+              <Ionicons name="chevron-back" size={22} color={isDarkMode ? '#fff' : '#000'} />
+            </TouchableOpacity>
+          )}
+          {/* Profile Image or Avatar */}
+          <View style={{ marginRight: 12, position: 'relative' }}>
+            {imageUrl && !imageError ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={{ 
+                  width: 44, 
+                  height: 44, 
+                  borderRadius: 22
+                }}
+                onError={() => setImageError(true)}
+              />
+            ) : (
               <View 
                 style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 16,
-                  height: 16,
-                  backgroundColor: '#10B981',
-                  borderRadius: 8,
-                  borderWidth: 3,
-                  borderColor: isDarkMode ? '#1F2937' : '#FFFFFF'
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#14B8A6'
                 }}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className={`font-bold text-lg ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`} numberOfLines={1}>
-                {otherUser?.name || 'Unknown User'}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                <View style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: '#10B981',
-                  marginRight: 6
-                }} />
-                <Text className={`text-sm font-semibold capitalize ${
-                  isDarkMode ? 'text-teal-400' : 'text-teal-600'
-                }`}>
-                  {otherUser?.role || 'User'} • Online
+              >
+                <Text className="text-white font-bold text-lg">
+                  {otherUser?.name?.[0]?.toUpperCase() || '?'}
                 </Text>
               </View>
-            </View>
+            )}
+            <View 
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                width: 12,
+                height: 12,
+                backgroundColor: '#10B981',
+                borderRadius: 6,
+                borderWidth: 2,
+                borderColor: isDarkMode ? '#1F2937' : '#FFFFFF'
+              }}
+            />
+          </View>
+          <View className="flex-1">
+            <Text className={`font-semibold text-base ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`} numberOfLines={1}>
+              {otherUser?.name || 'Unknown User'}
+            </Text>
+            <Text className={`text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              <Text style={{ color: '#10B981' }}>● </Text>
+              {otherUser?.role || 'User'}
+            </Text>
           </View>
         </View>
 
@@ -266,35 +256,32 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
 
         {/* Message Input */}
         <View 
-          className={`flex-row items-end px-5 py-4 ${
+          className={`flex-row items-end px-4 py-3 ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}
           style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -3 },
-            shadowOpacity: 0.12,
-            shadowRadius: 6,
-            elevation: 8
+            borderTopWidth: 1,
+            borderTopColor: isDarkMode ? '#374151' : '#E5E7EB'
           }}
         >
           <View 
-            className={`flex-1 flex-row items-center px-5 py-2.5 rounded-3xl mr-3 ${
+            className={`flex-1 flex-row items-center px-4 py-2 rounded-3xl mr-2 ${
               isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
             }`}
             style={{
-              minHeight: 48,
-              maxHeight: 120
+              minHeight: 44,
+              maxHeight: 100
             }}
           >
             <TextInput
               value={newMessage}
               onChangeText={setNewMessage}
-              placeholder="Type a message..."
-              placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
-              className={`flex-1 text-[15px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+              placeholder="Message..."
+              placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'}
+              className={`flex-1 text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
               multiline
               maxLength={1000}
-              style={{ paddingTop: 11, paddingBottom: 11 }}
+              style={{ paddingTop: 10, paddingBottom: 10 }}
             />
           </View>
           <TouchableOpacity
@@ -302,19 +289,14 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
             disabled={!newMessage.trim()}
             className="rounded-full items-center justify-center"
             style={{
-              width: 52,
-              height: 52,
-              backgroundColor: newMessage.trim() ? '#14B8A6' : (isDarkMode ? '#374151' : '#E5E7EB'),
-              shadowColor: newMessage.trim() ? '#14B8A6' : '#000',
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: newMessage.trim() ? 0.5 : 0.1,
-              shadowRadius: 6,
-              elevation: newMessage.trim() ? 5 : 2
+              width: 44,
+              height: 44,
+              backgroundColor: newMessage.trim() ? '#14B8A6' : (isDarkMode ? '#374151' : '#E5E7EB')
             }}
           >
             <Ionicons 
               name="send" 
-              size={24} 
+              size={20} 
               color="white" 
             />
           </TouchableOpacity>

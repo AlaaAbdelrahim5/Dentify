@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ActivityIndicator, TouchableOpacity, Modal, TextInput, FlatList, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useChat } from '../../contexts/ChatContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { authUtils } from '../../utils/auth';
@@ -27,6 +28,7 @@ const getImageUrl = (imagePath) => {
 const ChatScreen = () => {
   const { activeConversation, setActiveConversation, userId, startConversation } = useChat();
   const { isDarkMode } = useTheme();
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
@@ -215,13 +217,28 @@ const ChatScreen = () => {
             elevation: 5
           }}
         >
-          <Text style={{
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: isDarkMode ? '#FFFFFF' : '#111827'
-          }}>
-            Messages
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6'
+              }}
+            >
+              <Ionicons name="chevron-back" size={20} color={isDarkMode ? '#FFFFFF' : '#111827'} />
+            </TouchableOpacity>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 'bold',
+              color: isDarkMode ? '#FFFFFF' : '#111827'
+            }}>
+              Messages
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => setIsNewChatModalOpen(true)}
             style={{
