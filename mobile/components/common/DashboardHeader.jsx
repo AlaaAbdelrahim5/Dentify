@@ -3,10 +3,16 @@ import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { useChat } from '../../contexts/ChatContext';
+import NotificationBell from '../features/notifications/NotificationBell';
+import ChatButton from '../features/chat/ChatButton';
 
 const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, onSearch, userData }) => {
   const router = useRouter();
   const { isDarkMode } = useTheme();
+  const { unreadCount } = useNotifications();
+  const { totalUnreadCount } = useChat();
 
   const getDefaultSubtitle = () => {
     if (subtitle) return subtitle;
@@ -79,28 +85,10 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
               </TouchableOpacity>
             )}
 
-            {showNotifications && (
-              <TouchableOpacity
-                onPress={handleNotifications}
-                className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="notifications-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
-                {/* Notification badge */}
-                {/* <View className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" /> */}
-              </TouchableOpacity>
-            )}
+            {showNotifications && <NotificationBell />}
             
             {/* Messages button */}
-            <TouchableOpacity
-              onPress={handleMessages}
-              className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chatbubbles-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
-              {/* Message badge - uncomment when you have unread count */}
-              {/* <View className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" /> */}
-            </TouchableOpacity>
+            <ChatButton />
           </View>
         </View>
         
