@@ -9,9 +9,15 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.1
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
+  // If it's a data URI (base64), return as-is
+  if (imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  // If it's already a full URL, return as-is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
+  // Otherwise, construct the URL
   return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
 };
 
@@ -36,47 +42,49 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
     <TouchableOpacity
       onPress={onPress}
       style={{
-        marginHorizontal: 12,
-        marginVertical: 8,
-        padding: 16,
-        borderRadius: 16,
+        marginHorizontal: 16,
+        marginVertical: 6,
+        padding: 14,
+        borderRadius: 20,
         backgroundColor: getBackgroundColor(),
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3
+        borderWidth: isActive ? 2 : 0,
+        borderColor: '#14B8A6',
+        shadowColor: isActive ? '#14B8A6' : '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: isActive ? 0.25 : 0.08,
+        shadowRadius: 12,
+        elevation: isActive ? 5 : 2
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         {/* Profile Image or Avatar */}
-        <View style={{ marginRight: 16, position: 'relative' }}>
+        <View style={{ marginRight: 14, position: 'relative' }}>
           {imageUrl && !imageError ? (
             <Image
               source={{ uri: imageUrl }}
               style={{ 
-                width: 56, 
-                height: 56, 
-                borderRadius: 28,
-                borderWidth: 2,
-                borderColor: isDarkMode ? '#14B8A6' : '#5EEAD4'
+                width: 64, 
+                height: 64, 
+                borderRadius: 32,
+                borderWidth: 3,
+                borderColor: isActive ? '#14B8A6' : (isDarkMode ? '#374151' : '#E5E7EB')
               }}
               onError={() => setImageError(true)}
             />
           ) : (
             <View 
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
+                width: 64,
+                height: 64,
+                borderRadius: 32,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDarkMode ? '#14B8A6' : '#5EEAD4',
-                borderWidth: 2,
-                borderColor: isDarkMode ? '#0D9488' : '#2DD4BF'
+                backgroundColor: '#14B8A6',
+                borderWidth: 3,
+                borderColor: isActive ? '#0D9488' : (isDarkMode ? '#374151' : '#E5E7EB')
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 20 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 24 }}>
                 {otherUser?.name?.[0]?.toUpperCase() || '?'}
               </Text>
             </View>
@@ -85,41 +93,42 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
           <View 
             style={{
               position: 'absolute',
-              bottom: 0,
-              right: 0,
-              width: 16,
-              height: 16,
+              bottom: 2,
+              right: 2,
+              width: 18,
+              height: 18,
               backgroundColor: '#10B981',
-              borderRadius: 8,
+              borderRadius: 9,
               borderWidth: 3,
-              borderColor: isDarkMode ? '#1F2937' : '#FFFFFF'
+              borderColor: getBackgroundColor()
             }}
           />
         </View>
         
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <View style={{ flex: 1, marginRight: 8 }}>
               <Text style={{
-                fontWeight: 'bold',
-                fontSize: 16,
-                marginRight: 8,
-                color: isDarkMode ? '#FFFFFF' : '#111827'
+                fontWeight: '700',
+                fontSize: 17,
+                color: isDarkMode ? '#FFFFFF' : '#111827',
+                marginBottom: 4
               }} numberOfLines={1}>
                 {otherUser?.name || 'Unknown User'}
               </Text>
               {otherUser?.role && (
                 <View style={{
                   paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 12,
-                  backgroundColor: isDarkMode ? 'rgba(20, 184, 166, 0.2)' : '#CCFBF1'
+                  paddingVertical: 3,
+                  borderRadius: 10,
+                  backgroundColor: isDarkMode ? 'rgba(20, 184, 166, 0.25)' : 'rgba(20, 184, 166, 0.15)',
+                  alignSelf: 'flex-start'
                 }}>
                   <Text style={{
-                    fontSize: 12,
-                    fontWeight: '500',
+                    fontSize: 11,
+                    fontWeight: '600',
                     textTransform: 'capitalize',
-                    color: isDarkMode ? '#5EEAD4' : '#0F766E'
+                    color: '#14B8A6'
                   }}>
                     {otherUser.role}
                   </Text>
@@ -128,8 +137,8 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
             </View>
             {item.lastMessageAt && (
               <Text style={{
-                fontSize: 12,
-                fontWeight: '500',
+                fontSize: 11,
+                fontWeight: '600',
                 color: isDarkMode ? '#9CA3AF' : '#6B7280'
               }}>
                 {formatDistanceToNow(item.lastMessageAt.toDate())}
@@ -137,17 +146,18 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
             )}
           </View>
           
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
             <Text 
               style={{
                 flex: 1,
                 fontSize: 14,
-                fontWeight: unreadCount > 0 ? '600' : 'normal',
+                fontWeight: unreadCount > 0 ? '600' : '400',
                 color: unreadCount > 0 
-                  ? (isDarkMode ? '#FFFFFF' : '#111827')
-                  : (isDarkMode ? '#9CA3AF' : '#4B5563')
+                  ? (isDarkMode ? '#D1D5DB' : '#374151')
+                  : (isDarkMode ? '#9CA3AF' : '#6B7280'),
+                lineHeight: 20
               }}
-              numberOfLines={1}
+              numberOfLines={2}
             >
               {item.lastMessage || 'No messages yet'}
             </Text>
@@ -156,21 +166,21 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
               <View 
                 style={{
                   marginLeft: 12,
-                  borderRadius: 12,
-                  minWidth: 24,
-                  height: 24,
+                  borderRadius: 14,
+                  minWidth: 28,
+                  height: 28,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  paddingHorizontal: 8,
+                  paddingHorizontal: 10,
                   backgroundColor: '#14B8A6',
                   shadowColor: '#14B8A6',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 4,
-                  elevation: 4
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 6,
+                  elevation: 5
                 }}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: 'bold' }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Text>
               </View>
@@ -185,6 +195,11 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
 const ConversationsList = ({ users = [], onSelectConversation }) => {
   const { conversations, activeConversation, setActiveConversation, userId } = useChat();
   const { isDarkMode } = useTheme();
+
+  // Filter out conversations with no messages
+  const conversationsWithMessages = conversations.filter(conv => 
+    conv.lastMessage && conv.lastMessage.trim() !== ''
+  );
 
   const getOtherUser = (conversation) => {
     if (!conversation || !conversation.participants) return null;
@@ -221,7 +236,7 @@ const ConversationsList = ({ users = [], onSelectConversation }) => {
     );
   };
 
-  if (conversations.length === 0) {
+  if (conversationsWithMessages.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <View style={{
@@ -259,7 +274,7 @@ const ConversationsList = ({ users = [], onSelectConversation }) => {
 
   return (
     <FlatList
-      data={conversations}
+      data={conversationsWithMessages}
       renderItem={renderConversation}
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ paddingBottom: 20 }}

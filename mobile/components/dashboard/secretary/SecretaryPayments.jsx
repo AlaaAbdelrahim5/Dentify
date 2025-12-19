@@ -1,14 +1,8 @@
 import React from 'react';
-import { paymentsAPI } from '../../../services/api';
-import { SharedPayments } from '../shared';
+import RolePayments from '../shared/RolePayments';
 
 const SecretaryPayments = () => {
-  return (
-    <SharedPayments 
-      fetchPaymentsAPI={paymentsAPI.getClinicPayments} 
-      role="secretary" 
-    />
-  );
+  return <RolePayments role="secretary" />;
 };
 
 export default SecretaryPayments;

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, TextInput, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { UI_COLORS } from '../../../utils/colors';
 import { appointmentsAPI, dentistsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterTodayAppointments, filterUpcomingAppointments } from '../../../utils/filterUtils';
+import { createCancelHandler, createConfirmHandler, createCompleteHandler, createViewDetailsHandler, createSessionCostSaveHandler } from '../../../utils/appointmentHandlers';
 import { AppointmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
 import NewAppointmentModal from '../shared/NewAppointmentModal';
 import SessionCostModal from '../shared/SessionCostModal';
@@ -57,100 +58,29 @@ const SecretaryAppointments = () => {
     fetchAppointments();
   };
 
-  const handleConfirmAppointment = (appointment) => {
-    Alert.alert(
-      'Confirm Appointment',
-      `Confirm appointment for ${appointment.patient?.firstName} ${appointment.patient?.lastName} with Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            try {
-              await appointmentsAPI.update(appointment.id, { status: 'CONFIRMED' });
-              Alert.alert('Success', 'Appointment confirmed successfully');
-              fetchAppointments();
-            } catch (error) {
-              console.error('Error confirming appointment:', error);
-              showErrorAlert(error, 'Failed to confirm appointment');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const handleConfirmAppointment = createConfirmHandler({
+    role: 'secretary',
+    onSuccess: fetchAppointments
+  });
 
-  const handleCompleteAppointment = (appointment) => {
-    // Check if appointment is linked to a treatment
-    if (!appointment.treatmentId) {
-      Alert.alert(
-        'No Treatment Linked',
-        'This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-    
-    // Open session cost modal
-    setSelectedAppointment(appointment);
-    setIsSessionCostModalVisible(true);
-  };
+  const handleCompleteAppointment = createCompleteHandler({
+    setSelectedAppointment,
+    setModalVisible: setIsSessionCostModalVisible
+  });
 
-  const handleSaveSessionCost = async (sessionCost) => {
-    try {
-      await appointmentsAPI.complete(selectedAppointment.id, { sessionCost });
-      setIsSessionCostModalVisible(false);
-      setSelectedAppointment(null);
-      fetchAppointments();
-    } catch (error) {
-      console.error('Error completing appointment:', error);
-      throw error; // Let modal handle the error
-    }
-  };
+  const handleSaveSessionCost = createSessionCostSaveHandler({
+    selectedAppointment,
+    setModalVisible: setIsSessionCostModalVisible,
+    setSelectedAppointment,
+    onSuccess: fetchAppointments
+  });
 
-  const handleCancelAppointment = (appointment) => {
-    Alert.alert(
-      'Cancel Appointment',
-      `Are you sure you want to cancel the appointment for ${appointment.patient?.firstName} ${appointment.patient?.lastName} with Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}?`,
-      [
-        {
-          text: 'No',
-          style: 'cancel',
-        },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await appointmentsAPI.cancel(appointment.id);
-              Alert.alert('Success', 'Appointment cancelled successfully');
-              fetchAppointments();
-            } catch (error) {
-              console.error('Error cancelling appointment:', error);
-              showErrorAlert(error, 'Failed to cancel appointment');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const handleCancelAppointment = createCancelHandler({
+    role: 'secretary',
+    onSuccess: fetchAppointments
+  });
 
-  const handleViewDetails = (appointment) => {
-    const patientName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`;
-    const dentistName = `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`;
-    const treatmentType = appointment.treatment?.treatmentType || 'General Checkup';
-    const notes = appointment.patientNotes || appointment.sessionNotes || 'No notes';
-    const phone = appointment.patient?.user?.phone || 'N/A';
-    
-    Alert.alert(
-      'Appointment Details',
-      `Patient: ${patientName}\nPhone: ${phone}\nDentist: ${dentistName}\nTreatment: ${treatmentType}\nNotes: ${notes}`,
-      [{ text: 'OK' }]
-    );
-  };
+  const handleViewDetails = createViewDetailsHandler('secretary');
 
   const todayAppointments = useMemo(() => filterTodayAppointments(appointments), [appointments]);
   const upcomingAppointments = useMemo(() => filterUpcomingAppointments(appointments), [appointments]);

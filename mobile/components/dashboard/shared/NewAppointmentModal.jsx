@@ -16,6 +16,7 @@ import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { authUtils } from '../../../utils/auth';
 import { UI_COLORS } from '../../../utils/colors';
+import { generateTimeSlots, findBookedSlots, isAppointmentInFuture } from '../../../utils/appointmentUtils';
 
 const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
   const [loading, setLoading] = useState(false);
@@ -101,78 +102,6 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
     }
   };
 
-  const generateTimeSlots = (workingHours, duration = 30) => {
-    if (!workingHours || !workingHours.isWorking) return [];
-
-    const slots = [];
-    const [startHour, startMinute] = workingHours.start.split(':').map(Number);
-    const [endHour, endMinute] = workingHours.end.split(':').map(Number);
-    const endTimeInMinutes = endHour * 60 + endMinute;
-    
-    let currentHour = startHour;
-    let currentMinute = startMinute;
-
-    while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
-      const timeSlot = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
-      const slotStartInMinutes = currentHour * 60 + currentMinute;
-      const slotEndInMinutes = slotStartInMinutes + duration;
-      
-      if (slotEndInMinutes > endTimeInMinutes) break;
-      
-      let isDuringBreak = false;
-      if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
-        for (const breakPeriod of workingHours.breaks) {
-          const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number);
-          const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number);
-          const breakStartMinutes = breakStartHour * 60 + breakStartMinute;
-          const breakEndMinutes = breakEndHour * 60 + breakEndMinute;
-          
-          if (slotStartInMinutes >= breakStartMinutes && slotStartInMinutes < breakEndMinutes) {
-            isDuringBreak = true;
-            currentHour = breakEndHour;
-            currentMinute = breakEndMinute;
-            break;
-          }
-        }
-      }
-      
-      if (!isDuringBreak) {
-        slots.push(timeSlot);
-      }
-      
-      currentMinute += duration;
-      if (currentMinute >= 60) {
-        currentHour += Math.floor(currentMinute / 60);
-        currentMinute = currentMinute % 60;
-      }
-    }
-
-    return slots;
-  };
-
-  const findBookedSlots = (slots, appointments, duration, date) => {
-    const booked = [];
-    
-    slots.forEach(slot => {
-      const [slotHour, slotMinute] = slot.split(':').map(Number);
-      const slotStart = new Date(date);
-      slotStart.setHours(slotHour, slotMinute, 0, 0);
-      const slotEnd = new Date(slotStart.getTime() + duration * 60000);
-      
-      const hasOverlap = appointments.some(apt => {
-        const aptStart = new Date(apt.startTime);
-        const aptEnd = new Date(apt.endTime);
-        return slotStart < aptEnd && slotEnd > aptStart;
-      });
-      
-      if (hasOverlap) {
-        booked.push(slot);
-      }
-    });
-    
-    return booked;
-  };
-
   const validateForm = () => {
     const newErrors = {};
     
@@ -182,15 +111,8 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
     if (!formData.time) newErrors.time = 'Please select a time slot';
     
     // Check if appointment is in the future
-    if (formData.date && formData.time) {
-      const [hours, minutes] = formData.time.split(':');
-      const appointmentDate = new Date(formData.date);
-      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      const now = new Date();
-      
-      if (appointmentDate <= now) {
-        newErrors.time = 'Appointment must be in the future';
-      }
+    if (formData.date && formData.time && !isAppointmentInFuture(formData.date, formData.time)) {
+      newErrors.time = 'Appointment must be in the future';
     }
     
     setErrors(newErrors);

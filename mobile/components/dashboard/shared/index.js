@@ -53,6 +53,9 @@ export {
 // Unified Components
 export { default as SharedPayments } from './SharedPayments';
 export { default as SharedTreatments } from './SharedTreatments';
+export { default as RolePayments } from './RolePayments';
+export { default as RoleTreatments } from './RoleTreatments';
+export { default as RolePatientsList } from './RolePatientsList';
 export { default as PasswordChangeSection } from './PasswordChangeSection';
 export { default as SharedPatientsList } from './SharedPatientsList';
 export { default as SharedDentistsList } from './SharedDentistsList';

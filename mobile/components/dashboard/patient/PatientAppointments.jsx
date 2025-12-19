@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, ScrollView, RefreshControl, TextInput, Text, Alert, TouchableOpacity } from 'react-native';
+import { View, ScrollView, RefreshControl, TextInput, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppointmentCard, FilterTabs, StatCard } from '../shared';
 import { LoadingState, EmptyState } from '../shared';
@@ -7,6 +7,7 @@ import BookAppointmentModal from '../shared/BookAppointmentModal';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { appointmentsAPI } from '../../../services/api';
 import { showErrorAlert } from '../../../utils/errorUtils';
+import { createCancelHandler, createViewDetailsHandler, filterAppointments } from '../../../utils/appointmentHandlers';
 import { Select } from '../../common';
 import { UI_COLORS, COLORS } from '../../../utils/colors';
 
@@ -43,44 +44,12 @@ const PatientAppointments = () => {
     fetchAppointments();
   };
 
-  const handleCancelAppointment = (appointment) => {
-    Alert.alert(
-      'Cancel Appointment',
-      `Are you sure you want to cancel your appointment with Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}?`,
-      [
-        {
-          text: 'No',
-          style: 'cancel',
-        },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await appointmentsAPI.cancel(appointment.id);
-              Alert.alert('Success', 'Appointment cancelled successfully');
-              fetchAppointments();
-            } catch (error) {
-              console.error('Error cancelling appointment:', error);
-              showErrorAlert(error, 'Failed to cancel appointment');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const handleCancelAppointment = createCancelHandler({
+    role: 'patient',
+    onSuccess: fetchAppointments
+  });
 
-  const handleViewDetails = (appointment) => {
-    const dentistName = `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`;
-    const treatmentType = appointment.treatment?.treatmentType || 'General Checkup';
-    const notes = appointment.patientNotes || appointment.sessionNotes || 'No notes';
-    
-    Alert.alert(
-      'Appointment Details',
-      `Dentist: ${dentistName}\nTreatment: ${treatmentType}\nClinic: ${appointment.clinic?.clinicName}\nNotes: ${notes}`,
-      [{ text: 'OK' }]
-    );
-  };
+  const handleViewDetails = createViewDetailsHandler('patient');
 
   // Separate appointments into upcoming and past
   const upcomingAppointments = useMemo(() => {
@@ -101,20 +70,7 @@ const PatientAppointments = () => {
 
   // Filtered appointments based on search and status
   const filteredAppointments = useMemo(() => {
-    return displayAppointments.filter(appointment => {
-      const dentistName = `${appointment.dentist?.firstName || ''} ${appointment.dentist?.lastName || ''}`;
-      const treatment = appointment.treatment?.treatmentType || '';
-      const clinicName = appointment.clinic?.clinicName || '';
-      
-      const matchesSearch = searchTerm === '' || 
-        treatment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dentistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        clinicName.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = selectedStatus === 'all' || appointment.status === selectedStatus;
-
-      return matchesSearch && matchesStatus;
-    });
+    return filterAppointments(displayAppointments, searchTerm, selectedStatus, 'patient');
   }, [displayAppointments, searchTerm, selectedStatus]);
 
   // Calculate stats

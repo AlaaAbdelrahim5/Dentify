@@ -1,15 +1,8 @@
 import React from 'react';
-import { treatmentsAPI } from '../../../services/api';
-import { SharedTreatments } from '../shared';
+import RoleTreatments from '../shared/RoleTreatments';
 
 const DentistTreatments = () => {
-  return (
-    <SharedTreatments 
-      fetchTreatmentsAPI={treatmentsAPI.getDentistTreatments} 
-      role="dentist"
-      showCount={true}
-    />
-  );
+  return <RoleTreatments role="dentist" />;
 };
 
 export default DentistTreatments;

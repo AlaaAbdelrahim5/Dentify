@@ -12,9 +12,15 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.1
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
+  // If it's a data URI (base64), return as-is
+  if (imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  // If it's already a full URL, return as-is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
+  // Otherwise, construct the URL
   return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
 };
 
@@ -37,7 +43,12 @@ const ChatScreen = () => {
         const usersData = Array.isArray(response) ? response : (response.data || []);
         
         console.log('📸 Fetched users:', usersData.length);
-        console.log('📸 Sample user data:', usersData[0]);
+        console.log('📸 Sample user data:', JSON.stringify(usersData[0], null, 2));
+        
+        // Log all users with their profile images
+        usersData.forEach(u => {
+          console.log(`📸 User ${u.id} (${u.name}): profileImage = ${u.profileImage}`);
+        });
         
         // Filter users based on role
         const currentUser = authUtils.getCurrentUser();
@@ -55,6 +66,7 @@ const ChatScreen = () => {
           return true;
         });
         
+        console.log('📸 Filtered users:', filteredUsers.length);
         setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -67,9 +79,19 @@ const ChatScreen = () => {
   }, [userId]);
 
   const getOtherUser = (conversation) => {
-    if (!conversation) return null;
+    if (!conversation) {
+      console.log('📸 getOtherUser: No conversation provided');
+      return null;
+    }
     const otherUserId = conversation.participants.find(p => p !== userId);
-    return users.find(u => u.id === otherUserId);
+    console.log(`📸 getOtherUser: Looking for user ${otherUserId} in ${users.length} users`);
+    const foundUser = users.find(u => u.id === otherUserId);
+    if (foundUser) {
+      console.log(`📸 getOtherUser: Found user ${foundUser.name}, profileImage: ${foundUser.profileImage}`);
+    } else {
+      console.log(`📸 getOtherUser: User ${otherUserId} not found in users array`);
+    }
+    return foundUser;
   };
 
   const handleStartConversation = async (user) => {
