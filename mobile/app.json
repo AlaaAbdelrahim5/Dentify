@@ -13,7 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dentify.mobile"
+      "bundleIdentifier": "com.dentify.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby dentists and clinics."
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -21,14 +24,24 @@
       "package": "com.dentify.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#14B8A6"
-      }
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Dentify to use your location to show nearby dentists and clinics."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

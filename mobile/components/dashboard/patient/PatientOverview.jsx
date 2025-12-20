@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { formatDateTime } from '../../../utils/dateUtils';
-import { WelcomeCard, LoadingState, EmptyState, StatusBadge, SectionHeader, InfoRow } from '../shared/OverviewComponents';
+import { WelcomeCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
+import InfoRow from '../shared/InfoRow';
 import { appointmentsAPI } from '../../../services/api';
 
 const PatientOverview = () => {
@@ -89,17 +90,20 @@ const PatientOverview = () => {
                         icon="person-outline"
                         text={`Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`}
                         isDarkMode={isDarkMode}
+                        spacing="mt-0"
                       />
                       <InfoRow
                         icon="calendar-outline"
                         text={`${date} at ${time}`}
                         isDarkMode={isDarkMode}
+                        spacing="mt-0"
                       />
                       {appointment.clinic && (
                         <InfoRow
                           icon="location-outline"
                           text={appointment.clinic.clinicName}
                           isDarkMode={isDarkMode}
+                          spacing="mt-0"
                         />
                       )}
                     </View>

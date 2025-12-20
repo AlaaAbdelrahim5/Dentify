@@ -8,12 +8,16 @@ const Select = ({
   value,
   onValueChange,
   options = [],
+  items = [],
   placeholder = 'Select an option',
   error,
   className = '',
   ...props 
 }) => {
   const { isDarkMode } = useTheme();
+  // Support both 'options' and 'items' prop names
+  const selectOptions = items.length > 0 ? items : options;
+  
   return (
     <View style={styles.container}>
       {label && (
@@ -35,9 +39,9 @@ const Select = ({
           {...props}
         >
           <Picker.Item label={placeholder} value="" enabled={false} color="#9CA3AF" />
-          {options.map((option) => (
+          {selectOptions.map((option) => (
             <Picker.Item 
-              key={option.value} 
+              key={option.key || option.value} 
               label={option.label} 
               value={option.value}
               color={isDarkMode ? '#F3F4F6' : '#111827'}

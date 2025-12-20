@@ -73,15 +73,8 @@ export const SectionHeader = ({ title, onViewAll, isDarkMode }) => (
   </View>
 );
 
-// Info Row Component (for displaying icon + text)
-export const InfoRow = ({ icon, text, isDarkMode, size = 16 }) => (
-  <View className="flex-row items-center">
-    <Ionicons name={icon} size={size} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
-    <Text className={`text-sm ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-      {text}
-    </Text>
-  </View>
-);
+// Note: InfoRow has been moved to a separate InfoRow.jsx file for better flexibility
+// Use: import InfoRow from './InfoRow' or import { InfoRow } from './index'
 
 // Search Bar Component
 export const SearchBar = ({ placeholder = 'Search...', value, onChangeText, isDarkMode }) => (
