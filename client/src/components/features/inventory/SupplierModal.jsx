@@ -85,7 +85,7 @@ const SupplierModal = ({ isOpen, onClose, onSubmit, supplier = null }) => {
       showCloseButton={false}
     >
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center">
           <FaTruck className="text-white text-lg" />
         </div>
         <div>
@@ -205,7 +205,7 @@ const SupplierModal = ({ isOpen, onClose, onSubmit, supplier = null }) => {
               <Button
                 type="submit"
                 variant="primary"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 <FaSave className="mr-2" />
                 {isEditMode ? 'Update Supplier' : 'Add Supplier'}

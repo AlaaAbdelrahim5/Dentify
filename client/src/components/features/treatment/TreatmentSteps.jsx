@@ -59,7 +59,7 @@ const TreatmentSteps = ({ currentStep, steps, onStepClick }) => {
                 </button>
                 
                 {/* Step Label */}
-                <div className="mt-3 text-center max-w-[120px]">
+                <div className="mt-3 text-center max-w-30">
                   <p className={`text-sm font-semibold ${
                     status === 'current' 
                       ? 'text-teal-600' 

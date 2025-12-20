@@ -612,7 +612,7 @@ const ClinicInventory = () => {
                     <Button 
                       variant="primary" 
                       size="sm" 
-                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600"
+                      className="w-full bg-linear-to-r from-blue-600 to-cyan-600"
                       onClick={() => handleViewItem(item)}
                     >
                       <FaBoxes className="mr-2" />
@@ -643,7 +643,7 @@ const ClinicInventory = () => {
                       <Button 
                         variant="primary" 
                         size="sm" 
-                        className="flex-1 bg-gradient-to-r from-orange-600 to-red-600"
+                        className="flex-1 bg-linear-to-r from-orange-600 to-red-600"
                         onClick={() => {
                           setSelectedItem(item)
                           setIsReorderModalOpen(true)
@@ -667,7 +667,7 @@ const ClinicInventory = () => {
           <div className="flex justify-end mb-4">
             <Button 
               variant="primary"
-              className="bg-gradient-to-r from-purple-600 to-pink-600"
+              className="bg-linear-to-r from-purple-600 to-pink-600"
               onClick={() => { setSelectedSupplier(null); setIsSupplierModalOpen(true); }}
             >
               <FaPlus className="mr-2" />
@@ -731,7 +731,7 @@ const ClinicInventory = () => {
                     <Button 
                       variant="primary" 
                       size="sm" 
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                      className="w-full bg-linear-to-r from-purple-600 to-pink-600"
                       onClick={() => handleViewSupplier(supplier)}
                     >
                       <FaTruck className="mr-2" />
@@ -774,7 +774,7 @@ const ClinicInventory = () => {
           <div className="flex justify-end mb-4">
             <Button 
               variant="primary"
-              className="bg-gradient-to-r from-green-600 to-emerald-600"
+              className="bg-linear-to-r from-green-600 to-emerald-600"
               onClick={() => setIsCreateOrderModalOpen(true)}
             >
               <FaPlus className="mr-2" />
@@ -838,7 +838,7 @@ const ClinicInventory = () => {
                           View Details
                         </Button>
                         {order.status === 'pending' && (
-                          <Button variant="primary" size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600">
+                          <Button variant="primary" size="sm" className="bg-linear-to-r from-green-600 to-emerald-600">
                             <FaCheck className="mr-2" />
                             Mark Received
                           </Button>
@@ -961,7 +961,7 @@ const ClinicInventory = () => {
                     <Button
                       variant="primary"
                       size="sm"
-                      className="bg-gradient-to-r from-teal-600 to-cyan-600"
+                      className="bg-linear-to-r from-teal-600 to-cyan-600"
                     >
                       <FaShoppingCart className="mr-2" />
                       Create Purchase Order

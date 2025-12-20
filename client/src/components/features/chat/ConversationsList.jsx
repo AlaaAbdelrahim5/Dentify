@@ -69,16 +69,16 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
   );
 
   return (
-    <div className="w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-800">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-800">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-linear-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
             Messages
           </h2>
           <button
             onClick={() => setShowNewChatModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
+            className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
             title="New Chat"
           >
             <FiPlus className="w-5 h-5" />
@@ -109,7 +109,7 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-100 via-cyan-100 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+            <div className="w-20 h-20 bg-linear-to-br from-teal-100 via-cyan-100 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
               <FiMessageSquare className="w-10 h-10 text-teal-600 dark:text-teal-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -121,7 +121,7 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
             {!searchTerm && (
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold hover:scale-105 transform"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold hover:scale-105 transform"
               >
                 <FiPlus className="w-5 h-5" />
                 Start a conversation
@@ -147,17 +147,17 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
                 onClick={() => handleSelectConversation(conversation)}
                 className={`mx-3 my-2 p-4 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-[1.02] ${
                   isActive 
-                    ? 'bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-700 shadow-lg ring-2 ring-teal-500 dark:ring-teal-400' 
+                    ? 'bg-linear-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-700 shadow-lg ring-2 ring-teal-500 dark:ring-teal-400' 
                     : 'hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg'
                 }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+                    <div className="w-14 h-14 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                       {otherUser.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     {showUnread && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white dark:ring-gray-900 animate-pulse">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-linear-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white dark:ring-gray-900 animate-pulse">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
                     )}
@@ -197,8 +197,8 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700 transform transition-all">
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-teal-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800">
+                <h3 className="text-lg font-bold bg-linear-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
                   New Chat
                 </h3>
                 <button
@@ -237,10 +237,10 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
                     <div
                       key={user.id}
                       onClick={() => handleStartNewChat(user.id)}
-                      className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700 cursor-pointer transition-all hover:shadow-md"
+                      className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-linear-to-r hover:from-teal-50 hover:to-cyan-50 dark:hover:from-gray-700 dark:hover:to-gray-700 cursor-pointer transition-all hover:shadow-md"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+                        <div className="w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold shrink-0 shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                           {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
                         </div>
                         <div className="flex-1 min-w-0">

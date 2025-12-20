@@ -110,7 +110,7 @@ const ClinicDetailsModal = ({
       noPadding={true}
     >
       {/* Header with gradient */}
-      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-6">
+      <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 px-6 py-6">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -223,7 +223,7 @@ const ClinicDetailsModal = ({
                 }`}>
                   Email
                 </p>
-                <p className={`font-semibold break-words ${
+                <p className={`font-semibold wrap-break-word ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
                   {clinic.user?.email || clinic.email || 'N/A'}
@@ -277,7 +277,7 @@ const ClinicDetailsModal = ({
                   href={clinic.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`font-medium hover:underline break-words ${
+                  className={`font-medium hover:underline wrap-break-word ${
                     isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
                   }`}
                 >
@@ -460,7 +460,7 @@ const ClinicDetailsModal = ({
                 >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4 flex-1">
-                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                          <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0">
                             <FaUser className="text-white text-lg" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -471,7 +471,7 @@ const ClinicDetailsModal = ({
                             </h4>
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-2">
-                                <FaStethoscope className={`text-sm flex-shrink-0 ${
+                                <FaStethoscope className={`text-sm shrink-0 ${
                                   isDarkMode ? 'text-gray-400' : 'text-gray-500'
                                 }`} />
                                 <span className={`text-sm ${
@@ -482,7 +482,7 @@ const ClinicDetailsModal = ({
                               </div>
                               {dentist.user?.email && (
                                 <div className="flex items-center gap-2">
-                                  <FaEnvelope className={`text-sm flex-shrink-0 ${
+                                  <FaEnvelope className={`text-sm shrink-0 ${
                                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                                   }`} />
                                   <span className={`text-sm truncate ${
@@ -494,7 +494,7 @@ const ClinicDetailsModal = ({
                               )}
                               {dentist.user?.phone && (
                                 <div className="flex items-center gap-2">
-                                  <FaPhone className={`text-sm flex-shrink-0 ${
+                                  <FaPhone className={`text-sm shrink-0 ${
                                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                                   }`} />
                                   <span className={`text-sm ${
@@ -507,7 +507,7 @@ const ClinicDetailsModal = ({
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 flex-shrink-0">
+                        <div className="flex flex-col gap-2 shrink-0">
                           {onBookAppointment && (
                             <Button
                               variant="outline"

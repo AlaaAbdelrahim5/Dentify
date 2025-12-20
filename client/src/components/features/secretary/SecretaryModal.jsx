@@ -374,7 +374,7 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
+            className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

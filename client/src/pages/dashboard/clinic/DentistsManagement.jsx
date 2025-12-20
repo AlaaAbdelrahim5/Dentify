@@ -394,7 +394,7 @@ const DentistsManagement = () => {
     <tr key={dentist._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
             <FaUserMd className="w-5 h-5 text-white" />
           </div>
           <div className="ml-3">

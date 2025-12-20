@@ -138,7 +138,7 @@ const SessionCostModal = ({ isOpen, onClose, onSave, appointmentInfo }) => {
             type="submit"
             variant="primary"
             disabled={loading || !sessionCost}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            className="bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
           >
             {loading ? 'Completing...' : 'Complete Appointment'}
           </Button>

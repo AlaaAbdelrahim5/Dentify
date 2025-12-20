@@ -76,7 +76,7 @@ const PhoneInput = forwardRef(({
             className={`
               rounded-l-lg border border-r-0 py-3 text-sm shadow-sm transition-all duration-200 appearance-none
               focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20
-              cursor-pointer text-transparent w-24 flex-shrink-0
+              cursor-pointer text-transparent w-24 shrink-0
               ${isDarkMode 
                 ? 'border-gray-600 bg-gray-700 hover:border-gray-500'
                 : 'border-gray-300 bg-white hover:border-gray-400'

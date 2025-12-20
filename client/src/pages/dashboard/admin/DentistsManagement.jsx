@@ -279,7 +279,7 @@ const DentistsManagement = () => {
       {/* Dentist Info */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10">
+          <div className="shrink-0 h-10 w-10">
             {dentist.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
@@ -293,8 +293,8 @@ const DentistsManagement = () => {
             ) : null}
             <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${dentist.user?.profileImage ? 'hidden' : ''} ${
                 isDarkMode 
-                  ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
-                  : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+                  ? 'bg-linear-to-br from-teal-600 to-cyan-600' 
+                  : 'bg-linear-to-br from-teal-500 to-cyan-500'
               }`}>
               <FaUserMd className="text-white text-lg" />
             </div>

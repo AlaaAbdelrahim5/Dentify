@@ -117,8 +117,8 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl transition-all duration-300 ${
       isDarkMode 
-        ? 'bg-gradient-to-r from-gray-900/98 via-gray-900/98 to-gray-800/98 border-b border-gray-700/30 shadow-2xl shadow-gray-900/20' 
-        : 'bg-gradient-to-r from-white/98 via-white/98 to-gray-50/98 border-b border-gray-200/40 shadow-xl shadow-gray-200/40'
+        ? 'bg-linear-to-r from-gray-900/98 via-gray-900/98 to-gray-800/98 border-b border-gray-700/30 shadow-2xl shadow-gray-900/20' 
+        : 'bg-linear-to-r from-white/98 via-white/98 to-gray-50/98 border-b border-gray-200/40 shadow-xl shadow-gray-200/40'
     }`}>
       <div className={`${showDashboardInfo ? 'w-full' : 'max-w-7xl mx-auto'} px-4 lg:px-6`}>
         <div className="flex justify-between items-center h-16">
@@ -139,7 +139,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                 <FaBars className="w-5 h-5" />
               </button>
             )}
-            <div className="flex-shrink-0 transform transition-all duration-300 hover:scale-105">
+            <div className="shrink-0 transform transition-all duration-300 hover:scale-105">
               <Logo size={isAuthenticated ? "text-xl" : "text-2xl"} />
             </div>
           </div>
@@ -162,7 +162,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   </Link>
                   <Link 
                     to="/signup" 
-                    className="hidden md:block bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 hover:from-teal-600 hover:via-cyan-600 hover:to-blue-600"
+                    className="hidden md:block bg-linear-to-r from-teal-500 via-teal-600 to-cyan-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 hover:from-teal-600 hover:via-cyan-600 hover:to-blue-600"
                   >
                     Sign Up
                   </Link>
@@ -201,7 +201,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                             }}
                           />
                         ) : null}
-                        <div className={`w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20 ${currentUser?.profileImage ? 'hidden' : ''}`}>
+                        <div className={`w-8 h-8 md:w-10 md:h-10 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 transition-all duration-200 hover:ring-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/20 ${currentUser?.profileImage ? 'hidden' : ''}`}>
                           <span className="text-white text-xs md:text-sm font-bold">
                             {currentUser ? authUtils.getUserInitials() : 'U'}
                           </span>
@@ -230,14 +230,14 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
                     {/* Dropdown Menu */}
                     {isProfileDropdownOpen && (
-                      <div className={`absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl border backdrop-blur-lg overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-top-2 z-[100] ${
+                      <div className={`absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl border backdrop-blur-lg overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-top-2 z-100 ${
                         isDarkMode 
                           ? 'bg-gray-800/95 border-gray-700/50 shadow-gray-900/50' 
                           : 'bg-white/95 border-gray-200/50 shadow-gray-200/50'
                       }`}>
                         {/* User Info Header */}
                         <div className={`px-5 py-4 border-b backdrop-blur-sm ${
-                          isDarkMode ? 'border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50' : 'border-gray-200/50 bg-gradient-to-r from-gray-50 to-white'
+                          isDarkMode ? 'border-gray-700/50 bg-linear-to-r from-gray-900/50 to-gray-800/50' : 'border-gray-200/50 bg-linear-to-r from-gray-50 to-white'
                         }`}>
                             <div className="flex items-center space-x-3">
                             {currentUser?.profileImage ? (
@@ -251,7 +251,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                                 }}
                                 />
                             ) : null}
-                            <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 ${currentUser?.profileImage ? 'hidden' : ''}`}>
+                            <div className={`w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-teal-400/30 ${currentUser?.profileImage ? 'hidden' : ''}`}>
                               <span className="text-white text-base font-bold">
                                 {currentUser ? authUtils.getUserInitials() : 'U'}
                               </span>
@@ -368,7 +368,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   <Link 
                     to="/signup" 
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 mt-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-center rounded-xl text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                    className="block px-4 py-3 mt-2 bg-linear-to-r from-teal-600 to-cyan-600 text-white text-center rounded-xl text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
                   >
                     Sign Up
                   </Link>
@@ -402,7 +402,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                           }}
                           />
                       ) : null}
-                      <div className={`w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ${currentUser?.profileImage ? 'hidden' : ''}`}>
+                      <div className={`w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg ${currentUser?.profileImage ? 'hidden' : ''}`}>
                         <span className="text-white text-base font-bold">
                           {currentUser ? authUtils.getUserInitials() : 'U'}
                         </span>
@@ -420,13 +420,13 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                     <div className="flex items-center space-x-2">
                       <div className="relative">
                         <FaEnvelope className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                        <span className="absolute -top-1 -right-1 bg-linear-to-r from-blue-500 to-cyan-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
                           3
                         </span>
                       </div>
                       <div className="relative">
                         <MdNotifications className={`w-6 h-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                        <span className="absolute -top-1 -right-1 bg-linear-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
                           2
                         </span>
                       </div>

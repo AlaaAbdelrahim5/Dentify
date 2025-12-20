@@ -256,7 +256,7 @@ const PatientsManagement = () => {
       {/* Patient Info */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10">
+          <div className="shrink-0 h-10 w-10">
             {patient.user?.profileImage ? (
               <img
                 className="h-10 w-10 rounded-full object-cover"
@@ -270,8 +270,8 @@ const PatientsManagement = () => {
             ) : null}
             <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${patient.user?.profileImage ? 'hidden' : ''} ${
                 isDarkMode 
-                  ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
-                  : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+                  ? 'bg-linear-to-br from-teal-600 to-cyan-600' 
+                  : 'bg-linear-to-br from-teal-500 to-cyan-500'
               }`}>
               <FaUser className="text-white text-lg" />
             </div>

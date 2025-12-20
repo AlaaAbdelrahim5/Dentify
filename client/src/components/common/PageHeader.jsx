@@ -38,7 +38,7 @@ const PageHeader = ({ title, description, action, actions }) => {
       ) : action ? (
         <Button
           onClick={action.onClick}
-          className={`flex items-center gap-2 ${action.gradient ? `bg-gradient-to-r ${action.gradient}` : ''}`}
+          className={`flex items-center gap-2 ${action.gradient ? `bg-linear-to-r ${action.gradient}` : ''}`}
         >
           {action.icon && <action.icon className="w-4 h-4" />}
           {action.label}

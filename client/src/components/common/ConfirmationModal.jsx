@@ -108,15 +108,15 @@ const ConfirmationModal = ({
         <div
           className={`relative rounded-2xl shadow-2xl w-full max-w-md transform transition-all ${
             isDarkMode
-              ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700"
-              : "bg-gradient-to-br from-white to-gray-50 border border-gray-200"
+              ? "bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700"
+              : "bg-linear-to-br from-white to-gray-50 border border-gray-200"
           }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Content */}
           <div className="flex flex-col items-center pt-8 pb-4">
             <div
-              className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-gradient-to-br ${config.gradient} shadow-lg ${config.shadowColor}`}
+              className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-linear-to-br ${config.gradient} shadow-lg ${config.shadowColor}`}
             >
               <Icon className="w-10 h-10 text-white" />
             </div>
@@ -152,7 +152,7 @@ const ConfirmationModal = ({
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg bg-gradient-to-r ${config.gradient} ${config.shadowColor}`}
+              className={`flex-1 px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 shadow-lg bg-linear-to-r ${config.gradient} ${config.shadowColor}`}
             >
               {isCancel ? 'Yes, Cancel' : isDelete ? 'Delete' : isDeactivate ? 'Deactivate' : isReject ? 'Reject' : isApprove ? 'Approve' : 'Activate'}
             </button>

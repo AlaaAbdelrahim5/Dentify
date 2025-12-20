@@ -377,7 +377,7 @@ const DentistInventory = () => {
                     <Button 
                       variant="primary" 
                       size="sm" 
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600"
+                      className="flex-1 bg-linear-to-r from-blue-600 to-cyan-600"
                       onClick={() => handleViewItem(item)}
                     >
                       <FaEye className="mr-2" />
@@ -620,7 +620,7 @@ const DentistInventory = () => {
                   <Button
                     type="submit"
                     variant="primary"
-                    className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600"
+                    className="flex-1 bg-linear-to-r from-teal-600 to-cyan-600"
                   >
                     <FaSave className="mr-2" />
                     Save Usage

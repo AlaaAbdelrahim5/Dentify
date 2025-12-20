@@ -84,8 +84,8 @@ const AuthRouter = () => {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
-          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+          ? 'bg-linear-to-br from-gray-900 to-gray-800'
+          : 'bg-linear-to-br from-teal-50 to-blue-50'
       }`}>
         <LoadingSpinner />
       </div>
@@ -103,8 +103,8 @@ const AuthRouter = () => {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800'
-        : 'bg-gradient-to-br from-teal-50 to-blue-50'
+        ? 'bg-linear-to-br from-gray-900 to-gray-800'
+        : 'bg-linear-to-br from-teal-50 to-blue-50'
     }`}>
       <Routes>
         <Route path="/" element={<Home />} />

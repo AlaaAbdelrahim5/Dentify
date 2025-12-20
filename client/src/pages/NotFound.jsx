@@ -9,8 +9,8 @@ const NotFound = () => {
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden ${
       isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
-        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
+        ? 'bg-linear-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-linear-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -28,7 +28,7 @@ const NotFound = () => {
           <div className="relative inline-block">
             <FaTooth className="text-9xl text-teal-200 mx-auto animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-5xl font-extrabold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">404</span>
+              <span className="text-5xl font-extrabold bg-linear-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">404</span>
             </div>
           </div>
         </div>
@@ -50,7 +50,7 @@ const NotFound = () => {
 
             <div className="space-y-4">
               <Button 
-                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
+                className="w-full bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
                 size="lg"
                 onClick={() => navigate(-1)}
               >

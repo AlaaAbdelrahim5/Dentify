@@ -322,8 +322,8 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
                 className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
                   isActive
                     ? isDarkMode
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-teal-500/30'
-                      : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
+                      ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-teal-500/30'
+                      : 'bg-linear-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
                     : isDarkMode
                       ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white'
                       : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
@@ -343,12 +343,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
           <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'}`}>
             <div className={`flex items-center justify-between px-4 py-3.5 rounded-xl border shadow-lg ${
               isDarkMode 
-                ? 'bg-gradient-to-r from-teal-900/40 to-cyan-900/40 border-teal-700/50 shadow-teal-900/30' 
-                : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200/50 shadow-teal-500/10'
+                ? 'bg-linear-to-r from-teal-900/40 to-cyan-900/40 border-teal-700/50 shadow-teal-900/30' 
+                : 'bg-linear-to-r from-teal-50 to-cyan-50 border-teal-200/50 shadow-teal-500/10'
             }`}>
               <div className="flex items-center space-x-3">
                 <div className={`p-2.5 rounded-xl shadow-md ${
-                  isDarkMode ? 'bg-gradient-to-br from-teal-500/30 to-cyan-500/30' : 'bg-gradient-to-br from-teal-100 to-cyan-100'
+                  isDarkMode ? 'bg-linear-to-br from-teal-500/30 to-cyan-500/30' : 'bg-linear-to-br from-teal-100 to-cyan-100'
                 }`}>
                   <MdDashboard className={`text-xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
                 </div>

@@ -38,15 +38,15 @@ const Toast = ({ message, type = 'success', onClose, duration = 3000 }) => {
   const { bg, icon } = getTypeStyles()
 
   return (
-    <div className="fixed top-20 right-4 z-[9999] animate-slide-in-right">
-      <div className={`${bg} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md`}>
-        <div className="flex-shrink-0">
+    <div className="fixed top-20 right-4 z-9999 animate-slide-in-right">
+      <div className={`${bg} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-75 max-w-md`}>
+        <div className="shrink-0">
           {icon}
         </div>
         <p className="flex-1 font-medium">{message}</p>
         <button
           onClick={onClose}
-          className="flex-shrink-0 hover:bg-white/20 p-1 rounded transition-colors"
+          className="shrink-0 hover:bg-white/20 p-1 rounded transition-colors"
         >
           <FaTimes className="w-4 h-4" />
         </button>

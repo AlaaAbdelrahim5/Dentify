@@ -26,8 +26,8 @@ const NotificationDropdown = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={`relative p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group ${
           isDarkMode 
-            ? 'hover:bg-gradient-to-br from-teal-500/20 to-cyan-500/20 hover:shadow-lg hover:shadow-teal-500/20' 
-            : 'hover:bg-gradient-to-br from-teal-50 to-cyan-50 hover:shadow-md'
+            ? 'hover:bg-linear-to-br from-teal-500/20 to-cyan-500/20 hover:shadow-lg hover:shadow-teal-500/20' 
+            : 'hover:bg-linear-to-br from-teal-50 to-cyan-50 hover:shadow-md'
         }`}
         title="Notifications"
       >
@@ -41,8 +41,8 @@ const NotificationDropdown = () => {
             <>
               {/* Animated ping effect */}
               <span className="absolute -top-1 -right-1 flex h-5 w-5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gradient-to-r from-red-500 to-pink-500 opacity-75"></span>
-                <span className="relative inline-flex items-center justify-center rounded-full h-5 w-5 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] font-bold shadow-lg ring-2 ring-white dark:ring-gray-800">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-linear-to-r from-red-500 to-pink-500 opacity-75"></span>
+                <span className="relative inline-flex items-center justify-center rounded-full h-5 w-5 bg-linear-to-r from-red-500 to-pink-600 text-white text-[10px] font-bold shadow-lg ring-2 ring-white dark:ring-gray-800">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               </span>
@@ -58,7 +58,7 @@ const NotificationDropdown = () => {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className={`absolute right-0 z-[80] mt-3 w-96 rounded-2xl shadow-2xl border backdrop-blur-xl overflow-hidden animate-in fade-in slide-in-from-top-2 ${
+          <div className={`absolute right-0 z-80 mt-3 w-96 rounded-2xl shadow-2xl border backdrop-blur-xl overflow-hidden animate-in fade-in slide-in-from-top-2 ${
             isDarkMode
               ? 'bg-gray-800/95 border-gray-700/50 shadow-gray-900/50'
               : 'bg-white/95 border-gray-200/50 shadow-gray-200/50'
@@ -66,8 +66,8 @@ const NotificationDropdown = () => {
             {/* Header */}
             <div className={`flex items-center justify-between p-4 border-b backdrop-blur-sm ${
               isDarkMode
-                ? 'border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50'
-                : 'border-gray-200/50 bg-gradient-to-r from-gray-50 to-white'
+                ? 'border-gray-700/50 bg-linear-to-r from-gray-900/50 to-gray-800/50'
+                : 'border-gray-200/50 bg-linear-to-r from-gray-50 to-white'
             }`}>
               <div className="flex items-center gap-2">
                 <div className={`p-2 rounded-lg ${
@@ -152,7 +152,7 @@ const NotificationDropdown = () => {
                   >
                     <div className="flex items-start gap-3">
                       {!notification.read && (
-                        <div className="w-2.5 h-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full mt-1.5 flex-shrink-0 shadow-lg shadow-teal-500/50 animate-pulse" />
+                        <div className="w-2.5 h-2.5 bg-linear-to-r from-teal-500 to-cyan-500 rounded-full mt-1.5 shrink-0 shadow-lg shadow-teal-500/50 animate-pulse" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-bold ${
@@ -191,8 +191,8 @@ const NotificationDropdown = () => {
                   }}
                   className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                     isDarkMode
-                      ? 'bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-400 hover:from-teal-500/30 hover:to-cyan-500/30'
-                      : 'bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-600 hover:from-teal-100 hover:to-cyan-100'
+                      ? 'bg-linear-to-r from-teal-500/20 to-cyan-500/20 text-teal-400 hover:from-teal-500/30 hover:to-cyan-500/30'
+                      : 'bg-linear-to-r from-teal-50 to-cyan-50 text-teal-600 hover:from-teal-100 hover:to-cyan-100'
                   }`}
                 >
                   View all notifications

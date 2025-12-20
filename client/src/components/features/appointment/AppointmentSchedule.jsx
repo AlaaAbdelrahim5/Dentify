@@ -307,7 +307,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <div className="min-w-[900px]">
+        <div className="min-w-225">
           {/* Day Headers */}
           <div 
             className={`grid border-b sticky top-0 z-10 ${

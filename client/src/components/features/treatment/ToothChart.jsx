@@ -225,7 +225,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
             <div className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{tooth.name}</div>
             {condition && condition.allConditions && condition.allConditions.length > 0 && (
               <>
-                <div className="h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent my-2"></div>
+                <div className="h-px bg-linear-to-r from-transparent via-gray-500 to-transparent my-2"></div>
                 <div className={`text-xs font-semibold mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {condition.conditionCount} {condition.conditionCount === 1 ? 'Condition' : 'Conditions'} Recorded:
                 </div>
@@ -234,7 +234,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
                     <div key={index} className={`flex items-start gap-2 p-2 rounded-lg ${
                       isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
                     }`}>
-                      <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                      <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${
                         cond.status === 'healthy' ? 'bg-green-500' :
                         cond.status === 'cavity' ? 'bg-orange-500' :
                         cond.status.includes('root') ? 'bg-red-500' :
@@ -434,7 +434,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
         </div>
 
         {/* Tooth Information Panel */}
-        <div className="flex-shrink-0 w-full lg:w-80">
+        <div className="shrink-0 w-full lg:w-80">
           {hoveredTooth ? (
             <div className={`
               p-4 rounded-xl shadow-lg text-sm h-full
@@ -445,7 +445,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
               
               {toothConditions[hoveredTooth] && toothConditions[hoveredTooth].allConditions && toothConditions[hoveredTooth].allConditions.length > 0 ? (
                 <>
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent my-3"></div>
+                  <div className="h-px bg-linear-to-r from-transparent via-gray-500 to-transparent my-3"></div>
                   <div className={`text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     {toothConditions[hoveredTooth].conditionCount} {toothConditions[hoveredTooth].conditionCount === 1 ? 'Condition' : 'Conditions'} Recorded:
                   </div>
@@ -454,7 +454,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
                       <div key={index} className={`flex items-start gap-3 p-3 rounded-lg ${
                         isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
                       }`}>
-                        <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                        <div className={`w-3 h-3 rounded-full mt-1 shrink-0 ${
                           cond.status === 'healthy' ? 'bg-green-500' :
                           cond.status === 'cavity' ? 'bg-orange-500' :
                           cond.status.includes('root') ? 'bg-red-500' :
@@ -501,7 +501,7 @@ const ToothChart = ({ selectedTeeth = [], onToothSelect, readOnly = false, tooth
       {/* Selected Teeth Info */}
       {!readOnly && selectedTeeth.length > 0 && (
         <div className={`mt-8 p-5 rounded-xl shadow-lg ${
-          isDarkMode ? 'bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-2 border-teal-700/50' : 'bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200'
+          isDarkMode ? 'bg-linear-to-r from-teal-900/30 to-cyan-900/30 border-2 border-teal-700/50' : 'bg-linear-to-r from-teal-50 to-cyan-50 border-2 border-teal-200'
         }`}>
           <div className="flex items-center gap-3 mb-3">
             <div className={`p-2 rounded-lg ${

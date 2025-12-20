@@ -74,8 +74,8 @@ const PatientOverview = ({ userData, onTabChange }) => {
           </div>
           <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
             isDarkMode 
-              ? 'bg-gradient-to-br from-teal-600 to-cyan-600' 
-              : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+              ? 'bg-linear-to-br from-teal-600 to-cyan-600' 
+              : 'bg-linear-to-br from-teal-500 to-cyan-500'
           }`}>
             <FaTooth className="w-8 h-8 text-white" />
           </div>

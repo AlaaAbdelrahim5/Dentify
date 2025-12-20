@@ -190,7 +190,7 @@ const PatientTreatments = () => {
                 {loading ? '-' : stats.total}
               </p>
             </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-full bg-linear-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
               <FaStethoscope className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -206,7 +206,7 @@ const PatientTreatments = () => {
                 {loading ? '-' : stats.active}
               </p>
             </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-full bg-linear-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
               <FaTooth className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -222,7 +222,7 @@ const PatientTreatments = () => {
                 {loading ? '-' : stats.completed}
               </p>
             </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-full bg-linear-to-r from-green-600 to-green-700 flex items-center justify-center`}>
               <FaTooth className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -238,7 +238,7 @@ const PatientTreatments = () => {
                 {loading ? '-' : `$${stats.totalPaid.toFixed(0)}`}
               </p>
             </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-full bg-linear-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
               <FaDollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -254,7 +254,7 @@ const PatientTreatments = () => {
                 {loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}
               </p>
             </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-full bg-linear-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
               <FaDollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -303,8 +303,8 @@ const PatientTreatments = () => {
           <div className="text-center py-12">
             <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
               isDarkMode 
-                ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
-                : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                ? 'bg-linear-to-br from-gray-700 to-gray-800' 
+                : 'bg-linear-to-br from-gray-100 to-gray-200'
             }`}>
               <FaTooth className={`w-10 h-10 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'

@@ -191,7 +191,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
           : 'bg-teal-50 border-teal-600'
       }`}>
         <div className="flex items-start gap-3">
-          <FaInfoCircle className={`mt-0.5 flex-shrink-0 ${
+          <FaInfoCircle className={`mt-0.5 shrink-0 ${
             isDarkMode ? 'text-teal-400' : 'text-teal-600'
           }`} />
           <div>
@@ -212,7 +212,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-purple-50 to-purple-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-purple-50 to-purple-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-purple-900/30' : 'bg-purple-200'
@@ -230,7 +230,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
           </div>
         </Card>
 
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50 to-blue-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-blue-50 to-blue-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-blue-900/30' : 'bg-blue-200'
@@ -248,7 +248,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
           </div>
         </Card>
 
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-teal-50 to-teal-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-teal-50 to-teal-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-teal-900/30' : 'bg-teal-200'
@@ -418,7 +418,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
                 render: (value) => (
                   value ? (
                     <div className="flex items-start gap-2 max-w-xs">
-                      <FaStickyNote className={`mt-0.5 flex-shrink-0 text-sm ${
+                      <FaStickyNote className={`mt-0.5 shrink-0 text-sm ${
                         isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
                       }`} />
                       <span className={`text-sm line-clamp-2 ${
@@ -451,7 +451,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
       {/* No Tooth Selected State */}
       {!selectedTooth && teethWithHistory.length > 0 && (
         <Card className={`p-12 text-center ${
-          isDarkMode ? 'bg-gradient-to-br from-gray-800 to-gray-850 border border-gray-700' : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200'
+          isDarkMode ? 'bg-linear-to-br from-gray-800 to-gray-850 border border-gray-700' : 'bg-linear-to-br from-white to-gray-50 border border-gray-200'
         }`}>
           <div className={`inline-flex p-4 rounded-full mb-4 ${
             isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'

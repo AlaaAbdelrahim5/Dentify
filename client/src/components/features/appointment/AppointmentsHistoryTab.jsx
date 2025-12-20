@@ -79,7 +79,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
           : 'bg-blue-50 border-blue-600'
       }`}>
         <div className="flex items-start gap-3">
-          <FaInfoCircle className={`mt-0.5 flex-shrink-0 ${
+          <FaInfoCircle className={`mt-0.5 shrink-0 ${
             isDarkMode ? 'text-blue-400' : 'text-blue-600'
           }`} />
           <div>
@@ -99,7 +99,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50 to-blue-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-blue-50 to-blue-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-blue-900/30' : 'bg-blue-200'
@@ -117,7 +117,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
           </div>
         </Card>
 
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-green-50 to-green-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-green-50 to-green-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-green-900/30' : 'bg-green-200'
@@ -135,7 +135,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
           </div>
         </Card>
 
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-yellow-50 to-yellow-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-yellow-900/30' : 'bg-yellow-200'
@@ -153,7 +153,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
           </div>
         </Card>
 
-        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-red-50 to-red-100'}`}>
+        <Card className={`p-4 ${isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-red-50 to-red-100'}`}>
           <div className="flex items-center gap-3">
             <div className={`p-3 rounded-lg ${
               isDarkMode ? 'bg-red-900/30' : 'bg-red-200'
@@ -310,7 +310,7 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
               const notes = value || item.sessionNotes
               return notes ? (
                 <div className="flex items-start gap-2 max-w-xs">
-                  <FaStickyNote className={`mt-0.5 flex-shrink-0 text-sm ${
+                  <FaStickyNote className={`mt-0.5 shrink-0 text-sm ${
                     isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
                   }`} />
                   <span className={`text-sm line-clamp-2 ${

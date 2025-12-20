@@ -143,7 +143,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
               <div className="flex flex-col">
                 {/* Header with Avatar and Name */}
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold shrink-0">
                     {getInitials(dentist.firstName, dentist.lastName)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -174,7 +174,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
                     isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
                   }`}>
                     <div className="flex items-start gap-2">
-                      <FaStethoscope className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                      <FaStethoscope className={`w-4 h-4 mt-0.5 shrink-0 ${
                         isDarkMode ? 'text-teal-400' : 'text-teal-600'
                       }`} />
                       <div className="flex-1 min-w-0">
@@ -207,7 +207,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
                     <div className={`flex items-start gap-2 text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
-                      <FaEnvelope className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                      <FaEnvelope className={`w-4 h-4 mt-0.5 shrink-0 ${
                         isDarkMode ? 'text-gray-400' : 'text-gray-500'
                       }`} />
                       <span className="truncate">{dentist.user.email}</span>
@@ -217,7 +217,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
                     <div className={`flex items-center gap-2 text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
-                      <FaPhone className={`w-4 h-4 flex-shrink-0 ${
+                      <FaPhone className={`w-4 h-4 shrink-0 ${
                         isDarkMode ? 'text-gray-400' : 'text-gray-500'
                       }`} />
                       <span>{dentist.user.phone}</span>
@@ -227,7 +227,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
                     <div className={`flex items-center gap-2 text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
-                      <FaIdCard className={`w-4 h-4 flex-shrink-0 ${
+                      <FaIdCard className={`w-4 h-4 shrink-0 ${
                         isDarkMode ? 'text-gray-400' : 'text-gray-500'
                       }`} />
                       <span className="truncate">License: {dentist.licenseNumber}</span>
@@ -267,7 +267,7 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
 
       {/* Dentist Details Modal */}
       {showDetailsModal && selectedDentist && (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+        <div className="fixed inset-0 z-9999 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             {/* Backdrop */}
             <div 

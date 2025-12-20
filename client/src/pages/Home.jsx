@@ -51,8 +51,8 @@ const Home = () => {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode 
-          ? 'bg-gradient-to-br from-gray-900 to-gray-800'
-          : 'bg-gradient-to-br from-teal-50 to-blue-50'
+          ? 'bg-linear-to-br from-gray-900 to-gray-800'
+          : 'bg-linear-to-br from-teal-50 to-blue-50'
       }`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
@@ -135,7 +135,7 @@ const Home = () => {
       
       {/* Hero Section */}
       <section className={`relative overflow-hidden ${
-        isDarkMode ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-b from-teal-50 to-white'
+        isDarkMode ? 'bg-linear-to-b from-gray-900 via-gray-800 to-gray-900' : 'bg-linear-to-b from-teal-50 to-white'
       }`}>
         {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -161,7 +161,7 @@ const Home = () => {
             <h1 className={`text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight`}>
               Simplify Your
               <span className="relative inline-block mx-3">
-                <span className="relative z-10 bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
+                <span className="relative z-10 bg-linear-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
                   Dental Practice
                 </span>
                 <span className="absolute bottom-2 left-0 w-full h-3 bg-teal-500/20 -rotate-1"></span>
@@ -235,7 +235,7 @@ const Home = () => {
                     : 'bg-gray-50 hover:bg-white hover:shadow-xl border border-gray-100'
                 }`}
               >
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} mb-5`}>
+                <div className={`inline-flex p-3 rounded-xl bg-linear-to-br ${feature.color} mb-5`}>
                   <feature.icon className="text-2xl text-white" />
                 </div>
                 <h3 className={`text-xl font-bold mb-3`}>
@@ -282,7 +282,7 @@ const Home = () => {
                 }`}
               >
                 <div className="flex items-start gap-5">
-                  <div className="shrink-0 w-14 h-14 flex items-center justify-center bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="shrink-0 w-14 h-14 flex items-center justify-center bg-linear-to-br from-teal-500 to-cyan-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                     <user.icon className="text-2xl text-white" />
                   </div>
                   <div className="flex-1">
@@ -380,7 +380,7 @@ const Home = () => {
       <section className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <div className={`relative overflow-hidden rounded-3xl ${
-            isDarkMode ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : 'bg-gradient-to-r from-teal-500 to-cyan-500'
+            isDarkMode ? 'bg-linear-to-r from-teal-600 to-cyan-600' : 'bg-linear-to-r from-teal-500 to-cyan-500'
           }`}>
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">

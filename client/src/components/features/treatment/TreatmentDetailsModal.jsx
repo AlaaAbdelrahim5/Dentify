@@ -477,7 +477,7 @@ const TreatmentDetailsModal = ({
   const content = (
     <div className="w-full flex flex-col">
       {/* Header */}
-      <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+      <div className={`flex items-center justify-between p-6 border-b shrink-0 ${
         isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
       }`}>
         <div className="flex items-center gap-3">
@@ -611,7 +611,7 @@ const TreatmentDetailsModal = ({
             <div className="space-y-6">
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50 to-blue-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-blue-50 to-blue-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -627,7 +627,7 @@ const TreatmentDetailsModal = ({
                   </Card.Content>
                 </Card>
 
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-green-50 to-green-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-green-50 to-green-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -643,7 +643,7 @@ const TreatmentDetailsModal = ({
                   </Card.Content>
                 </Card>
 
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-purple-50 to-purple-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-purple-50 to-purple-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -785,7 +785,7 @@ const TreatmentDetailsModal = ({
             <div className="space-y-6">
               {/* Payment Summary */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-green-50 to-green-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-green-50 to-green-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -802,7 +802,7 @@ const TreatmentDetailsModal = ({
                 </Card>
 
                 {(treatmentData.treatmentDiscount || 0) > 0 && (
-                  <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-orange-50 to-orange-100'}>
+                  <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-orange-50 to-orange-100'}>
                     <Card.Content className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -819,7 +819,7 @@ const TreatmentDetailsModal = ({
                   </Card>
                 )}
 
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-teal-50 to-teal-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-teal-50 to-teal-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -836,8 +836,8 @@ const TreatmentDetailsModal = ({
                 </Card>
 
                 <Card className={isDarkMode ? 'bg-gray-700/50' : remainingBalance > 0 
-                  ? 'bg-gradient-to-br from-red-50 to-red-100' 
-                  : 'bg-gradient-to-br from-blue-50 to-blue-100'
+                  ? 'bg-linear-to-br from-red-50 to-red-100' 
+                  : 'bg-linear-to-br from-blue-50 to-blue-100'
                 }>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
@@ -884,8 +884,8 @@ const TreatmentDetailsModal = ({
                       <div
                         className={`h-full transition-all duration-500 ${
                           paymentProgress === 100 
-                            ? 'bg-gradient-to-r from-green-500 to-green-600'
-                            : 'bg-gradient-to-r from-teal-500 to-teal-600'
+                            ? 'bg-linear-to-r from-green-500 to-green-600'
+                            : 'bg-linear-to-r from-teal-500 to-teal-600'
                         }`}
                         style={{ width: `${paymentProgress}%` }}
                       />

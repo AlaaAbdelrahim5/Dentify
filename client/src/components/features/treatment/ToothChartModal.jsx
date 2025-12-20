@@ -184,7 +184,7 @@ const ToothChartModal = ({
         >
           {/* Header */}
           <div className={`flex items-center justify-between p-6 border-b ${
-            isDarkMode ? 'border-gray-700 bg-gradient-to-r from-teal-900/50 to-cyan-900/50' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'
+            isDarkMode ? 'border-gray-700 bg-linear-to-r from-teal-900/50 to-cyan-900/50' : 'border-gray-200 bg-linear-to-r from-teal-50 to-cyan-50'
           }`}>
             <div className="flex items-center gap-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${

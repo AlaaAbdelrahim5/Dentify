@@ -216,7 +216,7 @@ const PatientDetailsModal = ({
               }`}>
                 Email Address
               </p>
-              <p className={`font-semibold break-words ${
+              <p className={`font-semibold wrap-break-word ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 {patientData.email || 'Not provided'}
@@ -516,7 +516,7 @@ const PatientDetailsModal = ({
             </div>
             <div className={`h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div 
-                className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
+                className="h-full bg-linear-to-r from-green-500 to-green-600 rounded-full"
                 style={{ width: `${(treatment.paidAmount / treatment.totalAmount) * 100}%` }}
               />
             </div>
@@ -633,7 +633,7 @@ const PatientDetailsModal = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Gradient */}
-          <div className="relative bg-gradient-to-br from-teal-500 to-cyan-600 p-8">
+          <div className="relative bg-linear-to-br from-teal-500 to-cyan-600 p-8">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/20 transition-colors"

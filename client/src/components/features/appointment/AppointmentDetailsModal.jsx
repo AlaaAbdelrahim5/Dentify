@@ -358,7 +358,7 @@ const AppointmentDetailsModal = ({
                   onEdit?.(appointment)
                   onClose()
                 }}
-                className="bg-gradient-to-r from-teal-600 to-cyan-600"
+                className="bg-linear-to-r from-teal-600 to-cyan-600"
               >
                 <FaEdit className="w-4 h-4 mr-2" />
                 Edit

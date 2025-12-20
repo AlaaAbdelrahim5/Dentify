@@ -261,7 +261,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>{loading ? '-' : stats.total}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-full bg-linear-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
                   <FaStethoscope className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -277,7 +277,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>{loading ? '-' : stats.active}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-full bg-linear-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
                   <FaExclamationTriangle className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -293,7 +293,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>{loading ? '-' : stats.completed}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-full bg-linear-to-r from-green-600 to-green-700 flex items-center justify-center`}>
                   <FaCheck className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -309,7 +309,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>{loading ? '-' : `$${stats.totalRevenue.toFixed(0)}`}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-full bg-linear-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
                   <FaDollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -325,7 +325,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>{loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-full bg-linear-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
                   <FaMoneyBillWave className="w-6 h-6 text-white" />
                 </div>
               </div>

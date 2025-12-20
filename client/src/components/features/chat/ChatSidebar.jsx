@@ -95,8 +95,8 @@ const ChatSidebar = ({ isOpen, onClose }) => {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } ${
           isDarkMode
-            ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 border-l border-gray-800'
-            : 'bg-gradient-to-b from-white via-gray-50 to-white border-l border-gray-200'
+            ? 'bg-linear-to-b from-gray-900 via-gray-900 to-gray-800 border-l border-gray-800'
+            : 'bg-linear-to-b from-white via-gray-50 to-white border-l border-gray-200'
         } shadow-2xl`}
       >
         {/* Header */}
@@ -104,10 +104,10 @@ const ChatSidebar = ({ isOpen, onClose }) => {
           isDarkMode ? 'border-gray-800 bg-gray-900/50 backdrop-blur-sm' : 'border-gray-200 bg-white/50 backdrop-blur-sm'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 shadow-lg">
+            <div className="p-2.5 rounded-xl bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 shadow-lg">
               <FiMessageCircle className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold bg-linear-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
               Chats
             </h2>
           </div>
@@ -142,7 +142,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
             </div>
             <button
               onClick={() => setIsSearchModalOpen(true)}
-              className="p-3 rounded-xl transition-all duration-200 hover:scale-110 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
+              className="p-3 rounded-xl transition-all duration-200 hover:scale-110 bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
               title="New Conversation"
             >
               <FiUserPlus className="w-5 h-5" />
@@ -176,15 +176,15 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                     className={`w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] shadow-sm hover:shadow-md ${
                       isActiveChatOpen
                         ? isDarkMode
-                          ? 'bg-gradient-to-r from-teal-900/40 to-cyan-900/40 ring-2 ring-teal-500'
-                          : 'bg-gradient-to-r from-teal-50 to-cyan-50 ring-2 ring-teal-500'
+                          ? 'bg-linear-to-r from-teal-900/40 to-cyan-900/40 ring-2 ring-teal-500'
+                          : 'bg-linear-to-r from-teal-50 to-cyan-50 ring-2 ring-teal-500'
                         : isDarkMode
                         ? 'hover:bg-gray-800/80'
                         : 'hover:bg-white'
                     }`}
                   >
                     {/* Avatar */}
-                    <div className="relative flex-shrink-0">
+                    <div className="relative shrink-0">
                       {otherUser.profileImage ? (
                         <img
                           src={getImageUrl(otherUser.profileImage)}
@@ -196,7 +196,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                           }}
                         />
                       ) : (
-                        <div className="w-13 h-13 rounded-full bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+                        <div className="w-13 h-13 rounded-full bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                           <span className="text-white font-bold text-base">
                             {otherUser.name?.[0]?.toUpperCase() || '?'}
                           </span>
@@ -238,7 +238,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                           {conversation.lastMessage || 'Start chatting...'}
                         </p>
                         {showUnreadCount && (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-md animate-pulse">
+                          <span className="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-linear-to-r from-red-500 to-pink-600 text-white shadow-md animate-pulse">
                             {unreadCount}
                           </span>
                         )}
@@ -252,7 +252,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
             <div className={`flex flex-col items-center justify-center h-full px-4 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <div className="w-20 h-20 bg-linear-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
                 <FiMessageCircle className="w-10 h-10 text-teal-600 dark:text-teal-400" />
               </div>
               <p className="text-sm text-center font-medium mb-2">No conversations yet</p>
@@ -263,7 +263,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
 
         {/* Active Chat Window (Mini) */}
         {activeChat && (
-          <div className={`fixed bottom-4 right-[25rem] w-80 h-[500px] rounded-2xl shadow-2xl z-50 overflow-hidden border-2 transform transition-all duration-300 ${
+          <div className={`fixed bottom-4 right-100 w-80 h-125 rounded-2xl shadow-2xl z-50 overflow-hidden border-2 transform transition-all duration-300 ${
             isDarkMode ? 'bg-gray-800 border-teal-900' : 'bg-white border-teal-200'
           }`}>
             <ChatWindow user={activeChat} onClose={() => setActiveChat(null)} />
@@ -276,7 +276,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
         <>
           {/* Modal Overlay */}
           <div
-            className="fixed top-16 left-0 right-0 bottom-0 bg-black/50 z-[60] backdrop-blur-sm"
+            className="fixed top-16 left-0 right-0 bottom-0 bg-black/50 z-60 backdrop-blur-sm"
             onClick={() => {
               setIsSearchModalOpen(false);
               setContactSearchTerm('');
@@ -284,18 +284,18 @@ const ChatSidebar = ({ isOpen, onClose }) => {
           />
           
           {/* Modal Content */}
-          <div style={{ top: 'calc(50vh + 2rem)' }} className={`fixed left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[480px] max-h-[600px] rounded-2xl shadow-2xl z-[70] ${
+          <div style={{ top: 'calc(50vh + 2rem)' }} className={`fixed left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-120 max-h-150 rounded-2xl shadow-2xl z-70 ${
             isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
           }`}>
               {/* Modal Header */}
               <div className={`p-5 border-b flex items-center justify-between ${
-                isDarkMode ? 'border-gray-700 bg-gradient-to-r from-gray-800 to-gray-800' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'
+                isDarkMode ? 'border-gray-700 bg-linear-to-r from-gray-800 to-gray-800' : 'border-gray-200 bg-linear-to-r from-teal-50 to-cyan-50'
               }`}>
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
+                  <div className="p-2.5 rounded-xl bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
                     <FiUserPlus className="w-5 h-5 text-white" />
                   </div>
-                  <h2 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                  <h2 className="text-lg font-bold bg-linear-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
                     Find Contacts
                   </h2>
                 </div>
@@ -334,12 +334,12 @@ const ChatSidebar = ({ isOpen, onClose }) => {
               </div>
 
               {/* Contacts List */}
-              <div className="overflow-y-auto max-h-[450px] px-4 pb-4">
+              <div className="overflow-y-auto max-h-112.5 px-4 pb-4">
                 {filteredContacts.length === 0 ? (
                   <div className={`flex flex-col items-center justify-center py-12 ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                   }`}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+                    <div className="w-16 h-16 bg-linear-to-br from-teal-100 to-cyan-100 dark:from-gray-700 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
                       <FiSearch className="w-8 h-8 text-teal-600 dark:text-teal-400" />
                     </div>
                     <p className="text-sm font-medium">
@@ -354,11 +354,11 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                       className={`w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 transition-all duration-200 hover:scale-[1.02] shadow-sm hover:shadow-md ${
                         isDarkMode
                           ? 'hover:bg-gray-700/80'
-                          : 'hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50'
+                          : 'hover:bg-linear-to-r hover:from-teal-50 hover:to-cyan-50'
                       }`}
                     >
                       {/* Avatar */}
-                      <div className="relative flex-shrink-0">
+                      <div className="relative shrink-0">
                         {user.profileImage ? (
                           <img
                             src={getImageUrl(user.profileImage)}
@@ -370,7 +370,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+                          <div className="w-12 h-12 rounded-full bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
                             <span className="text-white font-bold text-sm">
                               {user.name?.[0]?.toUpperCase() || '?'}
                             </span>
@@ -451,7 +451,7 @@ const ChatWindow = ({ user, onClose }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 flex items-center justify-between flex-shrink-0 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
+      <div className="p-4 flex items-center justify-between shrink-0 bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
         <div className="flex items-center gap-3">
           {user.profileImage ? (
             <img
@@ -485,13 +485,13 @@ const ChatWindow = ({ user, onClose }) => {
 
       {/* Messages */}
       <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${
-        isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-gray-50 to-white'
+        isDarkMode ? 'bg-linear-to-b from-gray-900 to-gray-800' : 'bg-linear-to-b from-gray-50 to-white'
       }`}>
         {messages.length === 0 ? (
           <div className={`flex flex-col items-center justify-center h-full ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+            <div className="w-16 h-16 bg-linear-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
               <FiMessageCircle className="w-8 h-8 text-teal-600 dark:text-teal-400" />
             </div>
             <p className="text-sm font-medium">Start your conversation</p>
@@ -508,13 +508,13 @@ const ChatWindow = ({ user, onClose }) => {
                 <div
                   className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 ${
                     message.senderId === userId
-                      ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-br-sm'
+                      ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-br-sm'
                       : isDarkMode
                       ? 'bg-gray-700 text-white rounded-bl-sm border border-gray-600'
                       : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200'
                   }`}
                 >
-                  <p className="text-sm break-words leading-relaxed">{message.text || message.message || message.content || 'No message'}</p>
+                  <p className="text-sm wrap-break-word leading-relaxed">{message.text || message.message || message.content || 'No message'}</p>
                   <p className={`text-[10px] mt-1.5 ${
                     message.senderId === userId
                       ? 'text-teal-100'
@@ -533,7 +533,7 @@ const ChatWindow = ({ user, onClose }) => {
       </div>
 
       {/* Input */}
-      <div className={`p-4 border-t flex-shrink-0 ${
+      <div className={`p-4 border-t shrink-0 ${
         isDarkMode ? 'border-gray-700 bg-gray-900/80 backdrop-blur-sm' : 'border-gray-200 bg-white/80 backdrop-blur-sm'
       }`}>
         <div className="flex gap-2">
@@ -552,9 +552,9 @@ const ChatWindow = ({ user, onClose }) => {
           <button
             onClick={handleSend}
             disabled={!messageText.trim()}
-            className={`p-3 rounded-xl transition-all duration-200 flex-shrink-0 shadow-lg ${
+            className={`p-3 rounded-xl transition-all duration-200 shrink-0 shadow-lg ${
               messageText.trim()
-                ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white hover:shadow-xl hover:scale-105'
+                ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white hover:shadow-xl hover:scale-105'
                 : isDarkMode
                   ? 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-50'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'

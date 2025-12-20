@@ -59,7 +59,7 @@ const DoctorCard = ({
         <Card.Content className="p-6">
           <div className="flex items-start space-x-6">
             {/* Doctor Avatar */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {doctor.photoUrl && !imageError ? (
                 <img
                   src={doctor.photoUrl}
@@ -68,7 +68,7 @@ const DoctorCard = ({
                   className="w-24 h-24 rounded-xl object-cover shadow-lg"
                 />
               ) : (
-                <div className={`w-24 h-24 rounded-xl flex items-center justify-center bg-gradient-to-br ${getAvatarColor()} shadow-lg`}>
+                <div className={`w-24 h-24 rounded-xl flex items-center justify-center bg-linear-to-br ${getAvatarColor()} shadow-lg`}>
                   <span className="text-white text-3xl font-bold">
                     {getAvatarPlaceholder()}
                   </span>
@@ -77,7 +77,7 @@ const DoctorCard = ({
             </div>
 
             {/* Doctor Info */}
-            <div className="flex-grow">
+            <div className="grow">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
@@ -225,7 +225,7 @@ const DoctorCard = ({
             </div>
           ) : (
             <div className="relative">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-gradient-to-br ${getAvatarColor()} shadow-xl ring-4 ring-offset-2 ${
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-linear-to-br ${getAvatarColor()} shadow-xl ring-4 ring-offset-2 ${
                 isDarkMode ? 'ring-gray-700' : 'ring-gray-200'
               }`}>
                 <span className="text-white text-3xl font-bold">
@@ -375,8 +375,8 @@ const DoctorCard = ({
               onClick={() => onBookAppointment(doctor)}
               className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                 isDarkMode
-                  ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-500 hover:to-cyan-500'
-                  : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600'
+                  ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-500 hover:to-cyan-500'
+                  : 'bg-linear-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600'
               }`}
             >
               <div className="flex items-center justify-center">

@@ -71,7 +71,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
       showCloseButton={false}
     >
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-pink-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-red-600 to-pink-600 flex items-center justify-center">
           <FaMoneyBillWave className="text-white text-lg" />
         </div>
         <div>
@@ -250,7 +250,7 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1 bg-gradient-to-r from-red-600 to-pink-600"
+                className="flex-1 bg-linear-to-r from-red-600 to-pink-600"
               >
                 <FaSave className="mr-2" />
                 Save Expense

@@ -324,7 +324,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
       }`}>
         {/* Header with gradient */}
         <div className={`sticky top-0 z-10 overflow-hidden ${
-          isDarkMode ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'
+          isDarkMode ? 'bg-linear-to-r from-blue-600 to-cyan-600' : 'bg-linear-to-r from-blue-500 to-cyan-500'
         }`}>
           <div className="px-6 py-5">
             <div className="flex items-center justify-between">
@@ -356,7 +356,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
                 ? 'bg-red-900/20 border-red-500 text-red-200' 
                 : 'bg-red-50 border-red-500 text-red-800'
             }`}>
-              <FaTimes className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <FaTimes className="w-5 h-5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Error</p>
                 <p className="text-sm mt-1">{error}</p>
@@ -368,7 +368,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
           <div className={`p-4 rounded-xl border ${
             isDarkMode 
               ? 'bg-gray-700/50 border-gray-600' 
-              : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'
+              : 'bg-linear-to-br from-blue-50 to-cyan-50 border-blue-200'
           }`}>
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -620,7 +620,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
                   isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'
                 }`}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                       isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
                     }`}>
                       <FaLink className="w-5 h-5 text-white" />
@@ -683,8 +683,8 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               disabled={isSubmitting}
               className={`px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                 isDarkMode
-                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/30'
-                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30'
+                  ? 'bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/30'
+                  : 'bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30'
               }`}
             >
               {isSubmitting ? (

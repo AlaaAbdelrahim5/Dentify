@@ -210,7 +210,7 @@ const AdminsManagement = () => {
     <tr key={admin._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-linear-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
             <FaUserShield className="w-5 h-5 text-white" />
           </div>
           <div className="ml-3">
@@ -314,7 +314,7 @@ const AdminsManagement = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with gradient background */}
-            <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
+            <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 p-6">
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
@@ -608,7 +608,7 @@ const AdminsManagement = () => {
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+              className={`flex items-center justify-between p-6 border-b shrink-0 ${
                 isDarkMode
                   ? "border-gray-700 bg-gray-800"
                   : "border-gray-200 bg-white"
@@ -784,7 +784,7 @@ const AdminsManagement = () => {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600"
+                    className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600"
                   >
                     {loading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

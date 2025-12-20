@@ -18,7 +18,7 @@ const ChatInterface = ({ users = [] }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+    <div className="bg-linear-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
       <div className="flex h-[calc(100vh-14rem)]">
         <ConversationsList 
           onSelectConversation={handleSelectConversation}

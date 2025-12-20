@@ -319,7 +319,7 @@ const RadiologyManagement = () => {
       <tr key={center.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
               <FaXRay className="w-5 h-5 text-white" />
             </div>
             <div className="ml-3">
@@ -388,7 +388,7 @@ const RadiologyManagement = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with gradient background */}
-            <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
+            <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 p-6">
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"

@@ -261,7 +261,7 @@ const DentistReports = () => {
               </div>
             )}
           </div>
-          <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+          <div className={`w-16 h-16 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center`}>
             <Icon className="text-white text-2xl" />
           </div>
         </div>
@@ -304,7 +304,7 @@ const DentistReports = () => {
         
         {/* Quick Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-700' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'} border-2`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-green-900/40 to-emerald-900/40 border-green-700' : 'bg-linear-to-br from-green-50 to-emerald-50 border-green-200'} border-2`}>
             <Card.Content className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -319,14 +319,14 @@ const DentistReports = () => {
                     )}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
                   <FaDollarSign className="text-white text-xl" />
                 </div>
               </div>
             </Card.Content>
           </Card>
 
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-700' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'} border-2`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-blue-900/40 to-cyan-900/40 border-blue-700' : 'bg-linear-to-br from-blue-50 to-cyan-50 border-blue-200'} border-2`}>
             <Card.Content className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -341,14 +341,14 @@ const DentistReports = () => {
                     )}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
                   <FaUsers className="text-white text-xl" />
                 </div>
               </div>
             </Card.Content>
           </Card>
 
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-700' : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'} border-2`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-purple-900/40 to-pink-900/40 border-purple-700' : 'bg-linear-to-br from-purple-50 to-pink-50 border-purple-200'} border-2`}>
             <Card.Content className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -363,14 +363,14 @@ const DentistReports = () => {
                     )}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
                   <FaTooth className="text-white text-xl" />
                 </div>
               </div>
             </Card.Content>
           </Card>
 
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-orange-900/40 to-red-900/40 border-orange-700' : 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'} border-2`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-orange-900/40 to-red-900/40 border-orange-700' : 'bg-linear-to-br from-orange-50 to-red-50 border-orange-200'} border-2`}>
             <Card.Content className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -385,7 +385,7 @@ const DentistReports = () => {
                     )}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-orange-600 to-red-600 flex items-center justify-center shadow-lg">
                   <FaCheckCircle className="text-white text-xl" />
                 </div>
               </div>
@@ -412,7 +412,7 @@ const DentistReports = () => {
                   variant={dateRange === range ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange(range)}
-                  className={dateRange === range ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+                  className={dateRange === range ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
                 >
                   {range.charAt(0).toUpperCase() + range.slice(1)}
                 </Button>
@@ -421,7 +421,7 @@ const DentistReports = () => {
                 variant={dateRange === 'custom' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setDateRange('custom')}
-                className={dateRange === 'custom' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+                className={dateRange === 'custom' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
               >
                 Custom
               </Button>
@@ -537,11 +537,11 @@ const DentistReports = () => {
           {/* Performance Metrics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-teal-50 to-cyan-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
                     <FaPercentage className="text-white" />
                   </div>
                   Key Performance Indicators
@@ -631,11 +631,11 @@ const DentistReports = () => {
             </Card>
 
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-purple-50 to-pink-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                     <FaTooth className="text-white" />
                   </div>
                   Top 5 Treatments
@@ -656,7 +656,7 @@ const DentistReports = () => {
                       <div key={treatment} className={`p-3 rounded-lg transition-all hover:scale-102 ${isDarkMode ? 'bg-gray-800/50 hover:bg-gray-700/50' : 'bg-gray-50 hover:bg-gray-100'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors[index]} flex items-center justify-center text-white font-bold shadow-lg`}>
+                            <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${colors[index]} flex items-center justify-center text-white font-bold shadow-lg`}>
                               {index + 1}
                             </div>
                             <div>
@@ -679,7 +679,7 @@ const DentistReports = () => {
                         </div>
                         <div className={`w-full h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                           <div 
-                            className={`h-full rounded-full bg-gradient-to-r ${colors[index]} transition-all duration-500`}
+                            className={`h-full rounded-full bg-linear-to-r ${colors[index]} transition-all duration-500`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -739,11 +739,11 @@ const DentistReports = () => {
           </div>
 
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50'}`}>
+            <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-green-50 to-emerald-50'}`}>
               <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-linear-to-br from-green-600 to-emerald-600 flex items-center justify-center">
                   <FaChartBar className="text-white" />
                 </div>
                 Revenue by Treatment Type
@@ -763,7 +763,7 @@ const DentistReports = () => {
                       <div key={treatment} className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/30' : 'bg-gray-50'}`}>
                         <div className="flex justify-between items-center mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-2 h-8 rounded-full bg-gradient-to-b from-green-600 to-emerald-600"></div>
+                            <div className="w-2 h-8 rounded-full bg-linear-to-b from-green-600 to-emerald-600"></div>
                             <span className={`text-sm font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                               {treatment}
                             </span>
@@ -832,11 +832,11 @@ const DentistReports = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-teal-50 to-cyan-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
                     <FaTooth className="text-white" />
                   </div>
                   Most Treated Teeth
@@ -857,7 +857,7 @@ const DentistReports = () => {
                         <div key={tooth} className={`p-3 rounded-lg transition-all hover:scale-102 ${isDarkMode ? 'bg-gray-800/30 hover:bg-gray-700/30' : 'bg-gray-50 hover:bg-gray-100'}`}>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center text-white font-bold text-xs shadow-lg`}>
+                              <div className={`w-8 h-8 rounded-lg bg-linear-to-br from-teal-600 to-cyan-600 flex items-center justify-center text-white font-bold text-xs shadow-lg`}>
                                 {tooth}
                               </div>
                               <span className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -884,11 +884,11 @@ const DentistReports = () => {
             </Card>
 
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-blue-50 to-purple-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center">
                     <FaChartPie className="text-white" />
                   </div>
                   Treatment Status Distribution
@@ -899,9 +899,9 @@ const DentistReports = () => {
               </Card.Header>
               <Card.Content className="p-6">
                 <div className="space-y-4">
-                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-green-900/20 border border-green-800' : 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'}`}>
+                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-green-900/20 border border-green-800' : 'bg-linear-to-r from-green-50 to-emerald-50 border border-green-200'}`}>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
                         <FaCheckCircle className="text-white text-2xl" />
                       </div>
                       <div>
@@ -918,9 +918,9 @@ const DentistReports = () => {
                     </span>
                   </div>
 
-                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200'}`}>
+                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-linear-to-r from-blue-50 to-cyan-50 border border-blue-200'}`}>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
                         <FaClock className="text-white text-2xl" />
                       </div>
                       <div>
@@ -937,9 +937,9 @@ const DentistReports = () => {
                     </span>
                   </div>
 
-                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-red-900/20 border border-red-800' : 'bg-gradient-to-r from-red-50 to-pink-50 border border-red-200'}`}>
+                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-red-900/20 border border-red-800' : 'bg-linear-to-r from-red-50 to-pink-50 border border-red-200'}`}>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-pink-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-red-600 to-pink-600 flex items-center justify-center shadow-lg">
                         <FaTimesCircle className="text-white text-2xl" />
                       </div>
                       <div>
@@ -1005,11 +1005,11 @@ const DentistReports = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-blue-50 to-indigo-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
                     <FaUsers className="text-white" />
                   </div>
                   Patient Engagement
@@ -1019,10 +1019,10 @@ const DentistReports = () => {
                 </p>
               </Card.Header>
               <Card.Content className="space-y-5 p-6">
-                <div className={`p-5 rounded-xl ${isDarkMode ? 'bg-purple-900/20 border border-purple-800' : 'bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200'}`}>
+                <div className={`p-5 rounded-xl ${isDarkMode ? 'bg-purple-900/20 border border-purple-800' : 'bg-linear-to-r from-purple-50 to-pink-50 border border-purple-200'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
                         <FaTooth className="text-white text-xl" />
                       </div>
                       <div>
@@ -1040,10 +1040,10 @@ const DentistReports = () => {
                   </div>
                 </div>
 
-                <div className={`p-5 rounded-xl ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200'}`}>
+                <div className={`p-5 rounded-xl ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-linear-to-r from-blue-50 to-cyan-50 border border-blue-200'}`}>
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
                         <FaUserCheck className="text-white text-xl" />
                       </div>
                       <div>
@@ -1065,11 +1065,11 @@ const DentistReports = () => {
             </Card>
 
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gradient-to-r from-orange-50 to-amber-50'}`}>
+              <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-linear-to-r from-orange-50 to-amber-50'}`}>
                 <h3 className={`text-lg font-semibold flex items-center gap-2 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-orange-600 to-amber-600 flex items-center justify-center">
                     <FaCalendarCheck className="text-white" />
                   </div>
                   Appointment Insights
@@ -1079,9 +1079,9 @@ const DentistReports = () => {
                 </p>
               </Card.Header>
               <Card.Content className="space-y-4 p-6">
-                <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-red-900/20 border border-red-800' : 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200'}`}>
+                <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-red-900/20 border border-red-800' : 'bg-linear-to-r from-red-50 to-orange-50 border border-red-200'}`}>
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-600 to-orange-600 flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-xl bg-linear-to-br from-red-600 to-orange-600 flex items-center justify-center shadow-lg">
                       <FaTimesCircle className="text-white text-2xl" />
                     </div>
                     <div>
@@ -1099,9 +1099,9 @@ const DentistReports = () => {
                 </div>
 
                 {appointmentMetrics.busiestDay && (
-                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200'}`}>
+                  <div className={`flex items-center justify-between p-5 rounded-xl transition-all hover:scale-102 ${isDarkMode ? 'bg-blue-900/20 border border-blue-800' : 'bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200'}`}>
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                      <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
                         <FaCalendarAlt className="text-white text-2xl" />
                       </div>
                       <div>

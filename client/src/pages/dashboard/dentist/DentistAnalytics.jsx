@@ -256,7 +256,7 @@ const DentistAnalytics = () => {
               <div key={index} className="flex-1 flex flex-col items-center gap-2">
                 <div className="w-full flex flex-col items-center justify-end h-full">
                   <div 
-                    className={`w-full bg-gradient-to-t ${color} rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer relative group`}
+                    className={`w-full bg-linear-to-t ${color} rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer relative group`}
                     style={{ height: `${height}%`, minHeight: item.value > 0 ? '8px' : '0' }}
                   >
                     <div className={`absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
@@ -408,7 +408,7 @@ const DentistAnalytics = () => {
                     variant={dateRange === range ? 'primary' : 'outline'}
                     size="sm"
                     onClick={() => setDateRange(range)}
-                    className={dateRange === range ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+                    className={dateRange === range ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
                   >
                     {range === 'month' ? 'Last 30 Days' : range === 'quarter' ? 'Last 3 Months' : 'Last 12 Months'}
                   </Button>
@@ -482,7 +482,7 @@ const DentistAnalytics = () => {
                       {dateRange === 'month' ? 'Last 30 days' : dateRange === 'quarter' ? 'Last 3 months' : 'Last 12 months'}
                     </p>
                   </div>
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${view.color} flex items-center justify-center shadow-lg transform transition-transform ${
+                  <div className={`w-14 h-14 rounded-xl bg-linear-to-br ${view.color} flex items-center justify-center shadow-lg transform transition-transform ${
                     chartView === view.id ? 'scale-110' : ''
                   }`}>
                     <view.icon className="text-white text-2xl" />
@@ -603,7 +603,7 @@ const DentistAnalytics = () => {
                 <div key={type} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${colors[index]} flex items-center justify-center text-white font-bold text-xs`}>
+                      <div className={`w-8 h-8 rounded-lg bg-linear-to-br ${colors[index]} flex items-center justify-center text-white font-bold text-xs`}>
                         {index + 1}
                       </div>
                       <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -621,7 +621,7 @@ const DentistAnalytics = () => {
                   </div>
                   <div className={`w-full h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div 
-                      className={`h-full rounded-full bg-gradient-to-r ${colors[index]} transition-all duration-500`}
+                      className={`h-full rounded-full bg-linear-to-r ${colors[index]} transition-all duration-500`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -639,10 +639,10 @@ const DentistAnalytics = () => {
           Average Daily Performance
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-800' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'} border-2 hover:shadow-lg transition-shadow`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-green-900/20 to-emerald-900/20 border-green-800' : 'bg-linear-to-br from-green-50 to-emerald-50 border-green-200'} border-2 hover:shadow-lg transition-shadow`}>
             <Card.Content className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
                   <FaCheckCircle className="text-white text-2xl" />
                 </div>
                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>
@@ -665,10 +665,10 @@ const DentistAnalytics = () => {
             </Card.Content>
           </Card>
 
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-800' : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'} border-2 hover:shadow-lg transition-shadow`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-purple-900/20 to-pink-900/20 border-purple-800' : 'bg-linear-to-br from-purple-50 to-pink-50 border-purple-200'} border-2 hover:shadow-lg transition-shadow`}>
             <Card.Content className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
                   <FaTooth className="text-white text-2xl" />
                 </div>
                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-purple-900/50 text-purple-400' : 'bg-purple-100 text-purple-700'}`}>
@@ -691,10 +691,10 @@ const DentistAnalytics = () => {
             </Card.Content>
           </Card>
 
-          <Card className={`${isDarkMode ? 'bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-blue-800' : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'} border-2 hover:shadow-lg transition-shadow`}>
+          <Card className={`${isDarkMode ? 'bg-linear-to-br from-blue-900/20 to-cyan-900/20 border-blue-800' : 'bg-linear-to-br from-blue-50 to-cyan-50 border-blue-200'} border-2 hover:shadow-lg transition-shadow`}>
             <Card.Content className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg">
                   <FaCalendarCheck className="text-white text-2xl" />
                 </div>
                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>

@@ -53,7 +53,7 @@ const BaseModal = ({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto">
+    <div className="fixed inset-0 z-60 overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
@@ -66,8 +66,8 @@ const BaseModal = ({
         <div
           className={`relative rounded-2xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all ${
             isDarkMode
-              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700'
-              : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200'
+              ? 'bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700'
+              : 'bg-linear-to-br from-white to-gray-50 border border-gray-200'
           } ${className}`}
           onClick={(e) => e.stopPropagation()}
         >

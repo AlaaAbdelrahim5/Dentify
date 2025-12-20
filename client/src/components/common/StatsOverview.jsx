@@ -38,7 +38,7 @@ const StatsOverview = ({ stats }) => {
                   {stat.value}
                 </p>
               </div>
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${stat.gradient} flex items-center justify-center`}>
+              <div className={`w-12 h-12 rounded-full bg-linear-to-r ${stat.gradient} flex items-center justify-center`}>
                 <Icon className="w-6 h-6 text-white" />
               </div>
             </div>

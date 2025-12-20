@@ -52,12 +52,12 @@ const ChatWindow = ({ conversation, otherUser }) => {
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="flex-1 flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center px-6">
-          <div className="w-32 h-32 bg-gradient-to-br from-teal-100 via-cyan-100 to-blue-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-xl transform hover:scale-105 transition-transform duration-300">
+          <div className="w-32 h-32 bg-linear-to-br from-teal-100 via-cyan-100 to-blue-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-xl transform hover:scale-105 transition-transform duration-300">
             <FiMessageSquare className="w-16 h-16 text-teal-600 dark:text-teal-400" />
           </div>
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent mb-3">
+          <h3 className="text-2xl font-bold bg-linear-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent mb-3">
             Select a conversation
           </h3>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
@@ -71,10 +71,10 @@ const ChatWindow = ({ conversation, otherUser }) => {
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
       {/* Chat Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+            <div className="w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
               {otherUser?.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"></div>
@@ -94,7 +94,7 @@ const ChatWindow = ({ conversation, otherUser }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
         {isLoadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -105,7 +105,7 @@ const ChatWindow = ({ conversation, otherUser }) => {
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 bg-linear-to-br from-teal-100 to-cyan-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
                 <FiMessageSquare className="w-10 h-10 text-teal-600 dark:text-teal-400" />
               </div>
               <p className="text-gray-700 dark:text-gray-300 text-lg font-semibold">Start your conversation</p>
@@ -124,11 +124,11 @@ const ChatWindow = ({ conversation, otherUser }) => {
                   <div
                     className={`max-w-xs lg:max-w-md xl:max-w-lg ${
                       isSender
-                        ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform duration-200'
+                        ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform duration-200'
                         : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200'
                     } rounded-2xl px-4 py-3`}
                   >
-                    <p className="text-sm break-words leading-relaxed">{message.message}</p>
+                    <p className="text-sm wrap-break-word leading-relaxed">{message.message}</p>
                     <p
                       className={`text-xs mt-1.5 ${
                         isSender ? 'text-teal-100' : 'text-gray-500 dark:text-gray-400'
@@ -146,7 +146,7 @@ const ChatWindow = ({ conversation, otherUser }) => {
       </div>
 
       {/* Message Input */}
-      <div className="px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800">
+      <div className="px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-linear-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800">
         <form onSubmit={handleSendMessage} className="flex items-end gap-3">
           <button
             type="button"
@@ -173,7 +173,7 @@ const ChatWindow = ({ conversation, otherUser }) => {
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="p-3 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-xl hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:shadow-none disabled:scale-100"
+            className="p-3 bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-xl hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 disabled:shadow-none disabled:scale-100"
             title="Send message"
           >
             <FiSend className="w-5 h-5" />

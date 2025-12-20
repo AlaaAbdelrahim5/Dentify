@@ -553,7 +553,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 })}
                 className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
               />
-              <span className={`font-medium capitalize min-w-[100px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <span className={`font-medium capitalize min-w-25 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {day}
               </span>
             </div>

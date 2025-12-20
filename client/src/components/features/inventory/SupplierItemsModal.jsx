@@ -47,7 +47,7 @@ const SupplierItemsModal = ({ isOpen, onClose, supplier, items = [] }) => {
         <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-linear-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
                 <FaBoxes className="text-white text-xl" />
               </div>
               <div>

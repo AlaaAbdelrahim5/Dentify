@@ -572,7 +572,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
                                 <FaUser className="text-white" />
                               </div>
                               <div>
@@ -694,7 +694,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                                   : isBooked
                                     ? 'bg-red-500/20 text-red-600 dark:text-red-400 border-2 border-red-500 cursor-not-allowed'
                                     : formData.time === time
-                                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                                      ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
                                       : isDarkMode
                                         ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-600'
                                         : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -714,7 +714,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                     {formData.date && availableSlots.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-4 text-xs">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-gradient-to-r from-teal-600 to-cyan-600 rounded"></div>
+                          <div className="w-4 h-4 bg-linear-to-r from-teal-600 to-cyan-600 rounded"></div>
                           <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Selected</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -893,7 +893,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="bg-gradient-to-r from-teal-600 to-cyan-600"
+                    className="bg-linear-to-r from-teal-600 to-cyan-600"
                     disabled={loading}
                   >
                     Next
@@ -902,7 +902,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                 {((preselectedDoctor && step === 2) || (!preselectedDoctor && step === 4)) && (
                   <Button
                     type="submit"
-                    className="bg-gradient-to-r from-teal-600 to-cyan-600"
+                    className="bg-linear-to-r from-teal-600 to-cyan-600"
                     disabled={loading}
                   >
                     {loading ? 'Booking...' : 'Confirm Booking'}

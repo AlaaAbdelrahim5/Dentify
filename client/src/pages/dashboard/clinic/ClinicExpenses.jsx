@@ -331,7 +331,7 @@ const ClinicExpenses = () => {
                   </select>
                   <Button 
                     variant="primary"
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600"
+                    className="bg-linear-to-r from-blue-600 to-cyan-600"
                     onClick={() => setIsAddInvoiceModalOpen(true)}
                   >
                     <FaPlus className="mr-2" />
@@ -460,7 +460,7 @@ const ClinicExpenses = () => {
                   </select>
                   <Button 
                     variant="primary"
-                    className="bg-gradient-to-r from-red-600 to-pink-600"
+                    className="bg-linear-to-r from-red-600 to-pink-600"
                     onClick={() => setIsAddExpenseModalOpen(true)}
                   >
                     <FaPlus className="mr-2" />

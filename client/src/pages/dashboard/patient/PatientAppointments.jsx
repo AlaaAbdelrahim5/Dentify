@@ -318,7 +318,7 @@ const PatientAppointments = () => {
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
               <FaUser className="text-white text-sm" />
             </div>
             <div>
@@ -401,7 +401,7 @@ const PatientAppointments = () => {
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
                     <FaUser className="text-white" />
                   </div>
                   <div>
@@ -509,14 +509,14 @@ const PatientAppointments = () => {
           <Button
             variant={activeView === 'upcoming' ? 'primary' : 'outline'}
             onClick={() => setActiveView('upcoming')}
-            className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'upcoming' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
           >
             Upcoming ({upcomingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'past' ? 'primary' : 'outline'}
             onClick={() => setActiveView('past')}
-            className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'past' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
           >
             Past ({pastAppointments.length})
           </Button>
@@ -540,7 +540,7 @@ const PatientAppointments = () => {
             <p className="text-lg font-semibold mb-2">Error Loading Appointments</p>
             <p>{error}</p>
           </div>
-          <Button onClick={() => fetchAppointments()} className="bg-gradient-to-r from-teal-600 to-cyan-600">
+          <Button onClick={() => fetchAppointments()} className="bg-linear-to-r from-teal-600 to-cyan-600">
             Try Again
           </Button>
         </div>

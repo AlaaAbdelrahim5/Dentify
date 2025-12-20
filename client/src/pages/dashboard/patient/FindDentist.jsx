@@ -219,7 +219,7 @@ const FindDoctor = () => {
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
             <FaUser className="text-white text-sm" />
           </div>
           <div>
@@ -386,7 +386,7 @@ const FindDoctor = () => {
 
       {/* Dentist Details Modal */}
       {showDetailsModal && selectedDoctor && (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+        <div className="fixed inset-0 z-9999 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             {/* Backdrop */}
             <div 

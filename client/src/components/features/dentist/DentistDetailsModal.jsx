@@ -109,7 +109,7 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
               }`}>
                 Email
               </p>
-              <p className={`font-semibold break-words ${
+              <p className={`font-semibold wrap-break-word ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 {dentistData.user?.email || dentistData.userId?.email || 'N/A'}
@@ -501,7 +501,7 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
       noPadding={true}
     >
       {/* Header with gradient */}
-      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-6">
+      <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 px-6 py-6">
         {/* Close button */}
         <button
           onClick={onClose}

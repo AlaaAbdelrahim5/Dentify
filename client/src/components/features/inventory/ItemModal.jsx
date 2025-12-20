@@ -97,7 +97,7 @@ const ItemModal = ({ isOpen, onClose, onSubmit, item = null, suppliers = [] }) =
       showCloseButton={false}
     >
       <div className="flex items-center gap-3 mb-6">
-        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${gradientColor} flex items-center justify-center`}>
+        <div className={`w-10 h-10 rounded-lg bg-linear-to-br ${gradientColor} flex items-center justify-center`}>
           <Icon className="text-white text-lg" />
         </div>
         <div>
@@ -292,7 +292,7 @@ const ItemModal = ({ isOpen, onClose, onSubmit, item = null, suppliers = [] }) =
               <Button
                 type="submit"
                 variant="primary"
-                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
+                className="bg-linear-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
               >
                 <FaSave className="mr-2" />
                 {isEditMode ? 'Update Item' : 'Add Item'}

@@ -55,7 +55,7 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
         <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-orange-600 to-red-600 flex items-center justify-center">
                 <FaShoppingCart className="text-white text-lg" />
               </div>
               <div>
@@ -218,7 +218,7 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1 bg-gradient-to-r from-orange-600 to-red-600"
+                className="flex-1 bg-linear-to-r from-orange-600 to-red-600"
               >
                 <FaSave className="mr-2" />
                 Create Reorder

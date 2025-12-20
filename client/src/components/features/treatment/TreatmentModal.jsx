@@ -380,7 +380,7 @@ const TreatmentModal = ({
   const content = (
     <form id="treatment-form" onSubmit={handleSubmit} className="w-full flex flex-col">
       {/* Header */}
-      <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${
+      <div className={`flex items-center justify-between p-6 border-b shrink-0 ${
         isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
       }`}>
         <div className="flex items-center gap-3">
