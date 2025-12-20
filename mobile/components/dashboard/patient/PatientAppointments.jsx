@@ -1,87 +1,41 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, RefreshControl, TextInput, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppointmentCard, FilterTabs, StatCard } from '../shared';
 import { LoadingState, EmptyState } from '../shared';
 import BookAppointmentModal from '../shared/BookAppointmentModal';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { appointmentsAPI } from '../../../services/api';
-import { showErrorAlert } from '../../../utils/errorUtils';
-import { createCancelHandler, createViewDetailsHandler, filterAppointments } from '../../../utils/appointmentHandlers';
+import { useAppointments } from '../../../hooks';
+import { createCancelHandler, createViewDetailsHandler } from '../../../utils/appointmentHandlers';
 import { Select } from '../../common';
 import { UI_COLORS, COLORS } from '../../../utils/colors';
 
 const PatientAppointments = () => {
   const { isDarkMode } = useTheme();
-  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming, past, all
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
   const [isBookModalVisible, setIsBookModalVisible] = useState(false);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      const response = await appointmentsAPI.getMyAppointments();
-      setAppointments(response.appointments || []);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      showErrorAlert(error, 'Failed to load appointments');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchAppointments();
-  };
+  const {
+    filteredAppointments,
+    loading,
+    refreshing,
+    onRefresh,
+    refetch,
+    searchTerm,
+    setSearchTerm,
+    selectedStatus,
+    setSelectedStatus,
+    activeView: activeTab,
+    setActiveView: setActiveTab,
+    stats,
+    filterTabs
+  } = useAppointments('patient');
 
   const handleCancelAppointment = createCancelHandler({
     role: 'patient',
-    onSuccess: fetchAppointments
+    onSuccess: refetch
   });
 
   const handleViewDetails = createViewDetailsHandler('patient');
-
-  // Separate appointments into upcoming and past
-  const upcomingAppointments = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter(apt => new Date(apt.startTime) >= now && apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED')
-      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-  }, [appointments]);
-
-  const pastAppointments = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter(apt => new Date(apt.startTime) < now || apt.status === 'COMPLETED' || apt.status === 'CANCELLED')
-      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-  }, [appointments]);
-
-  const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
-
-  // Filtered appointments based on search and status
-  const filteredAppointments = useMemo(() => {
-    return filterAppointments(displayAppointments, searchTerm, selectedStatus, 'patient');
-  }, [displayAppointments, searchTerm, selectedStatus]);
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    return [
-      { label: 'Upcoming', value: upcomingAppointments.length, color: 'bg-teal-500' },
-      { label: 'Confirmed', value: upcomingAppointments.filter(a => a.status === 'CONFIRMED').length, color: 'bg-green-500' },
-      { label: 'Pending', value: upcomingAppointments.filter(a => a.status === 'PENDING').length, color: 'bg-yellow-500' },
-      { label: 'Total Visits', value: pastAppointments.filter(a => a.status === 'COMPLETED').length, color: 'bg-blue-500' }
-    ];
-  }, [upcomingAppointments, pastAppointments]);
 
   if (loading) {
     return (
@@ -90,11 +44,6 @@ const PatientAppointments = () => {
       </View>
     );
   }
-
-  const filterTabs = [
-    { id: 'upcoming', label: `Upcoming (${upcomingAppointments.length})` },
-    { id: 'past', label: `Past (${pastAppointments.length})` }
-  ];
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -166,7 +115,7 @@ const PatientAppointments = () => {
       <BookAppointmentModal
         visible={isBookModalVisible}
         onClose={() => setIsBookModalVisible(false)}
-        onSuccess={fetchAppointments}
+        onSuccess={refetch}
       />
     </View>
   );

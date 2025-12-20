@@ -8,23 +8,42 @@
  * @returns {Array} Today's appointments
  */
 export const filterTodayAppointments = (appointments) => {
-  const today = new Date().toDateString();
-  return appointments.filter(apt => 
-    new Date(apt.appointmentDateTime).toDateString() === today
-  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  return appointments.filter(apt => {
+    const aptDate = new Date(apt.startTime || apt.appointmentDate || apt.appointmentDateTime);
+    aptDate.setHours(0, 0, 0, 0);
+    return aptDate.getTime() === today.getTime();
+  });
 };
 
 /**
- * Filter upcoming appointments (future dates, not cancelled)
+ * Filter upcoming appointments (future confirmed appointments)
  * @param {Array} appointments - Array of appointment objects
+ * @param {string} role - User role ('dentist', 'secretary', 'patient')
  * @returns {Array} Upcoming appointments
  */
-export const filterUpcomingAppointments = (appointments) => {
-  const today = new Date();
-  return appointments.filter(apt => 
-    new Date(apt.appointmentDateTime) > today &&
-    apt.status !== 'CANCELLED'
-  );
+export const filterUpcomingAppointments = (appointments, role = 'patient') => {
+  const now = new Date();
+  return appointments.filter(apt => {
+    const aptDate = new Date(apt.startTime || apt.appointmentDate || apt.appointmentDateTime);
+    const isFuture = aptDate >= now;
+    
+    // For dentist and secretary, show only CONFIRMED appointments
+    if (role === 'dentist' || role === 'secretary') {
+      return isFuture && apt.status === 'CONFIRMED';
+    }
+    
+    // For patient, show all future appointments except cancelled/completed
+    return isFuture && 
+           apt.status !== 'CANCELLED' && 
+           apt.status !== 'COMPLETED';
+  }).sort((a, b) => {
+    const dateA = new Date(a.startTime || a.appointmentDate || a.appointmentDateTime);
+    const dateB = new Date(b.startTime || b.appointmentDate || b.appointmentDateTime);
+    return dateA - dateB;
+  });
 };
 
 /**

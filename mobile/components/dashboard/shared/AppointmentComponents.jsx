@@ -23,10 +23,13 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
     return appointment.treatmentType || appointment.treatment?.treatmentType || 'General Checkup';
   };
 
-  const canConfirm = role === 'dentist' && appointment.status === 'PENDING' && onConfirm;
-  const canCancel = (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && onCancel;
-  const canComplete = role === 'dentist' && (appointment.status === 'CONFIRMED' || appointment.status === 'PENDING') && onComplete;
-  const isPastAppointment = new Date(appointment.endTime) < new Date();
+  // Determine if appointment is in the past - use startTime for comparison
+  const appointmentTime = appointment.startTime || appointment.appointmentDateTime || appointment.appointmentDate;
+  const isPastAppointment = appointmentTime ? new Date(appointmentTime) < new Date() : false;
+  
+  // Match web client button logic
+  const isPending = appointment.status === 'PENDING';
+  const isConfirmed = appointment.status === 'CONFIRMED';
 
   return (
     <View
@@ -100,53 +103,88 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
       </View>
 
       {/* Action Buttons */}
-      {(canConfirm || canCancel || canComplete || onViewDetails) && (
-        <View className="flex-row mt-3" style={{ gap: 8 }}>
-          {onViewDetails && (
-            <TouchableOpacity
-              onPress={() => onViewDetails(appointment)}
-              className={`flex-1 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
-            >
-              <Text className={`text-center text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                View
-              </Text>
-            </TouchableOpacity>
-          )}
-          {canConfirm && !isPastAppointment && (
-            <TouchableOpacity
-              onPress={() => onConfirm(appointment)}
-              className="flex-1 py-2 rounded-lg"
-              style={{ backgroundColor: COLORS.green[600] }}
-            >
-              <Text className="text-center text-sm font-medium text-white">
-                Confirm
-              </Text>
-            </TouchableOpacity>
-          )}
-          {canComplete && !isPastAppointment && (
-            <TouchableOpacity
-              onPress={() => onComplete(appointment)}
-              className="flex-1 py-2 rounded-lg"
-              style={{ backgroundColor: COLORS.blue[600] }}
-            >
-              <Text className="text-center text-sm font-medium text-white">
-                Complete
-              </Text>
-            </TouchableOpacity>
-          )}
-          {canCancel && !isPastAppointment && (
-            <TouchableOpacity
-              onPress={() => onCancel(appointment)}
-              className="flex-1 py-2 rounded-lg"
-              style={{ backgroundColor: COLORS.red[600] }}
-            >
-              <Text className="text-center text-sm font-medium text-white">
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+      <View className="flex-row mt-3" style={{ gap: 8 }}>
+        {/* View button - always show if available */}
+        {onViewDetails && (
+          <TouchableOpacity
+            onPress={() => onViewDetails(appointment)}
+            className={`flex-1 py-2 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
+          >
+            <Text className={`text-center text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              View
+            </Text>
+          </TouchableOpacity>
+        )}
+        
+        {/* PENDING status: Show Confirm + Cancel for dentist */}
+        {isPending && role === 'dentist' && (
+          <>
+            {onConfirm && (
+              <TouchableOpacity
+                onPress={() => onConfirm(appointment)}
+                className="flex-1 py-2 rounded-lg"
+                style={{ backgroundColor: COLORS.green[600] }}
+              >
+                <Text className="text-center text-sm font-medium text-white">
+                  Confirm
+                </Text>
+              </TouchableOpacity>
+            )}
+            {onCancel && (
+              <TouchableOpacity
+                onPress={() => onCancel(appointment)}
+                className="flex-1 py-2 rounded-lg"
+                style={{ backgroundColor: COLORS.red[600] }}
+              >
+                <Text className="text-center text-sm font-medium text-white">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+        
+        {/* CONFIRMED status: Show Complete + Cancel for dentist */}
+        {isConfirmed && role === 'dentist' && (
+          <>
+            {onComplete && (
+              <TouchableOpacity
+                onPress={() => onComplete(appointment)}
+                className="flex-1 py-2 rounded-lg"
+                style={{ backgroundColor: COLORS.blue[600] }}
+              >
+                <Text className="text-center text-sm font-medium text-white">
+                  Complete
+                </Text>
+              </TouchableOpacity>
+            )}
+            {onCancel && (
+              <TouchableOpacity
+                onPress={() => onCancel(appointment)}
+                className="flex-1 py-2 rounded-lg"
+                style={{ backgroundColor: COLORS.red[600] }}
+              >
+                <Text className="text-center text-sm font-medium text-white">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+        
+        {/* For patient or secretary roles, show only cancel if available */}
+        {role !== 'dentist' && (isPending || isConfirmed) && onCancel && (
+          <TouchableOpacity
+            onPress={() => onCancel(appointment)}
+            className="flex-1 py-2 rounded-lg"
+            style={{ backgroundColor: COLORS.red[600] }}
+          >
+            <Text className="text-center text-sm font-medium text-white">
+              Cancel
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };

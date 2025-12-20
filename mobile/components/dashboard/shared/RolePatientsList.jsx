@@ -1,7 +1,7 @@
 import React from 'react';
 import { patientsAPI, treatmentsAPI } from '../../../services/api';
 import { filterPatients } from '../../../utils/searchUtils';
-import { SharedPatientsList } from './SharedPatientsList';
+import SharedPatientsList from './SharedPatientsList';
 
 /**
  * Unified Patients List component that handles all roles

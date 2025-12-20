@@ -83,7 +83,7 @@ const SecretaryAppointments = () => {
   const handleViewDetails = createViewDetailsHandler('secretary');
 
   const todayAppointments = useMemo(() => filterTodayAppointments(appointments), [appointments]);
-  const upcomingAppointments = useMemo(() => filterUpcomingAppointments(appointments), [appointments]);
+  const upcomingAppointments = useMemo(() => filterUpcomingAppointments(appointments, 'secretary'), [appointments]);
   
   const pendingAppointments = useMemo(() => {
     return appointments.filter(apt => apt.status === 'PENDING')

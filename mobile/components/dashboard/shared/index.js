@@ -59,3 +59,4 @@ export { default as RolePatientsList } from './RolePatientsList';
 export { default as PasswordChangeSection } from './PasswordChangeSection';
 export { default as SharedPatientsList } from './SharedPatientsList';
 export { default as SharedDentistsList } from './SharedDentistsList';
+export { default as SharedSettings } from './SharedSettings';

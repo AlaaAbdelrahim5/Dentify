@@ -5,6 +5,7 @@ import { UI_COLORS } from '../../../utils/colors';
 import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterByStatus } from '../../../utils/filterUtils';
 import { TreatmentCard, FilterTabs, LoadingState, EmptyState } from './index';
+import NewAppointmentModal from './NewAppointmentModal';
 
 /**
  * SharedTreatments - Unified treatments component for all roles
@@ -17,7 +18,9 @@ const SharedTreatments = ({ fetchTreatmentsAPI, role, showCount = true }) => {
   const [treatments, setTreatments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('IN_PROGRESS');
+  const [isAppointmentModalVisible, setIsAppointmentModalVisible] = useState(false);
+  const [selectedTreatment, setSelectedTreatment] = useState(null);
 
   useEffect(() => {
     fetchTreatments();
@@ -39,6 +42,17 @@ const SharedTreatments = ({ fetchTreatmentsAPI, role, showCount = true }) => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchTreatments();
+  };
+
+  const handleBookAppointment = (treatment) => {
+    setSelectedTreatment(treatment);
+    setIsAppointmentModalVisible(true);
+  };
+
+  const handleAppointmentSuccess = () => {
+    setIsAppointmentModalVisible(false);
+    setSelectedTreatment(null);
+    // Optionally refresh treatments to update counts
   };
 
   const filteredTreatments = useMemo(() => 
@@ -93,10 +107,23 @@ const SharedTreatments = ({ fetchTreatmentsAPI, role, showCount = true }) => {
               treatment={treatment}
               isDarkMode={isDarkMode}
               role={role}
+              onBookAppointment={handleBookAppointment}
             />
           ))
         )}
       </ScrollView>
+
+      {/* New Appointment Modal */}
+      <NewAppointmentModal
+        visible={isAppointmentModalVisible}
+        onClose={() => {
+          setIsAppointmentModalVisible(false);
+          setSelectedTreatment(null);
+        }}
+        onSuccess={handleAppointmentSuccess}
+        userRole={role}
+        preselectedTreatment={selectedTreatment}
+      />
     </View>
   );
 };

@@ -18,15 +18,16 @@ const SessionCostModal = ({ visible, onClose, onSave, appointmentInfo }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    // Validation
-    if (!sessionCost || parseFloat(sessionCost) <= 0) {
+    // Validation - allow 0 as valid cost
+    const cost = parseFloat(sessionCost);
+    if (sessionCost === '' || isNaN(cost) || cost < 0) {
       setError('Please enter a valid session cost');
       return;
     }
 
     try {
       setLoading(true);
-      await onSave(parseFloat(sessionCost));
+      await onSave(cost);
       
       Alert.alert('Success', 'Appointment completed successfully!', [
         { text: 'OK', onPress: handleClose }

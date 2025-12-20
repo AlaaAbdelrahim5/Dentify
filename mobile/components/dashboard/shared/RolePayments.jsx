@@ -1,6 +1,6 @@
 import React from 'react';
 import { paymentsAPI } from '../../../services/api';
-import { SharedPayments } from './SharedPayments';
+import SharedPayments from './SharedPayments';
 
 /**
  * Unified Payments component that handles all roles

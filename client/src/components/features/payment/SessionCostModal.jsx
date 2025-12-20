@@ -12,15 +12,16 @@ const SessionCostModal = ({ isOpen, onClose, onSave, appointmentInfo }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Validation
-    if (!sessionCost || parseFloat(sessionCost) <= 0) {
+    // Validation - allow 0 as valid cost
+    const cost = parseFloat(sessionCost)
+    if (sessionCost === '' || isNaN(cost) || cost < 0) {
       setError('Please enter a valid session cost')
       return
     }
 
     try {
       setLoading(true)
-      await onSave(parseFloat(sessionCost))
+      await onSave(cost)
       handleClose()
     } catch (err) {
       console.error('Error saving session cost:', err)

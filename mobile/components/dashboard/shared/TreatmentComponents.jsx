@@ -1,11 +1,17 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { getStatusColors } from '../../../utils/colors';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { getStatusColors, COLORS } from '../../../utils/colors';
 
 // Universal treatment card component that adapts to role
-export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient' }) => {
+export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookAppointment }) => {
   const showDentistInfo = role === 'patient' || role === 'secretary';
   const showPatientInfo = role === 'dentist' || role === 'secretary';
+  
+  // Only show book appointment button if treatment is not completed or cancelled
+  const canBookAppointment = onBookAppointment && 
+    treatment.status !== 'COMPLETED' && 
+    treatment.status !== 'CANCELLED';
 
   return (
     <View className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
@@ -76,6 +82,22 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient' }) => {
           </View>
         )}
       </View>
+
+      {/* Book Appointment Button */}
+      {canBookAppointment && (
+        <TouchableOpacity
+          onPress={() => onBookAppointment(treatment)}
+          className={`mt-3 py-2 px-4 rounded-lg flex-row items-center justify-center ${
+            isDarkMode ? 'bg-teal-600' : 'bg-teal-500'
+          }`}
+          style={{ elevation: 2 }}
+        >
+          <Ionicons name="calendar-outline" size={18} color="white" />
+          <Text className="text-white font-semibold ml-2">
+            Book Appointment
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

@@ -8,93 +8,105 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import Button from '../../common/Button';
-import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api';
-import { showErrorAlert } from '../../../utils/errorUtils';
+import { appointmentsAPI } from '../../../services/api';
 import { authUtils } from '../../../utils/auth';
 import { UI_COLORS } from '../../../utils/colors';
-import { generateTimeSlots, findBookedSlots, isAppointmentInFuture } from '../../../utils/appointmentUtils';
 
-const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
-  const [loading, setLoading] = useState(false);
-  const [patients, setPatients] = useState([]);
-  const [dentists, setDentists] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [bookedSlots, setBookedSlots] = useState([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  
+const NewAppointmentModal = ({ 
+  visible, 
+  onClose, 
+  onSuccess, 
+  userRole, 
+  preselectedTreatment = null 
+}) => {
   const [formData, setFormData] = useState({
-    patientId: '',
-    dentistId: '',
     date: '',
     time: '',
     sessionNotes: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [appointmentDuration, setAppointmentDuration] = useState(30);
 
-  // Fetch patients and dentists on mount
+  // Patient and dentist info from preselected treatment
+  const patientInfo = preselectedTreatment?.patient;
+  const dentistInfo = preselectedTreatment?.dentist;
+  const treatmentId = preselectedTreatment?.id || preselectedTreatment?._id;
+
+  // Fetch available slots when date is selected
   useEffect(() => {
-    if (visible) {
-      fetchPatients();
-      if (userRole === 'secretary') {
-        fetchDentists();
-      } else {
-        // For dentist, set their own ID
-        const user = authUtils.getCurrentUser();
-        setFormData(prev => ({ ...prev, dentistId: user?.id?.toString() || '' }));
-      }
+    if (visible && formData.date) {
+      fetchAvailableSlots(formData.date);
     }
-  }, [visible, userRole]);
+  }, [formData.date, visible]);
 
-  // Fetch available slots when dentist and date change
-  useEffect(() => {
-    if (formData.dentistId && formData.date) {
-      fetchAvailableSlots();
-    }
-  }, [formData.dentistId, formData.date]);
-
-  const fetchPatients = async () => {
-    try {
-      setLoading(true);
-      const response = await patientsAPI.getClinicPatients();
-      setPatients(response.patients || []);
-    } catch (error) {
-      showErrorAlert('Failed to load patients', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDentists = async () => {
-    try {
-      setLoading(true);
-      const response = await dentistsAPI.getForClinic();
-      setDentists(response.data || []);
-    } catch (error) {
-      showErrorAlert('Failed to load dentists', error.message);
-      setDentists([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAvailableSlots = async () => {
+  const fetchAvailableSlots = async (date) => {
     try {
       setLoadingSlots(true);
-      const response = await appointmentsAPI.getAvailableSlots(formData.dentistId, formData.date);
+      const user = authUtils.getCurrentUser();
       
+      // Use preselected dentist if available (for secretary), otherwise use current user (for dentist)
+      const dentistId = dentistInfo?._id?.toString() || 
+                       dentistInfo?.userId?.toString() || 
+                       preselectedTreatment?.dentistId?.toString() ||
+                       user?.id;
+      
+      if (!dentistId) {
+        console.error('Dentist ID not available');
+        return;
+      }
+
+      const response = await appointmentsAPI.getAvailableSlots(dentistId, date);
+      
+      // Store the dentist's appointment duration
       const duration = response.appointmentDuration || 30;
-      const slots = generateTimeSlots(response.workingHours, duration);
-      const booked = findBookedSlots(slots, response.appointments, duration, formData.date);
+      setAppointmentDuration(duration);
+      
+      // Generate time slots based on working hours
+      const slots = generateTimeSlotsFromWorkingHours(
+        response.workingHours,
+        duration
+      );
+      
+      // Mark booked slots
+      const booked = [];
+      
+      slots.forEach(slot => {
+        const [slotHour, slotMinute] = slot.split(':').map(Number);
+        const slotStart = new Date(date);
+        slotStart.setHours(slotHour, slotMinute, 0, 0);
+        const slotEnd = new Date(slotStart.getTime() + duration * 60000);
+        
+        // Check if this slot overlaps with any existing appointment
+        const hasOverlap = response.appointments.some(apt => {
+          const aptStart = new Date(apt.startTime);
+          const aptEnd = new Date(apt.endTime);
+          
+          // Check for overlap
+          return slotStart < aptEnd && slotEnd > aptStart;
+        });
+        
+        if (hasOverlap) {
+          booked.push(slot);
+        }
+      });
       
       setAvailableSlots(slots);
       setBookedSlots(booked);
-    } catch (error) {
-      showErrorAlert('Failed to load time slots', error.message);
+    } catch (err) {
+      console.error('Error fetching available slots:', err);
+      showErrorAlert('Failed to load available time slots', err.message);
       setAvailableSlots([]);
       setBookedSlots([]);
     } finally {
@@ -102,19 +114,139 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const generateTimeSlotsFromWorkingHours = (workingHours, duration = 30) => {
+    if (!workingHours || !workingHours.isWorking) {
+      return [];
+    }
+
+    const slots = [];
+    const [startHour, startMinute] = workingHours.start.split(':').map(Number);
+    const [endHour, endMinute] = workingHours.end.split(':').map(Number);
     
-    if (!formData.patientId) newErrors.patientId = 'Please select a patient';
-    if (userRole === 'secretary' && !formData.dentistId) newErrors.dentistId = 'Please select a dentist';
-    if (!formData.date) newErrors.date = 'Please select a date';
-    if (!formData.time) newErrors.time = 'Please select a time slot';
+    const endTimeInMinutes = endHour * 60 + endMinute;
     
-    // Check if appointment is in the future
-    if (formData.date && formData.time && !isAppointmentInFuture(formData.date, formData.time)) {
-      newErrors.time = 'Appointment must be in the future';
+    let currentHour = startHour;
+    let currentMinute = startMinute;
+
+    while (
+      currentHour < endHour || 
+      (currentHour === endHour && currentMinute < endMinute)
+    ) {
+      const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+      
+      const slotStartInMinutes = currentHour * 60 + currentMinute;
+      const slotEndInMinutes = slotStartInMinutes + duration;
+      
+      if (slotEndInMinutes > endTimeInMinutes) {
+        break;
+      }
+      
+      // Check if this slot is during a break
+      let isDuringBreak = false;
+      let breakEndTime = null;
+      if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
+        for (const breakPeriod of workingHours.breaks) {
+          const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number);
+          const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number);
+          
+          const slotMinutes = currentHour * 60 + currentMinute;
+          const breakStartMinutes = breakStartHour * 60 + breakStartMinute;
+          const breakEndMinutes = breakEndHour * 60 + breakEndMinute;
+          
+          if (slotMinutes >= breakStartMinutes && slotMinutes < breakEndMinutes) {
+            isDuringBreak = true;
+            breakEndTime = { hour: breakEndHour, minute: breakEndMinute };
+            break;
+          }
+        }
+      }
+      
+      if (isDuringBreak && breakEndTime) {
+        currentHour = breakEndTime.hour;
+        currentMinute = breakEndTime.minute;
+        continue;
+      }
+      
+      if (!isDuringBreak) {
+        slots.push(timeSlot);
+      }
+      
+      currentMinute += duration;
+      if (currentMinute >= 60) {
+        currentHour += Math.floor(currentMinute / 60);
+        currentMinute = currentMinute % 60;
+      }
+    }
+
+    return slots;
+  };
+
+  const convertTo12Hour = (time24) => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const handleDateChange = (event, date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    
+    if (date) {
+      setSelectedDate(date);
+      const dateString = date.toISOString().split('T')[0];
+      setFormData({ ...formData, date: dateString, time: '' });
+      setErrors(prev => ({ ...prev, date: '' }));
+    }
+  };
+
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  };
+
+  const handleTimeSelect = (time) => {
+    // Check if the selected time is in the future
+    if (formData.date) {
+      const appointmentDateTime = new Date(`${formData.date}T${time}`);
+      const now = new Date();
+      
+      if (appointmentDateTime <= now) {
+        setErrors(prev => ({
+          ...prev,
+          time: 'Appointment must be scheduled for a future time'
+        }));
+        return;
+      }
     }
     
+    setErrors(prev => ({ ...prev, time: '' }));
+    setFormData(prev => ({ ...prev, time }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.date) {
+      newErrors.date = 'Date is required';
+    }
+    
+    if (!formData.time) {
+      newErrors.time = 'Time is required';
+    } else if (formData.date && formData.time) {
+      const appointmentDateTime = new Date(`${formData.date}T${formData.time}`);
+      const now = new Date();
+      
+      if (appointmentDateTime <= now) {
+        newErrors.time = 'Appointment must be scheduled for a future time';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -124,18 +256,97 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
 
     try {
       setLoading(true);
+      const user = await authUtils.getCurrentUser();
       
-      const [hours, minutes] = formData.time.split(':');
-      const appointmentDate = new Date(formData.date);
-      appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      console.log('Current user:', user);
+      
+      if (!user || !user.id) {
+        Alert.alert('Error', 'User not authenticated. Please login again.');
+        setLoading(false);
+        return;
+      }
 
-      await appointmentsAPI.create({
-        patientId: formData.patientId,
-        dentistId: formData.dentistId,
-        date: appointmentDate.toISOString(),
-        sessionNotes: formData.sessionNotes,
-      });
+      if (!patientInfo) {
+        Alert.alert('Error', 'Patient information is missing.');
+        setLoading(false);
+        return;
+      }
 
+      // Get clinicId
+      const clinicId = dentistInfo?.clinic?.userId || 
+                      preselectedTreatment?.clinicId || 
+                      user.dentist?.clinicId || 
+                      user.clinicId;
+      
+      console.log('Clinic ID:', clinicId);
+      console.log('Dentist info:', dentistInfo);
+      console.log('Patient info:', patientInfo);
+      console.log('Treatment:', preselectedTreatment);
+      
+      if (!clinicId) {
+        Alert.alert('Error', 'Clinic information is missing. Please contact support.');
+        setLoading(false);
+        return;
+      }
+      
+      // Construct appointment data
+      const startDateTime = new Date(`${formData.date}T${formData.time}`);
+      const endDateTime = new Date(startDateTime.getTime() + appointmentDuration * 60000);
+      
+      // Extract patient ID - check various possible locations
+      const patientId = patientInfo?.userId || 
+                       patientInfo?._id || 
+                       patientInfo?.id ||
+                       preselectedTreatment?.patientId;
+      
+      // Extract dentist ID - use preselected dentist if available (for secretary), otherwise use current user (for dentist)
+      const dentistId = dentistInfo?.userId || 
+                       dentistInfo?._id || 
+                       dentistInfo?.id ||
+                       preselectedTreatment?.dentistId ||
+                       user.id;
+      
+      console.log('Appointment data being prepared:');
+      console.log('- Patient info:', patientInfo);
+      console.log('- Patient ID:', patientId);
+      console.log('- Dentist info:', dentistInfo);
+      console.log('- Dentist ID:', dentistId);
+      console.log('- Clinic ID:', clinicId);
+      console.log('- Date:', formData.date);
+      console.log('- Start Time:', startDateTime.toISOString());
+      console.log('- End Time:', endDateTime.toISOString());
+      console.log('- Treatment ID:', treatmentId);
+      
+      if (!patientId) {
+        console.error('Could not extract patient ID from:', patientInfo);
+        Alert.alert('Error', 'Patient ID is missing. Please try again.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!dentistId) {
+        console.error('Could not extract dentist ID from:', dentistInfo);
+        Alert.alert('Error', 'Dentist ID is missing. Please try again.');
+        setLoading(false);
+        return;
+      }
+      
+      const appointmentData = {
+        patientId: parseInt(patientId),
+        dentistId: parseInt(dentistId),
+        clinicId: parseInt(clinicId),
+        appointmentDate: formData.date,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        sessionNotes: formData.sessionNotes || '',
+        treatmentId: treatmentId ? parseInt(treatmentId) : null
+      };
+
+      console.log('Final appointment data:', appointmentData);
+      
+      const response = await appointmentsAPI.create(appointmentData);
+      console.log('Appointment created successfully:', response);
+      
       Alert.alert('Success', 'Appointment created successfully!', [
         { text: 'OK', onPress: () => {
           onSuccess?.();
@@ -143,7 +354,19 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
         }}
       ]);
     } catch (error) {
-      showErrorAlert('Failed to create appointment', error.message);
+      console.error('Error creating appointment:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'An unknown error occurred';
+      
+      Alert.alert('Error', `Failed to create appointment: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -151,23 +374,14 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
 
   const handleClose = () => {
     setFormData({
-      patientId: '',
-      dentistId: userRole === 'dentist' ? formData.dentistId : '',
       date: '',
       time: '',
       sessionNotes: '',
     });
     setErrors({});
-    setPatients([]);
-    setDentists([]);
     setAvailableSlots([]);
     setBookedSlots([]);
     onClose();
-  };
-
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
   };
 
   return (
@@ -180,175 +394,207 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
       <View className="flex-1 bg-black/50">
         <View className="flex-1 bg-white dark:bg-gray-800 mt-20 rounded-t-3xl">
           {/* Header */}
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">
-              New Appointment
-            </Text>
-            <TouchableOpacity onPress={handleClose}>
-              <Ionicons name="close" size={24} color={UI_COLORS.iconGray} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView className="flex-1 p-4">
-            {/* Patient Selection */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Patient *
-              </Text>
-              {loading ? (
-                <ActivityIndicator size="small" color={UI_COLORS.primaryDark} />
-              ) : (
-                <View className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                  <Picker
-                    selectedValue={formData.patientId}
-                    onValueChange={(value) => setFormData({ ...formData, patientId: value })}
-                    style={{ color: '#000' }}
-                  >
-                    <Picker.Item label="Select a patient..." value="" />
-                    {patients.map((patient) => (
-                      <Picker.Item
-                        key={patient._id || patient.userId}
-                        label={`${patient.firstName} ${patient.lastName}`}
-                        value={(patient._id || patient.userId).toString()}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-              {errors.patientId && (
-                <Text className="text-red-500 text-sm mt-1">{errors.patientId}</Text>
-              )}
-            </View>
-
-            {/* Dentist Selection (Secretary Only) */}
-            {userRole === 'secretary' && (
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Dentist *
+          <View className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                  Book an Appointment
                 </Text>
-                {loading ? (
-                  <ActivityIndicator size="small" color={UI_COLORS.primaryDark} />
-                ) : (
-                  <View className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                    <Picker
-                      selectedValue={formData.dentistId}
-                      onValueChange={(value) => setFormData({ ...formData, dentistId: value, time: '' })}
-                      style={{ color: '#000' }}
-                    >
-                      <Picker.Item label="Select a dentist..." value="" />
-                      {dentists.map((dentist) => (
-                        <Picker.Item
-                          key={dentist._id || dentist.userId}
-                          label={`Dr. ${dentist.firstName} ${dentist.lastName}`}
-                          value={(dentist._id || dentist.userId).toString()}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
-                )}
-                {errors.dentistId && (
-                  <Text className="text-red-500 text-sm mt-1">{errors.dentistId}</Text>
+                {patientInfo && (
+                  <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    for {patientInfo.firstName} {patientInfo.lastName}
+                    {dentistInfo && ` with Dr. ${dentistInfo.firstName} ${dentistInfo.lastName}`}
+                  </Text>
                 )}
               </View>
-            )}
-
-            {/* Date Input */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Appointment Date *
-              </Text>
-              <TextInput
-                value={formData.date}
-                onChangeText={(text) => setFormData({ ...formData, date: text, time: '' })}
-                placeholder="YYYY-MM-DD"
-                className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white"
-                placeholderTextColor={UI_COLORS.placeholderLight}
-              />
-              <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Minimum date: {getMinDate()}
-              </Text>
-              {errors.date && (
-                <Text className="text-red-500 text-sm mt-1">{errors.date}</Text>
-              )}
+              <TouchableOpacity onPress={handleClose}>
+                <Ionicons name="close" size={24} color={UI_COLORS.iconGray} />
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* Time Slots */}
-            {formData.date && formData.dentistId && (
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Available Time Slots *
-                </Text>
-                
-                {loadingSlots ? (
-                  <ActivityIndicator size="small" color={UI_COLORS.primaryDark} />
-                ) : availableSlots.length === 0 ? (
-                  <Text className="text-gray-500 dark:text-gray-400 text-center py-4">
-                    No available slots for this date
+          <ScrollView className="flex-1 p-6">
+            <View style={{ gap: 24 }}>
+              <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                Select Date, Time & Treatment
+              </Text>
+
+              {/* Date Selection */}
+              <View>
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="calendar-outline" size={18} color={UI_COLORS.iconGray} />
+                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                    Appointment Date
                   </Text>
-                ) : (
-                  <View className="flex-row flex-wrap gap-2">
-                    {availableSlots.map((slot) => {
-                      const isBooked = bookedSlots.includes(slot);
-                      const isSelected = formData.time === slot;
-                      
-                      return (
-                        <TouchableOpacity
-                          key={slot}
-                          onPress={() => !isBooked && setFormData({ ...formData, time: slot })}
-                          disabled={isBooked}
-                          className={`px-4 py-2 rounded-lg border ${
-                            isBooked
-                              ? 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
-                              : isSelected
-                              ? 'bg-teal-600 border-teal-600'
-                              : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
-                          }`}
-                        >
-                          <Text className={`text-sm font-medium ${
-                            isBooked
-                              ? 'text-gray-400 dark:text-gray-500'
-                              : isSelected
-                              ? 'text-white'
-                              : 'text-gray-900 dark:text-white'
-                          }`}>
-                            {slot}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                </View>
+                
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  className={`border rounded-lg p-3 ${
+                    errors.date 
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+                  }`}
+                >
+                  <Text className={`text-base ${
+                    formData.date 
+                      ? 'text-gray-900 dark:text-white' 
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {formData.date ? formatDateDisplay(formData.date) : 'Select appointment date'}
+                  </Text>
+                </TouchableOpacity>
+                
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                    minimumDate={new Date()}
+                  />
+                )}
+                
+                {errors.date && (
+                  <Text className="text-red-500 text-sm mt-1">{errors.date}</Text>
+                )}
+              </View>
+
+              {/* Time Selection */}
+              <View>
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="time-outline" size={18} color={UI_COLORS.iconGray} />
+                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                    Appointment Time
+                  </Text>
+                </View>
+                
+                {!formData.date ? (
+                  <Text className="text-sm italic text-gray-500 dark:text-gray-400">
+                    Please select a date first
+                  </Text>
+                ) : loadingSlots ? (
+                  <View className="py-8 items-center">
+                    <ActivityIndicator size="large" color={UI_COLORS.primary} />
                   </View>
+                ) : availableSlots.length === 0 ? (
+                  <View className="py-8 items-center">
+                    <Text className="text-gray-500 dark:text-gray-400 text-center">
+                      No available time slots for this date.
+                    </Text>
+                    <Text className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1">
+                      You may not be working on this day.
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <View 
+                      className="border border-gray-300 dark:border-gray-700 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50"
+                      style={{ maxHeight: 256 }}
+                    >
+                      <ScrollView>
+                        <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                          {availableSlots.map((time) => {
+                            const isBooked = bookedSlots.includes(time);
+                            const isSelected = formData.time === time;
+                            
+                            const isPastTime = (() => {
+                              const appointmentDateTime = new Date(`${formData.date}T${time}`);
+                              const now = new Date();
+                              return appointmentDateTime <= now;
+                            })();
+
+                            return (
+                              <TouchableOpacity
+                                key={time}
+                                onPress={() => !isBooked && !isPastTime && handleTimeSelect(time)}
+                                disabled={isPastTime || isBooked}
+                                className={`px-4 py-3 rounded-lg ${
+                                  isPastTime
+                                    ? 'bg-gray-200 dark:bg-gray-800'
+                                    : isBooked
+                                    ? 'bg-red-500/20 border-2 border-red-500'
+                                    : isSelected
+                                    ? 'bg-teal-600'
+                                    : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                                }`}
+                                style={{ minWidth: '30%' }}
+                              >
+                                <Text className={`text-sm font-medium text-center ${
+                                  isPastTime
+                                    ? 'text-gray-400 line-through'
+                                    : isBooked
+                                    ? 'text-red-600 dark:text-red-400'
+                                    : isSelected
+                                    ? 'text-white'
+                                    : 'text-gray-700 dark:text-gray-200'
+                                }`}>
+                                  {convertTo12Hour(time)}
+                                </Text>
+                                {isBooked && (
+                                  <Text className="text-xs text-red-600 dark:text-red-400 text-center mt-1">
+                                    Booked
+                                  </Text>
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                    </View>
+                    
+                    {/* Legend */}
+                    <View className="flex-row flex-wrap items-center justify-center mt-3" style={{ gap: 16 }}>
+                      <View className="flex-row items-center">
+                        <View className="w-4 h-4 rounded bg-teal-600 mr-2" />
+                        <Text className="text-xs text-gray-600 dark:text-gray-400">Selected</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <View className="w-4 h-4 rounded bg-red-500/20 border-2 border-red-500 mr-2" />
+                        <Text className="text-xs text-gray-600 dark:text-gray-400">Booked</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <View className="w-4 h-4 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 mr-2" />
+                        <Text className="text-xs text-gray-600 dark:text-gray-400">Available</Text>
+                      </View>
+                    </View>
+                  </>
                 )}
                 
                 {errors.time && (
                   <Text className="text-red-500 text-sm mt-2">{errors.time}</Text>
                 )}
               </View>
-            )}
 
-            {/* Notes */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Session Notes (Optional)
-              </Text>
-              <TextInput
-                value={formData.sessionNotes}
-                onChangeText={(text) => setFormData({ ...formData, sessionNotes: text })}
-                placeholder="Notes about this appointment..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white"
-                placeholderTextColor={UI_COLORS.placeholderLight}
-              />
+              {/* Session Notes */}
+              <View>
+                <View className="flex-row items-center mb-2">
+                  <Ionicons name="document-text-outline" size={18} color={UI_COLORS.iconGray} />
+                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                    Session Notes (Optional)
+                  </Text>
+                </View>
+                <TextInput
+                  value={formData.sessionNotes}
+                  onChangeText={(text) => setFormData({ ...formData, sessionNotes: text })}
+                  placeholder="Your notes about the planned session (treatment details, observations, etc.)..."
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                  placeholderTextColor={UI_COLORS.placeholderLight}
+                />
+              </View>
             </View>
           </ScrollView>
 
-          {/* Footer Buttons */}
+          {/* Footer */}
           <View className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <View className="flex-row gap-2">
+            <View className="flex-row gap-3">
               <Button
                 variant="outline"
                 onPress={handleClose}
+                disabled={loading}
                 className="flex-1"
               >
                 Cancel
@@ -357,13 +603,13 @@ const NewAppointmentModal = ({ visible, onClose, onSuccess, userRole }) => {
               <Button
                 variant="primary"
                 onPress={handleSubmit}
-                disabled={loading || loadingSlots}
+                disabled={!formData.date || !formData.time || loading}
                 className="flex-1"
               >
                 {loading ? (
                   <ActivityIndicator size="small" color={UI_COLORS.white} />
                 ) : (
-                  'Create Appointment'
+                  'Book Appointment'
                 )}
               </Button>
             </View>

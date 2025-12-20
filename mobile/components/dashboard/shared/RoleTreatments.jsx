@@ -1,6 +1,6 @@
 import React from 'react';
 import { treatmentsAPI } from '../../../services/api';
-import { SharedTreatments } from './SharedTreatments';
+import SharedTreatments from './SharedTreatments';
 
 /**
  * Unified Treatments component that handles all roles
