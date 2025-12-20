@@ -8,8 +8,9 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookA
   const showDentistInfo = role === 'patient' || role === 'secretary';
   const showPatientInfo = role === 'dentist' || role === 'secretary';
   
-  // Only show book appointment button if treatment is not completed or cancelled
+  // Only show book appointment button if treatment is not completed or cancelled AND user is not a patient
   const canBookAppointment = onBookAppointment && 
+    role !== 'patient' &&
     treatment.status !== 'COMPLETED' && 
     treatment.status !== 'CANCELLED';
 

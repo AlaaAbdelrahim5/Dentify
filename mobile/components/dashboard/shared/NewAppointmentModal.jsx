@@ -11,11 +11,12 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePicker from '../../common/DatePicker';
 import Button from '../../common/Button';
 import { appointmentsAPI } from '../../../services/api';
 import { authUtils } from '../../../utils/auth';
 import { UI_COLORS } from '../../../utils/colors';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 const NewAppointmentModal = ({ 
   visible, 
@@ -24,6 +25,7 @@ const NewAppointmentModal = ({
   userRole, 
   preselectedTreatment = null 
 }) => {
+  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     date: '',
     time: '',
@@ -35,8 +37,6 @@ const NewAppointmentModal = ({
   const [availableSlots, setAvailableSlots] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [appointmentDuration, setAppointmentDuration] = useState(30);
 
   // Patient and dentist info from preselected treatment
@@ -189,15 +189,9 @@ const NewAppointmentModal = ({
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  const handleDateChange = (event, date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    
-    if (date) {
-      setSelectedDate(date);
-      const dateString = date.toISOString().split('T')[0];
-      setFormData({ ...formData, date: dateString, time: '' });
-      setErrors(prev => ({ ...prev, date: '' }));
-    }
+  const handleDateChange = (dateString) => {
+    setFormData({ ...formData, date: dateString, time: '' });
+    setErrors(prev => ({ ...prev, date: '' }));
   };
 
   const formatDateDisplay = (dateString) => {
@@ -392,85 +386,55 @@ const NewAppointmentModal = ({
       onRequestClose={handleClose}
     >
       <View className="flex-1 bg-black/50">
-        <View className="flex-1 bg-white dark:bg-gray-800 mt-20 rounded-t-3xl">
+        <View className={`flex-1 mt-20 rounded-t-3xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           {/* Header */}
-          <View className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <View className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
-                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Book an Appointment
                 </Text>
                 {patientInfo && (
-                  <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <Text className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     for {patientInfo.firstName} {patientInfo.lastName}
                     {dentistInfo && ` with Dr. ${dentistInfo.firstName} ${dentistInfo.lastName}`}
                   </Text>
                 )}
               </View>
               <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color={UI_COLORS.iconGray} />
+                <Ionicons name="close" size={24} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
               </TouchableOpacity>
             </View>
           </View>
 
           <ScrollView className="flex-1 p-6">
             <View style={{ gap: 24 }}>
-              <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+              <Text className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Select Date, Time & Treatment
               </Text>
 
               {/* Date Selection */}
-              <View>
-                <View className="flex-row items-center mb-2">
-                  <Ionicons name="calendar-outline" size={18} color={UI_COLORS.iconGray} />
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
-                    Appointment Date
-                  </Text>
-                </View>
-                
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  className={`border rounded-lg p-3 ${
-                    errors.date 
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
-                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
-                  }`}
-                >
-                  <Text className={`text-base ${
-                    formData.date 
-                      ? 'text-gray-900 dark:text-white' 
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {formData.date ? formatDateDisplay(formData.date) : 'Select appointment date'}
-                  </Text>
-                </TouchableOpacity>
-                
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleDateChange}
-                    minimumDate={new Date()}
-                  />
-                )}
-                
-                {errors.date && (
-                  <Text className="text-red-500 text-sm mt-1">{errors.date}</Text>
-                )}
-              </View>
+              <DatePicker
+                label="Appointment Date"
+                value={formData.date}
+                onChange={handleDateChange}
+                error={errors.date}
+                placeholder="Select appointment date"
+                minimumDate={new Date()}
+                maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
+              />
 
               {/* Time Selection */}
               <View>
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="time-outline" size={18} color={UI_COLORS.iconGray} />
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                  <Ionicons name="time-outline" size={18} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
+                  <Text className={`text-sm font-medium ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Appointment Time
                   </Text>
                 </View>
                 
                 {!formData.date ? (
-                  <Text className="text-sm italic text-gray-500 dark:text-gray-400">
+                  <Text className={`text-sm italic ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Please select a date first
                   </Text>
                 ) : loadingSlots ? (
@@ -479,17 +443,17 @@ const NewAppointmentModal = ({
                   </View>
                 ) : availableSlots.length === 0 ? (
                   <View className="py-8 items-center">
-                    <Text className="text-gray-500 dark:text-gray-400 text-center">
+                    <Text className={`text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       No available time slots for this date.
                     </Text>
-                    <Text className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1">
+                    <Text className={`text-xs text-center mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                       You may not be working on this day.
                     </Text>
                   </View>
                 ) : (
                   <>
                     <View 
-                      className="border border-gray-300 dark:border-gray-700 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50"
+                      className={`border rounded-lg p-2 ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-300 bg-gray-50'}`}
                       style={{ maxHeight: 256 }}
                     >
                       <ScrollView>
@@ -511,12 +475,12 @@ const NewAppointmentModal = ({
                                 disabled={isPastTime || isBooked}
                                 className={`px-4 py-3 rounded-lg ${
                                   isPastTime
-                                    ? 'bg-gray-200 dark:bg-gray-800'
+                                    ? isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
                                     : isBooked
                                     ? 'bg-red-500/20 border-2 border-red-500'
                                     : isSelected
                                     ? 'bg-teal-600'
-                                    : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                                    : isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
                                 }`}
                                 style={{ minWidth: '30%' }}
                               >
@@ -524,15 +488,15 @@ const NewAppointmentModal = ({
                                   isPastTime
                                     ? 'text-gray-400 line-through'
                                     : isBooked
-                                    ? 'text-red-600 dark:text-red-400'
+                                    ? isDarkMode ? 'text-red-400' : 'text-red-600'
                                     : isSelected
                                     ? 'text-white'
-                                    : 'text-gray-700 dark:text-gray-200'
+                                    : isDarkMode ? 'text-gray-200' : 'text-gray-700'
                                 }`}>
                                   {convertTo12Hour(time)}
                                 </Text>
                                 {isBooked && (
-                                  <Text className="text-xs text-red-600 dark:text-red-400 text-center mt-1">
+                                  <Text className={`text-xs text-center mt-1 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
                                     Booked
                                   </Text>
                                 )}
@@ -547,15 +511,15 @@ const NewAppointmentModal = ({
                     <View className="flex-row flex-wrap items-center justify-center mt-3" style={{ gap: 16 }}>
                       <View className="flex-row items-center">
                         <View className="w-4 h-4 rounded bg-teal-600 mr-2" />
-                        <Text className="text-xs text-gray-600 dark:text-gray-400">Selected</Text>
+                        <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Selected</Text>
                       </View>
                       <View className="flex-row items-center">
                         <View className="w-4 h-4 rounded bg-red-500/20 border-2 border-red-500 mr-2" />
-                        <Text className="text-xs text-gray-600 dark:text-gray-400">Booked</Text>
+                        <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Booked</Text>
                       </View>
                       <View className="flex-row items-center">
-                        <View className="w-4 h-4 rounded bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 mr-2" />
-                        <Text className="text-xs text-gray-600 dark:text-gray-400">Available</Text>
+                        <View className={`w-4 h-4 rounded mr-2 border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} />
+                        <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Available</Text>
                       </View>
                     </View>
                   </>
@@ -569,8 +533,8 @@ const NewAppointmentModal = ({
               {/* Session Notes */}
               <View>
                 <View className="flex-row items-center mb-2">
-                  <Ionicons name="document-text-outline" size={18} color={UI_COLORS.iconGray} />
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                  <Ionicons name="document-text-outline" size={18} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
+                  <Text className={`text-sm font-medium ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Session Notes (Optional)
                   </Text>
                 </View>
@@ -581,15 +545,15 @@ const NewAppointmentModal = ({
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
-                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white bg-white dark:bg-gray-700"
-                  placeholderTextColor={UI_COLORS.placeholderLight}
+                  className={`border rounded-lg p-3 ${isDarkMode ? 'border-gray-600 text-white bg-gray-700' : 'border-gray-300 text-gray-900 bg-white'}`}
+                  placeholderTextColor={isDarkMode ? '#6B7280' : UI_COLORS.placeholderLight}
                 />
               </View>
             </View>
           </ScrollView>
 
           {/* Footer */}
-          <View className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <View className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <View className="flex-row gap-3">
               <Button
                 variant="outline"
