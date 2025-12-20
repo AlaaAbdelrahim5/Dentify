@@ -13,12 +13,6 @@ const firebaseConfig = {
   appId: Constants.expoConfig?.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
-// Log Firebase configuration status
-console.log('🔥 Firebase Configuration Status:');
-console.log('  - API Key:', firebaseConfig.apiKey ? '✓ Set' : '✗ Missing');
-console.log('  - Project ID:', firebaseConfig.projectId ? '✓ Set' : '✗ Missing');
-console.log('  - App ID:', firebaseConfig.appId ? '✓ Set' : '✗ Missing');
-
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
   console.warn('⚠️ Firebase configuration is incomplete. Please check your .env file.');
   console.warn('   Copy .env.example to .env and fill in your Firebase credentials.');

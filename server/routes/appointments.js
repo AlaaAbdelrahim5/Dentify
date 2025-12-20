@@ -18,10 +18,7 @@ async function sendAppointmentNotification(userId, title, body, data = {}) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       type: 'appointment'
     });
-
-    console.log(`Notification sent to user ${userId}: ${title}`);
   } catch (error) {
-    console.error('Error sending appointment notification:', error);
   }
 }
 
@@ -94,7 +91,6 @@ router.get('/patient/my-appointments', authenticate, authorize('Patient'), async
 
     res.json({ appointments });
   } catch (error) {
-    console.error('Error fetching patient appointments:', error);
     res.status(500).json({ error: 'Failed to fetch appointments' });
   }
 });
@@ -154,18 +150,8 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
       }
     });
 
-    // Debug: Log the first appointment to see if treatment is included
-    if (appointments.length > 0) {
-      console.log('Sample appointment with treatment:', JSON.stringify({
-        id: appointments[0].id,
-        treatmentId: appointments[0].treatmentId,
-        treatment: appointments[0].treatment
-      }, null, 2));
-    }
-
     res.json({ appointments });
   } catch (error) {
-    console.error('Error fetching dentist appointments:', error);
     res.status(500).json({ error: 'Failed to fetch appointments' });
   }
 });
@@ -246,7 +232,6 @@ router.get('/clinic/my-appointments', authenticate, authorize('Clinic', 'Secreta
 
     res.json({ appointments });
   } catch (error) {
-    console.error('Error fetching clinic appointments:', error);
     res.status(500).json({ error: 'Failed to fetch appointments' });
   }
 });
@@ -302,7 +287,6 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
 
     res.json({ appointments });
   } catch (error) {
-    console.error('Error fetching appointments:', error);
     res.status(500).json({ error: 'Failed to fetch appointments' });
   }
 });
@@ -372,7 +356,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ appointment });
   } catch (error) {
-    console.error('Error fetching appointment:', error);
     res.status(500).json({ error: 'Failed to fetch appointment' });
   }
 });
@@ -534,7 +517,6 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
       appointment 
     });
   } catch (error) {
-    console.error('Error creating appointment:', error);
     res.status(500).json({ error: 'Failed to create appointment' });
   }
 });
@@ -822,7 +804,6 @@ router.put('/:id', authenticate, async (req, res) => {
       appointment 
     });
   } catch (error) {
-    console.error('Error updating appointment:', error);
     res.status(500).json({ error: 'Failed to update appointment' });
   }
 });
@@ -940,7 +921,6 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
       appointment 
     });
   } catch (error) {
-    console.error('Error cancelling appointment:', error);
     res.status(500).json({ error: 'Failed to cancel appointment' });
   }
 });
@@ -1059,7 +1039,6 @@ router.patch('/:id/complete', authenticate, authorize('Dentist', 'Secretary'), a
       appointment 
     });
   } catch (error) {
-    console.error('Error completing appointment:', error);
     res.status(500).json({ error: 'Failed to complete appointment' });
   }
 });
@@ -1078,7 +1057,6 @@ router.delete('/:id', authenticate, authorize('Admin', 'Clinic'), async (req, re
       appointment 
     });
   } catch (error) {
-    console.error('Error deleting appointment:', error);
     res.status(500).json({ error: 'Failed to delete appointment' });
   }
 });
@@ -1134,9 +1112,6 @@ router.get('/dentist/:dentistId/available-slots', authenticate, async (req, res)
       }
     });
 
-    console.log(`Fetching slots for dentist ${dentistId} on ${date}`);
-    console.log(`Found ${appointments.length} appointments:`, appointments);
-
     res.json({ 
       appointments,
       appointmentDuration: dentist.appointmentDuration,
@@ -1144,7 +1119,6 @@ router.get('/dentist/:dentistId/available-slots', authenticate, async (req, res)
       dayOfWeek
     });
   } catch (error) {
-    console.error('Error fetching available slots:', error);
     res.status(500).json({ error: 'Failed to fetch available slots' });
   }
 });
@@ -1170,7 +1144,6 @@ router.get('/clinics/:clinicId/dentists', authenticate, async (req, res) => {
 
     res.json({ dentists });
   } catch (error) {
-    console.error('Error fetching clinic dentists:', error);
     res.status(500).json({ error: 'Failed to fetch dentists' });
   }
 });

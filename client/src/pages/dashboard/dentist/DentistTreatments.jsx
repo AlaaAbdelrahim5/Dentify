@@ -104,24 +104,17 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     try {
       setLoading(true)
       setError(null)
-      console.log('Fetching treatments data...')
       const [treatmentsRes, patientsRes, appointmentsRes, radiologyRes] = await Promise.all([
         treatmentsAPI.getDentistTreatments(),
         patientsAPI.getAll(),
         appointmentsAPI.getDentistAppointments(),
         radiologyAPI.getAll('limit=100&isActive=true')
       ])
-      console.log('Treatments response:', treatmentsRes)
-      console.log('Patients response:', patientsRes)
-      console.log('Appointments response:', appointmentsRes)
-      console.log('Radiology response:', radiologyRes)
       
       setTreatments(treatmentsRes.treatments || [])
       setPatients(patientsRes.patients || [])
       setAppointments(appointmentsRes.appointments || [])
       setRadiologyCenters(radiologyRes)
-      
-      console.log('Patients state set to:', patientsRes.patients || [])
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load data. Please try again.')
@@ -260,7 +253,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const fetchTreatmentPayments = async (treatmentId) => {
     try {
       const response = await paymentsAPI.getByTreatment(treatmentId)
-      console.log('Treatment payments:', response)
       
       setPayments(response.payments || [])
     } catch (error) {
@@ -272,7 +264,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const fetchTreatmentPrescriptions = async (treatmentId) => {
     try {
       const response = await treatmentsAPI.getPrescriptions(treatmentId)
-      console.log('Treatment prescriptions:', response)
       
       setPrescriptions(response.prescriptions || [])
     } catch (error) {
@@ -298,12 +289,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleSaveNewTreatment = async (treatmentData) => {
     try {
-      console.log('========================================')
-      console.log('handleSaveNewTreatment CALLED!')
-      console.log('Raw treatment data received:', treatmentData)
-      console.log('appointmentId in treatmentData:', treatmentData.appointmentId)
-      console.log('========================================')
-      
       // Prepare data for API (convert string IDs to integers)
       const apiData = {
         patientId: parseInt(treatmentData.patientId),
@@ -314,32 +299,22 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         teethStatus: treatmentData.teethStatus || []
       }
       
-      console.log('Formatted API data:', apiData)
-      console.log('Sending to treatmentsAPI.create...')
       const response = await treatmentsAPI.create(apiData)
-      console.log('Create response:', response)
-      console.log('Treatment ID created:', response.treatment?.id)
       
       // If this treatment is linked to an appointment, update the appointment
       if (treatmentData.appointmentId && response.treatment?.id) {
         try {
           const appointmentId = parseInt(treatmentData.appointmentId)
-          console.log('Updating appointment ID:', appointmentId)
-          console.log('Linking treatment ID:', response.treatment.id)
           
           const updateResponse = await appointmentsAPI.update(appointmentId, {
             treatmentId: response.treatment.id
           })
-          console.log('Appointment update response:', updateResponse)
-          console.log('Appointment linked to treatment successfully!')
         } catch (linkError) {
           console.error('Error linking appointment to treatment:', linkError)
           console.error('Link error details:', linkError.response?.data)
           // Don't fail the whole operation if linking fails
           setToast({ message: 'Treatment created but failed to link with appointment. Please link manually if needed.', type: 'error' })
         }
-      } else {
-        console.log('No appointment linking needed. appointmentId:', treatmentData.appointmentId, 'treatment.id:', response.treatment?.id)
       }
       
       setToast({ message: 'Treatment created successfully!', type: 'success' })
@@ -357,8 +332,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleUpdateTreatment = async (treatmentData) => {
     try {
-      console.log('Updating treatment with data:', treatmentData)
-      
       // Prepare data for API
       const apiData = {
         patientId: parseInt(treatmentData.patientId),
@@ -369,9 +342,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         teethStatus: treatmentData.teethStatus || []
       }
       
-      console.log('Sending update to API:', apiData)
       const response = await treatmentsAPI.update(selectedTreatment.id, apiData)
-      console.log('Update response:', response)
       
       setToast({ message: 'Treatment updated successfully!', type: 'success' })
       await fetchAllData()
@@ -615,7 +586,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
             </div>
           </div>
           <span className={`px-2 py-1 rounded-full text-xs border ${
-            getStatusColor(treatment.treatmentStatus)
+            getStatusColor(treatment.treatmentStatus, isDarkMode)
           }`}>
             {treatment.treatmentStatus}
           </span>

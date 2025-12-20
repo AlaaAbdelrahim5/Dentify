@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { 
   FaUser,
   FaPlus,
   FaEdit,
-  FaSearch,
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
@@ -15,7 +14,6 @@ import {
   FaUsers
 } from 'react-icons/fa'
 import { 
-  Card, 
   Button, 
   PageHeader,
   StatsOverview,
@@ -33,212 +31,136 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI } from '../../../services/api'
 import { CITY_OPTIONS_LOWERCASE, GENDER_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
 import { calculateAge, capitalizeFirstLetter, formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
-import { useDebounce } from '../../../hooks'
+import { useManagementPage, usePatientData } from '../../../hooks'
 
 const PatientsManagement = () => {
   const { isDarkMode } = useTheme()
-  const [patients, setPatients] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filtering, setFiltering] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  // Additional filters
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterGender, setFilterGender] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
-  const [selectedPatient, setSelectedPatient] = useState(null)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showNewModal, setShowNewModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [confirmAction, setConfirmAction] = useState(null)
-  const [patientToAction, setPatientToAction] = useState(null)
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const [toast, setToast] = useState(null)
-  const [stats, setStats] = useState({
-    total: '-',
-    active: '-',
-    inactive: '-'
-  })
-  const [error, setError] = useState(null)
 
-  // Fetch patients
-  const fetchPatients = async (isFiltering = false) => {
-    try {
-      if (isFiltering) {
-        setFiltering(true)
-      } else {
-        setLoading(true)
-      }
-      
-      setError(null)
-      
+  // Use unified management hook
+  const {
+    data: patients,
+    loading,
+    filtering,
+    error,
+    searchTerm,
+    updateSearch,
+    currentPage,
+    totalPages,
+    goToPage,
+    stats,
+    showDetailsModal,
+    showAddModal,
+    showEditModal,
+    selectedItem,
+    setSelectedItem,
+    setShowDetailsModal,
+    setShowEditModal,
+    handleViewDetails,
+    handleAdd,
+    handleEdit,
+    closeAllModals,
+    confirmProps,
+    confirmToggleStatus,
+    toast,
+    showToast,
+    refresh,
+    clearFilters
+  } = useManagementPage({
+    fetchFn: async () => {
       const response = await patientsAPI.getAll()
-
-      if (response.patients) {
-        console.log('Patients loaded:', response.patients?.length || 0)
-        setPatients(response.patients)
-      } else {
-        setError('Failed to load patients. Please try again.')
+      return {
+        success: true,
+        data: response.patients || [],
+        totalPages: 1
       }
-    } catch (error) {
-      console.error('❌ Error fetching patients:', error)
-      setError('Failed to load patients. Please try again.')
-    } finally {
-      if (isFiltering) {
-        setFiltering(false)
-      } else {
-        setLoading(false)
-      }
-    }
-  }
+    },
+    fetchStatsFn: async () => await patientsAPI.getStats(),
+    api: {
+      toggleStatus: (patient) => patientsAPI.toggleStatus(patient.userId)
+    },
+    initialStats: { total: '-', active: '-', inactive: '-' }
+  })
 
-  // Fetch patient statistics
-  const fetchStats = async () => {
-    try {
-      const response = await patientsAPI.getStats()
+  // Use patient data transformer and filter hook
+  const { filteredPatients } = usePatientData(patients, searchTerm, {
+    city: filterCity,
+    status: filterStatus,
+    gender: filterGender
+  })
 
-      if (response.data) {
-        setStats({
-          total: response.data.total || 0,
-          active: response.data.active || 0,
-          inactive: response.data.pending || response.data.inactive || response.data.deactivated || 0
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching patient stats:', error)
-    }
-  }
-
-  // Toggle patient status (activate/deactivate) - opens confirmation modal
-  const handleToggleStatus = (patient) => {
-    const action = patient.user?.status === 'ACTIVE' ? 'deactivate' : 'activate'
-    setPatientToAction(patient)
-    setConfirmAction(action)
-    setShowConfirmModal(true)
-  }
-
-  // Execute the confirmation action
-  const executeAction = async () => {
-    const patient = patientToAction
-    const action = confirmAction
-
-    try {
-      const response = await patientsAPI.toggleStatus(patient.userId)
-      
-      if (response && response.success) {
-        // Refresh the list and stats
-        await Promise.all([fetchPatients(true), fetchStats()])
-        setShowConfirmModal(false)
-        setPatientToAction(null)
-        setConfirmAction(null)
-        setToast({ message: `Patient ${action}d successfully`, type: 'success' })
-      } else {
-        setToast({ message: response?.message || `Failed to ${action} patient`, type: 'error' })
-        setShowConfirmModal(false)
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing patient:`, error)
-      setToast({ message: `Failed to ${action} patient`, type: 'error' })
-      setShowConfirmModal(false)
-    }
-  }
-
-  // Initial load
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([fetchPatients(), fetchStats()])
-    }
-    loadData()
-  }, [])
-
-  // Filter patients - use useMemo for performance
-  const filteredPatients = useMemo(() => {
-    return patients.filter(patient => {
-      const matchesSearch = 
-        !debouncedSearchTerm ||
-        `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        patient.user?.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        patient.user?.phone?.includes(debouncedSearchTerm)
-
-      const matchesCity = !filterCity || patient.city?.toLowerCase() === filterCity.toLowerCase()
-      const matchesStatus = !filterStatus || patient.user?.status === filterStatus
-      const matchesGender = !filterGender || patient.gender === filterGender
-
-      return matchesSearch && matchesCity && matchesStatus && matchesGender
-    })
-  }, [patients, debouncedSearchTerm, filterCity, filterStatus, filterGender])
-
-  // Pagination - use useMemo for performance
-  const { totalPages, paginatedPatients } = useMemo(() => {
-    const total = Math.ceil(filteredPatients.length / itemsPerPage)
+  // Manual pagination for filtered data
+  const itemsPerPage = 10
+  const paginatedData = useMemo(() => {
+    if (!filteredPatients || filteredPatients.length === 0) return []
     const startIndex = (currentPage - 1) * itemsPerPage
-    const paginated = filteredPatients.slice(startIndex, startIndex + itemsPerPage)
-    return { totalPages: total, paginatedPatients: paginated }
-  }, [filteredPatients, currentPage, itemsPerPage])
+    return filteredPatients.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredPatients, currentPage])
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [debouncedSearchTerm, filterCity, filterStatus, filterGender])
+  // Recalculate total pages when filtered data changes
+  const totalPagesCalculated = useMemo(() => {
+    if (!filteredPatients || filteredPatients.length === 0) return 1
+    return Math.ceil(filteredPatients.length / itemsPerPage)
+  }, [filteredPatients])
 
-  // Stats configuration - use useMemo for performance
-  const statsConfig = useMemo(() => [
+  // Stats configuration
+  const statsConfig = [
     {
       label: 'Total Patients',
-      value: loading ? '-' : stats.total,
+      value: stats?.totalPatients || 0,
       icon: FaUsers,
-      gradient: 'from-teal-600 to-cyan-600'
+      color: 'blue'
     },
     {
       label: 'Active Patients',
-      value: loading ? '-' : stats.active,
+      value: stats?.activePatients || 0,
       icon: FaCheckCircle,
-      gradient: 'from-green-600 to-green-700'
+      color: 'green'
     },
     {
       label: 'Inactive Patients',
-      value: loading ? '-' : stats.inactive,
+      value: stats?.inactivePatients || 0,
       icon: FaTimesCircle,
-      gradient: 'from-red-600 to-red-700'
+      color: 'red'
     }
-  ], [stats, loading])
+  ]
 
-  // Filter configuration - use useMemo for performance
-  const filterProps = useMemo(() => ({
-    searchTerm,
-    onSearchChange: (e) => setSearchTerm(e.target.value),
-    debouncedSearchTerm,
+  // Filter props configuration
+  const filterProps = {
+    searchValue: searchTerm,
+    onSearchChange: updateSearch,
+    placeholder: 'Search patients...',
     filters: [
       {
-        placeholder: 'All Statuses',
-        value: filterStatus,
-        onChange: (e) => setFilterStatus(e.target.value),
-        options: STATUS_OPTIONS.filter(opt => opt.value !== 'PENDING' && opt.value !== 'REJECTED')
-      },
-      {
-        placeholder: 'All Cities',
+        label: 'City',
         value: filterCity,
         onChange: (e) => setFilterCity(e.target.value),
         options: CITY_OPTIONS_LOWERCASE
       },
       {
-        placeholder: 'All Genders',
+        label: 'Status',
+        value: filterStatus,
+        onChange: (e) => setFilterStatus(e.target.value),
+        options: STATUS_OPTIONS
+      },
+      {
+        label: 'Gender',
         value: filterGender,
         onChange: (e) => setFilterGender(e.target.value),
         options: GENDER_OPTIONS
       }
     ],
-    onClearFilters: () => {
-      setSearchTerm('')
+    onClearAll: () => {
+      clearFilters()
       setFilterCity('')
       setFilterStatus('')
       setFilterGender('')
-      setCurrentPage(1)
-    },
-    filtering,
-    searchPlaceholder: 'Search patients by name, email, or phone...'
-  }), [searchTerm, debouncedSearchTerm, filterStatus, filterCity, filterGender, filtering])
+    }
+  }
 
   // Table columns
   const columns = [
@@ -334,20 +256,14 @@ const PatientsManagement = () => {
           actions={[
             {
               icon: FaEye,
-              onClick: () => {
-                setSelectedPatient(patient)
-                setShowDetailsModal(true)
-              },
+              onClick: () => handleViewDetails(patient),
               title: 'View Details',
               variant: 'default',
               key: 'view'
             },
             {
               icon: FaEdit,
-              onClick: () => {
-                setSelectedPatient(patient)
-                setShowEditModal(true)
-              },
+              onClick: () => handleEdit(patient),
               title: 'Edit Patient',
               variant: 'default',
               key: 'edit'
@@ -356,7 +272,7 @@ const PatientsManagement = () => {
             ...(patient.user?.status === 'ACTIVE' ? [
               {
                 icon: FaBan,
-                onClick: () => handleToggleStatus(patient),
+                onClick: () => confirmToggleStatus(patient, 'deactivate'),
                 title: 'Deactivate',
                 variant: 'warning',
                 key: 'deactivate'
@@ -366,7 +282,7 @@ const PatientsManagement = () => {
             ...(patient.user?.status === 'DEACTIVATED' ? [
               {
                 icon: FaCheckCircle,
-                onClick: () => handleToggleStatus(patient),
+                onClick: () => confirmToggleStatus(patient, 'activate'),
                 title: 'Activate',
                 variant: 'success',
                 key: 'activate'
@@ -383,7 +299,13 @@ const PatientsManagement = () => {
       {/* Page Header */}
       <PageHeader
         title="Patient Management"
-        subtitle="View and manage patient records"
+        description="View and manage patient records"
+        action={{
+          label: 'Add Patient',
+          onClick: handleAdd,
+          icon: FaPlus,
+          variant: 'primary'
+        }}
       />
 
       {/* Statistics */}
@@ -394,7 +316,7 @@ const PatientsManagement = () => {
 
       {/* Data Table */}
       <DataTable
-        data={paginatedPatients}
+        data={paginatedData}
         columns={columns}
         renderRow={renderRow}
         loading={loading}
@@ -403,20 +325,20 @@ const PatientsManagement = () => {
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPagesCalculated > 1 && (
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          totalPages={totalPagesCalculated}
+          onPageChange={goToPage}
         />
       )}
 
       {/* Patient Modal */}
       <PatientModal
-        isOpen={showNewModal}
-        onClose={() => setShowNewModal(false)}
+        isOpen={showAddModal}
+        onClose={closeAllModals}
         patientData={null}
-          onSave={async (patientData) => {
+        onSave={async (patientData) => {
           try {
             // Transform data to match API expectations
             const apiData = {
@@ -430,32 +352,28 @@ const PatientsManagement = () => {
               city: patientData.address || patientData.city || 'Unknown'
             }
             await patientsAPI.create(apiData)
-            setShowNewModal(false)
-            fetchPatients(true)
-            fetchStats()
-            setToast({ message: 'Patient created successfully', type: 'success' })
+            closeAllModals()
+            refresh()
+            showToast('Patient created successfully', 'success')
           } catch (error) {
             console.error('Error creating patient:', error)
             const errorMessage = error.response?.data?.error || error.message || 'Failed to create patient'
-            setToast({ message: errorMessage, type: 'error' })
+            showToast(errorMessage, 'error')
           }
         }}
       />
 
       {/* Edit Patient Modal */}
-      {selectedPatient && (
+      {selectedItem && (
         <PatientModal
           isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false)
-            setSelectedPatient(null)
-          }}
+          onClose={closeAllModals}
           patientData={{
-            ...selectedPatient,
-            phone: selectedPatient.user?.phone,
-            email: selectedPatient.user?.email,
-            dateOfBirth: selectedPatient.birthDate,
-            address: selectedPatient.city
+            ...selectedItem,
+            phone: selectedItem.user?.phone,
+            email: selectedItem.user?.email,
+            dateOfBirth: selectedItem.birthDate,
+            address: selectedItem.city
           }}
           onSave={async (updatedData) => {
             try {
@@ -467,42 +385,37 @@ const PatientsManagement = () => {
                 birthDate: updatedData.dateOfBirth,
                 city: updatedData.city
               }
-              await patientsAPI.update(selectedPatient.userId, apiData)
-              setShowEditModal(false)
-              setSelectedPatient(null)
-              fetchPatients(true)
-              fetchStats()
-              setToast({ message: 'Patient updated successfully', type: 'success' })
+              await patientsAPI.update(selectedItem.userId, apiData)
+              closeAllModals()
+              refresh()
+              showToast('Patient updated successfully', 'success')
             } catch (error) {
               console.error('Error updating patient:', error)
               const errorMessage = error.response?.data?.error || error.message || 'Failed to update patient'
-              setToast({ message: errorMessage, type: 'error' })
+              showToast(errorMessage, 'error')
             }
           }}
         />
       )}
 
       {/* Patient Details Modal */}
-      {selectedPatient && (
+      {selectedItem && (
         <PatientDetailsModal
           isOpen={showDetailsModal}
-          onClose={() => {
-            setShowDetailsModal(false)
-            setSelectedPatient(null)
-          }}
+          onClose={closeAllModals}
           patientData={{
-            ...selectedPatient,
-            name: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
-            phone: selectedPatient.user?.phone,
-            email: selectedPatient.user?.email,
-            dateOfBirth: selectedPatient.birthDate,
-            address: selectedPatient.city,
-            status: selectedPatient.user?.status === 'ACTIVE' ? 'active' : 'inactive'
+            ...selectedItem,
+            name: `${selectedItem.firstName} ${selectedItem.lastName}`,
+            phone: selectedItem.user?.phone,
+            email: selectedItem.user?.email,
+            dateOfBirth: selectedItem.birthDate,
+            address: selectedItem.city,
+            status: selectedItem.user?.status === 'ACTIVE' ? 'active' : 'inactive'
           }}
           onEdit={(patient) => {
-            setShowDetailsModal(false)
-            setSelectedPatient(patient)
+            setSelectedItem(patient)
             setShowEditModal(true)
+            setShowDetailsModal(false)
           }}
           treatments={[]}
           appointments={[]}
@@ -511,26 +424,14 @@ const PatientsManagement = () => {
       )}
 
       {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showConfirmModal}
-        onClose={() => {
-          setShowConfirmModal(false)
-          setConfirmAction(null)
-          setPatientToAction(null)
-        }}
-        onConfirm={executeAction}
-        item={patientToAction}
-        action={confirmAction}
-        itemName={patientToAction ? `${patientToAction.firstName} ${patientToAction.lastName}` : ''}
-        itemType="patient"
-      />
+      <ConfirmationModal {...confirmProps} />
 
       {/* Toast Notification */}
       {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={() => showToast(null)}
         />
       )}
     </div>

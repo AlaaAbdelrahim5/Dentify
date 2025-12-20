@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fa'
 import { Button, Card, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { calculateAge } from '../../../utils/helpers'
 
 const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
   const { isDarkMode } = useTheme()
@@ -32,18 +33,7 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
 
   if (!isOpen || !dentistData) return null
 
-  const calculateAge = (dateOfBirth) => {
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--
-    }
-    return age
-  }
-
-  const formatDate = (dateString) => {
+  const formatDateLong = (dateString) => {
     if (!dateString) return 'Not available'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',

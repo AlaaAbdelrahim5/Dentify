@@ -32,7 +32,6 @@ const SharedDentistsList = ({
       const response = await fetchDentistsAPI();
       setDentists(response.data || response.dentists || response);
     } catch (error) {
-      console.error('Error fetching dentists:', error);
       showErrorAlert(error, 'Failed to load dentists');
     } finally {
       setLoading(false);

@@ -30,14 +30,12 @@ const SharedPatientsList = ({
   const fetchPatients = async () => {
     try {
       const response = await fetchPatientsAPI();
-      console.log('SharedPatientsList - Response:', response);
       
       // Handle different response structures
       let patientsData = response.patients || response.data || response.treatments || response;
       
       // If data comes from treatments, extract unique patients
       if (Array.isArray(patientsData) && patientsData.length > 0 && patientsData[0]?.patient) {
-        console.log('Extracting patients from treatments');
         const patientMap = new Map();
         patientsData.forEach(treatment => {
           if (treatment.patient && treatment.patient.userId) {
@@ -56,14 +54,11 @@ const SharedPatientsList = ({
           }
         });
         const extractedPatients = Array.from(patientMap.values());
-        console.log('Extracted patients:', extractedPatients.length);
         setPatients(extractedPatients);
       } else {
-        console.log('Using patients data directly:', patientsData?.length);
         setPatients(Array.isArray(patientsData) ? patientsData : []);
       }
     } catch (error) {
-      console.error('Error fetching patients:', error);
       showErrorAlert(error, 'Failed to load patients');
       setPatients([]);
     } finally {

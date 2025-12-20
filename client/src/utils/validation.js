@@ -129,3 +129,183 @@ export const validateNumberRange = (value, min, max, fieldName = 'Value') => {
   }
   return null
 }
+
+/**
+ * Common validation rules for different field types
+ * Extended validation rule system for form validation
+ */
+export const validationRules = {
+  required: (value, fieldName = 'This field') => {
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      return `${fieldName} is required`
+    }
+    return null
+  },
+
+  email: (value) => {
+    if (!value) return null // Skip if empty (use required rule separately)
+    return validateEmail(value)
+  },
+
+  phone: (value) => {
+    if (!value) return null // Skip if empty (use required rule separately)
+    return validatePhone(value)
+  },
+
+  password: (value, isRequired = false) => {
+    if (!value && !isRequired) return null
+    return validatePassword(value, isRequired)
+  },
+
+  age: (dateOfBirth, minimumAge = 18) => {
+    if (!dateOfBirth) return null
+    return validateAge(dateOfBirth, minimumAge)
+  },
+
+  minLength: (value, length, fieldName = 'This field') => {
+    if (!value) return null
+    if (value.length < length) {
+      return `${fieldName} must be at least ${length} characters`
+    }
+    return null
+  },
+
+  maxLength: (value, length, fieldName = 'This field') => {
+    if (!value) return null
+    if (value.length > length) {
+      return `${fieldName} must not exceed ${length} characters`
+    }
+    return null
+  },
+
+  number: (value, fieldName = 'This field') => {
+    if (!value) return null
+    if (isNaN(value)) {
+      return `${fieldName} must be a valid number`
+    }
+    return null
+  },
+
+  min: (value, min, fieldName = 'This field') => {
+    if (!value) return null
+    if (Number(value) < min) {
+      return `${fieldName} must be at least ${min}`
+    }
+    return null
+  },
+
+  max: (value, max, fieldName = 'This field') => {
+    if (!value) return null
+    if (Number(value) > max) {
+      return `${fieldName} must not exceed ${max}`
+    }
+    return null
+  }
+}
+
+/**
+ * Validate a form based on schema
+ * @param {Object} formData - Form data to validate
+ * @param {Object} schema - Validation schema
+ * @returns {Object} Object with errors (empty if valid)
+ * 
+ * Schema format:
+ * {
+ *   fieldName: [
+ *     { rule: 'required', message: 'Custom message' },
+ *     { rule: 'email' },
+ *     { rule: 'minLength', params: [5] }
+ *   ]
+ * }
+ */
+export const validateForm = (formData, schema) => {
+  const errors = {}
+
+  Object.keys(schema).forEach(fieldName => {
+    const fieldRules = schema[fieldName]
+    const fieldValue = formData[fieldName]
+
+    for (const ruleConfig of fieldRules) {
+      const { rule, message, params = [] } = ruleConfig
+      
+      // Get validation function
+      const validationFn = validationRules[rule]
+      if (!validationFn) {
+        console.warn(`Unknown validation rule: ${rule}`)
+        continue
+      }
+
+      // Run validation
+      const error = validationFn(fieldValue, ...params, fieldName)
+      
+      if (error) {
+        errors[fieldName] = message || error
+        break // Stop at first error for this field
+      }
+    }
+  })
+
+  return errors
+}
+
+/**
+ * Quick validation helpers for common patterns
+ */
+export const validators = {
+  /**
+   * Validate person (patient, dentist, secretary) basic fields
+   */
+  person: (formData, isEditMode = false) => {
+    const errors = {}
+
+    if (!formData.firstName?.trim()) {
+      errors.firstName = 'First name is required'
+    }
+    if (!formData.lastName?.trim()) {
+      errors.lastName = 'Last name is required'
+    }
+    if (!formData.email?.trim()) {
+      errors.email = 'Email is required'
+    } else {
+      const emailError = validateEmail(formData.email)
+      if (emailError) errors.email = emailError
+    }
+    if (!formData.phone?.trim()) {
+      errors.phone = 'Phone is required'
+    } else {
+      const phoneError = validatePhone(formData.phone)
+      if (phoneError) errors.phone = phoneError
+    }
+
+    // Password required for new entries only
+    if (!isEditMode) {
+      const passwordError = validatePassword(formData.password, true)
+      if (passwordError) errors.password = passwordError
+    }
+
+    return errors
+  },
+
+  /**
+   * Validate date and age requirements
+   */
+  dateOfBirth: (dateOfBirth, minimumAge = 18) => {
+    if (!dateOfBirth) {
+      return 'Date of birth is required'
+    }
+    return validateAge(dateOfBirth, minimumAge)
+  },
+
+  /**
+   * Validate required fields
+   */
+  requiredFields: (formData, fields) => {
+    const errors = {}
+    fields.forEach(field => {
+      if (!formData[field] || (typeof formData[field] === 'string' && !formData[field].trim())) {
+        errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+      }
+    })
+    return errors
+  }
+}

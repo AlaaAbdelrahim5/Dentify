@@ -21,7 +21,6 @@ const PatientOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
-      console.log('PatientOverview - User data:', user);
       setUserData(user);
 
       const response = await appointmentsAPI.getMyAppointments();

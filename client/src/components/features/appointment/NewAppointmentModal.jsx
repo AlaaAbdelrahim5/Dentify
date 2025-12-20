@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { 
   FaTimes,
@@ -7,186 +7,36 @@ import {
   FaStickyNote
 } from 'react-icons/fa'
 import { Button, Input, LoadingSpinner, BaseModal } from '../../common'
+import { AppointmentSlotPicker } from '../'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { useFormInput, useFormErrors } from '../../../hooks'
 import { appointmentsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
-import { convertTo12Hour, addMinutes, getTodayISO } from '../../../utils/helpers'
+import { addMinutes, getTodayISO } from '../../../utils/helpers'
 
 const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = null, preselectedDentist = null }) => {
   const { isDarkMode } = useTheme()
-  const [formData, setFormData] = useState({
+  const { formData, setFormData, handleInputChange: handleInput, resetForm } = useFormInput({
     date: '',
     time: '',
     sessionNotes: ''
   })
-
-  const [errors, setErrors] = useState({})
+  const { errors, setErrors, clearError } = useFormErrors({})
   const [loading, setLoading] = useState(false)
-  const [availableSlots, setAvailableSlots] = useState([])
-  const [bookedSlots, setBookedSlots] = useState([])
-  const [loadingSlots, setLoadingSlots] = useState(false)
-  const [appointmentDuration, setAppointmentDuration] = useState(30) // Default 30 minutes
+  const [appointmentDuration, setAppointmentDuration] = useState(30)
 
-  // Fetch available slots when date is selected
-  useEffect(() => {
-    if (isOpen && formData.date) {
-      fetchAvailableSlots(formData.date)
-    }
-  }, [formData.date, isOpen])
-
-  const fetchAvailableSlots = async (date) => {
-    try {
-      setLoadingSlots(true)
-      const user = authUtils.getCurrentUser()
-      
-      // Use preselected dentist if available (for secretary), otherwise use current user (for dentist)
-      const dentistId = preselectedDentist?.id || user?.id
-      
-      if (!dentistId) {
-        console.error('Dentist ID not available')
-        return
-      }
-
-      const response = await appointmentsAPI.getAvailableSlots(dentistId, date)
-      
-      // Store the dentist's appointment duration
-      const duration = response.appointmentDuration || 30
-      setAppointmentDuration(duration)
-      
-      // Generate time slots based on working hours
-      const slots = generateTimeSlotsFromWorkingHours(
-        response.workingHours,
-        duration
-      )
-      
-      // Mark booked slots - check for overlaps with existing appointments
-      const booked = []
-      
-      slots.forEach(slot => {
-        const [slotHour, slotMinute] = slot.split(':').map(Number)
-        const slotStart = new Date(date)
-        slotStart.setHours(slotHour, slotMinute, 0, 0)
-        const slotEnd = addMinutes(slotStart, duration)
-        
-        // Check if this slot overlaps with any existing appointment
-        const hasOverlap = response.appointments.some(apt => {
-          const aptStart = new Date(apt.startTime)
-          const aptEnd = new Date(apt.endTime)
-          
-          // Check for overlap: slot overlaps if it starts before apt ends AND ends after apt starts
-          return slotStart < aptEnd && slotEnd > aptStart
-        })
-        
-        if (hasOverlap) {
-          booked.push(slot)
-        }
-      })
-      
-      setAvailableSlots(slots)
-      setBookedSlots(booked)
-    } catch (err) {
-      console.error('Error fetching available slots:', err)
-      setAvailableSlots([])
-      setBookedSlots([])
-    } finally {
-      setLoadingSlots(false)
-    }
-  }
-
-  const generateTimeSlotsFromWorkingHours = (workingHours, duration = 30) => {
-    if (!workingHours || !workingHours.isWorking) {
-      return []
-    }
-
-    const slots = []
-    const [startHour, startMinute] = workingHours.start.split(':').map(Number)
-    const [endHour, endMinute] = workingHours.end.split(':').map(Number)
-    
-    // Convert end time to minutes for easier comparison
-    const endTimeInMinutes = endHour * 60 + endMinute
-    
-    let currentHour = startHour
-    let currentMinute = startMinute
-
-    while (
-      currentHour < endHour || 
-      (currentHour === endHour && currentMinute < endMinute)
-    ) {
-      const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
-      
-      // Calculate appointment end time
-      const slotStartInMinutes = currentHour * 60 + currentMinute
-      const slotEndInMinutes = slotStartInMinutes + duration
-      
-      // Check if appointment fits within working hours
-      if (slotEndInMinutes > endTimeInMinutes) {
-        // Appointment would extend beyond working hours, stop generating slots
-        break
-      }
-      
-      // Check if this slot is during a break
-      let isDuringBreak = false
-      let breakEndTime = null
-      if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
-        for (const breakPeriod of workingHours.breaks) {
-          const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
-          const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number)
-          
-          const slotMinutes = currentHour * 60 + currentMinute
-          const breakStartMinutes = breakStartHour * 60 + breakStartMinute
-          const breakEndMinutes = breakEndHour * 60 + breakEndMinute
-          
-          // Slot is during break if it's >= break start AND < break end
-          if (slotMinutes >= breakStartMinutes && slotMinutes < breakEndMinutes) {
-            isDuringBreak = true
-            breakEndTime = { hour: breakEndHour, minute: breakEndMinute }
-            break
-          }
-        }
-      }
-      
-      if (isDuringBreak && breakEndTime) {
-        // Skip to the end of the break
-        currentHour = breakEndTime.hour
-        currentMinute = breakEndTime.minute
-        continue
-      }
-      
-      if (!isDuringBreak) {
-        slots.push(timeSlot)
-      }
-      
-      // Increment by duration
-      currentMinute += duration
-      if (currentMinute >= 60) {
-        currentHour += Math.floor(currentMinute / 60)
-        currentMinute = currentMinute % 60
-      }
-    }
-
-    return slots
-  }
-
-  // Convert 24-hour time to 12-hour format
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    handleInput(e)
     
     // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
+    if (errors[e.target.name]) {
+      clearError(e.target.name)
     }
 
     // Validate date/time combination when date or time changes
-    if (name === 'date' || name === 'time') {
-      const currentDate = name === 'date' ? value : formData.date
-      const currentTime = name === 'time' ? value : formData.time
+    if (e.target.name === 'date' || e.target.name === 'time') {
+      const currentDate = e.target.name === 'date' ? e.target.value : formData.date
+      const currentTime = e.target.name === 'time' ? e.target.value : formData.time
       
       if (currentDate && currentTime) {
         const appointmentDateTime = new Date(`${currentDate}T${currentTime}`)
@@ -217,14 +67,14 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
       }
     }
     
-    // Clear time error and set the time
-    setErrors(prev => {
-      const newErrors = { ...prev }
-      delete newErrors.time
-      return newErrors
-    })
-    
+    clearError('time')
     setFormData(prev => ({ ...prev, time }))
+  }
+
+  // Get dentist ID
+  const getDentistId = () => {
+    const user = authUtils.getCurrentUser()
+    return preselectedDentist?.id || user?.id
   }
 
   const validateForm = () => {
@@ -311,14 +161,8 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
   }
 
   const handleClose = () => {
-    setFormData({
-      date: '',
-      time: '',
-      sessionNotes: ''
-    })
+    resetForm()
     setErrors({})
-    setAvailableSlots([])
-    setBookedSlots([])
     onClose()
   }
 
@@ -381,93 +225,20 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
 
                 {/* Time Selection */}
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${
+                  <label className={`block text-sm font-medium mb-4 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
                     <FaClock className="inline mr-2" />
                     Appointment Time
                   </label>
                   
-                  {!formData.date ? (
-                    <p className={`text-sm italic ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Please select a date first
-                    </p>
-                  ) : loadingSlots ? (
-                    <div className="flex justify-center py-8">
-                      <LoadingSpinner />
-                    </div>
-                  ) : availableSlots.length === 0 ? (
-                    <p className={`text-sm ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      No available time slots for this date. You may not be working on this day.
-                    </p>
-                  ) : (
-                    <div className={`grid grid-cols-4 gap-2 max-h-64 overflow-y-auto p-2 border rounded-lg ${
-                      isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
-                    }`}>
-                      {availableSlots.map((time) => {
-                        const isBooked = bookedSlots.includes(time)
-                        
-                        const isPastTime = (() => {
-                          const appointmentDateTime = new Date(`${formData.date}T${time}`)
-                          const now = new Date()
-                          return appointmentDateTime <= now
-                        })()
-
-                        return (
-                          <button
-                            key={time}
-                            type="button"
-                            onClick={() => !isBooked && !isPastTime && handleTimeSelect(time)}
-                            disabled={isPastTime || isBooked}
-                            className={`p-2 rounded-lg text-sm font-medium transition-all ${
-                              isPastTime
-                                ? isDarkMode
-                                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed line-through'
-                                : isBooked
-                                  ? 'bg-red-500/20 text-red-600 dark:text-red-400 border-2 border-red-500 cursor-not-allowed'
-                                  : formData.time === time
-                                    ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                                    : isDarkMode
-                                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-600'
-                                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                            }`}
-                          >
-                            {convertTo12Hour(time)}
-                            {isBooked && (
-                              <div className="text-xs mt-1">Booked</div>
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                  
-                  {/* Legend */}
-                  {formData.date && availableSlots.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-4 text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-linear-to-r from-teal-600 to-cyan-600 rounded"></div>
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Selected</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded border-2 border-red-500 ${
-                          isDarkMode ? 'bg-red-500/20' : 'bg-red-500/20'
-                        }`}></div>
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Booked</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded ${
-                          isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
-                        }`}></div>
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Available</span>
-                      </div>
-                    </div>
-                  )}
+                  <AppointmentSlotPicker
+                    apiCall={appointmentsAPI.getAvailableSlots}
+                    dentistId={getDentistId()}
+                    selectedDate={formData.date}
+                    selectedTime={formData.time}
+                    onTimeSelect={handleTimeSelect}
+                  />
                   
                   {errors.time && (
                     <p className="text-red-500 text-sm mt-2">{errors.time}</p>

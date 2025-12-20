@@ -80,7 +80,6 @@ router.get('/', authenticate, async (req, res) => {
     
     res.json(formattedUsers);
   } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });

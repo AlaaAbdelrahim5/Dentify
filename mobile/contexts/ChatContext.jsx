@@ -35,7 +35,6 @@ export const ChatProvider = ({ children }) => {
         
         if (!currentToken) {
           // Clear all state if no token
-          console.log('ChatContext: No token found, clearing state');
           setUserId(null);
           setConversations([]);
           setActiveConversation(null);
@@ -46,14 +45,11 @@ export const ChatProvider = ({ children }) => {
         }
 
         const decoded = jwtDecode(currentToken);
-        console.log('ChatContext: Decoded JWT token:', decoded);
         
         // Ensure userId is a number to match database format
         const currentUserId = Number(decoded.userId || decoded.id);
-        console.log('ChatContext: Extracted userId:', currentUserId, 'Type:', typeof currentUserId);
         
         if (!currentUserId || isNaN(currentUserId)) {
-          console.error('ChatContext: Invalid userId extracted from token');
           setIsLoadingConversations(false);
           return;
         }
@@ -63,20 +59,15 @@ export const ChatProvider = ({ children }) => {
         setIsLoadingConversations(true);
 
         // Listen for conversations
-        console.log('ChatContext: Setting up listener for userId:', currentUserId);
         const unsubscribe = getUserConversations(currentUserId, (convs) => {
-          console.log('ChatContext: Received', convs.length, 'conversations for user', currentUserId);
-          console.log('ChatContext: Conversations:', convs);
           setConversations(convs);
           setIsLoadingConversations(false);
         });
 
         return () => {
-          console.log('ChatContext: Cleaning up listener for user', currentUserId);
           unsubscribe && unsubscribe();
         };
       } catch (error) {
-        console.error('ChatContext: Error initializing chat:', error);
         // Clear state on error
         setUserId(null);
         setConversations([]);
@@ -102,7 +93,6 @@ export const ChatProvider = ({ children }) => {
       return sum + (conv.unreadCount?.[userId] || 0);
     }, 0);
     
-    console.log('ChatContext: Recalculated total unread count:', total, 'activeConversation:', activeConversation?.id);
     setTotalUnreadCount(total);
   }, [conversations, activeConversation, userId]);
 
@@ -126,7 +116,6 @@ export const ChatProvider = ({ children }) => {
       setActiveConversation(conversation);
       return conversation;
     } catch (error) {
-      console.error('Error starting conversation:', error);
       throw error;
     }
   };
@@ -137,7 +126,6 @@ export const ChatProvider = ({ children }) => {
     try {
       await sendMessage(activeConversation.id, userId, message, type);
     } catch (error) {
-      console.error('Error sending message:', error);
       throw error;
     }
   };
@@ -148,7 +136,7 @@ export const ChatProvider = ({ children }) => {
     try {
       await markMessagesAsRead(conversationId, userId);
     } catch (error) {
-      console.error('Error marking conversation as read:', error);
+      // Silent fail
     }
   };
 

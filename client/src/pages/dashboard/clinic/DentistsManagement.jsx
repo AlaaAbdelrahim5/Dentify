@@ -370,16 +370,6 @@ const DentistsManagement = () => {
     searchPlaceholder: 'Search dentists...'
   }
 
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
   // Table columns configuration
   const columns = [
     { key: 'dentist', label: 'Dentist' },

@@ -179,10 +179,6 @@ const SecretariesManagement = () => {
     return city ? city.label : cityValue
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-GB')
-  }
-
   const handleAddSecretary = () => {
     setSelectedSecretary(null)
     setShowAddModal(true)
@@ -582,7 +578,7 @@ const SecretariesManagement = () => {
                         Birth Date
                       </p>
                       <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {formatDate(secretary.birthDate)}
+                        {formatDateHelper(secretary.birthDate)}
                       </p>
                     </div>
                   </div>
@@ -663,7 +659,7 @@ const SecretariesManagement = () => {
                         Join Date:
                       </span>
                       <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {formatDate(secretary.createdAt)}
+                        {formatDateHelper(secretary.createdAt)}
                       </span>
                     </div>
                   </div>

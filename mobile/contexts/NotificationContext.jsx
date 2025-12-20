@@ -39,12 +39,9 @@ export const NotificationProvider = ({ children }) => {
         const decoded = jwtDecode(token);
         const userId = decoded.userId || decoded.id;
         const userIdStr = String(userId);
-        
-        console.log('NotificationContext - User ID:', userId, 'Type:', typeof userId);
 
         // If user changed, reset notifications
         if (currentUserId && currentUserId !== userIdStr) {
-          console.log('NotificationContext - User changed, resetting notifications');
           setNotifications([]);
           setUnreadCount(0);
         }
@@ -52,22 +49,16 @@ export const NotificationProvider = ({ children }) => {
         setCurrentUserId(userIdStr);
 
         // Listen for notifications - convert userId to string
-        console.log('NotificationContext - Listening for notifications with userId:', userIdStr);
-        
         const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
-          console.log('NotificationContext - Received notifications:', notifs);
           setNotifications(notifs);
           const unread = notifs.filter(n => !n.read).length;
           setUnreadCount(unread);
-          console.log('NotificationContext - Unread count:', unread);
         });
 
         return () => {
-          console.log('NotificationContext - Cleaning up listener');
           unsubscribe && unsubscribe();
         };
       } catch (error) {
-        console.error('Error initializing notifications:', error);
         setNotifications([]);
         setUnreadCount(0);
       }
@@ -80,7 +71,7 @@ export const NotificationProvider = ({ children }) => {
     try {
       await markNotificationAsRead(notificationId);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      // Silent fail
     }
   };
 
@@ -90,7 +81,7 @@ export const NotificationProvider = ({ children }) => {
     try {
       await markAllNotificationsAsRead(currentUserId);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      // Silent fail
     }
   };
 

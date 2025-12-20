@@ -1,9 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { 
   FaUserMd, 
   FaPlus, 
-  FaEdit, 
-  FaSearch, 
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
@@ -14,14 +12,9 @@ import {
   FaCheck,
   FaTimes,
   FaCertificate,
-  FaHospital,
-  FaGraduationCap,
   FaBan
 } from 'react-icons/fa'
 import { 
-  Card, 
-  Button, 
-  LoadingSpinner,
   PageHeader,
   StatsOverview,
   FilterBar,
@@ -36,219 +29,133 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 import { CITY_OPTIONS, DENTAL_SPECIALIZATIONS_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
-import { useDebounce } from '../../../hooks'
+import { useManagementPage } from '../../../hooks'
 import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
 
 const DentistsManagement = () => {
   const { isDarkMode } = useTheme()
-  const [dentists, setDentists] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filtering, setFiltering] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  
+  // Additional filters not handled by base hook
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterSpecialization, setFilterSpecialization] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [selectedDentist, setSelectedDentist] = useState(null)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [confirmAction, setConfirmAction] = useState(null)
-  const [dentistToAction, setDentistToAction] = useState(null)
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const [toast, setToast] = useState(null)
-  const [stats, setStats] = useState({
-    total: '-',
-    pending: '-',
-    active: '-'
-  })
-  const [error, setError] = useState(null)
 
-  // Fetch dentists with all statuses for admin
-  const fetchDentists = async (isFiltering = false) => {
-    try {
-      if (isFiltering) {
-        setFiltering(true)
-      } else {
-        setLoading(true)
-      }
-      
-      setError(null)
-      
-      const params = {
-        page: currentPage.toString(),
-        limit: '10',
-        includeAll: 'true', // Include all statuses for admin
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+  // Use unified management hook
+  const {
+    data: dentists,
+    loading,
+    filtering,
+    error,
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    currentPage,
+    totalPages,
+    goToPage,
+    stats,
+    showDetailsModal,
+    selectedItem: selectedDentist,
+    handleViewDetails,
+    closeAllModals,
+    showConfirmModal,
+    confirmAction,
+    isProcessing,
+    executeOperation,
+    cancelOperation,
+    confirmApprove,
+    confirmReject,
+    toast,
+    refresh,
+    updateFilters
+  } = useManagementPage({
+    fetchFn: async (params) => {
+      const extraParams = {
+        ...params,
+        includeAll: 'true',
         ...(filterCity && { city: filterCity }),
         ...(filterStatus && { status: filterStatus }),
         ...(filterSpecialization && { specialization: filterSpecialization })
       }
-
-      console.log('Dentist filter params:', params)
-      const queryString = new URLSearchParams(params).toString()
-      console.log('Query string:', queryString)
+      const queryString = new URLSearchParams(extraParams).toString()
       const response = await dentistsAPI.getAll(queryString)
-
-      if (response.success && response.data) {
-        console.log('Dentists loaded:', response.data?.length || 0)
-        setDentists(response.data)
-        setTotalPages(response.pagination?.pages || 1)
-        setCurrentPage(response.pagination?.page || 1)
-      } else {
-        setError('Failed to load dentists. Please try again.')
+      return {
+        success: response.success,
+        data: response.data || [],
+        totalPages: response.pagination?.pages || 1
       }
-    } catch (error) {
-      console.error('❌ Error fetching dentists:', error)
-      setError('Failed to load dentists. Please try again.')
-    } finally {
-      if (isFiltering) {
-        setFiltering(false)
-      } else {
-        setLoading(false)
-      }
-    }
-  }
+    },
+    fetchStatsFn: async () => await dentistsAPI.getStats(),
+    api: {
+      approve: dentistsAPI.approve,
+      reject: (dentist) => dentistsAPI.reject(dentist.userId, 'Rejected by admin'),
+      toggleStatus: (dentist) => dentistsAPI.toggleStatus(dentist.userId)
+    },
+    initialStats: { total: '-', pending: '-', active: '-' },
+    initialFilters: {}
+  })
 
-  // Fetch dentist statistics
-  const fetchStats = async () => {
-    try {
-      const response = await dentistsAPI.getStats()
-
-      if (response.success || response.data) {
-        setStats({
-          total: response.data.total || 0,
-          pending: response.data.pending || 0,
-          active: response.data.active || 0
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching dentist stats:', error)
-    }
-  }
-
-  // Approve dentist - opens confirmation modal
-  const handleApproveDentist = (dentist) => {
-    setDentistToAction(dentist)
-    setConfirmAction('approve')
-    setShowConfirmModal(true)
-  }
-
-  // Reject dentist - opens confirmation modal
-  const handleRejectDentist = (dentist) => {
-    setDentistToAction(dentist)
-    setConfirmAction('reject')
-    setShowConfirmModal(true)
-  }
-
-  // Toggle dentist status (activate/deactivate) - opens confirmation modal
+  // Custom action handler for toggle status
   const handleToggleStatus = (dentist) => {
     const action = dentist.user?.status === 'ACTIVE' ? 'deactivate' : 'activate'
-    setDentistToAction(dentist)
-    setConfirmAction(action)
-    setShowConfirmModal(true)
+    executeOperation(
+      async () => await dentistsAPI.toggleStatus(dentist.userId),
+      { action, item: dentist }
+    )
   }
 
-  // Execute the confirmation action
-  const executeAction = async () => {
-    const dentist = dentistToAction
-    const action = confirmAction
-
-    try {
-      let response
-
-      if (action === 'approve') {
-        response = await dentistsAPI.approve(dentist.userId)
-      } else if (action === 'reject') {
-        response = await dentistsAPI.reject(dentist.userId, 'Rejected by admin')
-      } else if (action === 'activate' || action === 'deactivate') {
-        response = await dentistsAPI.toggleStatus(dentist.userId)
-      }
-
-      if (response && response.success) {
-        // Refresh the list and stats
-        await Promise.all([fetchDentists(true), fetchStats()])
-        setShowConfirmModal(false)
-        setDentistToAction(null)
-        setConfirmAction(null)
-        setToast({ message: `Dentist ${action}d successfully`, type: 'success' })
-      } else {
-        setToast({ message: response?.message || `Failed to ${action} dentist`, type: 'error' })
-        setShowConfirmModal(false)
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing dentist:`, error)
-      setToast({ message: `Failed to ${action} dentist`, type: 'error' })
-      setShowConfirmModal(false)
-    }
-  }
-
-  // Fetch data when filters change
-  useEffect(() => {
-    setCurrentPage(1)
-    fetchDentists(true)
-  }, [debouncedSearchTerm, filterCity, filterStatus, filterSpecialization])
-
-  // Fetch data when page changes
-  useEffect(() => {
-    fetchDentists(false)
-  }, [currentPage])
-
-  // Initial load
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([fetchDentists(), fetchStats()])
-    }
-    loadData()
-  }, [])
-
-  // Stats configuration - use useMemo for performance
+  // Stats configuration
   const statsConfig = useMemo(() => [
     {
       label: 'Total Dentists',
       value: loading ? '-' : stats.total,
       icon: FaUserMd,
-      gradient: 'from-teal-600 to-cyan-600',
-      cols: 1
+      gradient: 'from-blue-600 to-indigo-600'
     },
     {
       label: 'Pending Approval',
       value: loading ? '-' : stats.pending,
       icon: FaClock,
-      gradient: 'from-orange-500 to-orange-600',
-      cols: 1
+      gradient: 'from-yellow-600 to-orange-600'
     },
     {
       label: 'Active Dentists',
       value: loading ? '-' : stats.active,
       icon: FaCheckCircle,
-      gradient: 'from-green-600 to-green-700',
-      cols: 1
+      gradient: 'from-green-600 to-green-700'
     }
   ], [stats, loading])
 
-  // Filter configuration - use useMemo for performance
+  // Filter configuration
   const filterProps = useMemo(() => ({
     searchTerm,
     onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
     filters: [
       {
-        placeholder: 'All Statuses',
-        value: filterStatus,
-        onChange: (e) => setFilterStatus(e.target.value),
-        options: STATUS_OPTIONS
-      },
-      {
-        placeholder: 'All Cities',
+        label: 'City',
         value: filterCity,
-        onChange: (e) => setFilterCity(e.target.value),
+        onChange: (e) => {
+          setFilterCity(e.target.value)
+          refresh()
+        },
         options: CITY_OPTIONS
       },
       {
-        placeholder: 'All Specializations',
+        label: 'Status',
+        value: filterStatus,
+        onChange: (e) => {
+          setFilterStatus(e.target.value)
+          refresh()
+        },
+        options: STATUS_OPTIONS
+      },
+      {
+        label: 'Specialization',
         value: filterSpecialization,
-        onChange: (e) => setFilterSpecialization(e.target.value),
+        onChange: (e) => {
+          setFilterSpecialization(e.target.value)
+          refresh()
+        },
         options: DENTAL_SPECIALIZATIONS_OPTIONS
       }
     ],
@@ -257,21 +164,21 @@ const DentistsManagement = () => {
       setFilterCity('')
       setFilterStatus('')
       setFilterSpecialization('')
-      setCurrentPage(1)
+      refresh()
     },
     filtering,
-    searchPlaceholder: 'Search dentists by name, license, or email...'
-  }), [searchTerm, debouncedSearchTerm, filterStatus, filterCity, filterSpecialization, filtering])
+    searchPlaceholder: 'Search dentists by name, email, or license...'
+  }), [searchTerm, debouncedSearchTerm, filterCity, filterStatus, filterSpecialization, filtering, setSearchTerm, refresh])
 
-  // Table columns - use useMemo for performance
-  const columns = useMemo(() => [
+  // Columns configuration
+  const columns = [
     { key: 'dentist', label: 'Dentist' },
     { key: 'license', label: 'License & Specialization' },
     { key: 'clinic', label: 'Clinic & Location' },
     { key: 'status', label: 'Status' },
-    { key: 'registration', label: 'Registration Date' },
+    { key: 'date', label: 'Registration Date' },
     { key: 'actions', label: 'Actions' }
-  ], [])
+  ]
 
   // Render table row - use useMemo to prevent recreation on every render
   const renderRow = useMemo(() => (dentist) => (
@@ -354,10 +261,7 @@ const DentistsManagement = () => {
           actions={[
             {
               icon: FaEye,
-              onClick: () => {
-                setSelectedDentist(dentist)
-                setShowDetailsModal(true)
-              },
+              onClick: () => handleViewDetails(dentist),
               title: 'View Details',
               variant: 'default',
               key: 'view'
@@ -366,14 +270,14 @@ const DentistsManagement = () => {
             ...(dentist.user?.status === 'PENDING' ? [
               {
                 icon: FaCheck,
-                onClick: () => handleApproveDentist(dentist),
+                onClick: () => confirmApprove(dentist),
                 title: 'Approve',
                 variant: 'success',
                 key: 'approve'
               },
               {
                 icon: FaTimes,
-                onClick: () => handleRejectDentist(dentist),
+                onClick: () => confirmReject(dentist),
                 title: 'Reject',
                 variant: 'danger',
                 key: 'reject'
@@ -383,7 +287,7 @@ const DentistsManagement = () => {
             ...(dentist.user?.status === 'REJECTED' ? [
               {
                 icon: FaCheck,
-                onClick: () => handleApproveDentist(dentist),
+                onClick: () => confirmApprove(dentist),
                 title: 'Approve',
                 variant: 'success',
                 key: 'approve'
@@ -412,17 +316,35 @@ const DentistsManagement = () => {
         />
       </td>
     </tr>
-  ), [isDarkMode, setSelectedDentist, setShowDetailsModal, handleApproveDentist, handleRejectDentist, handleToggleStatus])
+  ), [isDarkMode, handleViewDetails, confirmApprove, confirmReject, handleToggleStatus])
 
-  // Using the reusable DentistDetailsModal component from components folder
+  const tableProps = {
+    columns,
+    data: dentists,
+    renderRow,
+    loading: loading || filtering,
+    emptyMessage: searchTerm ? 'Try adjusting your search criteria' : 'No dentists yet',
+    emptyIcon: FaUserMd,
+    hasFilters: !!searchTerm || !!filterCity || !!filterStatus || !!filterSpecialization
+  }
+
+  const confirmProps = {
+    isOpen: showConfirmModal,
+    onClose: cancelOperation,
+    onConfirm: executeOperation,
+    item: selectedDentist,
+    action: confirmAction,
+    itemName: selectedDentist ? `Dr. ${selectedDentist.firstName} ${selectedDentist.lastName}` : '',
+    itemType: 'dentist',
+    isProcessing
+  }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
         title="Dentist Management"
-        subtitle="Review and approve dentist registrations"
-        icon={FaUserMd}
+        description="Review and approve dentist registrations"
       />
 
       {/* Statistics */}
@@ -432,55 +354,31 @@ const DentistsManagement = () => {
       <FilterBar {...filterProps} />
 
       {/* Data Table */}
-      <DataTable
-        data={dentists}
-        columns={columns}
-        renderRow={renderRow}
-        loading={filtering}
-        emptyMessage="No dentists found"
-        emptyIcon={FaUserMd}
-      />
+      <DataTable {...tableProps} />
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
 
       {/* Dentist Details Modal */}
       <DentistDetailsModal
         isOpen={showDetailsModal}
         dentistData={selectedDentist}
-        onClose={() => {
-          setShowDetailsModal(false)
-          setSelectedDentist(null)
-        }}
+        onClose={closeAllModals}
       />
 
       {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showConfirmModal}
-        onClose={() => {
-          setShowConfirmModal(false)
-          setConfirmAction(null)
-          setDentistToAction(null)
-        }}
-        onConfirm={executeAction}
-        item={dentistToAction}
-        action={confirmAction}
-        itemName={dentistToAction ? `Dr. ${dentistToAction.firstName} ${dentistToAction.lastName}` : ''}
-        itemType="dentist"
-      />
+      <ConfirmationModal {...confirmProps} />
 
       {/* Toast Notification */}
       {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={() => {}}
         />
       )}
     </div>

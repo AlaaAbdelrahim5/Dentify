@@ -40,7 +40,6 @@ export const useSettings = ({
       const transformedData = transformFetchData ? transformFetchData(rawData) : rawData;
       setProfile(transformedData);
     } catch (error) {
-      console.error('Error fetching profile:', error);
       showErrorAlert(error, 'Failed to load profile');
     } finally {
       setLoading(false);
@@ -84,7 +83,6 @@ export const useSettings = ({
         onProfileUpdate();
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
       showErrorAlert(error, 'Failed to save profile');
     } finally {
       setSaving(false);

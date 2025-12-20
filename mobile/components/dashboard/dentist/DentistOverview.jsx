@@ -22,7 +22,6 @@ const DentistOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
-      console.log('DentistOverview - User data:', user);
       setUserData(user);
 
       const response = await appointmentsAPI.getDentistAppointments();

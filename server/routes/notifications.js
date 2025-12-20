@@ -56,7 +56,6 @@ router.post('/send', authenticate, async (req, res) => {
       message: 'Notification sent successfully' 
     });
   } catch (error) {
-    console.error('Error sending notification:', error);
     res.status(500).json({ 
       error: 'Failed to send notification',
       details: error.message 
@@ -120,7 +119,6 @@ router.post('/send-multiple', authenticate, async (req, res) => {
       message: 'Notifications sent successfully' 
     });
   } catch (error) {
-    console.error('Error sending notifications:', error);
     res.status(500).json({ 
       error: 'Failed to send notifications',
       details: error.message 
@@ -144,7 +142,6 @@ router.post('/subscribe-topic', authenticate, async (req, res) => {
       message: `Successfully subscribed to topic: ${topic}` 
     });
   } catch (error) {
-    console.error('Error subscribing to topic:', error);
     res.status(500).json({ 
       error: 'Failed to subscribe to topic',
       details: error.message 
@@ -178,7 +175,6 @@ router.post('/send-to-topic', authenticate, async (req, res) => {
       message: `Notification sent to topic: ${topic}` 
     });
   } catch (error) {
-    console.error('Error sending notification to topic:', error);
     res.status(500).json({ 
       error: 'Failed to send notification to topic',
       details: error.message 

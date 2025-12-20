@@ -5,6 +5,7 @@ export { default as AppointmentSchedule } from './appointment/AppointmentSchedul
 export { default as AppointmentsHistoryTab } from './appointment/AppointmentsHistoryTab'
 export { default as BookAppointmentModal } from './appointment/BookAppointmentModal'
 export { default as NewAppointmentModal } from './appointment/NewAppointmentModal'
+export { default as AppointmentSlotPicker } from './appointment/AppointmentSlotPicker'
 
 // Feature-specific Components - Clinic
 export { default as ClinicDetailsModal } from './clinic/ClinicDetailsModal'

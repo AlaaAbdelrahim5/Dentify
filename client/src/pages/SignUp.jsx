@@ -207,11 +207,7 @@ const SignUp = () => {
         city: formData.city,
       };
 
-      console.log('Sending signup data:', { ...signupData, password: '***' });
-
       const response = await authAPI.register(signupData);
-
-      console.log('Signup response:', response);
 
       // Backend returns { message, user, token, refreshToken }
       if (response && response.token) {

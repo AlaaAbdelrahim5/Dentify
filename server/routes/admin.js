@@ -31,7 +31,6 @@ router.get('/me', authenticate, authorize('Admin'), async (req, res) => {
       data: admin
     });
   } catch (error) {
-    console.error('Error fetching admin profile:', error);
     errorResponse(res, 'Failed to fetch admin profile');
   }
 });
@@ -70,7 +69,6 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, stats, 'Admin statistics fetched successfully');
   } catch (error) {
-    console.error('Error fetching admin statistics:', error);
     return errorResponse(res, 'Failed to fetch admin statistics');
   }
 });
@@ -141,9 +139,6 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
 
     return paginatedResponse(res, transformedAdmins, pagination, 'Admins fetched successfully');
   } catch (error) {
-    console.error('Error fetching admins:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
     return errorResponse(res, 'Failed to fetch admins');
   }
 });
@@ -175,7 +170,6 @@ router.get('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, admin, 'Admin fetched successfully');
   } catch (error) {
-    console.error('Error fetching admin:', error);
     return errorResponse(res, 'Failed to fetch admin');
   }
 });
@@ -244,9 +238,6 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, result, 'Admin created successfully', 201);
   } catch (error) {
-    console.error('Error creating admin:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
     return errorResponse(res, 'Failed to create admin');
   }
 });
@@ -310,7 +301,6 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, result, 'Admin updated successfully');
   } catch (error) {
-    console.error('Error updating admin:', error);
     return errorResponse(res, 'Failed to update admin');
   }
 });
@@ -349,7 +339,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req,
     const message = newStatus === 'ACTIVE' ? 'Admin activated successfully' : 'Admin deactivated successfully';
     return successResponse(res, { status: newStatus }, message);
   } catch (error) {
-    console.error('Error toggling admin status:', error);
     return errorResponse(res, 'Failed to toggle admin status');
   }
 });
@@ -376,7 +365,6 @@ router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, null, 'Admin deleted successfully');
   } catch (error) {
-    console.error('Error deleting admin:', error);
     return errorResponse(res, 'Failed to delete admin');
   }
 });

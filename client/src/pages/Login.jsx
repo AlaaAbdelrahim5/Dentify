@@ -96,17 +96,9 @@ const Login = () => {
     setApiError("");
 
     try {
-      console.log('Attempting login with email:', formData.email);
-      
       const response = await authAPI.login({
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
-      });
-
-      console.log('Login response received:', { 
-        hasUser: !!response.user, 
-        hasToken: !!response.token,
-        userRole: response.user?.role 
       });
 
       // Backend returns { message, user, token, refreshToken } directly
@@ -124,8 +116,6 @@ const Login = () => {
           }, 
           rememberMe
         );
-
-        console.log('Login successful, navigating to dashboard...');
 
         // Navigate to appropriate dashboard based on user role
         const dashboardRoute = authUtils.getDashboardRoute();

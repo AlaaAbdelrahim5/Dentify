@@ -37,8 +37,6 @@ const NotificationsScreen = () => {
   };
 
   const renderNotification = ({ item }) => {
-    console.log('NotificationScreen - Rendering:', item.title, 'Body:', item.body);
-    
     return (
       <TouchableOpacity
         onPress={() => handleNotificationPress(item)}

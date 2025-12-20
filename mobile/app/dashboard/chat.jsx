@@ -44,14 +44,6 @@ const ChatScreen = () => {
         // Handle both response formats: direct array or wrapped in data property
         const usersData = Array.isArray(response) ? response : (response.data || []);
         
-        console.log('📸 Fetched users:', usersData.length);
-        console.log('📸 Sample user data:', JSON.stringify(usersData[0], null, 2));
-        
-        // Log all users with their profile images
-        usersData.forEach(u => {
-          console.log(`📸 User ${u.id} (${u.name}): profileImage = ${u.profileImage}`);
-        });
-        
         // Filter users based on role
         const currentUser = authUtils.getCurrentUser();
         const currentUserRole = currentUser?.role?.toLowerCase();
@@ -68,7 +60,6 @@ const ChatScreen = () => {
           return true;
         });
         
-        console.log('📸 Filtered users:', filteredUsers.length);
         setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -82,17 +73,10 @@ const ChatScreen = () => {
 
   const getOtherUser = (conversation) => {
     if (!conversation) {
-      console.log('📸 getOtherUser: No conversation provided');
       return null;
     }
     const otherUserId = conversation.participants.find(p => p !== userId);
-    console.log(`📸 getOtherUser: Looking for user ${otherUserId} in ${users.length} users`);
     const foundUser = users.find(u => u.id === otherUserId);
-    if (foundUser) {
-      console.log(`📸 getOtherUser: Found user ${foundUser.name}, profileImage: ${foundUser.profileImage}`);
-    } else {
-      console.log(`📸 getOtherUser: User ${otherUserId} not found in users array`);
-    }
     return foundUser;
   };
 
@@ -115,10 +99,6 @@ const ChatScreen = () => {
   const UserItem = React.memo(({ item }) => {
     const [imageError, setImageError] = useState(false);
     const imageUrl = getImageUrl(item.profileImage);
-
-    useEffect(() => {
-      console.log('UserItem - User:', item.name, 'ProfileImage:', item.profileImage, 'ImageURL:', imageUrl);
-    }, [item, imageUrl]);
 
     return (
       <TouchableOpacity

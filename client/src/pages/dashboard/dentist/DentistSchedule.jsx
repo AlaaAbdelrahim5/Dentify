@@ -12,6 +12,7 @@ import {
 import { Card, Button, Input, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
+import { formatTime } from '../../../utils/helpers'
 import { ensureArray } from '../../../utils/helpers'
 
 const DentistSchedule = () => {
@@ -102,15 +103,6 @@ const DentistSchedule = () => {
   const [defaultDuration, setDefaultDuration] = useState(null)
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-  const formatTime = (time) => {
-    if (!time) return 'Not Set'
-    const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
 
   const handleDayToggle = (day) => {
     setSchedule(prev => ({

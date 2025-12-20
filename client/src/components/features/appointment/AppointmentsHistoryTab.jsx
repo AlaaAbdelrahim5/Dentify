@@ -12,7 +12,7 @@ import {
   FaInfoCircle
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { formatDate as formatDateHelper } from '../../../utils/helpers'
+import { formatDate as formatDateHelper, formatTime } from '../../../utils/helpers'
 import { Card, Select, StatusBadge, Button, DataTable } from '../../common'
 
 const AppointmentsHistoryTab = ({ appointments = [] }) => {
@@ -34,14 +34,6 @@ const AppointmentsHistoryTab = ({ appointments = [] }) => {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
-    })
-  }
-
-  const formatTime = (dateString) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
     })
   }
 

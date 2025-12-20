@@ -51,7 +51,6 @@ export const useDataFetch = (fetchFunction, options = {}) => {
         onSuccessRef.current(result);
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
       setError(err);
       
       if (onErrorRef.current) {
@@ -120,14 +119,12 @@ export const useMultiDataFetch = (fetchFunctions = []) => {
         if (result.status === 'fulfilled') {
           return result.value;
         } else {
-          console.error(`Error in fetch function ${index}:`, result.reason);
           return null;
         }
       });
 
       setData(processedData);
     } catch (err) {
-      console.error('Error fetching multiple data sources:', err);
       setError(err);
     } finally {
       setLoading(false);

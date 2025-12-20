@@ -35,9 +35,6 @@ const NotificationBell = () => {
   };
 
   const renderNotification = ({ item }) => {
-    // Debug log to see notification data
-    console.log('Rendering notification:', item.title, 'Body:', item.body, 'Full item:', item);
-    
     return (
       <TouchableOpacity
         onPress={() => handleNotificationPress(item)}

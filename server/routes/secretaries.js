@@ -70,7 +70,6 @@ router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
 
     return successResponse(res, transformedSecretary, 'Secretary profile fetched successfully');
   } catch (error) {
-    console.error('Error fetching secretary profile:', error);
     return errorResponse(res, 'Failed to fetch secretary profile', 500);
   }
 });
@@ -123,7 +122,6 @@ router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
 
     return successResponse(res, transformedSecretaries, 'Secretaries fetched successfully');
   } catch (error) {
-    console.error('Error fetching secretaries:', error);
     return errorResponse(res, 'Failed to fetch secretaries', 500);
   }
 });
@@ -159,7 +157,6 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, secretaries, 'Secretaries fetched successfully');
   } catch (error) {
-    console.error('Error fetching secretaries:', error);
     return errorResponse(res, 'Failed to fetch secretaries', 500);
   }
 });
@@ -223,7 +220,6 @@ router.get('/clinic/:clinicId', authenticate, authorize('Admin', 'Clinic'), asyn
     });
     return successResponse(res, secretaries, 'Secretaries fetched successfully');
   } catch (error) {
-    console.error('Error fetching secretaries for clinic:', error);
     return errorResponse(res, 'Failed to fetch secretaries for clinic', 500);
   }
 });
@@ -316,7 +312,6 @@ router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
 
     return successResponse(res, transformedSecretary, 'Secretary created successfully', 201);
   } catch (error) {
-    console.error('Error creating secretary:', error);
     return errorResponse(res, error.message || 'Failed to create secretary', 500);
   }
 });
@@ -409,7 +404,6 @@ router.put('/me', authenticate, authorize('Secretary'), async (req, res) => {
 
     return successResponse(res, transformedSecretary, 'Secretary profile updated successfully');
   } catch (error) {
-    console.error('Error updating secretary profile:', error);
     return errorResponse(res, error.message || 'Failed to update secretary profile', 500);
   }
 });
@@ -527,7 +521,6 @@ router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
 
     return successResponse(res, transformedSecretary, 'Secretary updated successfully');
   } catch (error) {
-    console.error('Error updating secretary:', error);
     return errorResponse(res, error.message || 'Failed to update secretary', 500);
   }
 });
@@ -558,7 +551,6 @@ router.delete('/:id', authenticate, authorize('Clinic'), async (req, res) => {
 
     return successResponse(res, null, 'Secretary deleted successfully');
   } catch (error) {
-    console.error('Error deleting secretary:', error);
     return errorResponse(res, error.message || 'Failed to delete secretary', 500);
   }
 });
@@ -628,7 +620,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Clinic'), async (req
       `Secretary ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`
     );
   } catch (error) {
-    console.error('Error toggling secretary status:', error);
     return errorResponse(res, error.message || 'Failed to toggle secretary status', 500);
   }
 });

@@ -28,7 +28,6 @@ const Home = () => {
 
     // Listen for logout events
     const handleLogout = () => {
-      console.log('Home: Logout detected')
       setIsAuthenticated(false)
     }
 
@@ -42,7 +41,6 @@ const Home = () => {
   // If user is authenticated and didn't just logout, redirect to their dashboard
   if (!isChecking && isAuthenticated) {
     const dashboardRoute = authUtils.getDashboardRoute()
-    console.log('Home: Redirecting authenticated user to dashboard:', dashboardRoute)
     return <Navigate to={dashboardRoute} replace />
   }
 

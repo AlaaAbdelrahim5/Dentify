@@ -6,9 +6,6 @@ const { paginatedResponse, successResponse, errorResponse, notFoundResponse, cal
 
 // Get radiology centers statistics
 router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  console.log('=== GET /api/radiology-centers/stats called ===');
-  console.log('User:', req.user);
-  
   try {
     // Count all users with RadiologyCenter role
     const total = await prisma.user.count({
@@ -34,8 +31,6 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
 
-    console.log('Stats result:', { total, active, inactive });
-
     res.json({ 
       success: true,
       data: {
@@ -45,16 +40,12 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching radiology center stats:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch radiology center statistics' });
   }
 });
 
 // Get current radiology center profile
 router.get('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
-  console.log('=== GET /api/radiology-centers/me called ===');
-  console.log('User:', req.user);
-  
   try {
     const userId = req.user.id;
 
@@ -81,14 +72,11 @@ router.get('/me', authenticate, authorize('RadiologyCenter'), async (req, res) =
       });
     }
 
-    console.log('Radiology center found:', radiologyCenter);
-
     res.json({ 
       success: true,
       data: radiologyCenter
     });
   } catch (error) {
-    console.error('Error fetching radiology center profile:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch radiology center profile' 
@@ -98,10 +86,6 @@ router.get('/me', authenticate, authorize('RadiologyCenter'), async (req, res) =
 
 // Update current radiology center profile
 router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
-  console.log('=== PUT /api/radiology-centers/me called ===');
-  console.log('User:', req.user);
-  console.log('Body:', req.body);
-  
   try {
     const userId = req.user.id;
     const { 
@@ -141,15 +125,12 @@ router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) =
       }
     });
 
-    console.log('Radiology center updated:', updatedCenter);
-
     res.json({ 
       success: true,
       data: updatedCenter,
       message: 'Radiology center profile updated successfully'
     });
   } catch (error) {
-    console.error('Error updating radiology center profile:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to update radiology center profile' 
@@ -159,10 +140,6 @@ router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) =
 
 // Get all radiology centers with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
-  console.log('=== GET /api/radiology-centers called ===');
-  console.log('Query params:', req.query);
-  console.log('User:', req.user);
-  
   try {
     const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
     
@@ -241,12 +218,8 @@ router.get('/', authenticate, async (req, res) => {
       }
     });
 
-    console.log('Successfully fetched', radiologyCenters.length, 'radiology centers');
     return paginatedResponse(res, radiologyCenters, pagination, 'Radiology centers fetched successfully');
   } catch (error) {
-    console.error('Error fetching radiology centers:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
     return errorResponse(res, `Failed to fetch radiology centers: ${error.message}`, 500);
   }
 });
@@ -285,7 +258,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req,
     const message = newStatus === 'ACTIVE' ? 'Radiology center activated successfully' : 'Radiology center deactivated successfully';
     return successResponse(res, { status: newStatus }, message);
   } catch (error) {
-    console.error('Error toggling radiology center status:', error);
     return errorResponse(res, 'Failed to toggle radiology center status');
   }
 });
@@ -317,7 +289,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     return successResponse(res, radiologyCenter, 'Radiology center fetched successfully');
   } catch (error) {
-    console.error('Error fetching radiology center:', error);
     return errorResponse(res, 'Failed to fetch radiology center');
   }
 });
@@ -401,9 +372,6 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, result, 'Radiology center created successfully', 201);
   } catch (error) {
-    console.error('Error creating radiology center:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
     return errorResponse(res, `Failed to create radiology center: ${error.message}`, 500);
   }
 });
@@ -480,7 +448,6 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, result, 'Radiology center updated successfully');
   } catch (error) {
-    console.error('Error updating radiology center:', error);
     return errorResponse(res, 'Failed to update radiology center');
   }
 });
@@ -507,7 +474,6 @@ router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, null, 'Radiology center deleted successfully');
   } catch (error) {
-    console.error('Error deleting radiology center:', error);
     return errorResponse(res, 'Failed to delete radiology center');
   }
 });

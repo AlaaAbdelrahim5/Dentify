@@ -10,7 +10,7 @@ import {
   FaEye,
   FaTimes
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, LoadingState, ErrorState, EmptyState } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -94,40 +94,25 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
 
       {/* Dentists List */}
       {loading ? (
-        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mb-4"></div>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              Loading dentists...
-            </p>
-          </div>
+        <Card>
+          <LoadingState message="Loading dentists..." />
         </Card>
       ) : error ? (
-        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <FaUserMd className={`w-12 h-12 mx-auto mb-4 text-red-500`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Error Loading Dentists
-          </h3>
-          <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {error}
-          </p>
-          <Button onClick={fetchDentists}>
-            Try Again
-          </Button>
+        <Card>
+          <ErrorState
+            icon={FaUserMd}
+            title="Error Loading Dentists"
+            message={error}
+            onRetry={fetchDentists}
+          />
         </Card>
       ) : filteredDentists.length === 0 ? (
-        <Card className={`p-12 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <FaUserMd className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            No dentists found
-          </h3>
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-            {searchTerm ? 'No dentists match your search criteria' : 'No dentists in this clinic'}
-          </p>
+        <Card>
+          <EmptyState
+            icon={FaUserMd}
+            title="No dentists found"
+            message={searchTerm ? 'No dentists match your search criteria' : 'No dentists in this clinic'}
+          />
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

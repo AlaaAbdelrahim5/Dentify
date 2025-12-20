@@ -40,12 +40,6 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
   const imageUrl = getImageUrl(otherUser?.profileImage);
 
   useEffect(() => {
-    if (otherUser) {
-      console.log('ChatWindow - User:', otherUser.name, 'ProfileImage:', otherUser.profileImage, 'ImageURL:', imageUrl);
-    }
-  }, [otherUser, imageUrl]);
-
-  useEffect(() => {
     // Scroll to bottom when new messages arrive
     if (messages.length > 0) {
       setTimeout(() => {
@@ -68,7 +62,7 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
       await sendChatMessage(newMessage.trim());
       setNewMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Error handled by context
     }
   };
 

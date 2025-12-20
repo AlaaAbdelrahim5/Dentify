@@ -33,7 +33,6 @@ const SharedTreatments = ({ fetchTreatmentsAPI, role, showCount = true }) => {
       const response = await fetchTreatmentsAPI();
       setTreatments(response.treatments || []);
     } catch (error) {
-      console.error('Error fetching treatments:', error);
       showErrorAlert(error, 'Failed to load treatments');
     } finally {
       setLoading(false);

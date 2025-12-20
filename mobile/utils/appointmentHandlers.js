@@ -47,7 +47,6 @@ export const createCancelHandler = ({ role, onSuccess }) => {
               Alert.alert('Success', 'Appointment cancelled successfully');
               onSuccess?.();
             } catch (error) {
-              console.error('Error cancelling appointment:', error);
               showErrorAlert(error, 'Failed to cancel appointment');
             }
           },
@@ -89,7 +88,6 @@ export const createConfirmHandler = ({ role, onSuccess }) => {
               Alert.alert('Success', 'Appointment confirmed successfully');
               onSuccess?.();
             } catch (error) {
-              console.error('Error confirming appointment:', error);
               showErrorAlert(error, 'Failed to confirm appointment');
             }
           },
@@ -188,7 +186,6 @@ export const createSessionCostSaveHandler = ({
       setSelectedAppointment(null);
       onSuccess?.();
     } catch (error) {
-      console.error('Error completing appointment:', error);
       throw error; // Let modal handle the error
     }
   };

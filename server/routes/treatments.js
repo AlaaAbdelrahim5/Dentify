@@ -17,7 +17,6 @@ const sendTreatmentNotification = async (userId, title, body, data = {}) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Error sending treatment notification:', error);
   }
 };
 
@@ -71,7 +70,6 @@ router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching treatment stats:', error);
     res.status(500).json({ error: 'Failed to fetch treatment statistics' });
   }
 });
@@ -133,7 +131,6 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
 
     res.json({ treatments });
   } catch (error) {
-    console.error('Error fetching treatments:', error);
     res.status(500).json({ error: 'Failed to fetch treatments' });
   }
 });
@@ -168,7 +165,6 @@ router.get('/patient/my-treatments', authenticate, authorize('Patient'), async (
 
     res.json({ treatments });
   } catch (error) {
-    console.error('Error fetching patient treatments:', error);
     res.status(500).json({ error: 'Failed to fetch treatments' });
   }
 });
@@ -266,7 +262,6 @@ router.get('/clinic/my-treatments', authenticate, authorize('Clinic', 'Secretary
 
     res.json({ treatments });
   } catch (error) {
-    console.error('Error fetching treatments:', error);
     res.status(500).json({ error: 'Failed to fetch treatments' });
   }
 });
@@ -338,7 +333,6 @@ router.get('/', authenticate, authorize('Admin', 'Clinic', 'Secretary'), async (
     });
     res.json({ treatments });
   } catch (error) {
-    console.error('Error fetching treatments:', error);
     res.status(500).json({ error: 'Failed to fetch treatments' });
   }
 });
@@ -384,7 +378,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ treatment });
   } catch (error) {
-    console.error('Error fetching treatment:', error);
     res.status(500).json({ error: 'Failed to fetch treatment' });
   }
 });
@@ -462,7 +455,6 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       treatment 
     });
   } catch (error) {
-    console.error('Error creating treatment:', error);
     res.status(500).json({ error: 'Failed to create treatment' });
   }
 });
@@ -554,7 +546,6 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
       treatment 
     });
   } catch (error) {
-    console.error('Error updating treatment:', error);
     res.status(500).json({ error: 'Failed to update treatment' });
   }
 });
@@ -586,7 +577,6 @@ router.get('/:id/prescriptions', authenticate, async (req, res) => {
     const prescriptions = treatment.prescriptions || [];
     res.json({ prescriptions });
   } catch (error) {
-    console.error('Error fetching prescriptions:', error);
     res.status(500).json({ error: 'Failed to fetch prescriptions' });
   }
 });
@@ -665,7 +655,6 @@ router.post('/:id/prescriptions', authenticate, authorize('Dentist'), async (req
       prescription: newPrescription 
     });
   } catch (error) {
-    console.error('Error creating prescription:', error);
     res.status(500).json({ error: 'Failed to create prescription' });
   }
 });
@@ -708,7 +697,6 @@ router.delete('/:id/prescriptions/:prescriptionId', authenticate, authorize('Den
 
     res.json({ message: 'Prescription deleted successfully' });
   } catch (error) {
-    console.error('Error deleting prescription:', error);
     res.status(500).json({ error: 'Failed to delete prescription' });
   }
 });
@@ -740,7 +728,6 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, r
 
     res.json({ message: 'Treatment deleted successfully' });
   } catch (error) {
-    console.error('Error deleting treatment:', error);
     res.status(500).json({ error: 'Failed to delete treatment' });
   }
 });

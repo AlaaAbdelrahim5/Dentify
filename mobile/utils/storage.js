@@ -6,7 +6,6 @@ export const storage = {
     try {
       return await AsyncStorage.getItem(key);
     } catch (error) {
-      console.error('Error getting item from storage:', error);
       return null;
     }
   },
@@ -15,7 +14,7 @@ export const storage = {
     try {
       await AsyncStorage.setItem(key, value);
     } catch (error) {
-      console.error('Error setting item in storage:', error);
+      // Silent fail
     }
   },
 
@@ -23,7 +22,7 @@ export const storage = {
     try {
       await AsyncStorage.removeItem(key);
     } catch (error) {
-      console.error('Error removing item from storage:', error);
+      // Silent fail
     }
   },
 
@@ -31,7 +30,7 @@ export const storage = {
     try {
       await AsyncStorage.clear();
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      // Silent fail
     }
   }
 };

@@ -63,7 +63,6 @@ const NewAppointmentModal = ({
                        user?.id;
       
       if (!dentistId) {
-        console.error('Dentist ID not available');
         return;
       }
 
@@ -105,7 +104,6 @@ const NewAppointmentModal = ({
       setAvailableSlots(slots);
       setBookedSlots(booked);
     } catch (err) {
-      console.error('Error fetching available slots:', err);
       showErrorAlert('Failed to load available time slots', err.message);
       setAvailableSlots([]);
       setBookedSlots([]);
@@ -252,8 +250,6 @@ const NewAppointmentModal = ({
       setLoading(true);
       const user = await authUtils.getCurrentUser();
       
-      console.log('Current user:', user);
-      
       if (!user || !user.id) {
         Alert.alert('Error', 'User not authenticated. Please login again.');
         setLoading(false);
@@ -271,11 +267,6 @@ const NewAppointmentModal = ({
                       preselectedTreatment?.clinicId || 
                       user.dentist?.clinicId || 
                       user.clinicId;
-      
-      console.log('Clinic ID:', clinicId);
-      console.log('Dentist info:', dentistInfo);
-      console.log('Patient info:', patientInfo);
-      console.log('Treatment:', preselectedTreatment);
       
       if (!clinicId) {
         Alert.alert('Error', 'Clinic information is missing. Please contact support.');
@@ -300,26 +291,13 @@ const NewAppointmentModal = ({
                        preselectedTreatment?.dentistId ||
                        user.id;
       
-      console.log('Appointment data being prepared:');
-      console.log('- Patient info:', patientInfo);
-      console.log('- Patient ID:', patientId);
-      console.log('- Dentist info:', dentistInfo);
-      console.log('- Dentist ID:', dentistId);
-      console.log('- Clinic ID:', clinicId);
-      console.log('- Date:', formData.date);
-      console.log('- Start Time:', startDateTime.toISOString());
-      console.log('- End Time:', endDateTime.toISOString());
-      console.log('- Treatment ID:', treatmentId);
-      
       if (!patientId) {
-        console.error('Could not extract patient ID from:', patientInfo);
         Alert.alert('Error', 'Patient ID is missing. Please try again.');
         setLoading(false);
         return;
       }
       
       if (!dentistId) {
-        console.error('Could not extract dentist ID from:', dentistInfo);
         Alert.alert('Error', 'Dentist ID is missing. Please try again.');
         setLoading(false);
         return;
@@ -336,10 +314,7 @@ const NewAppointmentModal = ({
         treatmentId: treatmentId ? parseInt(treatmentId) : null
       };
 
-      console.log('Final appointment data:', appointmentData);
-      
       const response = await appointmentsAPI.create(appointmentData);
-      console.log('Appointment created successfully:', response);
       
       Alert.alert('Success', 'Appointment created successfully!', [
         { text: 'OK', onPress: () => {
@@ -348,13 +323,7 @@ const NewAppointmentModal = ({
         }}
       ]);
     } catch (error) {
-      console.error('Error creating appointment:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
+
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
                           error.message || 

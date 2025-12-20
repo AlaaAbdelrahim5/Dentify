@@ -17,7 +17,6 @@ const sendPaymentNotification = async (userId, title, body, data = {}) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Error sending payment notification:', error);
   }
 };
 
@@ -74,7 +73,6 @@ router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching payment stats:', error);
     res.status(500).json({ error: 'Failed to fetch payment statistics' });
   }
 });
@@ -145,7 +143,6 @@ router.get('/dentist/my-payments', authenticate, authorize('Dentist'), async (re
 
     res.json({ payments });
   } catch (error) {
-    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
@@ -204,7 +201,6 @@ router.get('/patient/my-payments', authenticate, authorize('Patient'), async (re
 
     res.json({ payments });
   } catch (error) {
-    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
@@ -240,7 +236,6 @@ router.get('/treatment/:treatmentId', authenticate, async (req, res) => {
 
     res.json({ payments });
   } catch (error) {
-    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
@@ -276,7 +271,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ payment });
   } catch (error) {
-    console.error('Error fetching payment:', error);
     res.status(500).json({ error: 'Failed to fetch payment' });
   }
 });
@@ -381,7 +375,6 @@ router.get('/clinic/my-payments', authenticate, authorize('Clinic', 'Secretary')
 
     res.json({ payments });
   } catch (error) {
-    console.error('Error fetching payments:', error);
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
@@ -527,7 +520,6 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
       treatment: updatedTreatment
     });
   } catch (error) {
-    console.error('Error creating payment:', error);
     res.status(500).json({ error: 'Failed to record payment' });
   }
 });
@@ -642,7 +634,6 @@ router.put('/:id', authenticate, authorize('Dentist', 'Admin', 'Secretary'), asy
       payment 
     });
   } catch (error) {
-    console.error('Error updating payment:', error);
     res.status(500).json({ error: 'Failed to update payment' });
   }
 });
@@ -717,7 +708,6 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin', 'Secretary'), 
 
     res.json({ message: 'Payment deleted successfully' });
   } catch (error) {
-    console.error('Error deleting payment:', error);
     res.status(500).json({ error: 'Failed to delete payment' });
   }
 });

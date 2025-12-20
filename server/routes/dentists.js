@@ -29,7 +29,6 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching dentist stats:', error);
     res.status(500).json({ error: 'Failed to fetch dentist statistics' });
   }
 });
@@ -93,7 +92,6 @@ router.get('/clinic', authenticate, authorize('Clinic', 'Secretary'), async (req
 
     return successResponse(res, dentists, 'Dentists fetched successfully');
   } catch (error) {
-    console.error('Error fetching clinic dentists:', error);
     return errorResponse(res, 'Failed to fetch dentists');
   }
 });
@@ -203,7 +201,6 @@ router.get('/', authenticate, async (req, res) => {
 
     return paginatedResponse(res, dentists, pagination, 'Dentists fetched successfully');
   } catch (error) {
-    console.error('Error fetching dentists:', error);
     return errorResponse(res, 'Failed to fetch dentists');
   }
 });
@@ -268,7 +265,6 @@ router.get('/dashboard-stats', authenticate, authorize('Dentist'), async (req, r
       }
     }, 'Dashboard stats fetched successfully');
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
     return errorResponse(res, 'Failed to fetch dashboard stats');
   }
 });
@@ -313,7 +309,6 @@ router.get('/me', authenticate, authorize('Dentist'), async (req, res) => {
 
     return successResponse(res, { dentist }, 'Dentist profile fetched successfully');
   } catch (error) {
-    console.error('Error fetching dentist profile:', error);
     return errorResponse(res, 'Failed to fetch dentist profile');
   }
 });
@@ -418,7 +413,6 @@ router.put('/me', authenticate, authorize('Dentist'), async (req, res) => {
 
     return successResponse(res, { dentist: result }, 'Dentist profile updated successfully');
   } catch (error) {
-    console.error('Error updating dentist profile:', error);
     if (error.code === 'P2002') {
       return errorResponse(res, 'Email or license number already exists', 400);
     }
@@ -524,7 +518,6 @@ router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) =>
 
     return successResponse(res, result, 'Dentist request created successfully. Awaiting admin approval.', 201);
   } catch (error) {
-    console.error('Error creating dentist:', error);
     return errorResponse(res, error.message || 'Failed to create dentist');
   }
 });
@@ -657,7 +650,6 @@ router.put('/:id', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async 
 
     return successResponse(res, result, 'Dentist updated successfully');
   } catch (error) {
-    console.error('Error updating dentist:', error);
     return errorResponse(res, error.message || 'Failed to update dentist');
   }
 });
@@ -691,7 +683,6 @@ router.delete('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, re
 
     return successResponse(res, null, 'Dentist deleted successfully');
   } catch (error) {
-    console.error('Error deleting dentist:', error);
     return errorResponse(res, 'Failed to delete dentist');
   }
 });
@@ -719,7 +710,6 @@ router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) =
 
     return successResponse(res, null, 'Dentist approved successfully');
   } catch (error) {
-    console.error('Error approving dentist:', error);
     return errorResponse(res, 'Failed to approve dentist');
   }
 });
@@ -763,7 +753,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin', 'Clinic'), a
 
     return successResponse(res, { status: newStatus }, `Dentist ${newStatus.toLowerCase()} successfully`);
   } catch (error) {
-    console.error('Error toggling dentist status:', error);
     return errorResponse(res, 'Failed to toggle dentist status');
   }
 });
@@ -794,7 +783,6 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
     
     return successResponse(res, { reason }, 'Dentist rejected successfully');
   } catch (error) {
-    console.error('Error rejecting dentist:', error);
     return errorResponse(res, 'Failed to reject dentist');
   }
 });
@@ -827,7 +815,6 @@ router.delete('/:id', authenticate, authorize('Admin', 'Clinic'), async (req, re
 
     return successResponse(res, null, 'Dentist deleted successfully');
   } catch (error) {
-    console.error('Error deleting dentist:', error);
     return errorResponse(res, 'Failed to delete dentist');
   }
 });

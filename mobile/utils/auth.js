@@ -27,7 +27,6 @@ export const authUtils = {
       const token = await storage.getItem(authUtils.ACCESS_TOKEN_KEY);
       return token;
     } catch (error) {
-      console.error('Error getting access token:', error);
       return null;
     }
   },
@@ -38,7 +37,6 @@ export const authUtils = {
       const token = await storage.getItem(authUtils.REFRESH_TOKEN_KEY);
       return token;
     } catch (error) {
-      console.error('Error getting refresh token:', error);
       return null;
     }
   },
@@ -61,8 +59,6 @@ export const authUtils = {
   // Set tokens in storage
   setTokens: async (tokens, remember = false) => {
     try {
-      console.log('Setting tokens:', { hasAccess: !!tokens.accessToken, hasRefresh: !!tokens.refreshToken, remember });
-      
       if (tokens.accessToken) {
         await storage.setItem(authUtils.ACCESS_TOKEN_KEY, tokens.accessToken);
       }
@@ -77,7 +73,7 @@ export const authUtils = {
         await storage.removeItem(authUtils.REMEMBER_KEY);
       }
     } catch (error) {
-      console.error('Error setting tokens:', error);
+      // Silent fail
     }
   },
 
@@ -87,7 +83,7 @@ export const authUtils = {
       await storage.removeItem(authUtils.ACCESS_TOKEN_KEY);
       await storage.removeItem(authUtils.REFRESH_TOKEN_KEY);
     } catch (error) {
-      console.error('Error clearing tokens:', error);
+      // Silent fail
     }
   },
 
@@ -97,7 +93,6 @@ export const authUtils = {
       const user = await storage.getItem(authUtils.USER_KEY);
       return user ? JSON.parse(user) : null;
     } catch (error) {
-      console.error('Error getting current user:', error);
       return null;
     }
   },
@@ -108,7 +103,7 @@ export const authUtils = {
       const userData = JSON.stringify(user);
       await storage.setItem(authUtils.USER_KEY, userData);
     } catch (error) {
-      console.error('Error setting user:', error);
+      // Silent fail
     }
   },
 
@@ -122,7 +117,7 @@ export const authUtils = {
       const remember = await authUtils.shouldRemember();
       await authUtils.setUser(updatedUser, remember);
     } catch (error) {
-      console.error('Error updating user:', error);
+      // Silent fail
     }
   },
 
@@ -131,13 +126,12 @@ export const authUtils = {
     try {
       await storage.removeItem(authUtils.USER_KEY);
     } catch (error) {
-      console.error('Error clearing user:', error);
+      // Silent fail
     }
   },
 
   // Login user with tokens
   login: async (user, tokens, remember = false) => {
-    console.log('Auth utils login called:', { user: user?.email, tokens: !!tokens, remember });
     await authUtils.setRememberMe(remember);
     await authUtils.setUser(user, remember);
     

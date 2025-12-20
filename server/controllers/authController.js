@@ -40,14 +40,6 @@ exports.register = async (req, res) => {
     
     if (role === 'Patient') {
       // Create user and patient profile in a transaction
-      console.log('Creating patient with data:', {
-        firstName,
-        lastName,
-        gender,
-        birthDate,
-        city
-      });
-
       const result = await prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {
@@ -59,8 +51,6 @@ exports.register = async (req, res) => {
           }
         });
 
-        console.log('User created with ID:', newUser.id);
-
         const patient = await tx.patient.create({
           data: {
             userId: newUser.id,
@@ -71,8 +61,6 @@ exports.register = async (req, res) => {
             city
           }
         });
-
-        console.log('Patient created successfully:', patient);
 
         return { ...newUser, patient };
       });
@@ -106,12 +94,6 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: error.stack
-    });
     
     // Handle specific errors
     if (error.code === 'P2002') {
@@ -188,7 +170,6 @@ exports.login = async (req, res) => {
       refreshToken
     });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 };
@@ -225,7 +206,6 @@ exports.me = async (req, res) => {
 
     res.json({ user });
   } catch (error) {
-    console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user data' });
   }
 };
@@ -271,7 +251,6 @@ exports.changePassword = async (req, res) => {
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
 };

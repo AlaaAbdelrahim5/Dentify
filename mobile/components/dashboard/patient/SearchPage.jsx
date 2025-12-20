@@ -51,7 +51,6 @@ const SearchPage = () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.log('Location permission denied');
         setUserLocation('failed');
         setLocationChecked(true);
         return;
@@ -63,7 +62,6 @@ const SearchPage = () => {
       setUserLocation([location.coords.latitude, location.coords.longitude]);
       setLocationChecked(true);
     } catch (error) {
-      console.log('Error getting location:', error);
       setUserLocation('failed');
       setLocationChecked(true);
     }
@@ -189,8 +187,6 @@ const SearchPage = () => {
         return;
       }
 
-      console.log('Current user for booking:', user);
-
       // Extract patient name from user object
       const patientFirstName = user.firstName || user.patient?.firstName || 'Patient';
       const patientLastName = user.lastName || user.patient?.lastName || '';
@@ -214,8 +210,6 @@ const SearchPage = () => {
         patientId: user.id,
         clinicId: dentist.clinic?.userId || dentist.clinic?.id
       };
-
-      console.log('Treatment data for booking:', treatmentData);
 
       setSelectedDentist(treatmentData);
       setBookingModalVisible(true);

@@ -24,15 +24,12 @@ export const createNotification = async (notificationData) => {
     });
     return docRef.id;
   } catch (error) {
-    console.error('Error creating notification:', error);
     throw error;
   }
 };
 
 // Get notifications for a user
 export const getUserNotifications = (userId, callback) => {
-  console.log('getUserNotifications called with userId:', userId, 'Type:', typeof userId);
-  
   const notificationsRef = collection(db, 'notifications');
   const q = query(
     notificationsRef,
@@ -41,22 +38,16 @@ export const getUserNotifications = (userId, callback) => {
     limit(50)
   );
 
-  console.log('Setting up Firestore listener for notifications...');
-
   return onSnapshot(q, (snapshot) => {
-    console.log('Firestore snapshot received, docs count:', snapshot.docs.length);
     const notifications = snapshot.docs.map(doc => {
       const data = doc.data();
-      console.log('Notification doc:', doc.id, data);
       return {
         id: doc.id,
         ...data
       };
     });
-    console.log('Processed notifications:', notifications);
     callback(notifications);
   }, (error) => {
-    console.error('Error listening to notifications:', error);
     callback([]);
   });
 };
@@ -69,7 +60,6 @@ export const markNotificationAsRead = async (notificationId) => {
       read: true
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
     throw error;
   }
 };
@@ -91,7 +81,6 @@ export const markAllNotificationsAsRead = async (userId) => {
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
     throw error;
   }
 };

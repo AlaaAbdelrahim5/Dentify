@@ -203,14 +203,6 @@ const PatientXRayResults = () => {
     return statusMap[status] || status
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
   const RequestCard = ({ request }) => (
     <Card className={`p-6 ${
       isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -269,14 +261,14 @@ const PatientXRayResults = () => {
         <div className="flex items-center gap-2 text-sm">
           <FaCalendarAlt className="text-gray-500 w-4 h-4" />
           <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Requested: {formatDate(request.requestDate)}
+            Requested: {formatDateHelper(request.requestDate)}
           </span>
         </div>
         {request.availableDate && (
           <div className="flex items-center gap-2 text-sm">
             <FaClock className="text-teal-500 w-4 h-4" />
             <span className={isDarkMode ? 'text-teal-400' : 'text-teal-600'}>
-              Available: {formatDate(request.availableDate)}
+              Available: {formatDateHelper(request.availableDate)}
             </span>
           </div>
         )}
@@ -514,7 +506,7 @@ const PatientXRayResults = () => {
                   {
                     label: 'Request Date',
                     accessor: 'requestDate',
-                    render: (value) => formatDate(value)
+                    render: (value) => formatDateHelper(value)
                   },
                   {
                     label: 'Available Date',
@@ -522,7 +514,7 @@ const PatientXRayResults = () => {
                     render: (value) => value ? (
                       <div className="flex items-center gap-2 text-teal-500">
                         <FaClock className="w-4 h-4" />
-                        <span>{formatDate(value)}</span>
+                        <span>{formatDateHelper(value)}</span>
                       </div>
                     ) : (
                       <span className="text-gray-400">Pending</span>

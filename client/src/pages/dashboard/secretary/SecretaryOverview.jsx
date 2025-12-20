@@ -116,18 +116,6 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
     return timeA - timeB
   })
 
-  const formatTime = (timeString) => {
-    if (!timeString) return 'N/A'
-    try {
-      const [hours, minutes] = timeString.split(':')
-      const hour = parseInt(hours)
-      const ampm = hour >= 12 ? 'PM' : 'AM'
-      const displayHour = hour % 12 || 12
-      return `${displayHour}:${minutes} ${ampm}`
-    } catch (error) {
-      return timeString
-    }
-  }
 
   const getStatusBadge = (status) => {
     const statusLower = status?.toLowerCase() || 'pending'
@@ -283,63 +271,6 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
           </div>
         )}
       </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
-          isDarkMode ? 'hover:bg-gray-800/70' : 'hover:bg-gray-50'
-        }`} onClick={() => onTabChange?.('appointments')}>
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-full ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-              <FaCalendarAlt className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            </div>
-            <div>
-              <h4 className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Manage Appointments
-              </h4>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Schedule & view appointments
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
-          isDarkMode ? 'hover:bg-gray-800/70' : 'hover:bg-gray-50'
-        }`} onClick={() => onTabChange?.('patients')}>
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-full ${isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'}`}>
-              <FaUsers className={`w-6 h-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-            </div>
-            <div>
-              <h4 className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Patient Records
-              </h4>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                View & manage patients
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
-          isDarkMode ? 'hover:bg-gray-800/70' : 'hover:bg-gray-50'
-        }`} onClick={() => onTabChange?.('dentists')}>
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-full ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}`}>
-              <FaUserMd className={`w-6 h-6 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
-            </div>
-            <div>
-              <h4 className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                Dentists Schedule
-              </h4>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                View dentist availability
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
     </div>
   )
 }

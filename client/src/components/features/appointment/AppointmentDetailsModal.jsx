@@ -16,7 +16,8 @@ import {
 } from 'react-icons/fa'
 import { Button, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { formatDate as formatDateHelper } from '../../../utils/helpers'
+import { formatDate as formatDateHelper, formatTime } from '../../../utils/helpers'
+import { FaTimes } from 'react-icons/fa'
 
 const AppointmentDetailsModal = ({ 
   isOpen, 
@@ -46,21 +47,13 @@ const AppointmentDetailsModal = ({
     }
   }
 
-  const formatDate = (dateString) => {
+  const formatDateLong = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    })
-  }
-
-  const formatTime = (timeString) => {
-    const time = new Date(timeString)
-    return time.toLocaleTimeString('en-US', { 
-      hour: '2-digit',
-      minute: '2-digit'
     })
   }
 
@@ -174,7 +167,7 @@ const AppointmentDetailsModal = ({
                   <p className={`mt-1 font-semibold ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    {formatDate(appointment.appointmentDate)}
+                    {formatDateLong(appointment.appointmentDate)}
                   </p>
                 </div>
                 <div>

@@ -29,7 +29,6 @@ router.get('/me', authenticate, authorize('Clinic'), async (req, res) => {
       data: clinic
     });
   } catch (error) {
-    console.error('Error fetching clinic profile:', error);
     errorResponse(res, 'Failed to fetch clinic profile');
   }
 });
@@ -67,16 +66,12 @@ router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
       data: clinic
     });
   } catch (error) {
-    console.error('Error updating clinic profile:', error);
     errorResponse(res, 'Failed to update clinic profile');
   }
 });
 
 // Get clinics statistics
 router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  console.log('=== GET /api/clinics/stats called ===');
-  console.log('User:', req.user);
-  
   try {
     // Count all users with Clinic role (excluding DELETED completely from total)
     const total = await prisma.user.count({
@@ -101,8 +96,6 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
         }
       }
     });
-
-    console.log('Stats result:', { total, active, inactive });
     
     res.json({ 
       success: true,
@@ -113,17 +106,12 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching clinic stats:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch clinic statistics' });
   }
 });
 
 // Get all clinics with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
-  console.log('=== GET /api/clinics called ===');
-  console.log('Query params:', req.query);
-  console.log('User:', req.user);
-  
   try {
     const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
     
@@ -227,12 +215,8 @@ router.get('/', authenticate, async (req, res) => {
       }
     });
 
-    console.log('Successfully fetched', clinics.length, 'clinics');
     return paginatedResponse(res, clinics, pagination, 'Clinics fetched successfully');
   } catch (error) {
-    console.error('Error fetching clinics:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
     return errorResponse(res, `Failed to fetch clinics: ${error.message}`, 500);
   }
 });
@@ -286,7 +270,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     return successResponse(res, clinic, 'Clinic fetched successfully');
   } catch (error) {
-    console.error('Error fetching clinic:', error);
     return errorResponse(res, 'Failed to fetch clinic');
   }
 });
@@ -370,9 +353,7 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, result, 'Clinic created successfully', 201);
   } catch (error) {
-    console.error('Error creating clinic:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
+
     return errorResponse(res, `Failed to create clinic: ${error.message}`, 500);
   }
 });
@@ -403,7 +384,6 @@ router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) 
 
     return successResponse(res, clinic, 'Clinic updated successfully');
   } catch (error) {
-    console.error('Error updating clinic:', error);
     return errorResponse(res, 'Failed to update clinic');
   }
 });
@@ -442,7 +422,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req,
     const message = newStatus === 'ACTIVE' ? 'Clinic activated successfully' : 'Clinic deactivated successfully';
     return successResponse(res, { status: newStatus }, message);
   } catch (error) {
-    console.error('Error toggling clinic status:', error);
     return errorResponse(res, 'Failed to toggle clinic status');
   }
 });
@@ -469,7 +448,6 @@ router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
 
     return successResponse(res, null, 'Clinic deleted successfully');
   } catch (error) {
-    console.error('Error deleting clinic:', error);
     return errorResponse(res, 'Failed to delete clinic');
   }
 });

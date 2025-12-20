@@ -49,7 +49,6 @@ export const createOrGetConversation = async (userId1, userId2) => {
     const docRef = await addDoc(conversationsRef, conversationData);
     return { id: docRef.id, ...conversationData };
   } catch (error) {
-    console.error('Error creating/getting conversation:', error);
     throw error;
   }
 };
@@ -57,23 +56,17 @@ export const createOrGetConversation = async (userId1, userId2) => {
 // Get all conversations for a user
 export const getUserConversations = (userId, callback) => {
   try {
-    console.log('chatService: Getting conversations for userId:', userId, 'Type:', typeof userId);
-    
     const conversationsRef = collection(db, 'conversations');
     const q = query(
       conversationsRef,
       where('participants', 'array-contains', userId)
     );
 
-    console.log('chatService: Setting up Firestore listener...');
-
     return onSnapshot(q, 
       (snapshot) => {
-        console.log('chatService: Snapshot received, docs count:', snapshot.docs.length);
         const conversations = snapshot.docs
           .map(doc => {
             const data = doc.data();
-            console.log('chatService: Conversation doc:', doc.id, data);
             return {
               id: doc.id,
               ...data
@@ -86,13 +79,10 @@ export const getUserConversations = (userId, callback) => {
             if (!b.lastMessageAt) return -1;
             return b.lastMessageAt.toMillis() - a.lastMessageAt.toMillis();
           });
-        console.log('chatService: Returning', conversations.length, 'conversations');
         callback(conversations);
       },
       (error) => {
         console.error('chatService: Error in snapshot listener:', error);
-        console.error('chatService: Error code:', error.code);
-        console.error('chatService: Error message:', error.message);
         callback([]);
       }
     );
@@ -135,7 +125,6 @@ export const sendMessage = async (conversationId, senderId, message, type = 'tex
 
     return docRef.id;
   } catch (error) {
-    console.error('Error sending message:', error);
     throw error;
   }
 };
@@ -161,7 +150,6 @@ export const markMessagesAsRead = async (conversationId, userId) => {
     const conversationDoc = await getDoc(conversationRef);
     
     if (!conversationDoc.exists()) {
-      console.warn('Conversation not found:', conversationId);
       return;
     }
     
@@ -186,7 +174,6 @@ export const markMessagesAsRead = async (conversationId, userId) => {
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error('Error marking messages as read:', error);
     throw error;
   }
 };

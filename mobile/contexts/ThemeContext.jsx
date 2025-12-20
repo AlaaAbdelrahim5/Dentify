@@ -32,7 +32,6 @@ export const ThemeProvider = ({ children }) => {
         setIsDarkMode(systemColorScheme === 'dark');
       }
     } catch (error) {
-      console.error('Error loading theme preference:', error);
       setIsDarkMode(systemColorScheme === 'dark');
     } finally {
       setIsLoading(false);
@@ -45,7 +44,7 @@ export const ThemeProvider = ({ children }) => {
       setIsDarkMode(newTheme);
       await AsyncStorage.setItem('theme', newTheme ? 'dark' : 'light');
     } catch (error) {
-      console.error('Error saving theme preference:', error);
+      // Silent fail
     }
   };
 

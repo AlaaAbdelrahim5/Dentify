@@ -33,7 +33,6 @@ router.post('/profile-image', authenticate, upload.single('profileImage'), async
       user: updatedUser
     });
   } catch (error) {
-    console.error('Error uploading profile image:', error);
     res.status(500).json({ error: 'Failed to upload profile image' });
   }
 });
@@ -70,7 +69,6 @@ router.delete('/profile-image', authenticate, async (req, res) => {
       user: updatedUser
     });
   } catch (error) {
-    console.error('Error deleting profile image:', error);
     res.status(500).json({ error: 'Failed to delete profile image' });
   }
 });

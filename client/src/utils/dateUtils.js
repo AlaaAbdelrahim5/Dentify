@@ -1,3 +1,6 @@
+// Re-export date utilities from helpers to maintain backward compatibility
+export { formatDate, formatTime, formatDateWithOptions, toISODateString, getTodayISO, convertTo12Hour } from './helpers'
+
 // Utility function to format dates
 export const formatDistanceToNow = (date) => {
   if (!date) return '';
@@ -20,15 +23,6 @@ export const formatDistanceToNow = (date) => {
   if (weeks < 4) return `${weeks}w ago`;
   if (months < 12) return `${months}mo ago`;
   return `${years}y ago`;
-};
-
-export const formatDate = (date) => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
 };
 
 export const formatDateTime = (date) => {

@@ -21,7 +21,6 @@ const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 export const requestNotificationPermission = async () => {
   try {
     if (!messaging) {
-      console.log('Messaging not supported');
       return null;
     }
 
@@ -31,7 +30,6 @@ export const requestNotificationPermission = async () => {
       console.log('FCM Token:', token);
       return token;
     } else {
-      console.log('Notification permission denied');
       return null;
     }
   } catch (error) {
@@ -44,7 +42,6 @@ export const requestNotificationPermission = async () => {
 export const onMessageListener = () => {
   return new Promise((resolve) => {
     if (!messaging) {
-      console.log('Messaging not supported');
       return;
     }
     

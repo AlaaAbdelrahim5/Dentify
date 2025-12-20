@@ -37,7 +37,6 @@ export const authUtils = {
       
       return response.ok;
     } catch (error) {
-      console.error('Token validation error:', error);
       return false;
     }
   },
@@ -59,7 +58,6 @@ export const authUtils = {
       
       return null;
     } catch (error) {
-      console.error('Error getting access token:', error);
       return null;
     }
   },
@@ -75,7 +73,6 @@ export const authUtils = {
       token = sessionStorage.getItem(authUtils.REFRESH_TOKEN_KEY);
       return token;
     } catch (error) {
-      console.error('Error getting refresh token:', error);
       return null;
     }
   },
@@ -95,27 +92,22 @@ export const authUtils = {
   },
   setTokens: (tokens, remember = false) => {
     try {
-      console.log('Setting tokens:', { hasAccess: !!tokens.accessToken, hasRefresh: !!tokens.refreshToken, remember });
       const storage = remember ? localStorage : sessionStorage;
       
       if (tokens.accessToken) {
         storage.setItem(authUtils.ACCESS_TOKEN_KEY, tokens.accessToken);
-        console.log('Access token stored in:', remember ? 'localStorage' : 'sessionStorage');
       }
       
       if (tokens.refreshToken) {
         storage.setItem(authUtils.REFRESH_TOKEN_KEY, tokens.refreshToken);
-        console.log('Refresh token stored in:', remember ? 'localStorage' : 'sessionStorage');
       }
 
       if (remember) {
         localStorage.setItem(authUtils.REMEMBER_KEY, 'true');
-        console.log('Remember preference saved');
       } else {
         localStorage.removeItem(authUtils.REMEMBER_KEY);
       }
     } catch (error) {
-      console.error('Error setting tokens:', error);
     }
   },
 
@@ -127,7 +119,6 @@ export const authUtils = {
       sessionStorage.removeItem(authUtils.ACCESS_TOKEN_KEY);
       sessionStorage.removeItem(authUtils.REFRESH_TOKEN_KEY);
     } catch (error) {
-      console.error('Error clearing tokens:', error);
     }
   },
 
@@ -148,7 +139,6 @@ export const authUtils = {
 
       return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
       return null;
     }
   },
@@ -160,7 +150,6 @@ export const authUtils = {
       const storage = remember ? localStorage : sessionStorage;
       storage.setItem(authUtils.USER_KEY, userData);
     } catch (error) {
-      console.error('Error setting user:', error);
     }
   },
 
@@ -174,7 +163,6 @@ export const authUtils = {
       const remember = authUtils.shouldRemember();
       authUtils.setUser(updatedUser, remember);
     } catch (error) {
-      console.error('Error updating user:', error);
     }
   },
 
@@ -184,13 +172,11 @@ export const authUtils = {
       localStorage.removeItem(authUtils.USER_KEY);
       sessionStorage.removeItem(authUtils.USER_KEY);
     } catch (error) {
-      console.error('Error clearing user:', error);
     }
   },
 
   // Login user with tokens
   login: (user, tokens, remember = false) => {
-    console.log('Auth utils login called:', { user: user?.email, tokens: !!tokens, remember });
     authUtils.setRememberMe(remember);
     authUtils.setUser(user, remember);
     
@@ -201,17 +187,14 @@ export const authUtils = {
     } : tokens;
     
     authUtils.setTokens(tokenData, remember);
-    console.log('Login complete, tokens stored in:', remember ? 'localStorage' : 'sessionStorage');
     
     // Dispatch custom login event to notify context providers
     window.dispatchEvent(new Event('login'));
-    console.log('Login event dispatched');
   },
 
   // Logout user
   logout: () => {
     try {
-      console.log('Logging out user...');
       authUtils.clearUser();
       authUtils.clearTokens();
       localStorage.removeItem(authUtils.REMEMBER_KEY);
@@ -227,9 +210,7 @@ export const authUtils = {
       // Dispatch custom logout event for same-tab logout detection
       window.dispatchEvent(new Event('logout'));
       
-      console.log('Logout completed successfully');
     } catch (error) {
-      console.error('Error during logout:', error);
     }
   },
 
@@ -250,11 +231,9 @@ export const authUtils = {
 
   // Initialize authentication state (call on app startup)
   initializeAuth: async () => {
-    console.log('Initializing auth...');
     
     // Check if user just logged out - this should always be the first check
     if (authUtils.wasLoggedOut()) {
-      console.log('Auth: User just logged out, clearing any remaining auth data and skipping auth check');
       // Make sure everything is cleaned up
       authUtils.clearUser();
       authUtils.clearTokens();
@@ -268,16 +247,8 @@ export const authUtils = {
     const refreshToken = authUtils.getRefreshToken();
     const user = authUtils.getCurrentUser();
     const shouldRemember = authUtils.shouldRemember();
-    
-    console.log('Auth state check:', { 
-      hasToken: !!token, 
-      hasRefreshToken: !!refreshToken, 
-      hasUser: !!user, 
-      shouldRemember 
-    });
 
     if (!user) {
-      console.log('No user found, cleaning up');
       // Don't call logout() here as it sets the logout flag
       authUtils.clearUser();
       authUtils.clearTokens();
@@ -286,7 +257,6 @@ export const authUtils = {
 
     if (!token) {
       if (refreshToken) {
-        console.log('No access token, trying to refresh...');
         // Try to refresh the token
         try {
           const response = await fetch('http://localhost:5000/api/auth/refresh', {
@@ -300,7 +270,6 @@ export const authUtils = {
           const data = await response.json();
           
           if (response.ok && data.token) {
-            console.log('Token refresh successful');
             const remember = authUtils.shouldRemember();
             authUtils.setTokens({
               accessToken: data.token,
@@ -308,26 +277,22 @@ export const authUtils = {
             }, remember);
             return true;
           } else {
-            console.log('Token refresh failed:', data.error);
             authUtils.clearUser();
             authUtils.clearTokens();
             return false;
           }
         } catch (error) {
-          console.error('Token refresh failed:', error);
           authUtils.clearUser();
           authUtils.clearTokens();
           return false;
         }
       } else {
-        console.log('No refresh token available, cleaning up');
         authUtils.clearUser();
         authUtils.clearTokens();
         return false;
       }
     }
 
-    console.log('Auth initialization successful');
     return true;
   },
 

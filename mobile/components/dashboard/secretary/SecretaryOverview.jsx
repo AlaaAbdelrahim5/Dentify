@@ -22,9 +22,6 @@ const SecretaryOverview = () => {
     try {
       setIsLoading(true);
       const user = await authUtils.getCurrentUser();
-      console.log('SecretaryOverview - User data:', user);
-      console.log('SecretaryOverview - Secretary data:', user?.secretary);
-      console.log('SecretaryOverview - Clinic data:', user?.secretary?.clinic);
       setUserData(user);
 
       const [appointmentsRes, dentistsRes] = await Promise.allSettled([

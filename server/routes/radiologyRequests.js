@@ -17,7 +17,7 @@ const sendRadiologyNotification = async (userId, title, body, data = {}) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('Error sending radiology notification:', error);
+    // Silent fail
   }
 };
 
@@ -104,7 +104,6 @@ router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), asyn
       }
     });
   } catch (error) {
-    console.error('Error fetching radiology request stats:', error);
     res.status(500).json({ error: 'Failed to fetch radiology request statistics' });
   }
 });
@@ -153,7 +152,6 @@ router.get('/dentist/my-requests', authenticate, authorize('Dentist'), async (re
 
     res.json({ radiologyRequests });
   } catch (error) {
-    console.error('Error fetching radiology requests:', error);
     res.status(500).json({ error: 'Failed to fetch radiology requests' });
   }
 });
@@ -209,7 +207,6 @@ router.get('/center/my-requests', authenticate, authorize('RadiologyCenter'), as
 
     res.json({ radiologyRequests });
   } catch (error) {
-    console.error('Error fetching radiology requests:', error);
     res.status(500).json({ error: 'Failed to fetch radiology requests' });
   }
 });
@@ -267,7 +264,6 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
 
     res.json({ radiologyRequests });
   } catch (error) {
-    console.error('Error fetching radiology requests:', error);
     res.status(500).json({ error: 'Failed to fetch radiology requests' });
   }
 });
@@ -328,7 +324,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ radiologyRequest });
   } catch (error) {
-    console.error('Error fetching radiology request:', error);
     res.status(500).json({ error: 'Failed to fetch radiology request' });
   }
 });
@@ -451,7 +446,6 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       radiologyRequest 
     });
   } catch (error) {
-    console.error('Error creating radiology request:', error);
     res.status(500).json({ error: 'Failed to create radiology request' });
   }
 });
@@ -581,7 +575,6 @@ router.patch('/:id/status', authenticate, authorize('RadiologyCenter', 'Dentist'
       radiologyRequest 
     });
   } catch (error) {
-    console.error('Error updating radiology request:', error);
     res.status(500).json({ error: 'Failed to update radiology request' });
   }
 });
@@ -722,7 +715,6 @@ router.patch('/:id/upload-result', authenticate, authorize('RadiologyCenter'), a
       data: radiologyRequest 
     });
   } catch (error) {
-    console.error('Error uploading result:', error);
     res.status(500).json({ error: 'Failed to upload result' });
   }
 });
@@ -800,7 +792,6 @@ router.put('/:id', authenticate, authorize('Dentist', 'RadiologyCenter', 'Admin'
       radiologyRequest 
     });
   } catch (error) {
-    console.error('Error updating radiology request:', error);
     res.status(500).json({ error: 'Failed to update radiology request' });
   }
 });
@@ -832,7 +823,6 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, r
 
     res.json({ message: 'Radiology request deleted successfully' });
   } catch (error) {
-    console.error('Error deleting radiology request:', error);
     res.status(500).json({ error: 'Failed to delete radiology request' });
   }
 });

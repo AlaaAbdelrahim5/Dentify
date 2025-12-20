@@ -21,7 +21,7 @@ import {
   FaUserPlus,
   FaUserCheck
 } from 'react-icons/fa'
-import { Card, Button, Select, PageHeader } from '../../../components'
+import { Card, Button, Select, PageHeader, StatCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, appointmentsAPI, paymentsAPI } from '../../../services/api'
 import { safeJsonParse, ensureArray } from '../../../utils/helpers'
@@ -228,46 +228,7 @@ const DentistReports = () => {
     }
   }, [filteredAppointments])
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, gradient, onClick }) => (
-    <Card 
-      hover={onClick ? true : false} 
-      onClick={onClick}
-      className={onClick ? 'cursor-pointer' : ''}
-    >
-      <Card.Content className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {title}
-            </p>
-            <p className={`text-3xl font-bold mt-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              {value}
-            </p>
-            {subtitle && (
-              <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                {subtitle}
-              </p>
-            )}
-            {trend && (
-              <div className="flex items-center gap-1 mt-2">
-                {trend === 'up' ? (
-                  <FaArrowUp className="text-green-500 text-sm" />
-                ) : (
-                  <FaArrowDown className="text-red-500 text-sm" />
-                )}
-                <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {trendValue}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className={`w-16 h-16 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center`}>
-            <Icon className="text-white text-2xl" />
-          </div>
-        </div>
-      </Card.Content>
-    </Card>
-  )
+  // Component removed - using shared StatCard from components/common instead
 
   const ProgressBar = ({ percentage, color = 'teal' }) => {
     const colorClasses = {

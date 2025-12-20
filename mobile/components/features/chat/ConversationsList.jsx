@@ -26,12 +26,6 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
   const [imageError, setImageError] = React.useState(false);
   const imageUrl = getImageUrl(otherUser?.profileImage);
 
-  React.useEffect(() => {
-    if (otherUser) {
-      console.log('ConversationItem - User:', otherUser.name, 'ProfileImage:', otherUser.profileImage, 'ImageURL:', imageUrl);
-    }
-  }, [otherUser, imageUrl]);
-
   const getBackgroundColor = () => {
     if (isActive) {
       return isDarkMode ? '#134E4A' : '#CCFBF1';

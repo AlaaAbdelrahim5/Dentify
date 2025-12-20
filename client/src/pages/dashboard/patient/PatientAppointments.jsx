@@ -31,6 +31,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
+import { getStatusColor } from '../../../utils/helpers'
 
 const PatientAppointments = () => {
   const { isDarkMode } = useTheme()

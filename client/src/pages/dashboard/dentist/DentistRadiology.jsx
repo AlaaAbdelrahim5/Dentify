@@ -381,7 +381,7 @@ const DentistRadiology = () => {
           </div>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 ${
-          getStatusColor(request.status)
+          getStatusColor(request.status, isDarkMode)
         }`}>
           {getStatusIcon(request.status)}
           {request.status}

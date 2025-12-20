@@ -4,8 +4,6 @@ import { authUtils } from '../utils/auth';
 // Update the .env file to change the API URL
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000/api';
 
-console.log('📡 API Base URL:', API_BASE_URL);
-
 // API service for making HTTP requests with JWT support
 class ApiService {
   static async request(endpoint, options = {}) {
@@ -43,7 +41,6 @@ class ApiService {
               return this.request(endpoint, { ...options, headers: config.headers });
             }
           } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
             await authUtils.logout();
             throw new Error('Session expired. Please login again.');
           }

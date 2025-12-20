@@ -30,7 +30,6 @@ router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching patient stats:', error);
     res.status(500).json({ error: 'Failed to fetch patient statistics' });
   }
 });
@@ -65,7 +64,6 @@ router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
       data: patient
     });
   } catch (error) {
-    console.error('Get patient profile error:', error);
     res.status(500).json({ error: 'Failed to fetch patient profile' });
   }
 });
@@ -129,7 +127,6 @@ router.put('/me', authenticate, authorize('Patient'), async (req, res) => {
       message: 'Patient profile updated successfully'
     });
   } catch (error) {
-    console.error('Update patient profile error:', error);
     res.status(500).json({ 
       success: false,
       error: 'Failed to update patient profile' 
@@ -188,7 +185,6 @@ router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (
       data: radiologyRequests 
     });
   } catch (error) {
-    console.error('Error fetching patient radiology requests:', error);
     res.status(500).json({ error: 'Failed to fetch radiology requests' });
   }
 });
@@ -264,7 +260,6 @@ router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin
     });
     res.json({ patients });
   } catch (error) {
-    console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Failed to fetch patients' });
   }
 });
@@ -295,7 +290,6 @@ router.get('/:id', authenticate, async (req, res) => {
 
     res.json({ patient });
   } catch (error) {
-    console.error('Error fetching patient by ID:', error);
     res.status(500).json({ error: 'Failed to fetch patient' });
   }
 });
@@ -367,7 +361,6 @@ router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (r
       patient: result 
     });
   } catch (error) {
-    console.error('Create patient error:', error);
     res.status(500).json({ error: 'Failed to create patient' });
   }
 });
@@ -458,7 +451,6 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req,
       message 
     });
   } catch (error) {
-    console.error('Error toggling patient status:', error);
     return res.status(500).json({ 
       success: false,
       error: 'Failed to toggle patient status' 
