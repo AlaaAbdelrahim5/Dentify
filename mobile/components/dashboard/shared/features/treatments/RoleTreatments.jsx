@@ -1,5 +1,5 @@
 import React from 'react';
-import { treatmentsAPI } from '../../../services/api';
+import { treatmentsAPI } from '../../../../../services/api';
 import SharedTreatments from './SharedTreatments';
 
 /**

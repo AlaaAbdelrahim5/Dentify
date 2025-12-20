@@ -1,6 +1,6 @@
 import React from 'react';
-import { patientsAPI, treatmentsAPI } from '../../../services/api';
-import { filterPatients } from '../../../utils/searchUtils';
+import { patientsAPI, treatmentsAPI } from '../../../../services/api';
+import { filterPatients } from '../../../../utils/searchUtils';
 import SharedPatientsList from './SharedPatientsList';
 
 /**

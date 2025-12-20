@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getStatusColors } from '../../../utils/colors';
+import { getStatusColors } from '../../../../../utils/colors';
 
 export const RadiologyRequestCard = ({ request, isDarkMode }) => (
   <View className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}

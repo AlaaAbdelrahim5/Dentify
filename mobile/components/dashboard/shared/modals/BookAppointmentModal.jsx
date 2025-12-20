@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import Button from '../../common/Button';
-import { clinicsAPI, appointmentsAPI } from '../../../services/api';
-import { showErrorAlert } from '../../../utils/errorUtils';
-import { UI_COLORS } from '../../../utils/colors';
-import { generateTimeSlots, findBookedSlots, isAppointmentInFuture } from '../../../utils/appointmentUtils';
+import Button from '../../../common/Button';
+import { clinicsAPI, appointmentsAPI } from '../../../../services/api';
+import { showErrorAlert } from '../../../../utils/errorUtils';
+import { UI_COLORS } from '../../../../utils/colors';
+import { generateTimeSlots, findBookedSlots, isAppointmentInFuture } from '../../../../utils/appointmentUtils';
 
 const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
   const [step, setStep] = useState(1); // 1: Select Clinic, 2: Select Dentist, 3: Select Date/Time

@@ -1,5 +1,5 @@
 import React from 'react';
-import RoleTreatments from '../shared/RoleTreatments';
+import RoleTreatments from '../shared/features/treatments/RoleTreatments';
 
 const PatientTreatments = () => {
   return <RoleTreatments role="patient" />;

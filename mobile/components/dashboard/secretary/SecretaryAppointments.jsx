@@ -8,8 +8,8 @@ import { showErrorAlert } from '../../../utils/errorUtils';
 import { filterTodayAppointments, filterUpcomingAppointments } from '../../../utils/filterUtils';
 import { createCancelHandler, createConfirmHandler, createCompleteHandler, createViewDetailsHandler, createSessionCostSaveHandler } from '../../../utils/appointmentHandlers';
 import { AppointmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
-import NewAppointmentModal from '../shared/NewAppointmentModal';
-import SessionCostModal from '../shared/SessionCostModal';
+import NewAppointmentModal from '../shared/modals/NewAppointmentModal';
+import SessionCostModal from '../shared/modals/SessionCostModal';
 import { Select } from '../../common';
 
 const SecretaryAppointments = () => {

@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { formatDateTime } from '../../../utils/dateUtils';
-import { WelcomeCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
-import InfoRow from '../shared/InfoRow';
+import { WelcomeCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/overview/OverviewComponents';
+import InfoRow from '../shared/ui/InfoRow';
 import { appointmentsAPI } from '../../../services/api';
 
 const PatientOverview = () => {

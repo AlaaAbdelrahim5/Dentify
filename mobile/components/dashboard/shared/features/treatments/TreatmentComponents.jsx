@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getStatusColors, COLORS } from '../../../utils/colors';
+import { getStatusColors, COLORS } from '../../../../../utils/colors';
 
 // Universal treatment card component that adapts to role
 export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookAppointment }) => {

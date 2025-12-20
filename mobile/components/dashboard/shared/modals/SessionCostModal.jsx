@@ -9,9 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Button from '../../common/Button';
-import { UI_COLORS } from '../../../utils/colors';
-import { useTheme } from '../../../contexts/ThemeContext';
+import Button from '../../../common/Button';
+import { UI_COLORS } from '../../../../utils/colors';
+import { useTheme } from '../../../../contexts/ThemeContext';
 
 const SessionCostModal = ({ visible, onClose, onSave, appointmentInfo }) => {
   const { isDarkMode } = useTheme();

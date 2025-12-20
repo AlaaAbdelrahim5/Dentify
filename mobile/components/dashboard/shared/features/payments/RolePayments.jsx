@@ -1,5 +1,5 @@
 import React from 'react';
-import { paymentsAPI } from '../../../services/api';
+import { paymentsAPI } from '../../../../../services/api';
 import SharedPayments from './SharedPayments';
 
 /**

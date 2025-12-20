@@ -124,12 +124,12 @@ const DentistSettings = ({ onProfileUpdate }) => {
       const updateData = {
         firstName: profile.firstName,
         lastName: profile.lastName,
-        phone: profile.phone,
         licenseNumber: profile.licenseNumber,
         specialization: profile.specialization,
         birthDate: profile.birthDate,
         gender: profile.gender,
         city: profile.city,
+        phone: profile.phone,
         socialLinks: profile.socialLinks
       };
       

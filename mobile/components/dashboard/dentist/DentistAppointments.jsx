@@ -6,8 +6,8 @@ import { UI_COLORS } from '../../../utils/colors';
 import { useAppointments } from '../../../hooks';
 import { createCancelHandler, createConfirmHandler, createCompleteHandler, createViewDetailsHandler, createSessionCostSaveHandler } from '../../../utils/appointmentHandlers';
 import { AppointmentCard, FilterTabs, LoadingState, EmptyState } from '../shared';
-import NewAppointmentModal from '../shared/NewAppointmentModal';
-import SessionCostModal from '../shared/SessionCostModal';
+import NewAppointmentModal from '../shared/modals/NewAppointmentModal';
+import SessionCostModal from '../shared/modals/SessionCostModal';
 import { Select } from '../../common';
 
 const DentistAppointments = () => {

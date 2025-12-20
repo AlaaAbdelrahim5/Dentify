@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getImageUrl } from '../../../utils/imageUtils';
-import Avatar from './Avatar';
-import CardWrapper from './CardWrapper';
-import InfoRow from './InfoRow';
+import { getImageUrl } from '../../../../utils/imageUtils';
+import Avatar from '../ui/Avatar';
+import CardWrapper from '../ui/CardWrapper';
+import InfoRow from '../ui/InfoRow';
 
 export const PatientCard = ({ patient, isDarkMode, onPress }) => {
   return (

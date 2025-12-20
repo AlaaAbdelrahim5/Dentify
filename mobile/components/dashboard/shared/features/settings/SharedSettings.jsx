@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { UI_COLORS } from '../../../utils/colors';
-import { Input, Select, DatePicker } from '../../../components/common';
+import { useTheme } from '../../../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../../../utils/colors';
+import { Input, Select, DatePicker } from '../../../../../components/common';
 import { ProfileHeader } from './SettingsComponents';
-import { LoadingState } from './OverviewComponents';
+import { LoadingState } from '../../overview/OverviewComponents';
 import PasswordChangeSection from './PasswordChangeSection';
-import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants';
+import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../../../utils/constants';
 
 /**
  * Shared Settings Component - Base settings interface for all user roles
@@ -89,20 +89,19 @@ const SharedSettings = ({
             label="First Name"
             value={profile.firstName}
             onChangeText={(value) => handleProfileUpdate('firstName', value)}
-            disabled={!isEditing}
+            editable={isEditing}
           />
 
           <Input
             label="Last Name"
             value={profile.lastName}
             onChangeText={(value) => handleProfileUpdate('lastName', value)}
-            disabled={!isEditing}
+            editable={isEditing}
           />
 
           <Input
             label="Email"
             value={profile.email}
-            disabled={true}
             editable={false}
             helperText="Email cannot be changed"
           />
@@ -110,9 +109,9 @@ const SharedSettings = ({
           <Input
             label="Phone"
             value={profile.phone}
-            disabled={true}
-            editable={false}
-            helperText="Phone cannot be changed"
+            onChangeText={(value) => handleProfileUpdate('phone', value)}
+            editable={isEditing}
+            keyboardType="phone-pad"
           />
 
           <DatePicker

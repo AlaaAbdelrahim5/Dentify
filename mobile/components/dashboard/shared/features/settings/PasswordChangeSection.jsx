@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Input } from '../../common';
-import { UI_COLORS } from '../../../utils/colors';
+import { Input } from '../../../../../components/common';
+import { UI_COLORS } from '../../../../../utils/colors';
 
 const PasswordChangeSection = ({ isDarkMode, apiChangePassword, onSuccess }) => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);

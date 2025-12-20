@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatDateTime } from '../../../utils/dateUtils';
-import { getStatusColors, COLORS, UI_COLORS } from '../../../utils/colors';
+import { formatDateTime } from '../../../../../utils/dateUtils';
+import { getStatusColors, COLORS, UI_COLORS } from '../../../../../utils/colors';
 
 // Appointment Card Component
 export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onCancel, onComplete, onConfirm, onViewDetails }) => {

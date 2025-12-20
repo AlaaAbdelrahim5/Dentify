@@ -11,12 +11,12 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DatePicker from '../../common/DatePicker';
-import Button from '../../common/Button';
-import { appointmentsAPI } from '../../../services/api';
-import { authUtils } from '../../../utils/auth';
-import { UI_COLORS } from '../../../utils/colors';
-import { useTheme } from '../../../contexts/ThemeContext';
+import DatePicker from '../../../common/DatePicker';
+import Button from '../../../common/Button';
+import { appointmentsAPI } from '../../../../services/api';
+import { authUtils } from '../../../../utils/auth';
+import { UI_COLORS } from '../../../../utils/colors';
+import { useTheme } from '../../../../contexts/ThemeContext';
 
 const NewAppointmentModal = ({ 
   visible, 

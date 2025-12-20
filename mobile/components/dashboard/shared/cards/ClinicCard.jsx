@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatDistance } from '../../../utils/geoUtils';
-import Avatar from './Avatar';
-import CardWrapper from './CardWrapper';
-import InfoRow from './InfoRow';
+import { formatDistance } from '../../../../utils/geoUtils';
+import Avatar from '../ui/Avatar';
+import CardWrapper from '../ui/CardWrapper';
+import InfoRow from '../ui/InfoRow';
 
 const ClinicCard = ({ clinic, isDarkMode, onViewDetails }) => {
   return (

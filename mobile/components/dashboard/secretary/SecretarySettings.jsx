@@ -88,7 +88,8 @@ const SecretarySettings = ({ onProfileUpdate }) => {
         lastName: profile.lastName,
         birthDate: profile.birthDate,
         gender: profile.gender,
-        city: profile.city
+        city: profile.city,
+        phone: profile.phone
       };
       
       await secretariesAPI.updateMyProfile(updateData);
@@ -172,7 +173,8 @@ const SecretarySettings = ({ onProfileUpdate }) => {
           <Input
             label="Phone"
             value={profile.phone}
-            editable={false}
+            onChangeText={(text) => handleProfileUpdate('phone', text)}
+            editable={isEditing}
             icon="call-outline"
             keyboardType="phone-pad"
           />

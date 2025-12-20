@@ -36,7 +36,8 @@ const PatientSettings = ({ onProfileUpdate }) => {
       lastName: profile.lastName,
       gender: profile.gender,
       birthDate: profile.birthDate,
-      city: profile.city
+      city: profile.city,
+      phone: profile.phone
     }),
     onProfileUpdate
   });

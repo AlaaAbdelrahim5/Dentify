@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { UI_COLORS } from '../../../utils/colors';
-import { showErrorAlert } from '../../../utils/errorUtils';
-import { calculatePaymentStats } from '../../../utils/paymentUtils';
-import { PaymentCard, PaymentStatsCard, LoadingState, EmptyState } from './index';
+import { useTheme } from '../../../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../../../utils/colors';
+import { showErrorAlert } from '../../../../../utils/errorUtils';
+import { calculatePaymentStats } from '../../../../../utils/paymentUtils';
+import { PaymentCard, PaymentStatsCard } from './PaymentComponents';
+import { LoadingState, EmptyState } from '../../overview/OverviewComponents';
 
 /**
  * SharedPayments - Unified payments component for all roles

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { authUtils } from '../../../utils/auth';
 import { formatTime } from '../../../utils/dateUtils';
-import { WelcomeCard, StatCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/OverviewComponents';
+import { WelcomeCard, StatCard, LoadingState, EmptyState, StatusBadge, SectionHeader } from '../shared/overview/OverviewComponents';
 import { appointmentsAPI } from '../../../services/api';
 
 const DentistOverview = () => {

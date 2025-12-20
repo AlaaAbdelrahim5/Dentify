@@ -70,6 +70,73 @@ router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
   }
 });
 
+// Update current patient's profile (for logged-in patient)
+router.put('/me', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, birthDate, gender, city, phone } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !birthDate || !gender || !city) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'All required fields must be provided' 
+      });
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user data if phone is provided
+      if (phone) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { phone }
+        });
+      }
+
+      // Update patient data
+      const patient = await tx.patient.update({
+        where: { userId },
+        data: {
+          firstName,
+          lastName,
+          birthDate: new Date(birthDate),
+          gender: gender.charAt(0).toUpperCase() + gender.slice(1),
+          city
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true,
+              role: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          }
+        }
+      });
+
+      return patient;
+    });
+
+    res.json({ 
+      success: true,
+      data: result,
+      message: 'Patient profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Update patient profile error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update patient profile' 
+    });
+  }
+});
+
 // Get current patient's radiology requests
 router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (req, res) => {
   try {

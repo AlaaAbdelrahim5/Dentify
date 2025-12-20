@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadAPI } from '../../../services/api';
-import { getImageUrl } from '../../../utils/imageUtils';
+import { uploadAPI } from '../../../../../services/api';
+import { getImageUrl } from '../../../../../utils/imageUtils';
 
 // Profile Header Component (Avatar + Name with Image Upload)
 export const ProfileHeader = ({ firstName, lastName, subtitle, isDarkMode, prefix = '', profileImage, onImageUpdate, isEditing = false }) => {

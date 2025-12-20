@@ -7,31 +7,31 @@ export {
   StatusBadge,
   SectionHeader,
   SearchBar
-} from './OverviewComponents';
+} from './overview/OverviewComponents';
 
-// Reusable Components
-export { default as Avatar } from './Avatar';
-export { default as InfoRow } from './InfoRow';
-export { default as CardWrapper } from './CardWrapper';
+// UI Components
+export { default as Avatar } from './ui/Avatar';
+export { default as InfoRow } from './ui/InfoRow';
+export { default as CardWrapper } from './ui/CardWrapper';
 
-// Person List Components
+// Card Components
 export {
   PatientCard,
   DentistCard
-} from './PersonListComponents';
+} from './cards/PersonListComponents';
 
 // Radiology Components
 export {
   RadiologyRequestCard,
   getRadiologyStatusColor
-} from './RadiologyComponents';
+} from './features/radiology/RadiologyComponents';
 
 // Appointment Components
 export {
   AppointmentCard,
   FilterTabs,
   getStatusColor
-} from './AppointmentComponents';
+} from './features/appointments/AppointmentComponents';
 
 // Settings Components
 export {
@@ -40,27 +40,27 @@ export {
   SettingsActionButton,
   SettingsSectionHeader,
   SettingsToggleRow
-} from './SettingsComponents';
+} from './features/settings/SettingsComponents';
 
 // Treatment Components
 export {
   TreatmentCard,
   getTreatmentStatusColor
-} from './TreatmentComponents';
+} from './features/treatments/TreatmentComponents';
 
 // Payment Components
 export {
   PaymentCard,
   PaymentStatsCard
-} from './PaymentComponents';
+} from './features/payments/PaymentComponents';
 
 // Unified Components
-export { default as SharedPayments } from './SharedPayments';
-export { default as SharedTreatments } from './SharedTreatments';
-export { default as RolePayments } from './RolePayments';
-export { default as RoleTreatments } from './RoleTreatments';
-export { default as RolePatientsList } from './RolePatientsList';
-export { default as PasswordChangeSection } from './PasswordChangeSection';
-export { default as SharedPatientsList } from './SharedPatientsList';
-export { default as SharedDentistsList } from './SharedDentistsList';
-export { default as SharedSettings } from './SharedSettings';
+export { default as SharedPayments } from './features/payments/SharedPayments';
+export { default as SharedTreatments } from './features/treatments/SharedTreatments';
+export { default as RolePayments } from './features/payments/RolePayments';
+export { default as RoleTreatments } from './features/treatments/RoleTreatments';
+export { default as RolePatientsList } from './lists/RolePatientsList';
+export { default as PasswordChangeSection } from './features/settings/PasswordChangeSection';
+export { default as SharedPatientsList } from './lists/SharedPatientsList';
+export { default as SharedDentistsList } from './lists/SharedDentistsList';
+export { default as SharedSettings } from './features/settings/SharedSettings';

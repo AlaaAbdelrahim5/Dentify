@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { UI_COLORS } from '../../../utils/colors';
-import { showErrorAlert } from '../../../utils/errorUtils';
-import { PatientCard, LoadingState, EmptyState, SearchBar } from './index';
+import { useTheme } from '../../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../../utils/colors';
+import { showErrorAlert } from '../../../../utils/errorUtils';
+import { PatientCard } from '../cards/PersonListComponents';
+import { LoadingState, EmptyState, SearchBar } from '../overview/OverviewComponents';
 
 /**
  * SharedPatientsList - Unified patients list component

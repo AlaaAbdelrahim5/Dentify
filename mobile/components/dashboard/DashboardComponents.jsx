@@ -18,19 +18,19 @@ export const Card = ({ children, className = '' }) => {
 /**
  * StatsCard component - Re-exported from shared components
  */
-export { StatCard as StatsCard } from './shared/OverviewComponents';
+export { StatCard as StatsCard } from './shared/overview/OverviewComponents';
 
 /**
  * StatusBadge component - Re-exported from shared components
  */
-export { StatusBadge } from './shared/OverviewComponents';
+export { StatusBadge } from './shared/overview/OverviewComponents';
 
 /**
  * EmptyState component - Re-exported from shared components
  */
-export { EmptyState } from './shared/OverviewComponents';
+export { EmptyState } from './shared/overview/OverviewComponents';
 
 /**
  * LoadingSpinner component - Re-exported from shared components
  */
-export { LoadingState as LoadingSpinner } from './shared/OverviewComponents';
+export { LoadingState as LoadingSpinner } from './shared/overview/OverviewComponents';

@@ -3,7 +3,7 @@ import { View, ScrollView, RefreshControl, TextInput, Text, TouchableOpacity } f
 import { Ionicons } from '@expo/vector-icons';
 import { AppointmentCard, FilterTabs, StatCard } from '../shared';
 import { LoadingState, EmptyState } from '../shared';
-import BookAppointmentModal from '../shared/BookAppointmentModal';
+import BookAppointmentModal from '../shared/modals/BookAppointmentModal';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAppointments } from '../../../hooks';
 import { createCancelHandler, createViewDetailsHandler } from '../../../utils/appointmentHandlers';

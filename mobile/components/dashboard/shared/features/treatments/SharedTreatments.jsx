@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { UI_COLORS } from '../../../utils/colors';
-import { showErrorAlert } from '../../../utils/errorUtils';
-import { filterByStatus } from '../../../utils/filterUtils';
-import { TreatmentCard, FilterTabs, LoadingState, EmptyState } from './index';
-import NewAppointmentModal from './NewAppointmentModal';
+import { useTheme } from '../../../../../contexts/ThemeContext';
+import { UI_COLORS } from '../../../../../utils/colors';
+import { showErrorAlert } from '../../../../../utils/errorUtils';
+import { filterByStatus } from '../../../../../utils/filterUtils';
+import { TreatmentCard } from './TreatmentComponents';
+import { FilterTabs } from '../appointments/AppointmentComponents';
+import { LoadingState, EmptyState } from '../../overview/OverviewComponents';
+import NewAppointmentModal from '../../modals/NewAppointmentModal';
 
 /**
  * SharedTreatments - Unified treatments component for all roles

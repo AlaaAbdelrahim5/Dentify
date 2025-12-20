@@ -1,5 +1,5 @@
 import React from 'react';
-import RolePatientsList from '../shared/RolePatientsList';
+import RolePatientsList from '../shared/lists/RolePatientsList';
 
 const SecretaryPatients = () => {
   return <RolePatientsList role="secretary" />;
