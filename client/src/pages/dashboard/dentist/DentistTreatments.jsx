@@ -142,7 +142,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         patientId: treatment.patientId,
         patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
         dentistId: treatment.dentistId,
-        treatmentType: treatment.treatmentType,
+        treatmentName: treatment.treatmentName,
         description: treatment.description || '',
         status: treatment.status, // Keep original status for receipt
         treatmentStatus: statusMap[treatment.status] || treatment.status,
@@ -223,7 +223,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     return displayTreatments.filter(treatment => {
       const matchesSearch = debouncedSearchTerm === '' || 
                            treatment.patientName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                           treatment.treatmentType.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.treatmentName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            treatment.teethStatus?.some(t => t.toothNumber.toString().includes(debouncedSearchTerm))
       
       const matchesView = activeView === 'all' || 
@@ -291,7 +291,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       // Prepare data for API (convert string IDs to integers)
       const apiData = {
         patientId: parseInt(treatmentData.patientId),
-        treatmentType: treatmentData.treatmentType,
+        treatmentName: treatmentData.treatmentName,
         description: treatmentData.description,
         totalAmount: parseFloat(treatmentData.totalAmount) || 0,
         notes: treatmentData.notes,
@@ -329,7 +329,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       // Prepare data for API
       const apiData = {
         patientId: parseInt(treatmentData.patientId),
-        treatmentType: treatmentData.treatmentType,
+        treatmentName: treatmentData.treatmentName,
         description: treatmentData.description,
         totalAmount: parseFloat(treatmentData.totalAmount) || 0,
         notes: treatmentData.notes,
@@ -556,7 +556,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               <h3 className={`font-semibold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>
-                {treatment.treatmentType}
+                {treatment.treatmentName}
               </h3>
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -1033,7 +1033,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         onSave={handleSavePayment}
         treatmentInfo={selectedTreatment ? {
           id: selectedTreatment.id,
-          treatmentType: selectedTreatment.treatmentType,
+          treatmentName: selectedTreatment.treatmentName,
           patientName: selectedTreatment.patientName,
           totalAmount: selectedTreatment.totalAmount,
           paidAmount: selectedTreatment.paidAmount
@@ -1064,7 +1064,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         } : null}
         treatmentInfo={selectedTreatment ? {
           id: selectedTreatment.id,
-          treatmentType: selectedTreatment.treatmentType
+          treatmentName: selectedTreatment.treatmentName
         } : null}
       />
 
@@ -1074,7 +1074,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         onConfirm={handleConfirmDelete}
         item={selectedTreatment}
         action="delete"
-        itemName={selectedTreatment?.treatmentType || 'Treatment'}
+        itemName={selectedTreatment?.treatmentName || 'Treatment'}
         itemType="Treatment"
       />
 
@@ -1088,7 +1088,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         } : null}
         treatmentInfo={selectedTreatment ? {
           id: selectedTreatment.id,
-          treatmentType: selectedTreatment.treatmentType
+          treatmentName: selectedTreatment.treatmentName
         } : null}
       />
 

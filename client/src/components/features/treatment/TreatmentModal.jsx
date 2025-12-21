@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { TREATMENT_STATUS_OPTIONS, PRIORITY_OPTIONS, TREATMENT_TYPES, TOOTH_CONDITION_OPTIONS } from '../../../utils/constants'
+import { TREATMENT_STATUS_OPTIONS, PRIORITY_OPTIONS, TOOTH_CONDITION_OPTIONS } from '../../../utils/constants'
 import { getTodayISO, safeJsonParse, ensureArray } from '../../../utils/helpers'
 import { FaTimes, FaSave, FaTooth, FaCalendarAlt, FaDollarSign, FaStethoscope, FaPlus, FaTrash, FaExclamationTriangle, FaUser, FaStickyNote } from 'react-icons/fa'
 import { Button, Input, Select, Card } from '../../common'
 import ToothChart from './ToothChart'
+import { dentistsAPI, clinicsAPI } from '../../../services/api'
 
 // Reusable Section Card Component
 const SectionCard = ({ icon: Icon, title, iconColor, children }) => {
@@ -67,7 +68,7 @@ const TreatmentModal = ({
   const [activeTab, setActiveTab] = useState('basic') // basic, teeth
   const [formData, setFormData] = useState({
     patientId: '',
-    treatmentType: '',
+    treatmentName: '',
     description: '',
     treatmentStatus: 'In Progress',
     creationDate: getTodayISO(),
@@ -81,13 +82,74 @@ const TreatmentModal = ({
   const [patientTeethHistory, setPatientTeethHistory] = useState({})
   const [showToothChart, setShowToothChart] = useState(false)
   const [errors, setErrors] = useState({})
+  const [availableTreatments, setAvailableTreatments] = useState([])
+  const [loadingTreatments, setLoadingTreatments] = useState(true)
+
+  // Fetch availableTreatments from dentist's clinic
+  useEffect(() => {
+    const fetchAvailableTreatments = async () => {
+      try {
+        setLoadingTreatments(true)
+        
+        // Fetch dentist profile
+        const response = await dentistsAPI.getMyProfile()
+        console.log('Dentist profile response:', response)
+        
+        const dentist = response.data?.dentist || response.dentist
+        console.log('Dentist data:', dentist)
+        console.log('Clinic ID:', dentist?.clinicId)
+        
+        if (dentist?.clinicId) {
+          // Fetch available treatments for the clinic
+          const treatmentsResponse = await clinicsAPI.getAvailableTreatments(dentist.clinicId)
+          console.log('Treatments response:', treatmentsResponse)
+          
+          // Extract treatments array from response
+          let treatments = treatmentsResponse.data || treatmentsResponse
+          console.log('Extracted treatments:', treatments)
+          
+          // Handle case where treatments might be a JSON string
+          if (typeof treatments === 'string') {
+            try {
+              treatments = JSON.parse(treatments)
+            } catch (e) {
+              console.error('Failed to parse treatments JSON:', e)
+              treatments = []
+            }
+          }
+          
+          // Ensure we have an array of treatments with name and cost properties
+          if (Array.isArray(treatments) && treatments.length > 0) {
+            console.log('Setting available treatments:', treatments)
+            setAvailableTreatments(treatments)
+          } else {
+            console.log('No treatments found or invalid format')
+            setAvailableTreatments([])
+          }
+        } else {
+          console.log('No clinic ID found for dentist')
+          setAvailableTreatments([])
+        }
+      } catch (error) {
+        console.error('Error fetching available treatments:', error)
+        console.error('Error details:', error.response?.data)
+        setAvailableTreatments([])
+      } finally {
+        setLoadingTreatments(false)
+      }
+    }
+
+    if (isOpen) {
+      fetchAvailableTreatments()
+    }
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setFormData({
           patientId: initialData.patientId || '',
-          treatmentType: initialData.treatmentType || '',
+          treatmentName: initialData.treatmentName || '',
           description: initialData.description || '',
           treatmentStatus: initialData.treatmentStatus || 'In Progress',
           creationDate: initialData.creationDate || getTodayISO(),
@@ -111,7 +173,7 @@ const TreatmentModal = ({
       } else {
         setFormData({
           patientId: '',
-          treatmentType: '',
+          treatmentName: '',
           description: '',
           treatmentStatus: 'In Progress',
           creationDate: getTodayISO(),
@@ -164,7 +226,7 @@ const TreatmentModal = ({
             historyMap[tooth.toothNumber].conditionCount++
             historyMap[tooth.toothNumber].allConditions.push({
               status: tooth.conditionStatus?.toLowerCase() || 'cavity',
-              treatment: treatment.treatmentType,
+              treatment: treatment.treatmentName,
               date: treatment.createdAt,
               notes: tooth.notes
             })
@@ -190,7 +252,7 @@ const TreatmentModal = ({
       setFormData(prev => ({
         ...prev,
         patientId: appointmentData.patientId?.toString() || '',
-        treatmentType: appointmentData.treatmentType || '',
+        treatmentName: appointmentData.treatmentName || '',
         description: '',
         notes: appointmentData.toothNotes || '', // Pre-fill notes from tooth chart
         appointmentId: apptId
@@ -217,10 +279,29 @@ const TreatmentModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // If treatment name is being changed, auto-fill the cost
+    if (name === 'treatmentName' && value) {
+      const selectedTreatment = availableTreatments.find(t => t.name === value)
+      if (selectedTreatment && !initialData) { // Only auto-fill for new treatments
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          totalAmount: selectedTreatment.cost.toString()
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }))
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+    
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -280,8 +361,8 @@ const TreatmentModal = ({
       setActiveTab('basic') // Switch to basic tab to show error
     }
 
-    if (!formData.treatmentType.trim()) {
-      newErrors.treatmentType = 'Treatment type is required'
+    if (!formData.treatmentName.trim()) {
+      newErrors.treatmentName = 'Treatment type is required'
       if (!newErrors.patientId) setActiveTab('basic') // Switch to basic tab if not already there
     }
 
@@ -339,7 +420,7 @@ const TreatmentModal = ({
   const handleClose = () => {
     setFormData({
       patientId: '',
-      treatmentType: '',
+      treatmentName: '',
       description: '',
       treatmentStatus: 'In Progress',
       creationDate: getTodayISO(),
@@ -508,13 +589,27 @@ const TreatmentModal = ({
                         Treatment Type <span className="text-red-500">*</span>
                       </label>
                       <Select
-                        name="treatmentType"
-                        value={formData.treatmentType}
+                        name="treatmentName"
+                        value={formData.treatmentName}
                         onChange={handleChange}
-                        options={TREATMENT_TYPES}
+                        options={loadingTreatments ? [] : availableTreatments.map(t => ({ 
+                          value: t.name, 
+                          label: `${t.name} - $${t.cost}` 
+                        }))}
+                        disabled={loadingTreatments}
                       />
-                      {errors.treatmentType && (
-                        <p className="text-red-500 text-sm mt-1">{errors.treatmentType}</p>
+                      {loadingTreatments && (
+                        <p className={`text-xs mt-1 ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>Loading treatments...</p>
+                      )}
+                      {!loadingTreatments && availableTreatments.length === 0 && (
+                        <p className={`text-xs mt-1 ${
+                          isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+                        }`}>No treatments configured for your clinic</p>
+                      )}
+                      {errors.treatmentName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.treatmentName}</p>
                       )}
                     </div>
                   </div>

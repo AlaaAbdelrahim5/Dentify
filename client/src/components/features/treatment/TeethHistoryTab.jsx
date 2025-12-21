@@ -41,7 +41,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
         historyMap[toothNumber].push({
           ...toothEntry,
           treatmentId: treatment.id,
-          treatmentType: treatment.treatmentType,
+          treatmentName: treatment.treatmentName,
           treatmentStatus: treatment.status,
           treatmentDate: treatment.createdAt,
           totalAmount: treatment.totalAmount,
@@ -74,7 +74,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
             status: entry.conditionStatus?.toLowerCase().replace(/\s+/g, '-') || 'unknown',
             priority: entry.priority,
             date: entry.diagnosedDate || entry.treatmentDate,
-            treatment: entry.treatmentType
+            treatment: entry.treatmentName
           })),
           hasHistory: true,
           conditionCount: history.length
@@ -383,7 +383,7 @@ const TeethHistoryTab = ({ treatments = [] }) => {
               },
               {
                 label: 'Treatment',
-                accessor: 'treatmentType',
+                accessor: 'treatmentName',
                 render: (value, item) => (
                   <div>
                     <p className={`font-medium ${

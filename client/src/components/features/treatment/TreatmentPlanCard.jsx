@@ -75,7 +75,7 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
               <h3 className={`text-lg font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>
-                {treatment.treatmentType}
+                {treatment.treatmentName}
               </h3>
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'

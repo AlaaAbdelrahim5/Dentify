@@ -79,7 +79,7 @@ const PatientPayments = () => {
     dentistSpecialization: p.treatment.dentist.specialization,
     clinicName: p.treatment.dentist.clinic?.clinicName || 'N/A',
     clinicLocation: p.treatment.dentist.clinic?.location || p.treatment.dentist.clinic?.city || 'N/A',
-    treatmentType: p.treatment.treatmentType,
+    treatmentName: p.treatment.treatmentName,
     amount: p.amount,
     paymentMethod: p.method, // 'CASH' or 'CARD'
     paymentDate: p.paymentDate,
@@ -90,7 +90,7 @@ const PatientPayments = () => {
   const mockTreatments = treatments.map(t => ({
     id: t.id,
     dentistName: `Dr. ${t.dentist.firstName} ${t.dentist.lastName}`,
-    treatmentType: t.treatmentType,
+    treatmentName: t.treatmentName,
     totalAmount: t.totalAmount,
     paidAmount: t.paidAmount,
     status: t.status.replace('_', ' '),
@@ -121,7 +121,7 @@ const PatientPayments = () => {
 
   const filteredPayments = filterPaymentsByDate(mockPayments).filter(payment => {
     const matchesSearch = payment.dentistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase())
+                         payment.treatmentName.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesPaymentMethod = selectedPaymentMethod === 'all' || payment.paymentMethod === selectedPaymentMethod
     
@@ -193,7 +193,7 @@ const PatientPayments = () => {
     },
     {
       label: 'Treatment',
-      accessor: 'treatmentType',
+      accessor: 'treatmentName',
       render: (value) => (
         <div className="flex items-center gap-2">
           <FaTooth className="text-gray-500 w-4 h-4" />
@@ -319,7 +319,7 @@ const PatientPayments = () => {
                 { value: 'all', label: 'All Treatments' },
                 ...mockTreatments.map(t => ({
                   value: t.id.toString(),
-                  label: t.treatmentType
+                  label: t.treatmentName
                 }))
               ],
               placeholder: 'Treatment'

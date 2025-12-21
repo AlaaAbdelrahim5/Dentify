@@ -93,7 +93,7 @@ const PatientTreatments = () => {
         id: treatment.id,
         dentistName: `Dr. ${treatment.dentist.firstName} ${treatment.dentist.lastName}`,
         dentistSpecialization: treatment.dentist.specialization,
-        treatmentType: treatment.treatmentType,
+        treatmentName: treatment.treatmentName,
         description: treatment.description || '',
         treatmentStatus: statusMap[treatment.status] || treatment.status,
         creationDate: treatment.createdAt,
@@ -110,7 +110,7 @@ const PatientTreatments = () => {
     return displayTreatments.filter(treatment => {
       const matchesSearch = debouncedSearchTerm === '' || 
                            treatment.dentistName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                           treatment.treatmentType.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.treatmentName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            treatment.teethStatus?.some(t => t.toothNumber.toString().includes(debouncedSearchTerm))
       
       const matchesView = activeView === 'all' || 

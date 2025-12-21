@@ -79,7 +79,7 @@ const PatientOverview = () => {
                   >
                     <View className="flex-row items-start justify-between mb-3">
                       <Text className={`font-semibold flex-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {appointment.treatment?.treatmentType || 'Appointment'}
+                        {appointment.treatment?.treatmentName || 'Appointment'}
                       </Text>
                       <StatusBadge status={appointment.status} isDarkMode={isDarkMode} />
                     </View>

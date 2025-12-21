@@ -13,6 +13,7 @@ export { default as AppointmentSlotPicker } from './appointment/AppointmentSlotP
 // Feature-specific Components - Clinic
 export { default as ClinicDetailsModal } from './clinic/ClinicDetailsModal'
 export { default as ClinicModal } from './clinic/ClinicModal'
+export { default as AvailableTreatmentsManager } from './clinic/AvailableTreatmentsManager'
 
 // Feature-specific Components - Dentist
 export { default as DentistCard } from './dentist/DentistCard'

@@ -91,7 +91,7 @@ const DentistAppointments = ({ onTabChange }) => {
         phone: apt.patient.user?.phone || apt.patient.phone || 'N/A',
         email: apt.patient.user?.email || 'N/A'
       },
-      treatment: apt.treatment?.treatmentType || 'General Consultation',
+      treatment: apt.treatment?.treatmentName || 'General Consultation',
       status: apt.status, // Keep original status (uppercase)
       notes: apt.sessionNotes || apt.patientNotes || '',
       toothNumber: '',
@@ -300,7 +300,7 @@ const DentistAppointments = ({ onTabChange }) => {
         patientEmail: appointment.patient.email,
         appointmentDate: appointment.appointmentDate,
         appointmentTime: appointment.time,
-        treatmentType: appointment.rawData?.patientNotes || '', // Use the actual appointment reason
+        treatmentName: appointment.rawData?.patientNotes || '', // Use the actual appointment reason
         notes: appointment.notes,
         fromAppointment: true
       }
@@ -334,7 +334,7 @@ const DentistAppointments = ({ onTabChange }) => {
       patientEmail: selectedAppointment.patient.email,
       appointmentDate: selectedAppointment.appointmentDate,
       appointmentTime: selectedAppointment.time,
-      treatmentType: selectedAppointment.rawData?.patientNotes || '', // Use the actual appointment reason
+      treatmentName: selectedAppointment.rawData?.patientNotes || '', // Use the actual appointment reason
       notes: selectedAppointment.notes,
       fromAppointment: true,
       toothNumber: toothData?.toothNumber, // Add the tooth number
@@ -764,7 +764,7 @@ const DentistAppointments = ({ onTabChange }) => {
         patientInfo={selectedAppointment ? selectedAppointment.patient : null}
         treatmentInfo={selectedAppointment ? {
           id: selectedAppointment.id,
-          treatmentType: selectedAppointment.treatment,
+          treatmentName: selectedAppointment.treatment,
           toothNumber: selectedAppointment.toothNumber,
           appointmentTime: selectedAppointment.time
         } : null}

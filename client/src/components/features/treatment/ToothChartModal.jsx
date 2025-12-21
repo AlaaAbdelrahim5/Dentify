@@ -210,7 +210,7 @@ const ToothChartModal = ({
                     <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
                       isDarkMode ? 'bg-teal-900/50 text-teal-300 border border-teal-700' : 'bg-white text-teal-700 border border-teal-300'
                     }`}>
-                      Adding to: {treatmentInfo.treatmentType}
+                      Adding to: {treatmentInfo.treatmentName}
                     </span>
                     {treatmentInfo.toothNumber && (
                       <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${

@@ -220,7 +220,7 @@ const AppointmentDetailsModal = ({
                 <p className={`mt-1 font-semibold ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {appointment.treatment?.treatmentType || 'General Consultation'}
+                  {appointment.treatment?.treatmentName || 'General Consultation'}
                 </p>
               </div>
               {appointment.isTreatment && (

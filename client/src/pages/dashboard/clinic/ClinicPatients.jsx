@@ -143,7 +143,7 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       // Transform treatments to match expected format
       const transformedTreatments = patientTreatmentsData.map(treatment => ({
         id: treatment.id,
-        treatmentType: treatment.treatmentType,
+        treatmentName: treatment.treatmentName,
         description: treatment.description,
         status: treatment.status === 'COMPLETED' ? 'Completed' : 
                 treatment.status === 'IN_PROGRESS' ? 'In Progress' : 'Cancelled',

@@ -16,6 +16,7 @@ import {
   FaIdCard
 } from 'react-icons/fa'
 import { Card, Button, Input, ProfileImageUpload } from '../../../components'
+import { AvailableTreatmentsManager } from '../../../components/features'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import api from '../../../services/api'
@@ -221,6 +222,7 @@ const ClinicSettings = () => {
   const settingSections = [
     { id: 'general', label: 'General Information', icon: FaBuilding },
     { id: 'hours', label: 'Working Hours', icon: FaClock },
+    { id: 'treatments', label: 'Available Treatments', icon: FaIdCard },
     { id: 'security', label: 'Security', icon: FaLock }
   ]
 
@@ -537,6 +539,8 @@ const ClinicSettings = () => {
         return renderGeneralSettings()
       case 'hours':
         return renderWorkingHours()
+      case 'treatments':
+        return <AvailableTreatmentsManager clinicId={currentUser?.id} />
       case 'security':
         return renderSecuritySettings()
       default:

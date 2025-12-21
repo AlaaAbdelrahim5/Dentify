@@ -126,7 +126,7 @@ const SecretaryAppointments = () => {
     return displayAppointments.filter(appointment => {
       const patientName = `${appointment.patient?.firstName || ''} ${appointment.patient?.lastName || ''}`;
       const dentistName = `Dr. ${appointment.dentist?.firstName || ''} ${appointment.dentist?.lastName || ''}`;
-      const treatment = appointment.treatment?.treatmentType || '';
+      const treatment = appointment.treatment?.treatmentName || '';
       
       const matchesSearch = searchTerm === '' || 
         treatment.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -271,7 +271,7 @@ const SecretaryAppointments = () => {
         onSave={handleSaveSessionCost}
         appointmentInfo={selectedAppointment ? {
           patientName: `${selectedAppointment.patient?.firstName} ${selectedAppointment.patient?.lastName}`,
-          treatment: selectedAppointment.treatment?.treatmentType || 'General Consultation'
+          treatment: selectedAppointment.treatment?.treatmentName || 'General Consultation'
         } : null}
       />
     </View>

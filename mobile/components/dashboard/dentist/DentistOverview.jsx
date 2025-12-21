@@ -98,7 +98,7 @@ const DentistOverview = () => {
                         {appointment.patient?.firstName} {appointment.patient?.lastName}
                       </Text>
                       <Text className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {appointment.treatment?.treatmentType || 'Consultation'}
+                        {appointment.treatment?.treatmentName || 'Consultation'}
                       </Text>
                       {appointment.patient?.user?.phone && (
                         <View className="flex-row items-center mt-2">

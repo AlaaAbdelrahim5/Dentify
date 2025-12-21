@@ -13,11 +13,12 @@ import {
   FaGlobe,
   FaTimes,
   FaCheckCircle,
-  FaTimesCircle
+  FaTimesCircle,
+  FaDollarSign
 } from 'react-icons/fa'
 import { Card, Button, LoadingSpinner, BaseModal, LocationMap } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { dentistsAPI } from '../../../services/api'
+import { dentistsAPI, clinicsAPI } from '../../../services/api'
 
 const ClinicDetailsModal = ({ 
   isOpen, 
@@ -29,6 +30,9 @@ const ClinicDetailsModal = ({
   const [dentists, setDentists] = useState([])
   const [isLoadingDentists, setIsLoadingDentists] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [availableTreatments, setAvailableTreatments] = useState([])
+  const [showTreatments, setShowTreatments] = useState(false)
+  const [isLoadingTreatments, setIsLoadingTreatments] = useState(false)
   
   // Determine if clinic is active
   const isActive = clinic?.user?.status === 'ACTIVE'
@@ -72,6 +76,23 @@ const ClinicDetailsModal = ({
   }
 
   if (!clinic) return null
+
+  const handleViewTreatments = async () => {
+    try {
+      setIsLoadingTreatments(true)
+      const clinicUserId = clinic._id || clinic.userId || clinic.id || clinic.user?.id
+      const response = await clinicsAPI.getAvailableTreatments(clinicUserId)
+      const treatments = response.data || response
+      setAvailableTreatments(Array.isArray(treatments) ? treatments : [])
+      setShowTreatments(true)
+    } catch (error) {
+      console.error('Error fetching treatments:', error)
+      setAvailableTreatments([])
+      setShowTreatments(true)
+    } finally {
+      setIsLoadingTreatments(false)
+    }
+  }
 
   const handleBookAppointmentWithDentist = (dentist) => {
     if (onBookAppointment) {
@@ -243,6 +264,64 @@ const ClinicDetailsModal = ({
 
           {/* Additional Information */}
           <div className="space-y-4">
+            {/* View Treatments Button */}
+            <div className={`p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaDollarSign className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Available Treatments & Pricing
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleViewTreatments}
+                  disabled={isLoadingTreatments}
+                  leftIcon={isLoadingTreatments ? undefined : FaStethoscope}
+                >
+                  {isLoadingTreatments ? 'Loading...' : 'View Treatments'}
+                </Button>
+              </div>
+              
+              {/* Treatments List */}
+              {showTreatments && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  {availableTreatments.length === 0 ? (
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      No treatments configured for this clinic yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {availableTreatments.map((treatment, index) => (
+                        <div 
+                          key={index}
+                          className={`flex justify-between items-center p-3 rounded-lg ${
+                            isDarkMode ? 'bg-gray-700/50' : 'bg-white'
+                          }`}
+                        >
+                          <span className={`font-medium ${
+                            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                          }`}>
+                            {treatment.name}
+                          </span>
+                          <span className={`font-semibold ${
+                            isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                          }`}>
+                            ${treatment.cost}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Website */}
             {clinic.website && (
               <div className={`p-4 rounded-lg border ${
@@ -284,33 +363,6 @@ const ClinicDetailsModal = ({
                 }`}>
                   {clinic.description}
                 </p>
-              </div>
-            )}
-
-            {/* Services Available */}
-            {clinic.servicesAvailable && clinic.servicesAvailable.length > 0 && (
-              <div className={`p-4 rounded-lg border ${
-                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
-                <p className={`text-sm font-medium mb-3 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  Available Services
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {clinic.servicesAvailable.map((service, index) => (
-                    <span
-                      key={index}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                        isDarkMode
-                          ? 'bg-teal-900/30 text-teal-400 border border-teal-700'
-                          : 'bg-teal-50 text-teal-700 border border-teal-200'
-                      }`}
-                    >
-                      {service}
-                    </span>
-                  ))}
-                </div>
               </div>
             )}
 

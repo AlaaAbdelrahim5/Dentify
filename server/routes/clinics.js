@@ -36,7 +36,7 @@ router.get('/me', authenticate, authorize('Clinic'), async (req, res) => {
 // Update current clinic profile
 router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
   try {
-    const { clinicName, registrationNumber, city, location, website, description, workingHours } = req.body;
+    const { clinicName, registrationNumber, city, location, website, description, workingHours, availableTreatments } = req.body;
 
     const updateData = {};
     if (clinicName !== undefined) updateData.clinicName = clinicName;
@@ -45,6 +45,7 @@ router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
     if (website !== undefined) updateData.website = website;
     if (description !== undefined) updateData.description = description;
     if (workingHours !== undefined) updateData.workingHours = workingHours;
+    if (availableTreatments !== undefined) updateData.availableTreatments = availableTreatments;
 
     const clinic = await prisma.clinic.update({
       where: { userId: req.user.id },
@@ -288,7 +289,6 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
       coordinates, 
       website, 
       description, 
-      servicesAvailable, 
       workingHours 
     } = req.body;
 
@@ -332,7 +332,6 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
           coordinates: coordinates || null,
           website: website || null,
           description: description || null,
-          servicesAvailable: servicesAvailable || [],
           workingHours: workingHours || null
         },
         include: {
@@ -362,7 +361,7 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
 router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { clinicName, registrationNumber, city, location, coordinates, website, description, servicesAvailable, workingHours } = req.body;
+    const { clinicName, registrationNumber, city, location, coordinates, website, description, workingHours } = req.body;
 
     const clinic = await prisma.clinic.update({
       where: { userId: parseInt(id) },
@@ -374,7 +373,6 @@ router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) 
         ...(coordinates !== undefined && { coordinates }),
         ...(website !== undefined && { website }),
         ...(description !== undefined && { description }),
-        ...(servicesAvailable && { servicesAvailable }),
         ...(workingHours && { workingHours })
       },
       include: {
@@ -449,6 +447,76 @@ router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
     return successResponse(res, null, 'Clinic deleted successfully');
   } catch (error) {
     return errorResponse(res, 'Failed to delete clinic');
+  }
+});
+
+// Get available treatments for a clinic
+router.get('/:id/available-treatments', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const clinic = await prisma.clinic.findUnique({
+      where: { userId: parseInt(id) },
+      select: {
+        availableTreatments: true
+      }
+    });
+
+    if (!clinic) {
+      return notFoundResponse(res, 'Clinic not found');
+    }
+
+    res.json({
+      success: true,
+      data: clinic.availableTreatments || []
+    });
+  } catch (error) {
+    errorResponse(res, 'Failed to fetch available treatments');
+  }
+});
+
+// Update available treatments for current clinic
+router.put('/me/available-treatments', authenticate, authorize('Clinic'), async (req, res) => {
+  try {
+    const { availableTreatments } = req.body;
+
+    // Validate structure: [{ name: "Root Canal", cost: 150 }, ...]
+    if (!Array.isArray(availableTreatments)) {
+      return res.status(400).json({ error: 'availableTreatments must be an array' });
+    }
+
+    for (const treatment of availableTreatments) {
+      if (!treatment.name || typeof treatment.name !== 'string') {
+        return res.status(400).json({ error: 'Each treatment must have a name (string)' });
+      }
+      if (treatment.cost === undefined) {
+        treatment.cost = 0; // Default to 0
+      }
+      if (typeof treatment.cost !== 'number' || treatment.cost < 0) {
+        return res.status(400).json({ error: 'Treatment cost must be a non-negative number' });
+      }
+    }
+
+    const clinic = await prisma.clinic.update({
+      where: { userId: req.user.id },
+      data: { availableTreatments },
+      include: {
+        user: {
+          select: {
+            email: true,
+            phone: true
+          }
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Available treatments updated successfully',
+      data: clinic
+    });
+  } catch (error) {
+    errorResponse(res, 'Failed to update available treatments');
   }
 });
 

@@ -111,7 +111,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
         name: `Dr. ${apt.dentist?.firstName || ''} ${apt.dentist?.lastName || ''}`,
         id: apt.dentistId
       },
-      treatment: apt.reason || apt.treatment?.treatmentType || 'General Consultation',
+      treatment: apt.reason || apt.treatment?.treatmentName || 'General Consultation',
       status: apt.status?.toUpperCase() || 'PENDING',
       notes: apt.sessionNotes || apt.patientNotes || apt.notes || '',
       rawData: apt

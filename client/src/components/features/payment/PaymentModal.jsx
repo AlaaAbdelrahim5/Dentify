@@ -263,7 +263,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
                             const balance = treatment.totalAmount - treatment.paidAmount
                             return (
                               <option key={treatment.id} value={treatment.id}>
-                                {treatment.treatmentType} - Balance: ${balance.toFixed(2)}
+                                {treatment.treatmentName} - Balance: ${balance.toFixed(2)}
                               </option>
                             )
                           })}

@@ -87,7 +87,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
       patientId: patientInfo?.id,
       patientName: patientInfo?.name,
       treatmentId: treatmentInfo?.id,
-      treatmentType: treatmentInfo?.treatmentType,
+      treatmentName: treatmentInfo?.treatmentName,
       prescriptionDate,
       medications: validMedications,
       notes
@@ -236,7 +236,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
 
         <div class="patient-info">
           <div><strong>Patient Name:</strong> ${patientInfo?.name || 'N/A'}</div>
-          <div><strong>Treatment:</strong> ${treatmentInfo?.treatmentType || 'N/A'}</div>
+          <div><strong>Treatment:</strong> ${treatmentInfo?.treatmentName || 'N/A'}</div>
           <div><strong>Date:</strong> ${new Date(prescriptionDate).toLocaleDateString()}</div>
         </div>
 
@@ -363,7 +363,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
                 <p className={`mt-1 ${
                   isDarkMode ? 'text-white' : 'text-gray-800'
                 }`}>
-                  {treatmentInfo?.treatmentType || 'N/A'}
+                  {treatmentInfo?.treatmentName || 'N/A'}
                 </p>
               </div>
               <div>

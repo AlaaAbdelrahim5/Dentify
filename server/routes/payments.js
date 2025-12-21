@@ -110,7 +110,7 @@ router.get('/dentist/my-payments', authenticate, authorize('Dentist'), async (re
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             patientId: true,
             patient: {
               select: {
@@ -342,7 +342,7 @@ router.get('/clinic/my-payments', authenticate, authorize('Clinic', 'Secretary')
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             patientId: true,
             patient: {
               select: {

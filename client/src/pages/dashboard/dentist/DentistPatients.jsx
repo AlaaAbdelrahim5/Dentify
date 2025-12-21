@@ -168,7 +168,7 @@ const DentistPatients = () => {
 
         return {
           id: treatment.id,
-          treatmentType: treatment.treatmentType,
+          treatmentName: treatment.treatmentName,
           status: statusMap[treatment.status] || treatment.status,
           createdAt: treatment.createdAt,
           totalAmount: treatment.totalAmount || 0,

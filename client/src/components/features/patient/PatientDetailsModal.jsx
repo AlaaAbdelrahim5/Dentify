@@ -386,7 +386,7 @@ const PatientDetailsModal = ({
                 <h4 className={`font-medium ${
                   isDarkMode ? 'text-white' : 'text-gray-800'
                 }`}>
-                  {appointment.treatment?.treatmentType || 'General Appointment'}
+                  {appointment.treatment?.treatmentName || 'General Appointment'}
                 </h4>
                 <p className={`text-sm ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -473,7 +473,7 @@ const PatientDetailsModal = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {treatment.treatmentType}
+                    {treatment.treatmentName}
                   </h4>
                   {treatment.teethStatus && treatment.teethStatus.length > 0 && (
                     <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 rounded text-xs">

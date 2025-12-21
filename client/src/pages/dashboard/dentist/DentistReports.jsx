@@ -118,7 +118,7 @@ const DentistReports = () => {
     // Treatment type revenue
     const revenueByTreatment = {}
     filteredTreatments.forEach(t => {
-      const type = t.treatmentType || 'Other'
+      const type = t.treatmentName || 'Other'
       revenueByTreatment[type] = (revenueByTreatment[type] || 0) + (t.paidAmount || 0)
     })
     
@@ -166,7 +166,7 @@ const DentistReports = () => {
     // Most common treatments
     const treatmentCount = {}
     filteredTreatments.forEach(t => {
-      const type = t.treatmentType || 'Other'
+      const type = t.treatmentName || 'Other'
       treatmentCount[type] = (treatmentCount[type] || 0) + 1
     })
     

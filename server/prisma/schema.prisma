@@ -47,16 +47,16 @@ model Admin {
 
 // Clinic model
 model Clinic {
-  userId             Int      @id
-  clinicName         String
-  registrationNumber String
-  city               String
-  location           String?
-  coordinates        String?
-  website            String?
-  description        String?
-  servicesAvailable  String[]
-  workingHours       Json?
+  userId              Int      @id
+  clinicName          String
+  registrationNumber  String
+  city                String
+  location            String?
+  coordinates         String?
+  website             String?
+  description         String?
+  workingHours        Json?
+  availableTreatments Json? // [{ name: "Root Canal", cost: 150 }, { name: "Extraction", cost: 75 }]
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   dentists     Dentist[]
@@ -156,17 +156,17 @@ model Appointment {
 
 // Treatment model
 model Treatment {
-  id               Int             @id @default(autoincrement())
-  patientId        Int
-  dentistId        Int
-  treatmentType    String // e.g. "Root Canal", "Extraction"
-  description      String?
-  status           TreatmentStatus @default(IN_PROGRESS)
-  createdAt        DateTime        @default(now())
-  totalAmount      Float           @default(0)
-  treatmentDiscount Float          @default(0) // Total discount applied to treatment from payments
-  paidAmount       Float           @default(0)
-  notes            String?
+  id                Int             @id @default(autoincrement())
+  patientId         Int
+  dentistId         Int
+  treatmentName     String // e.g. "Root Canal", "Extraction" - name from availableTreatments
+  description       String?
+  status            TreatmentStatus @default(IN_PROGRESS)
+  createdAt         DateTime        @default(now())
+  totalAmount       Float           @default(0)
+  treatmentDiscount Float           @default(0) // Total discount applied to treatment from payments
+  paidAmount        Float           @default(0)
+  notes             String?
 
   // Teeth status list for this treatment.
   // [{ toothNumber: 12, conditionStatus:"Cavity", priority:"High", diagnosedDate:"2025-10-27", notes:"Deep decay" }, ...]

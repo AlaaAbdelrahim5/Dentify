@@ -20,7 +20,7 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
     if (role === 'secretary') {
       return `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`;
     }
-    return appointment.treatmentType || appointment.treatment?.treatmentType || 'General Checkup';
+    return appointment.treatmentName || appointment.treatment?.treatmentName || 'General Checkup';
   };
 
   // Determine if appointment is in the past - use startTime for comparison

@@ -149,7 +149,7 @@ const DentistAppointments = () => {
         onSave={handleSaveSessionCost}
         appointmentInfo={selectedAppointment ? {
           patientName: `${selectedAppointment.patient?.firstName} ${selectedAppointment.patient?.lastName}`,
-          treatment: selectedAppointment.treatment?.treatmentType || 'General Consultation'
+          treatment: selectedAppointment.treatment?.treatmentName || 'General Consultation'
         } : null}
       />
     </View>

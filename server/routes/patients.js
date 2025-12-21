@@ -170,7 +170,7 @@ router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true
           }
         }

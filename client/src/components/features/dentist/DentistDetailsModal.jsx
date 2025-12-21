@@ -25,7 +25,7 @@ import {
 } from 'react-icons/fa'
 import { Button, Card, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { calculateAge } from '../../../utils/helpers'
+import { calculateAge, formatDate } from '../../../utils/helpers'
 
 const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
   const { isDarkMode } = useTheme()

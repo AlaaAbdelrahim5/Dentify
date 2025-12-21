@@ -85,7 +85,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
         patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
         dentistName: `Dr. ${treatment.dentist.firstName} ${treatment.dentist.lastName}`,
         clinicName: treatment.dentist?.clinic?.clinicName,
-        treatmentType: treatment.treatmentType,
+        treatmentName: treatment.treatmentName,
         treatmentStatus: treatment.status === 'COMPLETED' ? 'Completed' : 
                         treatment.status === 'IN_PROGRESS' ? 'In Progress' : 'Cancelled',
         status: treatment.status,
@@ -123,7 +123,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
       const matchesSearch = 
         treatment.patientName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
         treatment.dentistName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        treatment.treatmentType.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        treatment.treatmentName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
 
       const matchesStatus = selectedStatus === 'all' || treatment.treatmentStatus === selectedStatus
 

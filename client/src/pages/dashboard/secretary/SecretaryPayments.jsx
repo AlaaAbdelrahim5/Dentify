@@ -89,7 +89,7 @@ const SecretaryPayments = () => {
       patientId: t.patientId,
       patientName: `${t.patient.firstName} ${t.patient.lastName}`,
       dentistName: `Dr. ${t.dentist.firstName} ${t.dentist.lastName}`,
-      treatmentType: t.treatmentType,
+      treatmentName: t.treatmentName,
       totalAmount: t.totalAmount,
       treatmentDiscount: t.treatmentDiscount || 0,
       paidAmount: t.paidAmount,
@@ -108,7 +108,7 @@ const SecretaryPayments = () => {
       dentistName: `Dr. ${p.treatment.dentist.firstName} ${p.treatment.dentist.lastName}`,
       clinicName: p.treatment.dentist.clinic?.clinicName || 'N/A',
       clinicLocation: p.treatment.dentist.clinic?.location || p.treatment.dentist.clinic?.city || 'N/A',
-      treatmentType: p.treatment.treatmentType,
+      treatmentName: p.treatment.treatmentName,
       amount: p.amount,
       discount: p.discount || 0,
       paymentMethod: p.method,
@@ -169,7 +169,7 @@ const SecretaryPayments = () => {
     // Other filters
     return filtered.filter(payment => {
       const matchesSearch = payment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           payment.treatmentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           payment.treatmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            payment.dentistName.toLowerCase().includes(searchTerm.toLowerCase())
       
       const matchesPaymentMethod = selectedPaymentMethod === 'all' || payment.paymentMethod === selectedPaymentMethod
@@ -278,7 +278,7 @@ const SecretaryPayments = () => {
     },
     {
       label: 'Treatment',
-      accessor: 'treatmentType'
+      accessor: 'treatmentName'
     },
     {
       label: 'Amount',
@@ -482,7 +482,7 @@ const SecretaryPayments = () => {
                                 <h5 className={`font-semibold ${
                                   isDarkMode ? 'text-white' : 'text-gray-800'
                                 }`}>
-                                  {treatment.treatmentType}
+                                  {treatment.treatmentName}
                                 </h5>
                                 <span className={`px-2 py-0.5 rounded text-xs ${
                                   treatment.status === 'Completed'

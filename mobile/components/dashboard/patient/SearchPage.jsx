@@ -268,6 +268,10 @@ const SearchPage = () => {
 
     Alert.alert('Clinic Details', details, [
       { text: 'Close', style: 'cancel' },
+      { 
+        text: 'View Treatments', 
+        onPress: () => handleViewTreatments(clinic) 
+      },
       clinic.user?.phone ? { 
         text: 'Call', 
         onPress: () => handleCall(clinic.user.phone) 
@@ -277,6 +281,31 @@ const SearchPage = () => {
         onPress: () => handleEmail(clinic.user.email) 
       } : null
     ].filter(Boolean));
+  };
+
+  const handleViewTreatments = async (clinic) => {
+    try {
+      const response = await clinicsAPI.getAvailableTreatments(clinic.userId);
+      const treatments = response.data || response;
+      
+      if (!Array.isArray(treatments) || treatments.length === 0) {
+        Alert.alert('Available Treatments', 'No treatments configured for this clinic yet.');
+        return;
+      }
+
+      const treatmentsList = treatments
+        .map((t, index) => `${index + 1}. ${t.name} - $${t.cost}`)
+        .join('\n');
+
+      Alert.alert(
+        `${clinic.clinicName} - Treatments`,
+        treatmentsList,
+        [{ text: 'Close' }]
+      );
+    } catch (error) {
+      console.error('Error fetching treatments:', error);
+      Alert.alert('Error', 'Failed to load treatments. Please try again.');
+    }
   };
 
   const handleCall = (phoneNumber) => {

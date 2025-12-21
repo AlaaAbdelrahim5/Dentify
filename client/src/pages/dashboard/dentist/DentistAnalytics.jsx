@@ -365,7 +365,7 @@ const DentistAnalytics = () => {
   const treatmentDistribution = useMemo(() => {
     const distribution = {}
     treatments.forEach(t => {
-      const type = t.treatmentType || 'Other'
+      const type = t.treatmentName || 'Other'
       distribution[type] = (distribution[type] || 0) + 1
     })
     return Object.entries(distribution)

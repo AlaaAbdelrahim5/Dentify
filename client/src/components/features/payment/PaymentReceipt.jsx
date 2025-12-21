@@ -104,7 +104,7 @@ export const generatePaymentReceipt = (payment) => {
           </thead>
           <tbody>
             <tr>
-              <td><strong>${payment.treatmentType}</strong></td>
+              <td><strong>${payment.treatmentName}</strong></td>
               ${!payment.patientName ? `<td>${payment.paymentMethod === 'CASH' ? 'Cash' : 'Card'}</td>` : ''}
               <td style="text-align: right;">$${payment.amount.toFixed(2)}</td>
             </tr>

@@ -20,7 +20,7 @@ export const PaymentCard = ({ payment, isDarkMode, role = 'patient' }) => {
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-1">
           <Text className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {payment.treatment?.treatmentType || 'Treatment'}
+            {payment.treatment?.treatmentName || 'Treatment'}
           </Text>
           {showDentistInfo && payment.treatment?.dentist && (
             <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>

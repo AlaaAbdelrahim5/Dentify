@@ -132,7 +132,7 @@ const PatientOverview = ({ userData, onTabChange }) => {
                   <div className="flex justify-between items-start mb-2">
                     <h4 className={`font-medium ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>{appointment.treatment?.treatmentType || 'Appointment'}</h4>
+                    }`}>{appointment.treatment?.treatmentName || 'Appointment'}</h4>
                     <StatusBadge 
                       status={appointment.status.toLowerCase()}
                       label={getStatusBadge(appointment.status.toLowerCase()).label}

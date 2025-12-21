@@ -218,7 +218,7 @@ const TreatmentDetailsModal = ({
 
         <div class="patient-info">
           <div><strong>Patient Name:</strong> ${treatmentData.patientName || 'N/A'}</div>
-          <div><strong>Treatment:</strong> ${treatmentData.treatmentType || 'N/A'}</div>
+          <div><strong>Treatment:</strong> ${treatmentData.treatmentName || 'N/A'}</div>
           <div><strong>Date:</strong> ${new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString()}</div>
         </div>
 
@@ -327,7 +327,7 @@ const TreatmentDetailsModal = ({
               </div>
               <div class="info-row">
                 <span class="info-label">Treatment:</span>
-                <span class="info-value">${treatmentData.treatmentType}</span>
+                <span class="info-value">${treatmentData.treatmentName}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Status:</span>
@@ -476,7 +476,7 @@ const TreatmentDetailsModal = ({
             <h2 className={`text-xl font-bold ${
               isDarkMode ? 'text-white' : 'text-gray-800'
             }`}>
-              {treatmentData.treatmentType}
+              {treatmentData.treatmentName}
             </h2>
             <p className={`text-xs ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -965,7 +965,7 @@ const TreatmentDetailsModal = ({
                               <span className={`text-sm ${
                                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
                               }`}>
-                                {payment.treatment?.treatmentType || treatmentData.treatmentType}
+                                {payment.treatment?.treatmentName || treatmentData.treatmentName}
                               </span>
                             </div>
 

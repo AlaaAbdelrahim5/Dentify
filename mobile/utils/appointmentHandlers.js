@@ -134,14 +134,14 @@ export const createViewDetailsHandler = (role) => {
     switch (role) {
       case 'patient':
         const dentistName = `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`;
-        const treatmentType = appointment.treatment?.treatmentType || 'General Checkup';
+        const treatmentName = appointment.treatment?.treatmentName || 'General Checkup';
         const notes = appointment.patientNotes || appointment.sessionNotes || 'No notes';
-        message = `Dentist: ${dentistName}\nTreatment: ${treatmentType}\nClinic: ${appointment.clinic?.clinicName}\nNotes: ${notes}`;
+        message = `Dentist: ${dentistName}\nTreatment: ${treatmentName}\nClinic: ${appointment.clinic?.clinicName}\nNotes: ${notes}`;
         break;
         
       case 'dentist':
         const patientName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`;
-        const treatment = appointment.treatment?.treatmentType || 'General Checkup';
+        const treatment = appointment.treatment?.treatmentName || 'General Checkup';
         const patientNotes = appointment.patientNotes || appointment.sessionNotes || 'No notes';
         const phone = appointment.patient?.user?.phone || 'N/A';
         message = `Patient: ${patientName}\nPhone: ${phone}\nTreatment: ${treatment}\nNotes: ${patientNotes}`;
@@ -150,7 +150,7 @@ export const createViewDetailsHandler = (role) => {
       case 'secretary':
         const patName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`;
         const dentName = `Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`;
-        const treat = appointment.treatment?.treatmentType || 'General Checkup';
+        const treat = appointment.treatment?.treatmentName || 'General Checkup';
         const note = appointment.patientNotes || appointment.sessionNotes || 'No notes';
         const phoneNum = appointment.patient?.user?.phone || 'N/A';
         message = `Patient: ${patName}\nPhone: ${phoneNum}\nDentist: ${dentName}\nTreatment: ${treat}\nNotes: ${note}`;
@@ -206,10 +206,10 @@ export const filterAppointments = (appointments, searchTerm, selectedStatus, rol
     
     if (role === 'patient') {
       const dentistName = `${appointment.dentist?.firstName || ''} ${appointment.dentist?.lastName || ''}`;
-      searchableText = `${dentistName} ${appointment.treatment?.treatmentType || ''}`;
+      searchableText = `${dentistName} ${appointment.treatment?.treatmentName || ''}`;
     } else if (role === 'dentist' || role === 'secretary') {
       const patientName = `${appointment.patient?.firstName || ''} ${appointment.patient?.lastName || ''}`;
-      searchableText = `${patientName} ${appointment.treatment?.treatmentType || ''}`;
+      searchableText = `${patientName} ${appointment.treatment?.treatmentName || ''}`;
       
       if (role === 'secretary') {
         const dentistName = `${appointment.dentist?.firstName || ''} ${appointment.dentist?.lastName || ''}`;

@@ -141,7 +141,7 @@ router.get('/dentist/my-requests', authenticate, authorize('Dentist'), async (re
         treatment: {
           select: {
             id: true,
-            treatmentType: true
+            treatmentName: true
           }
         }
       },
@@ -195,7 +195,7 @@ router.get('/center/my-requests', authenticate, authorize('RadiologyCenter'), as
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true
           }
         }
@@ -252,7 +252,7 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true
           }
         }
@@ -311,7 +311,7 @@ router.get('/:id', authenticate, async (req, res) => {
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true
           }
         }

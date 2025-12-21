@@ -388,7 +388,7 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
     const dentistId = req.user.id;
     const { 
       patientId, 
-      treatmentType, 
+      treatmentName, 
       description, 
       totalAmount, 
       notes,
@@ -396,8 +396,8 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!patientId || !treatmentType) {
-      return res.status(400).json({ error: 'Patient ID and treatment type are required' });
+    if (!patientId || !treatmentName) {
+      return res.status(400).json({ error: 'Patient ID and treatment name are required' });
     }
 
     // Check if patient exists
@@ -413,7 +413,7 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       data: {
         patientId: parseInt(patientId),
         dentistId,
-        treatmentType,
+        treatmentName,
         description,
         totalAmount: parseFloat(totalAmount) || 0,
         treatmentDiscount: 0, // Initialize with 0, will be updated when payments with discounts are made
@@ -442,10 +442,10 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
     await sendTreatmentNotification(
       treatment.patientId,
       'New Treatment Plan',
-      `A new treatment plan for ${treatmentType} has been created. Total amount: $${totalAmount || 0}`,
+      `A new treatment plan for ${treatmentName} has been created. Total amount: $${totalAmount || 0}`,
       {
         treatmentId: treatment.id,
-        treatmentType: treatmentType,
+        treatmentName: treatmentName,
         totalAmount: totalAmount || 0
       }
     );
@@ -465,7 +465,7 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
     const { id } = req.params;
     const dentistId = req.user.id;
     const { 
-      treatmentType, 
+      treatmentName, 
       description, 
       status,
       totalAmount, 
@@ -489,7 +489,7 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
     }
 
     const updateData = {};
-    if (treatmentType) updateData.treatmentType = treatmentType;
+    if (treatmentName) updateData.treatmentName = treatmentName;
     if (description !== undefined) updateData.description = description;
     if (status) updateData.status = status;
     if (totalAmount !== undefined) updateData.totalAmount = parseFloat(totalAmount);
@@ -535,7 +535,7 @@ router.put('/:id', authenticate, authorize('Dentist'), async (req, res) => {
           {
             treatmentId: treatment.id,
             status: status,
-            treatmentType: treatment.treatmentType
+            treatmentName: treatment.treatmentName
           }
         );
       }

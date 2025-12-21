@@ -239,6 +239,8 @@ export const clinicsAPI = {
     const queryString = new URLSearchParams(params).toString();
     return ApiService.get(`/clinics/search?${queryString}`);
   },
+  getAvailableTreatments: (id) => ApiService.get(`/clinics/${id}/available-treatments`),
+  updateAvailableTreatments: (data) => ApiService.put('/clinics/me/available-treatments', data),
 };
 
 // Admin API functions

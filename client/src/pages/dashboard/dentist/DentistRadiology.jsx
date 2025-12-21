@@ -101,7 +101,7 @@ const DentistRadiology = () => {
       radiologyCenterId: r.radiologyCenterId,
       radiologyCenterName: r.radiologyCenter.centerName,
       treatmentId: r.treatmentId,
-      treatmentType: r.treatment?.treatmentType || null,
+      treatmentName: r.treatment?.treatmentName || null,
       requestDate: r.requestDate,
       availableDate: r.availableDate,
       imagingType: r.imagingType,
@@ -134,7 +134,7 @@ const DentistRadiology = () => {
   const transformedTreatments = useMemo(() => 
     treatments.map(t => ({
       id: t.id,
-      treatmentType: t.treatmentType,
+      treatmentName: t.treatmentName,
       patientName: `${t.patient.firstName} ${t.patient.lastName}`,
       patientId: t.patientId,
       date: t.createdAt
@@ -407,11 +407,11 @@ const DentistRadiology = () => {
             </span>
           </div>
         )}
-        {request.treatmentId && request.treatmentType && (
+        {request.treatmentId && request.treatmentName && (
           <div className="flex items-center gap-2 text-sm">
             <FaStethoscope className="text-purple-500 w-4 h-4" />
             <span className={isDarkMode ? 'text-purple-400' : 'text-purple-600'}>
-              Treatment: {request.treatmentType}
+              Treatment: {request.treatmentName}
             </span>
           </div>
         )}

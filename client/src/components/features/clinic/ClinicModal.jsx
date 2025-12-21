@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import { Button, Input, LoadingSpinner, BaseModal } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { CITY_OPTIONS, DENTAL_SPECIALIZATIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
+import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validatePassword } from "../../../utils/validation";
 
 const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
@@ -31,7 +31,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     coordinates: "",
     website: "",
     description: "",
-    servicesAvailable: [],
     workingHours: DEFAULT_WORKING_HOURS,
   });
 
@@ -107,7 +106,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           coordinates: clinic.coordinates || "",
           website: clinic.website || "",
           description: clinic.description || "",
-          servicesAvailable: clinic.servicesAvailable || [],
           workingHours: workingHoursObj,
         });
       } else {
@@ -125,7 +123,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           coordinates: "",
           website: "",
           description: "",
-          servicesAvailable: [],
           workingHours: {
             sunday: { isOpen: true, start: "09:00", end: "17:00" },
             monday: { isOpen: true, start: "09:00", end: "17:00" },
@@ -177,15 +174,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           [field]: value,
         },
       },
-    }));
-  };
-
-  const handleServiceToggle = (serviceValue) => {
-    setFormData((prev) => ({
-      ...prev,
-      servicesAvailable: prev.servicesAvailable.includes(serviceValue)
-        ? prev.servicesAvailable.filter((s) => s !== serviceValue)
-        : [...prev.servicesAvailable, serviceValue],
     }));
   };
 
@@ -365,7 +353,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         ...(formData.coordinates && formData.coordinates.trim() && { coordinates: formData.coordinates.trim() }),
         website: formData.website,
         description: formData.description,
-        servicesAvailable: formData.servicesAvailable,
         workingHours: workingHoursArray
       };
 
@@ -722,41 +709,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 >
                   {formData.description.length}/500 characters
                 </p>
-              </div>
-
-              {/* Services */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Services Offered
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {DENTAL_SPECIALIZATIONS.map((service) => (
-                    <label
-                      key={service}
-                      className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
-                        isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.servicesAvailable.includes(service)}
-                        onChange={() => handleServiceToggle(service)}
-                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                      />
-                      <span
-                        className={`text-sm ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        {service}
-                      </span>
-                    </label>
-                  ))}
-                </div>
               </div>
 
               {/* Working Hours */}

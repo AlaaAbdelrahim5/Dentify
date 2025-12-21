@@ -78,7 +78,7 @@ router.get('/patient/my-appointments', authenticate, authorize('Patient'), async
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true,
             status: true
           }
@@ -139,7 +139,7 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true,
             status: true
           }
@@ -219,7 +219,7 @@ router.get('/clinic/my-appointments', authenticate, authorize('Clinic', 'Secreta
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true,
             status: true
           }
@@ -274,7 +274,7 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true,
             status: true
           }
@@ -331,7 +331,7 @@ router.get('/:id', authenticate, async (req, res) => {
         treatment: {
           select: {
             id: true,
-            treatmentType: true,
+            treatmentName: true,
             description: true,
             status: true
           }

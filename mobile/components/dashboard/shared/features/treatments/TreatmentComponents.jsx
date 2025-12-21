@@ -27,7 +27,7 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookA
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-1">
           <Text className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {treatment.treatmentType}
+            {treatment.treatmentName}
           </Text>
           {showDentistInfo && treatment.dentist && (
             <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
