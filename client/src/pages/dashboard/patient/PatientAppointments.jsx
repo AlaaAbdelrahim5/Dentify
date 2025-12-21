@@ -84,21 +84,6 @@ const PatientAppointments = () => {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status.toUpperCase()) {
-      case 'CONFIRMED':
-        return 'green'
-      case 'PENDING':
-        return 'yellow'
-      case 'COMPLETED':
-        return 'blue'
-      case 'CANCELLED':
-        return 'red'
-      default:
-        return 'gray'
-    }
-  }
-
   const getStatusIcon = (status) => {
     switch (status.toUpperCase()) {
       case 'CONFIRMED':
