@@ -7,8 +7,8 @@ import { Button, Input, Select, Card } from '../../common'
 import ToothChart from './ToothChart'
 import { dentistsAPI, clinicsAPI } from '../../../services/api'
 
-// Reusable Section Card Component
-const SectionCard = ({ icon: Icon, title, iconColor, children }) => {
+// Reusable Section Card Component - Export for reuse
+export const SectionCard = ({ icon: Icon, title, iconColor, children }) => {
   const { isDarkMode } = useTheme()
   return (
     <Card>
@@ -27,8 +27,8 @@ const SectionCard = ({ icon: Icon, title, iconColor, children }) => {
   )
 }
 
-// Reusable Textarea Component
-const TextArea = ({ name, value, onChange, rows = 3, placeholder, label }) => {
+// Reusable Textarea Component - Export for reuse
+export const TextArea = ({ name, value, onChange, rows = 3, placeholder, label }) => {
   const { isDarkMode } = useTheme()
   return (
     <div>

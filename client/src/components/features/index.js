@@ -59,7 +59,7 @@ export { default as UploadResultModal } from './radiology/UploadResultModal'
 export { default as SecretaryModal } from './secretary/SecretaryModal'
 
 // Feature-specific Components - Treatment
-export { default as TreatmentModal } from './treatment/TreatmentModal'
+export { default as TreatmentModal, SectionCard, TextArea } from './treatment/TreatmentModal'
 export { default as PrescriptionModal } from './treatment/PrescriptionModal'
 export { default as TeethHistoryTab } from './treatment/TeethHistoryTab'
 export { default as ToothChart } from './treatment/ToothChart'

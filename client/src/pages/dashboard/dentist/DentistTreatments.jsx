@@ -535,206 +535,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     }
   }
 
-  const TreatmentCard = ({ treatment }) => {
-    const treatmentDiscount = treatment.treatmentDiscount || 0
-    const effectiveTotal = treatment.totalAmount - treatmentDiscount
-    const remainingBalance = effectiveTotal - treatment.paidAmount
-    const paymentProgress = effectiveTotal > 0 ? (treatment.paidAmount / effectiveTotal) * 100 : 0
-
-    return (
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      } hover:shadow-lg transition-shadow`}>
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-            }`}>
-              <FaStethoscope className="text-teal-600" />
-            </div>
-            <div>
-              <h3 className={`font-semibold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                {treatment.treatmentName}
-              </h3>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                {treatment.patientName}
-              </p>
-            </div>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs border ${
-            getStatusColor(treatment.treatmentStatus, isDarkMode)
-          }`}>
-            {treatment.treatmentStatus}
-          </span>
-        </div>
-
-        {treatment.description && (
-          <p className={`text-sm mb-4 line-clamp-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {treatment.description}
-          </p>
-        )}
-
-        {/* Teeth Status Preview */}
-        {treatment.teethStatus && treatment.teethStatus.length > 0 && (
-          <div className="mb-4">
-            <TreatmentTeethStatus teethStatus={treatment.teethStatus} compact={true} />
-          </div>
-        )}
-
-        {/* Payment Info */}
-        <div className={`p-3 rounded-lg mb-4 ${
-          isDarkMode ? 'bg-gray-900/50' : 'bg-gray-50'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Payment Progress
-            </span>
-            <span className={`text-xs font-semibold ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              {paymentProgress.toFixed(0)}%
-            </span>
-          </div>
-          <div className={`w-full h-2 rounded-full overflow-hidden mb-2 ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-          }`}>
-            <div
-              className="h-full bg-linear-to-r from-green-500 to-teal-500"
-              style={{ width: `${paymentProgress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <div>
-              <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                Paid:{' '}
-              </span>
-              <span className={`font-semibold ${
-                isDarkMode ? 'text-green-400' : 'text-green-600'
-              }`}>
-                ${treatment.paidAmount.toFixed(2)}
-              </span>
-            </div>
-            {treatmentDiscount > 0 && (
-              <div>
-                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                  Discount:{' '}
-                </span>
-                <span className={`font-semibold ${
-                  isDarkMode ? 'text-orange-400' : 'text-orange-600'
-                }`}>
-                  ${treatmentDiscount.toFixed(2)}
-                </span>
-              </div>
-            )}
-            <div>
-              <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                Balance:{' '}
-              </span>
-              <span className={`font-semibold ${
-                remainingBalance > 0
-                  ? isDarkMode ? 'text-orange-400' : 'text-orange-600'
-                  : isDarkMode ? 'text-green-400' : 'text-green-600'
-              }`}>
-                ${Math.max(0, remainingBalance).toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-          <div className="flex items-center gap-2">
-            <FaCalendarAlt className="text-gray-500" />
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              {new Date(treatment.creationDate).toLocaleDateString()}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <FaDollarSign className="text-gray-500" />
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              ${treatment.totalAmount.toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleViewTreatment(treatment)}
-            title="View Details"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleEditTreatment(treatment)}
-            title="Edit Treatment"
-          >
-            <FaEdit className="w-4 h-4" />
-          </Button>
-          {remainingBalance > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => handleAddPayment(treatment)}
-              title="Add Payment"
-              className="text-green-600"
-            >
-              <FaMoneyBillWave className="w-4 h-4" />
-            </Button>
-          )}
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleRequestRadiology(treatment)}
-            title="Request Radiology"
-            className="text-purple-600"
-          >
-            <FaXRay className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleCreatePrescription(treatment)}
-            title="Create Prescription"
-            className="text-blue-600"
-          >
-            <FaPrescriptionBottle className="w-4 h-4" />
-          </Button>
-          {treatment.treatmentStatus === 'In Progress' && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => handleUpdateStatus(treatment.id, 'Completed')}
-              title="Mark Complete"
-              className="text-green-600"
-            >
-              <FaCheck className="w-4 h-4" />
-            </Button>
-          )}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-600"
-            onClick={() => handleDeleteTreatment(treatment)}
-            title="Delete Treatment"
-          >
-            <FaTrash className="w-4 h-4" />
-          </Button>
-        </div>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Show New Treatment Page */}
@@ -1008,16 +808,19 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       ) : (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
           {filteredTreatments.map((treatment) => (
-            viewMode === 'grid' ? (
-              <TreatmentPlanCard 
-                key={treatment.id} 
-                treatment={treatment}
-                onClick={() => handleViewTreatment(treatment)}
-                onBookAppointment={handleBookAppointment}
-              />
-            ) : (
-              <TreatmentCard key={treatment.id} treatment={treatment} />
-            )
+            <TreatmentPlanCard 
+              key={treatment.id} 
+              treatment={treatment}
+              onClick={viewMode === 'grid' ? () => handleViewTreatment(treatment) : undefined}
+              onEdit={handleEditTreatment}
+              onDelete={handleDeleteTreatment}
+              onAddPayment={handleAddPayment}
+              onRequestRadiology={handleRequestRadiology}
+              onCreatePrescription={handleCreatePrescription}
+              onMarkComplete={handleUpdateStatus}
+              onBookAppointment={viewMode === 'grid' ? handleBookAppointment : undefined}
+              showActions={viewMode === 'list'}
+            />
           ))}
         </div>
       )}

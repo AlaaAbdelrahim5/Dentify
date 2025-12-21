@@ -1,12 +1,25 @@
 import { useTheme } from '../../../contexts/ThemeContext'
 import { 
   FaTooth, FaCalendarAlt, FaDollarSign, FaClipboardList, 
-  FaCheck, FaClock, FaTimes, FaCheckCircle, FaCalendarPlus
+  FaCheck, FaClock, FaTimes, FaCheckCircle, FaCalendarPlus,
+  FaEye, FaEdit, FaTrash, FaMoneyBillWave, FaXRay, FaPrescriptionBottle
 } from 'react-icons/fa'
 import { Card, Button } from '../../common'
 import { getStatusDisplay as getStatusHelper, calculateRemainingBalance } from '../../../utils/helpers'
+import TreatmentTeethStatus from './TreatmentTeethStatus'
 
-const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
+const TreatmentPlanCard = ({ 
+  treatment, 
+  onClick, 
+  onBookAppointment,
+  onEdit,
+  onDelete,
+  onAddPayment,
+  onRequestRadiology,
+  onCreatePrescription,
+  onMarkComplete,
+  showActions = false
+}) => {
   const { isDarkMode } = useTheme()
 
   // Calculate payments correctly accounting for discount
@@ -80,7 +93,7 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                {treatment.patientName}
+                {treatment.dentistName || treatment.patientName}
               </p>
             </div>
           </div>
@@ -93,41 +106,18 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
 
       <Card.Content className="space-y-4">
         {/* Description */}
-        <p className={`text-sm line-clamp-2 ${
-          isDarkMode ? 'text-gray-300' : 'text-gray-700'
-        }`}>
-          {treatment.description}
-        </p>
+        {treatment.description && (
+          <p className={`text-sm line-clamp-2 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            {treatment.description}
+          </p>
+        )}
 
-        {/* Teeth Affected */}
+        {/* Teeth Status Preview */}
         {treatment.teethStatus && treatment.teethStatus.length > 0 && (
-          <div className="flex items-center gap-2">
-            <FaTooth className={`w-4 h-4 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <div className="flex flex-wrap gap-2">
-              {treatment.teethStatus.slice(0, 5).map((tooth) => (
-                <span 
-                  key={tooth.toothNumber}
-                  className={`
-                    px-2 py-1 rounded-md text-xs font-medium
-                    ${isDarkMode 
-                      ? 'bg-gray-700 text-gray-300' 
-                      : 'bg-gray-100 text-gray-700'
-                    }
-                  `}
-                >
-                  #{tooth.toothNumber}
-                </span>
-              ))}
-              {treatment.teethStatus.length > 5 && (
-                <span className={`text-xs ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  +{treatment.teethStatus.length - 5} more
-                </span>
-              )}
-            </div>
+          <div>
+            <TreatmentTeethStatus teethStatus={treatment.teethStatus} compact={true} />
           </div>
         )}
 
@@ -202,6 +192,108 @@ const TreatmentPlanCard = ({ treatment, onClick, onBookAppointment }) => {
             <FaCalendarPlus className="w-4 h-4" />
             Book Appointment
           </Button>
+        )}
+
+        {/* Action Buttons */}
+        {showActions && (
+          <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+            {onClick && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onClick(treatment)
+                }}
+                title="View Details"
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
+            )}
+            {onEdit && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(treatment)
+                }}
+                title="Edit Treatment"
+              >
+                <FaEdit className="w-4 h-4" />
+              </Button>
+            )}
+            {onAddPayment && remainingBalance > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddPayment(treatment)
+                }}
+                title="Add Payment"
+                className="text-green-600"
+              >
+                <FaMoneyBillWave className="w-4 h-4" />
+              </Button>
+            )}
+            {onRequestRadiology && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRequestRadiology(treatment)
+                }}
+                title="Request Radiology"
+                className="text-purple-600"
+              >
+                <FaXRay className="w-4 h-4" />
+              </Button>
+            )}
+            {onCreatePrescription && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCreatePrescription(treatment)
+                }}
+                title="Create Prescription"
+                className="text-blue-600"
+              >
+                <FaPrescriptionBottle className="w-4 h-4" />
+              </Button>
+            )}
+            {onMarkComplete && treatment.treatmentStatus === 'In Progress' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMarkComplete(treatment.id, 'Completed')
+                }}
+                title="Mark Complete"
+                className="text-green-600"
+              >
+                <FaCheck className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(treatment)
+                }}
+                title="Delete Treatment"
+              >
+                <FaTrash className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         )}
       </Card.Content>
     </Card>

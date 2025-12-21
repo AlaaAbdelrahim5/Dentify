@@ -13,7 +13,7 @@ import {
   FaSave,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal } from '../../../components'
+import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal, BaseModal } from '../../../components'
 
 const DentistInventory = () => {
   const { isDarkMode } = useTheme()
@@ -505,132 +505,113 @@ const DentistInventory = () => {
       )}
 
       {/* Record Usage Modal */}
-      {isRecordUsageModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Record Material Usage
-                  </h3>
-                  <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Record materials used during patient treatment
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsRecordUsageModalOpen(false)}
-                  className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-                >
-                  <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-                </button>
-              </div>
-            </Card.Header>
-            <Card.Content className="p-6">
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleRecordUsage(); }}>
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Item *
-                  </label>
-                  <select
-                    value={usageForm.itemId}
-                    onChange={(e) => setUsageForm({...usageForm, itemId: e.target.value})}
-                    className={`w-full px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                    required
-                  >
-                    <option value="">Select an item</option>
-                    {inventoryItems.map(item => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} (Available: {item.quantity} {item.unit})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+      <BaseModal
+        isOpen={isRecordUsageModalOpen}
+        onClose={() => setIsRecordUsageModalOpen(false)}
+        title="Record Material Usage"
+        subtitle="Record materials used during patient treatment"
+      >
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleRecordUsage(); }}>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Item *
+            </label>
+            <select
+              value={usageForm.itemId}
+              onChange={(e) => setUsageForm({...usageForm, itemId: e.target.value})}
+              className={`w-full px-4 py-2 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+              required
+            >
+              <option value="">Select an item</option>
+              {inventoryItems.map(item => (
+                <option key={item.id} value={item.id}>
+                  {item.name} (Available: {item.quantity} {item.unit})
+                </option>
+              ))}
+            </select>
+          </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Quantity Used *
-                  </label>
-                  <Input
-                    type="number"
-                    value={usageForm.quantity}
-                    onChange={(e) => setUsageForm({...usageForm, quantity: e.target.value})}
-                    placeholder="Enter quantity"
-                    required
-                  />
-                </div>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Quantity Used *
+            </label>
+            <Input
+              type="number"
+              value={usageForm.quantity}
+              onChange={(e) => setUsageForm({...usageForm, quantity: e.target.value})}
+              placeholder="Enter quantity"
+              required
+            />
+          </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Patient Name *
-                  </label>
-                  <Input
-                    type="text"
-                    value={usageForm.patientName}
-                    onChange={(e) => setUsageForm({...usageForm, patientName: e.target.value})}
-                    placeholder="Enter patient name"
-                    required
-                  />
-                </div>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Patient Name *
+            </label>
+            <Input
+              type="text"
+              value={usageForm.patientName}
+              onChange={(e) => setUsageForm({...usageForm, patientName: e.target.value})}
+              placeholder="Enter patient name"
+              required
+            />
+          </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Treatment Type *
-                  </label>
-                  <Input
-                    type="text"
-                    value={usageForm.treatment}
-                    onChange={(e) => setUsageForm({...usageForm, treatment: e.target.value})}
-                    placeholder="e.g., Dental Filling, Root Canal"
-                    required
-                  />
-                </div>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Treatment Type *
+            </label>
+            <Input
+              type="text"
+              value={usageForm.treatment}
+              onChange={(e) => setUsageForm({...usageForm, treatment: e.target.value})}
+              placeholder="e.g., Dental Filling, Root Canal"
+              required
+            />
+          </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    value={usageForm.notes}
-                    onChange={(e) => setUsageForm({...usageForm, notes: e.target.value})}
-                    placeholder="Additional notes about usage"
-                    rows={3}
-                    className={`w-full px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  />
-                </div>
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Notes (Optional)
+            </label>
+            <textarea
+              value={usageForm.notes}
+              onChange={(e) => setUsageForm({...usageForm, notes: e.target.value})}
+              placeholder="Additional notes about usage"
+              rows={3}
+              className={`w-full px-4 py-2 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsRecordUsageModalOpen(false)}
-                    className="flex-1"
-                  >
-                    <FaTimes className="mr-2" />
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    className="flex-1 bg-linear-to-r from-teal-600 to-cyan-600"
-                  >
-                    <FaSave className="mr-2" />
-                    Save Usage
-                  </Button>
-                </div>
-              </form>
-            </Card.Content>
-          </Card>
-        </div>
-      )}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsRecordUsageModalOpen(false)}
+              className="flex-1"
+            >
+              <FaTimes className="mr-2" />
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1 bg-linear-to-r from-teal-600 to-cyan-600"
+            >
+              <FaSave className="mr-2" />
+              Save Usage
+            </Button>
+          </div>
+        </form>
+      </BaseModal>
 
       {/* View Item Modal */}
       <ViewItemModal
