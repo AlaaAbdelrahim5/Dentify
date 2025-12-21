@@ -285,16 +285,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     }
   }
 
-  const renderRequestCard = (request) => (
-    <RequestCard
-      key={request.id}
-      request={request}
-      variant="radiology"
-      onViewDetails={handleViewDetails}
-      onEdit={request.status !== 'COMPLETED' && request.status !== 'CANCELLED' ? handleUploadResult : (request.status === 'COMPLETED' ? handleUploadResult : null)}
-    />
-  )
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -439,7 +429,15 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map(renderRequestCard)}
+              {filteredRequests.map((request) => (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  variant="radiology"
+                  onViewDetails={handleViewDetails}
+                  onEdit={request.status !== 'COMPLETED' && request.status !== 'CANCELLED' ? handleUploadResult : (request.status === 'COMPLETED' ? handleUploadResult : null)}
+                />
+              ))}
             </div>
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

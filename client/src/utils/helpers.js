@@ -152,8 +152,8 @@ export const getStatusColor = (status, isDarkMode = false) => {
     
     case 'COMPLETED':
       return isDarkMode 
-        ? 'bg-green-900/30 text-green-400 border-green-600' 
-        : 'bg-green-100 text-green-700 border-green-400'
+        ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+        : 'bg-blue-100 text-blue-700 border-blue-400'
     
     case 'CANCELLED':
     case 'CANCELED':

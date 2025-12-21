@@ -20,7 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard } from '../../../components'
+import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard, LoadingSpinner } from '../../../components'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
@@ -168,8 +168,8 @@ const DentistRadiology = () => {
           : 'bg-blue-100 text-blue-700 border-blue-400'
       case 'Completed':
         return isDarkMode 
-          ? 'bg-green-900/30 text-green-400 border-green-600' 
-          : 'bg-green-100 text-green-700 border-green-400'
+          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+          : 'bg-blue-100 text-blue-700 border-blue-400'
       case 'Cancelled':
         return isDarkMode 
           ? 'bg-red-900/30 text-red-400 border-red-600' 
@@ -354,16 +354,6 @@ const DentistRadiology = () => {
     downloadSingleFile(reportFile)
   }
 
-  const renderRequestCard = (request) => (
-    <RequestCard
-      key={request.id}
-      request={request}
-      variant="dentist"
-      onEdit={request.status === 'Requested' ? handleEditRequest : null}
-      onDelete={request.status === 'Requested' ? handleDeleteRequest : null}
-    />
-  )
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -496,7 +486,15 @@ const DentistRadiology = () => {
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map(renderRequestCard)}
+              {filteredRequests.map((request) => (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  variant="dentist"
+                  onEdit={request.status === 'Requested' ? handleEditRequest : null}
+                  onDelete={request.status === 'Requested' ? handleDeleteRequest : null}
+                />
+              ))}
             </div>
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

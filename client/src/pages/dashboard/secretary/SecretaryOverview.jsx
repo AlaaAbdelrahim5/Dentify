@@ -100,29 +100,6 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
     return timeA - timeB
   })
 
-
-  const getStatusBadge = (status) => {
-    const statusLower = status?.toLowerCase() || 'pending'
-    // Match StatusBadge component colors: confirmed = green, completed = blue, pending = yellow, cancelled = red
-    const styles = {
-      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      scheduled: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      confirmed: 'bg-green-100 text-green-800 border-green-200',
-      completed: 'bg-blue-100 text-blue-800 border-blue-200',
-      cancelled: 'bg-red-100 text-red-800 border-red-200'
-    }
-    
-    const darkStyles = {
-      pending: 'bg-yellow-900/20 text-yellow-400 border-yellow-800',
-      scheduled: 'bg-yellow-900/20 text-yellow-400 border-yellow-800',
-      confirmed: 'bg-green-900/20 text-green-400 border-green-800',
-      completed: 'bg-blue-900/20 text-blue-400 border-blue-800',
-      cancelled: 'bg-red-900/20 text-red-400 border-red-800'
-    }
-
-    return isDarkMode ? darkStyles[statusLower] || darkStyles.pending : styles[statusLower] || styles.pending
-  }
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}

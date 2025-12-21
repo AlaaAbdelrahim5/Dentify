@@ -203,62 +203,6 @@ const PatientXRayResults = () => {
     return statusMap[status] || status
   }
 
-  // Custom render for patient's request card with download functionality
-  const renderRequestCard = (request) => (
-    <div key={request.id}>
-      <RequestCard 
-        request={request}
-        variant="patient"
-      />
-      {/* Additional download button for patient's view */}
-      <div className="mt-2 flex gap-2">
-        {request.reportFile && (
-          <Button 
-            variant="primary" 
-            size="sm"
-            className="w-full"
-            onClick={() => handleDownloadReport(request.reportFile)}
-            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Result"}
-          >
-            {isReportFileUrl(request.reportFile) ? (
-              <>
-                <FaLink className="w-4 h-4 mr-2" />
-                View Report
-              </>
-            ) : (
-              <>
-                <FaDownload className="w-4 h-4 mr-2" />
-                Download Result
-              </>
-            )}
-          </Button>
-        )}
-        {!request.reportFile && request.status === 'COMPLETED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex-1"
-            disabled
-          >
-            <FaFileAlt className="w-4 h-4 mr-2" />
-            No File Available
-          </Button>
-        )}
-        {request.status !== 'COMPLETED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex-1"
-            disabled
-          >
-            <FaClock className="w-4 h-4 mr-2" />
-            Pending Result
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -398,7 +342,60 @@ const PatientXRayResults = () => {
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map(renderRequestCard)}
+              {filteredRequests.map((request) => (
+                <div key={request.id}>
+                  <RequestCard 
+                    request={request}
+                    variant="patient"
+                  />
+                  {/* Additional download button for patient's view */}
+                  <div className="mt-2 flex gap-2">
+                    {request.reportFile && (
+                      <Button 
+                        variant="primary" 
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleDownloadReport(request.reportFile)}
+                        title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Result"}
+                      >
+                        {isReportFileUrl(request.reportFile) ? (
+                          <>
+                            <FaLink className="w-4 h-4 mr-2" />
+                            View Report
+                          </>
+                        ) : (
+                          <>
+                            <FaDownload className="w-4 h-4 mr-2" />
+                            Download Result
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {!request.reportFile && request.status === 'COMPLETED' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex-1"
+                        disabled
+                      >
+                        <FaFileAlt className="w-4 h-4 mr-2" />
+                        No File Available
+                      </Button>
+                    )}
+                    {request.status !== 'COMPLETED' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex-1"
+                        disabled
+                      >
+                        <FaClock className="w-4 h-4 mr-2" />
+                        Pending Result
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
