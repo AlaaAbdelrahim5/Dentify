@@ -1,4 +1,7 @@
-// Feature-specific Components - Appointment
+// Feature-specific Components - Admin
+export { AdminDetailsModal } from './admin/AdminDetailsModal'
+export { AddAdminModal } from './admin/AddAdminModal'
+
 // Feature-specific Components - Appointment
 export { default as AppointmentDetailsModal } from './appointment/AppointmentDetailsModal'
 export { default as AppointmentSchedule } from './appointment/AppointmentSchedule'

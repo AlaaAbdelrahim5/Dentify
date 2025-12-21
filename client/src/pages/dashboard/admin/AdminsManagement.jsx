@@ -26,12 +26,12 @@ import {
   StatusBadge,
   ActionButtons,
   ConfirmationModal,
-  Toast
+  Toast,
+  AddAdminModal,
+  AdminDetailsModal,
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { adminAPI } from '../../../services/api'
-import { AddAdminModal } from './components/AddAdminModal'
-import { AdminDetailsModal } from './components/AdminDetailsModal'
 
 const AdminsManagement = () => {
   const { isDarkMode } = useTheme()

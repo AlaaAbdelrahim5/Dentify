@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { FaUserShield, FaTimes, FaSave } from 'react-icons/fa'
-import { Button, Input } from '../../../../components'
-import { useTheme } from '../../../../contexts/ThemeContext'
-import { validateEmail } from '../../../../utils/validation'
-import { adminAPI } from '../../../../services/api'
+import { Button, Input } from '../../common'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { validateEmail } from '../../../utils/validation'
+import { adminAPI } from '../../../services/api'
 
 export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
   const { isDarkMode } = useTheme()
@@ -318,7 +318,7 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600"
+                  className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600"
                 >
                   {loading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

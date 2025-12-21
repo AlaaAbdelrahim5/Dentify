@@ -1,7 +1,7 @@
 import { FaUserShield, FaTimes, FaEnvelope, FaPhone, FaCheck, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
-import { StatusBadge } from '../../../../components'
-import { useTheme } from '../../../../contexts/ThemeContext'
-import { formatDate as formatDateHelper, getImageUrl } from '../../../../utils/helpers'
+import { StatusBadge } from '../../common'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
 
 export const AdminDetailsModal = ({ admin, onClose }) => {
   const { isDarkMode } = useTheme()
@@ -27,7 +27,7 @@ export const AdminDetailsModal = ({ admin, onClose }) => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with gradient background */}
-          <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
+          <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 p-6">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
