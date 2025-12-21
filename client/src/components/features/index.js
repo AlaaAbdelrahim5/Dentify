@@ -54,9 +54,11 @@ export { default as RadiologyModal } from './radiology/RadiologyModal'
 export { default as RadiologyRequestModal } from './radiology/RadiologyRequestModal'
 export { default as RequestDetailsModal } from './radiology/RequestDetailsModal'
 export { default as UploadResultModal } from './radiology/UploadResultModal'
+export { default as RadiologyDetailsModal } from './radiology/RadiologyDetailsModal'
 
 // Feature-specific Components - Secretary
 export { default as SecretaryModal } from './secretary/SecretaryModal'
+export { default as SecretaryDetailsModal } from './secretary/SecretaryDetailsModal'
 
 // Feature-specific Components - Treatment
 export { default as TreatmentModal, SectionCard, TextArea } from './treatment/TreatmentModal'

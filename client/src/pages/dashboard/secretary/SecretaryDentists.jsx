@@ -9,7 +9,7 @@ import {
   FaStethoscope,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal } from '../../../components'
+import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal, StatusBadge } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -137,17 +137,11 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
                       Dr. {dentist.firstName} {dentist.lastName}
                     </h3>
                     <div className="mt-1">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                        dentist.user?.status === 'ACTIVE'
-                          ? isDarkMode 
-                            ? 'bg-green-900/30 text-green-400' 
-                            : 'bg-green-100 text-green-800'
-                          : isDarkMode 
-                            ? 'bg-red-900/30 text-red-400' 
-                            : 'bg-red-100 text-red-800'
-                      }`}>
-                        {dentist.user?.status === 'ACTIVE' ? 'Active' : 'Inactive'}
-                      </span>
+                      <StatusBadge 
+                        isActive={dentist.user?.status === 'ACTIVE'}
+                        activeLabel="Active"
+                        inactiveLabel="Inactive"
+                      />
                     </div>
                   </div>
                 </div>

@@ -460,14 +460,7 @@ const DentistRadiology = () => {
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          </div>
-          <p className={`mt-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            Loading radiology requests...
-          </p>
+          <LoadingSpinner size="lg" text="Loading radiology requests..." />
         </Card>
       ) : filteredRequests.length === 0 ? (
         <Card className={`p-8 text-center ${

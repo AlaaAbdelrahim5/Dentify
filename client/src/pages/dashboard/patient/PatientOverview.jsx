@@ -38,16 +38,6 @@ const PatientOverview = ({ userData, onTabChange }) => {
     fetchAppointments()
   }, [])
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      confirmed: { label: 'Confirmed', color: 'green' },
-      pending: { label: 'Pending', color: 'yellow' },
-      completed: { label: 'Completed', color: 'blue' },
-      cancelled: { label: 'Cancelled', color: 'red' }
-    }
-    return statusMap[status] || { label: status, color: 'gray' }
-  }
-
   const getUserFirstName = () => {
     if (userData?.firstName) {
       return userData.firstName
@@ -56,7 +46,7 @@ const PatientOverview = ({ userData, onTabChange }) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8">{/* Welcome Section */}
       {/* Welcome Section */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
@@ -135,7 +125,7 @@ const PatientOverview = ({ userData, onTabChange }) => {
                     }`}>{appointment.treatment?.treatmentName || 'Appointment'}</h4>
                     <StatusBadge 
                       status={appointment.status.toLowerCase()}
-                      label={getStatusBadge(appointment.status.toLowerCase()).label}
+                      label={appointment.status}
                     />
                   </div>
                   <div className={`text-sm space-y-1 ${

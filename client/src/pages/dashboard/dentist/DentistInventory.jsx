@@ -13,7 +13,7 @@ import {
   FaSave,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal, BaseModal } from '../../../components'
+import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal, BaseModal, StatusBadge } from '../../../components'
 
 const DentistInventory = () => {
   const { isDarkMode } = useTheme()
@@ -165,20 +165,6 @@ const DentistInventory = () => {
     setIsViewItemModalOpen(true)
   }
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      adequate: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Adequate' },
-      low: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', label: 'Low Stock' },
-      critical: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Critical' }
-    }
-    const config = statusConfig[status] || statusConfig.adequate
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {toast && (
@@ -308,7 +294,10 @@ const DentistInventory = () => {
                         {item.category}
                       </p>
                     </div>
-                    {getStatusBadge(item.status)}
+                    <StatusBadge 
+                      status={item.status} 
+                      label={item.status === 'adequate' ? 'Adequate' : item.status === 'low' ? 'Low Stock' : 'Critical'}
+                    />
                   </div>
 
                   <div className="space-y-3 mb-4">

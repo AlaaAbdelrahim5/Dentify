@@ -2,7 +2,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck, FaUsers, FaChartLine, FaLock, FaCloud } from 'react-icons/fa'
 import { MdDashboard, MdSchedule, MdMedicalServices, MdVerified } from 'react-icons/md'
-import { Navbar, Button, Card, Logo } from '../components'
+import { Navbar, Button, Card, Logo, LoadingSpinner } from '../components'
 import { useTheme } from '../contexts/ThemeContext'
 import { authUtils } from '../utils/auth'
 
@@ -52,7 +52,7 @@ const Home = () => {
           ? 'bg-linear-to-br from-gray-900 to-gray-800'
           : 'bg-linear-to-br from-teal-50 to-blue-50'
       }`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     )
   }

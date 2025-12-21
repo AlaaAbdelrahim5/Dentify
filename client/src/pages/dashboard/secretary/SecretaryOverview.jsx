@@ -10,7 +10,7 @@ import {
   FaPhone,
   FaEnvelope
 } from 'react-icons/fa'
-import { Card, Button, StatsOverview } from '../../../components'
+import { Card, Button, StatsOverview, LoadingSpinner, StatusBadge } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'
 
@@ -190,8 +190,7 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
 
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
-            <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading appointments...</p>
+            <LoadingSpinner size="md" text="Loading appointments..." />
           </div>
         ) : todayAppointments.length === 0 ? (
           <div className="text-center py-8">
@@ -224,9 +223,7 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
                         <p className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                           {appointment.patient?.firstName} {appointment.patient?.lastName}
                         </p>
-                        <span className={`px-2 py-1 text-xs rounded-full border ${getStatusBadge(appointment.status)}`}>
-                          {appointment.status}
-                        </span>
+                        <StatusBadge status={appointment.status} label={appointment.status} />
                       </div>
                       <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                         with Dr. {appointment.dentist?.firstName} {appointment.dentist?.lastName}
