@@ -165,7 +165,6 @@ const PatientXRayResults = () => {
         setIsLoading(true)
       }
       const response = await patientsAPI.getMyRadiologyRequests()
-      console.log('Radiology requests response:', response)
       setRequests(response.data || [])
     } catch (error) {
       console.error('Error fetching X-ray requests:', error)

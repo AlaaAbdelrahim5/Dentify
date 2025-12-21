@@ -53,13 +53,6 @@ const ClinicOverview = ({ userData, stats: propStats }) => {
           patients = patientsRes.value?.patients || []
         }
 
-        console.log('Clinic Stats Debug:', {
-          secretaries: secretaries.length,
-          dentists: dentists.length,
-          appointments: appointments.length,
-          patients: patients.length
-        })
-
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const todayAppointments = appointments.filter(apt => {

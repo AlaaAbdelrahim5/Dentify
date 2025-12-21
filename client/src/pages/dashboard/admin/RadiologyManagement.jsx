@@ -102,11 +102,9 @@ const RadiologyManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        console.log('Radiology centers loaded:', data.data?.length || 0)
         setCenters(data.data)
         setTotalPages(data.pagination?.pages || 1)
       } else {
-        console.error('Failed to fetch centers:', data.message)
         setError('Failed to load radiology centers. Please try again.')
         setCenters([])
       }
@@ -215,9 +213,7 @@ const RadiologyManagement = () => {
     const action = confirmAction
 
     try {
-      console.log('Toggling center status for center ID:', center.userId)
       const response = await radiologyAPI.toggleStatus(center.userId)
-      console.log('Toggle status response:', response)
 
       if (response.success) {
         setShowConfirmModal(false)

@@ -27,7 +27,7 @@ isSupported().then(yes => {
   if (yes) {
     messaging = getMessaging(app);
   }
-}).catch(err => console.log('Firebase messaging not supported:', err));
+}).catch(err => {/* Firebase messaging not supported */});
 
 export { messaging };
 export default app;

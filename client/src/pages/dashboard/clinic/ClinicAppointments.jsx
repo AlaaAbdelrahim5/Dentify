@@ -58,11 +58,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       setLoading(true)
       setError(null)
       
-      console.log('Clinic: Fetching clinic appointments...')
-      
       const response = await appointmentsAPI.getClinicAppointments()
-      console.log('Clinic: Received response:', response)
-      console.log('Clinic: Appointments count:', response.appointments?.length || 0)
       
       setAppointments(response.appointments || [])
     } catch (error) {

@@ -189,10 +189,6 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         role: 'Dentist'
       }
 
-      console.log('🔍 Sending dentist data:', dentistData)
-      console.log('🔍 Working hours:', dentistData.workingHours)
-      console.log('🔍 City value:', dentistData.city)
-
       await onSave(dentistData)
       // Don't close modal here - let the parent component handle it after successful save
     } catch (error) {
@@ -254,9 +250,6 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   }
 
   const updateWorkingHour = (index, field, value) => {
-    if (field === 'startTime' || field === 'endTime') {
-      console.log(`Time input ${field}:`, value, 'typeof:', typeof value)
-    }
     
     setFormData(prev => ({
       ...prev,

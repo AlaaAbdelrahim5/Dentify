@@ -76,8 +76,6 @@ const DentistSettings = () => {
         throw new Error('Dentist profile not found')
       }
 
-      console.log('Fetched dentist data:', dentist) // Debug log
-
       // Map the data to profile state
       // Note: email and phone come from user object
       setProfile({

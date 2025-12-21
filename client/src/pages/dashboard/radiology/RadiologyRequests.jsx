@@ -163,10 +163,8 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Radiology requests loaded:', data.radiologyRequests?.length || data.data?.length || data.requests?.length || 0)
         setRequests(data.radiologyRequests || data.data || data.requests || [])
       } else {
-        console.error('Failed to fetch requests')
         setError('Failed to load requests. Please try again.')
       }
     } catch (error) {

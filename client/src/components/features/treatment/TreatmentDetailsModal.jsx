@@ -277,20 +277,6 @@ const TreatmentDetailsModal = ({
     const clinicInfo = dentistInfo?.clinic
     const statusValue = treatmentData.treatmentStatus || treatmentData.status || 'N/A'
     
-    // Debug logging
-    console.log('=== RECEIPT DEBUG ===')
-    console.log('treatmentData:', treatmentData)
-    console.log('rawTreatment:', rawTreatment)
-    console.log('dentistInfo:', dentistInfo)
-    console.log('clinicInfo:', clinicInfo)
-    console.log('clinicName options:', {
-      fromClinicInfo: clinicInfo?.clinicName,
-      fromTreatmentData: treatmentData.clinicName,
-      direct: treatmentData.dentist?.clinic?.clinicName,
-      rawData: treatmentData.rawData?.dentist?.clinic?.clinicName
-    })
-    console.log('==================')
-    
     const printWindow = window.open('', '_blank')
     printWindow.document.write(`
       <!DOCTYPE html>

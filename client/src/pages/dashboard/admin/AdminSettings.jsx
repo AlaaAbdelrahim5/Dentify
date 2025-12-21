@@ -62,10 +62,6 @@ const AdminSettings = () => {
 
       const data = await response.json()
       const admin = data.data || data
-      
-      console.log('Admin profile data:', admin)
-      console.log('Profile image from user:', admin.user?.profileImage)
-      console.log('Profile image from admin:', admin.profileImage)
 
       setProfile({
         firstName: admin.firstName || '',

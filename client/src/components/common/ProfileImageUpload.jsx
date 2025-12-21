@@ -14,8 +14,6 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", on
 
   // Update imagePreview when currentImage prop changes
   useEffect(() => {
-    console.log('ProfileImageUpload - currentImage prop:', currentImage)
-    console.log('ProfileImageUpload - Full URL:', getImageUrlHelper(currentImage))
     setImagePreview(currentImage)
   }, [currentImage])
 
@@ -174,7 +172,6 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", on
               alt={userName}
               className="w-full h-full object-cover"
               onError={(e) => {
-                console.error('Image load error for URL:', getImageUrlHelper(imagePreview))
                 e.target.onerror = null // Prevent infinite loop
                 e.target.src = '' // Clear src
                 e.target.style.display = 'none'

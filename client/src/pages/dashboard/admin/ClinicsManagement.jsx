@@ -97,7 +97,6 @@ const ClinicsManagement = () => {
       const data = await response.json()
 
       if (data.success) {
-        console.log('Clinics loaded:', data.data?.length || 0)
         setClinics(data.data)
         setTotalPages(data.pagination.pages)
       } else {
@@ -230,9 +229,7 @@ const ClinicsManagement = () => {
     const action = confirmAction
 
     try {
-      console.log('Toggling clinic status for clinic ID:', clinic.userId)
       const response = await clinicsAPI.toggleStatus(clinic.userId)
-      console.log('Toggle status response:', response)
 
       if (response.success) {
         setShowConfirmModal(false)

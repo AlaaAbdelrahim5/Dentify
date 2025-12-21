@@ -67,7 +67,7 @@ const FindDoctor = () => {
           setUserLocation([position.coords.latitude, position.coords.longitude])
         },
         (error) => {
-          console.log('Location access denied:', error)
+          
         },
         {
           enableHighAccuracy: false,
@@ -88,11 +88,8 @@ const FindDoctor = () => {
       setError(null)
       
       const response = await dentistsAPI.getAll({ limit: 1000, status: 'active' })
-      console.log('Fetched doctors:', response)
       
       const dentistsData = response.dentists || response.data || response || []
-      console.log('Dentists data:', dentistsData)
-      console.log('Sample clinic coordinates:', dentistsData[0]?.clinic?.coordinates)
       setDoctors(dentistsData)
     } catch (err) {
       console.error('Error fetching doctors:', err)
@@ -142,7 +139,6 @@ const FindDoctor = () => {
     
     // Sort by clinic distance from user if location is available, then alphabetically
     if (userLocation) {
-      console.log('User location for sorting:', userLocation)
       // Map doctors to include clinic coordinates and full name for sorting
       const doctorsWithClinicLocations = filtered.map(doctor => ({
         ...doctor,
@@ -150,16 +146,7 @@ const FindDoctor = () => {
         fullName: `${doctor.firstName} ${doctor.lastName}`
       }))
       
-      console.log('Doctors with clinic coordinates:', doctorsWithClinicLocations.map(d => ({ 
-        name: d.fullName, 
-        coordinates: d.coordinates 
-      })))
-      
       const sorted = sortByDistance(doctorsWithClinicLocations, userLocation, 'fullName')
-      console.log('Sorted doctors with distances:', sorted.map(d => ({ 
-        name: d.fullName, 
-        distance: d.distance 
-      })))
       
       return sorted
     }

@@ -53,8 +53,6 @@ const DentistRadiology = () => {
       setLoading(true)
       setError(null)
       const requestsRes = await radiologyRequestsAPI.getDentistRequests()
-      console.log('Radiology Requests Response:', requestsRes)
-      console.log('Requests Array:', requestsRes.radiologyRequests)
       setRadiologyRequests(requestsRes.radiologyRequests || [])
     } catch (err) {
       console.error('Error fetching radiology requests:', err)

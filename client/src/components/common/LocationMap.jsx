@@ -75,7 +75,6 @@ const LocationMap = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userPos = [position.coords.latitude, position.coords.longitude]
-          console.log('User location obtained:', userPos)
           setUserLocation(userPos)
         },
         (error) => {

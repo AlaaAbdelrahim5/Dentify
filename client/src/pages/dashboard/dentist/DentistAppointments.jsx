@@ -64,14 +64,6 @@ const DentistAppointments = ({ onTabChange }) => {
       setLoading(true)
       setError(null)
       const response = await appointmentsAPI.getDentistAppointments()
-      console.log('Fetched appointments:', response.appointments)
-      if (response.appointments && response.appointments.length > 0) {
-        console.log('First appointment sample:', {
-          id: response.appointments[0].id,
-          treatmentId: response.appointments[0].treatmentId,
-          treatment: response.appointments[0].treatment
-        })
-      }
       setAppointments(response.appointments || [])
     } catch (err) {
       console.error('Error fetching appointments:', err)
@@ -278,18 +270,13 @@ const DentistAppointments = ({ onTabChange }) => {
   }
 
   const handleSaveToothChart = (chartData) => {
-    console.log('Tooth chart data for appointment:', chartData)
     
     if (selectedAppointment) {
       // Associate the tooth chart with the selected appointment
-      console.log('Attaching tooth chart to appointment:', selectedAppointment.id)
-      console.log('Appointment:', selectedAppointment.treatment)
-      console.log('Patient:', selectedAppointment.patient.name)
       
       setToast({ message: `Tooth chart successfully added to appointment: ${selectedAppointment.treatment} for ${selectedAppointment.patient.name}`, type: 'success' })
     } else {
       // Save as standalone tooth chart examination
-      console.log('Saving standalone tooth chart')
     }
     
     setIsToothChartModalOpen(false)
@@ -332,7 +319,6 @@ const DentistAppointments = ({ onTabChange }) => {
 
   const handleCreateTreatmentFromTooth = (toothData) => {
     // Navigate to treatments page to create treatment for specific tooth
-    console.log('Creating treatment for tooth:', toothData)
     
     if (!selectedAppointment) {
       setToast({ message: 'No appointment selected', type: 'error' })
@@ -356,9 +342,6 @@ const DentistAppointments = ({ onTabChange }) => {
       toothNotes: toothData?.notes // Add tooth-specific notes
     }
     
-    console.log('Storing appointment context with ID:', appointmentContext.id)
-    console.log('Full appointment context:', appointmentContext)
-    
     // Store in sessionStorage so treatments page can access it
     sessionStorage.setItem('createTreatmentFromAppointment', JSON.stringify(appointmentContext))
     
@@ -374,7 +357,6 @@ const DentistAppointments = ({ onTabChange }) => {
 
   const handleScheduleAppointmentFromTooth = (toothNumber) => {
     // Pre-fill the appointment modal with tooth information
-    console.log('Scheduling appointment for tooth:', toothNumber)
     setIsToothChartModalOpen(false)
     setIsNewAppointmentModalOpen(true)
     // You can pass the tooth number to pre-fill the appointment modal
@@ -387,7 +369,6 @@ const DentistAppointments = ({ onTabChange }) => {
                          appointment.rawData?.patient?.id
     
     if (!patientUserId) {
-      console.error('Patient userId not found in appointment data')
       setToast({ message: 'Unable to find patient information. Please try again.', type: 'error' })
       return
     }

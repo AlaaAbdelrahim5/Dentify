@@ -56,7 +56,6 @@ const AuthRouter = () => {
     const handleStorageChange = (e) => {
       // Check if logout flag was set
       if (e.key === 'dentify_logout_performed' && e.newValue === 'true') {
-        console.log('App: Logout detected via storage event')
         setIsAuthenticated(false)
         setUser(null)
       }
@@ -67,7 +66,6 @@ const AuthRouter = () => {
 
     // Also create a custom event listener for same-tab logout
     const handleLogout = () => {
-      console.log('App: Logout detected via custom event')
       setIsAuthenticated(false)
       setUser(null)
     }
@@ -96,7 +94,6 @@ const AuthRouter = () => {
   if (isAuthenticated && user && 
       (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup')) {
     const dashboardRoute = authUtils.getDashboardRoute()
-    console.log('AuthRouter: Redirecting authenticated user to dashboard:', dashboardRoute)
     return <Navigate to={dashboardRoute} replace />
   }
 

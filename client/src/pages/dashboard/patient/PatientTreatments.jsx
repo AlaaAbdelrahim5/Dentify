@@ -59,9 +59,7 @@ const PatientTreatments = () => {
         setLoading(true)
       }
       setError(null)
-      console.log('Fetching patient treatments...')
       const response = await treatmentsAPI.getPatientTreatments()
-      console.log('Patient treatments response:', response)
       setTreatments(response.treatments || [])
     } catch (err) {
       console.error('Error fetching treatments:', err)

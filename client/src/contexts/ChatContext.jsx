@@ -31,7 +31,6 @@ export const ChatProvider = ({ children }) => {
   // Listen for logout events to reset state
   useEffect(() => {
     const handleLogout = () => {
-      console.log('ChatContext: Logout detected, clearing state');
       setUserId(null);
       setConversations([]);
       setActiveConversation(null);
@@ -41,7 +40,6 @@ export const ChatProvider = ({ children }) => {
     };
 
     const handleLogin = () => {
-      console.log('ChatContext: Login detected, forcing re-initialization');
       setInitKey(prev => prev + 1); // Force re-init
     };
 
@@ -60,7 +58,6 @@ export const ChatProvider = ({ children }) => {
     
     if (!currentToken) {
       // Clear all state if no token
-      console.log('ChatContext: No token found, clearing state');
       setUserId(null);
       setConversations([]);
       setActiveConversation(null);
@@ -71,10 +68,8 @@ export const ChatProvider = ({ children }) => {
 
     try {
       const decoded = jwtDecode(currentToken);
-      console.log('ChatContext: Decoded JWT token:', decoded); // Debug log
       // Ensure userId is a number to match database format
       const currentUserId = Number(decoded.userId || decoded.id);
-      console.log('ChatContext: Extracted userId:', currentUserId, 'initKey:', initKey); // Debug log
       
       // Always update userId to ensure it's current
       setUserId(currentUserId);
@@ -82,13 +77,11 @@ export const ChatProvider = ({ children }) => {
 
       // Listen for conversations
       const unsubscribe = getUserConversations(currentUserId, (convs) => {
-        console.log('ChatContext: Received', convs.length, 'conversations for user', currentUserId);
         setConversations(convs);
         setIsLoadingConversations(false);
       });
 
       return () => {
-        console.log('ChatContext: Cleaning up listener for user', currentUserId);
         unsubscribe && unsubscribe();
       };
     } catch (error) {
@@ -114,7 +107,6 @@ export const ChatProvider = ({ children }) => {
       return sum + (conv.unreadCount?.[userId] || 0);
     }, 0);
     
-    console.log('ChatContext: Recalculated total unread count:', total, 'activeConversation:', activeConversation?.id);
     setTotalUnreadCount(total);
   }, [conversations, activeConversation, userId]);
 

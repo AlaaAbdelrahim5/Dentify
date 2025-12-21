@@ -76,7 +76,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     if (storedContext) {
       try {
         const appointmentContext = JSON.parse(storedContext)
-        console.log('Found appointment context in sessionStorage:', appointmentContext)
         setAppointmentDataState(appointmentContext)
         setCurrentPage('new')
         // Clear from sessionStorage after using it
@@ -311,7 +310,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           })
         } catch (linkError) {
           console.error('Error linking appointment to treatment:', linkError)
-          console.error('Link error details:', linkError.response?.data)
           // Don't fail the whole operation if linking fails
           setToast({ message: 'Treatment created but failed to link with appointment. Please link manually if needed.', type: 'error' })
         }
@@ -321,11 +319,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       await fetchAllData()
       handleBackToList()
     } catch (error) {
-      console.error('========================================')
-      console.error('ERROR in handleSaveNewTreatment:')
-      console.error('Error:', error)
-      console.error('Error response:', error.response?.data)
-      console.error('========================================')
+      console.error('Error creating treatment:', error)
       setToast({ message: error.response?.data?.error || 'Failed to create treatment. Please try again.', type: 'error' })
     }
   }
@@ -349,7 +343,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       handleBackToList()
     } catch (error) {
       console.error('Error updating treatment:', error)
-      console.error('Error response:', error.response?.data)
       setToast({ message: error.response?.data?.error || 'Failed to update treatment. Please try again.', type: 'error' })
     }
   }
@@ -382,7 +375,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleConfirmDelete = async () => {
     try {
-      console.log('Deleting treatment:', selectedTreatment.id)
       await treatmentsAPI.delete(selectedTreatment.id)
       setToast({ message: 'Treatment deleted successfully!', type: 'success' })
       await fetchAllData()
@@ -390,7 +382,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       setSelectedTreatment(null)
     } catch (error) {
       console.error('Error deleting treatment:', error)
-      console.error('Error response:', error.response?.data)
       setToast({ message: error.response?.data?.error || 'Failed to delete treatment. Please try again.', type: 'error' })
     }
   }
@@ -404,14 +395,12 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     try {
       // Convert status to database format (e.g., "Completed" -> "COMPLETED")
       const dbStatus = newStatus.toUpperCase().replace(' ', '_')
-      console.log('Updating treatment status:', treatmentId, dbStatus)
       
       await treatmentsAPI.update(treatmentId, { status: dbStatus })
       setToast({ message: 'Treatment status updated successfully!', type: 'success' })
       await fetchAllData()
     } catch (error) {
       console.error('Error updating treatment status:', error)
-      console.error('Error response:', error.response?.data)
       setToast({ message: error.response?.data?.error || 'Failed to update treatment status. Please try again.', type: 'error' })
     }
   }
@@ -428,9 +417,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleSavePayment = async (paymentData) => {
     try {
-      console.log('Creating payment:', paymentData)
       const response = await paymentsAPI.create(paymentData)
-      console.log('Payment created:', response)
       
       // Wait a brief moment for database consistency
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -443,7 +430,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       setSelectedTreatment(null)
     } catch (error) {
       console.error('Error creating payment:', error)
-      console.error('Error response:', error.response?.data)
       setToast({ message: error.response?.data?.error || 'Failed to record payment. Please try again.', type: 'error' })
     }
   }
@@ -460,7 +446,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleSaveAppointment = async (appointmentData) => {
     try {
-      console.log('Creating appointment:', appointmentData)
       await appointmentsAPI.create(appointmentData)
       setToast({ message: 'Appointment booked successfully!', type: 'success' })
       setIsAppointmentModalOpen(false)
@@ -487,7 +472,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleSaveRadiologyRequest = async (requestData) => {
     try {
-      console.log('Creating radiology request:', requestData)
       
       // Prepare data for backend - remove requestDate as it's set by backend
       const apiData = {
@@ -500,7 +484,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       
       const { radiologyRequestsAPI } = await import('../../../services/api')
       const response = await radiologyRequestsAPI.create(apiData)
-      console.log('Radiology request created:', response)
       setToast({ message: 'Radiology request created successfully!', type: 'success' })
       setIsRadiologyModalOpen(false)
       // Don't clear selectedTreatment if we're in view mode
@@ -509,7 +492,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       }
     } catch (error) {
       console.error('Error creating radiology request:', error)
-      console.error('Error response:', error.response?.data)
       setToast({ message: error.response?.data?.error || 'Failed to create radiology request. Please try again.', type: 'error' })
     }
   }
@@ -529,7 +511,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   const handleSavePrescription = async (prescriptionData) => {
     try {
-      console.log('Creating prescription:', prescriptionData)
       
       const treatmentId = selectedTreatment?.id || prescriptionData.treatmentId
       if (!treatmentId) {
@@ -539,7 +520,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       
       // Create prescription via API
       const response = await treatmentsAPI.createPrescription(treatmentId, prescriptionData)
-      console.log('Prescription created:', response)
       
       // Refresh prescriptions list if we're viewing the treatment
       if (currentPage === 'view') {

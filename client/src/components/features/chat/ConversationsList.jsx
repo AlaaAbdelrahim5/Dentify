@@ -43,8 +43,6 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
   };
 
   // Filter users excluding current user
-  console.log('Users prop:', users);
-  console.log('Current userId:', userId, 'type:', typeof userId);
   
   // Get current user info to check their role
   const currentUser = authUtils.getCurrentUser();
@@ -59,10 +57,8 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
       return false;
     }
     
-    console.log(`User ${u.name} (id: ${u.id}, type: ${typeof u.id}) === ${userId}? ${isCurrentUser}`);
     return !isCurrentUser;
   });
-  console.log('Available users after filter:', availableUsers);
   const filteredUsers = availableUsers.filter(u => 
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
     u.role?.toLowerCase().includes(userSearchTerm.toLowerCase())
@@ -136,11 +132,6 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
             // Don't show unread indicator for active conversation
             const showUnread = !isActive && unreadCount > 0;
             
-            // Debug logging
-            if (unreadCount > 0) {
-              console.log('Conversation:', conversation.id, 'Active:', activeConversation?.id, 'isActive:', isActive, 'showUnread:', showUnread);
-            }
-
             return (
               <div
                 key={conversation.id}

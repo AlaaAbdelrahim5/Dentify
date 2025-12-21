@@ -75,12 +75,10 @@ const FindClinic = () => {
         try {
           const location = await Promise.race([geoPromise, timeoutPromise])
           if (mounted) {
-            console.log('User location obtained:', location)
             setUserLocation(location)
             setLocationChecked(true)
           }
         } catch (error) {
-          console.log('Geolocation error or timeout:', error)
           if (mounted) {
             setUserLocation('failed')
             setLocationChecked(true)
@@ -125,11 +123,8 @@ const FindClinic = () => {
       setError(null)
       
       const response = await clinicsAPI.getAll()
-      console.log('Fetched clinics:', response)
       
       const clinicsData = response.clinics || response.data || response || []
-      console.log('Clinics data:', clinicsData)
-      console.log('Sample clinic coordinates:', clinicsData[0]?.coordinates)
       setClinics(clinicsData)
     } catch (err) {
       console.error('Error fetching clinics:', err)
@@ -170,10 +165,7 @@ const FindClinic = () => {
 
     // Sort by distance if user location is available (and not failed)
     if (userLocation && Array.isArray(userLocation)) {
-      console.log('User location for clinic sorting:', userLocation)
-      console.log('Clinics to sort:', filtered.map(c => ({ name: c.clinicName, coordinates: c.coordinates })))
       const sorted = sortByDistance(filtered, userLocation, 'clinicName')
-      console.log('Sorted clinics with distances:', sorted.map(c => ({ name: c.clinicName, distance: c.distance })))
       return sorted
     }
 

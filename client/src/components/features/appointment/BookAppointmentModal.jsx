@@ -120,9 +120,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
     try {
       setLoadingSlots(true)
       setError(null)
-      console.log(`Fetching available slots for dentist ${dentistId} on ${date}`)
       const response = await appointmentsAPI.getAvailableSlots(dentistId, date)
-      console.log('Available slots response:', response)
       
       // Store the dentist's appointment duration
       const duration = response.appointmentDuration || 30
@@ -154,12 +152,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         
         if (hasOverlap) {
           booked.push(slot)
-          console.log(`Booked slot (overlap detected): ${slot}`)
         }
       })
-      
-      console.log('Generated slots:', slots)
-      console.log('Booked slots:', booked)
       
       setAvailableSlots(slots)
       setBookedSlots(booked)
@@ -419,7 +413,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           treatmentId: null
         }
 
-        console.log('Submitting appointment data:', appointmentData)
         await onSave(appointmentData)
         handleClose()
       } catch (err) {

@@ -49,25 +49,16 @@ const ClinicPayments = () => {
         paymentsAPI.getClinicPayments(),
         treatmentsAPI.getClinicTreatments()
       ])
-      console.log('=== PAYMENTS DATA ===')
-      console.log('Payments response:', paymentsRes)
-      console.log('Payments count:', paymentsRes.payments?.length || 0)
-      console.log('=== TREATMENTS DATA ===')
-      console.log('Treatments response:', treatmentsRes)
-      console.log('Treatments count:', treatmentsRes.treatments?.length || 0)
       setPayments(paymentsRes.payments || [])
       setTreatments(treatmentsRes.treatments || [])
       
       // Extract unique patients from treatments that have unpaid balances
       const patientMap = new Map()
-      console.log('Processing treatments for patients...')
       treatmentsRes.treatments?.forEach(treatment => {
         const remainingBalance = calculateRemainingBalance(treatment.totalAmount, treatment.paidAmount || 0, treatment.treatmentDiscount)
-        console.log(`Treatment ${treatment.id}: Total=${treatment.totalAmount}, Discount=${treatment.treatmentDiscount || 0}, Paid=${treatment.paidAmount || 0}, Remaining=${remainingBalance}`)
         // Only include patients with treatments that have unpaid balances
         if (remainingBalance > 0) {
           const patientId = treatment.patient.userId
-          console.log(`Adding patient ${patientId}: ${treatment.patient.firstName} ${treatment.patient.lastName}`)
           if (!patientMap.has(patientId)) {
             patientMap.set(patientId, treatment.patient)
           }
@@ -75,7 +66,6 @@ const ClinicPayments = () => {
       })
       
       const extractedPatients = Array.from(patientMap.values())
-      console.log('Total patients with unpaid balances:', extractedPatients.length)
       setPatients(extractedPatients)
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -92,7 +82,6 @@ const ClinicPayments = () => {
       name: `${p.firstName} ${p.lastName}`,
       phone: p.user?.phone || 'N/A'
     }))
-    console.log('mockPatients transformed:', transformed)
     return transformed
   }, [patients])
 

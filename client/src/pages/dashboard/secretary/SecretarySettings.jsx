@@ -77,8 +77,6 @@ const SecretarySettings = () => {
       const data = await response.json()
       const secretary = data.data || data
 
-      console.log('Fetched secretary data:', secretary)
-
       setProfile({
         firstName: secretary.firstName || '',
         lastName: secretary.lastName || '',

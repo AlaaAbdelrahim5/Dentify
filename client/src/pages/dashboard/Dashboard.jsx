@@ -201,7 +201,6 @@ const UnifiedDashboard = () => {
         const user = authUtils.getCurrentUser()
         
         if (!user || !user.role) {
-          console.error('Invalid user data:', user)
           navigate('/login', { replace: true })
           return
         }
@@ -270,11 +269,7 @@ const UnifiedDashboard = () => {
       
       if (response.ok) {
         const data = await response.json()
-        console.log('📅 UnifiedDashboard: Fetched appointments:', data.appointments?.length || 0)
-        console.log('📅 First appointment sample:', data.appointments?.[0])
         setAppointments(data.appointments || [])
-      } else {
-        console.error('Failed to fetch appointments:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -427,7 +422,6 @@ const UnifiedDashboard = () => {
   // Fetch appointments when dentist user is loaded
   useEffect(() => {
     if (currentUser?.role === 'Dentist') {
-      console.log('📅 UnifiedDashboard: Fetching appointments for dentist user')
       fetchAppointments()
     }
   }, [currentUser])

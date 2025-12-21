@@ -99,7 +99,6 @@ const TreatmentModal = ({
         setSelectedTeeth(initialData.teethStatus?.map(t => t.toothNumber) || [])
         const conditions = {}
         initialData.teethStatus?.forEach(tooth => {
-          console.log('Loading tooth from database:', tooth)
           conditions[tooth.toothNumber] = {
             status: tooth.conditionStatus?.toLowerCase() || 'cavity',
             priority: tooth.priority || 'Medium',
@@ -108,7 +107,6 @@ const TreatmentModal = ({
             toothStatus: tooth.status || 'In Progress' // Track if tooth is completed
           }
         })
-        console.log('Loaded toothConditions from database:', conditions)
         setToothConditions(conditions)
       } else {
         setFormData({
@@ -188,8 +186,6 @@ const TreatmentModal = ({
   useEffect(() => {
     if (appointmentData && isOpen) {
       const apptId = appointmentData.appointmentId || appointmentData.id
-      console.log('NewTreatmentModal: appointmentData received:', appointmentData)
-      console.log('NewTreatmentModal: Setting appointmentId to:', apptId)
       
       setFormData(prev => ({
         ...prev,
@@ -315,14 +311,7 @@ const TreatmentModal = ({
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    console.log('=== TREATMENT FORM SUBMIT ===')
-    console.log('Form Data:', formData)
-    console.log('Selected Teeth:', selectedTeeth)
-    console.log('Tooth Conditions:', toothConditions)
-    console.log('Validation starting...')
-    
     if (validateForm()) {
-      console.log('Validation passed!')
       const teethStatus = selectedTeeth.map(toothNumber => ({
         toothNumber,
         conditionStatus: toothConditions[toothNumber]?.status || 'Cavity',
@@ -332,8 +321,6 @@ const TreatmentModal = ({
         status: toothConditions[toothNumber]?.toothStatus || 'In Progress' // Include tooth status
       }))
       
-      console.log('TeethStatus being saved:', teethStatus)
-
       const treatmentData = {
         ...formData,
         description: formData.description?.trim() || null,
@@ -344,15 +331,8 @@ const TreatmentModal = ({
         appointmentId: formData.appointmentId || null // Explicitly include appointmentId
       }
       
-      console.log('Treatment Data to Save:', treatmentData)
-      console.log('appointmentId being passed:', treatmentData.appointmentId)
-      console.log('Calling onSave...')
       onSave(treatmentData)
-      console.log('Calling onClose...')
       onClose()
-    } else {
-      console.log('Validation failed!')
-      console.log('Errors:', errors)
     }
   }
 

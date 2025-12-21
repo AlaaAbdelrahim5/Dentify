@@ -34,7 +34,6 @@ const DentistSchedule = () => {
       setLoading(true)
       setError(null)
       const response = await dentistsAPI.getMyProfile()
-      console.log('Dentist profile response:', response)
       
       // Handle different response structures
       const dentist = response.data?.dentist || response.dentist || response.data

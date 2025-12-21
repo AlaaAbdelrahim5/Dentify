@@ -77,15 +77,6 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
         : 0
       const teethProgress = totalTeeth > 0 ? (completedTeeth / totalTeeth) * 100 : 0
 
-      // Debug logging
-      console.log('Secretary Treatment Transform:', {
-        id: treatment.id,
-        hasDentist: !!treatment.dentist,
-        hasClinic: !!treatment.dentist?.clinic,
-        clinicName: treatment.dentist?.clinic?.clinicName,
-        dentistData: treatment.dentist
-      })
-
       return {
         id: treatment.id,
         patientId: treatment.patientId,

@@ -49,8 +49,6 @@ const DentistPayments = () => {
         paymentsAPI.getDentistPayments(),
         treatmentsAPI.getDentistTreatments()
       ])
-      console.log('Payments loaded:', paymentsRes.payments?.length || 0)
-      console.log('Treatments loaded:', treatmentsRes.treatments?.length || 0)
       setPayments(paymentsRes.payments || [])
       setTreatments(treatmentsRes.treatments || [])
       

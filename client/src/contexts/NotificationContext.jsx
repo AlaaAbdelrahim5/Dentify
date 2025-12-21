@@ -42,12 +42,9 @@ export const NotificationProvider = ({ children }) => {
       const decoded = jwtDecode(token);
       const userId = decoded.userId || decoded.id;
       const userIdStr = String(userId);
-      
-      console.log('NotificationContext - User ID:', userId, 'Type:', typeof userId);
 
       // If user changed, reset notifications
       if (currentUserId && currentUserId !== userIdStr) {
-        console.log('NotificationContext - User changed, resetting notifications');
         setNotifications([]);
         setUnreadCount(0);
       }
@@ -64,20 +61,16 @@ export const NotificationProvider = ({ children }) => {
       });
 
       // Listen for notifications - convert userId to string
-      console.log('NotificationContext - Listening for notifications with userId:', userIdStr);
       
       const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
-        console.log('NotificationContext - Received notifications:', notifs);
         setNotifications(notifs);
         const unread = notifs.filter(n => !n.read).length;
         setUnreadCount(unread);
-        console.log('NotificationContext - Unread count:', unread);
       });
 
       // Listen for foreground messages
       onMessageListener()
         .then((payload) => {
-          console.log('Received foreground message:', payload);
           // Show browser notification
           if (Notification.permission === 'granted') {
             new Notification(payload.notification.title, {
@@ -86,10 +79,9 @@ export const NotificationProvider = ({ children }) => {
             });
           }
         })
-        .catch((err) => console.log('Failed to receive message:', err));
+        .catch((err) => {});
 
       return () => {
-        console.log('NotificationContext - Cleaning up listener');
         unsubscribe && unsubscribe();
       };
     } catch (error) {

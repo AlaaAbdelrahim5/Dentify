@@ -77,22 +77,6 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
         totalPatients: patientsCount,
         totalDentists: dentistsCount
       })
-      
-      console.log('Secretary Stats Debug:', {
-        todayAppointments: todayAppts.length,
-        totalAppointments: appointments.length,
-        uniquePatients: patientsCount,
-        dentists: dentistsCount,
-        todayApptDetails: todayAppts.map(a => ({
-          id: a.id,
-          status: a.status,
-          startTime: a.startTime,
-          patient: `${a.patient?.firstName} ${a.patient?.lastName}`
-        })),
-        pendingCount: todayAppts.filter(a => a.status === 'PENDING').length,
-        confirmedCount: todayAppts.filter(a => a.status === 'CONFIRMED').length,
-        completedCount: todayAppts.filter(a => a.status === 'COMPLETED').length
-      })
     } catch (error) {
       console.error('Error fetching secretary data:', error)
     } finally {

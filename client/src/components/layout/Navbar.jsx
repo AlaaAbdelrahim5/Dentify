@@ -72,9 +72,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
   const handleLogout = () => {
     try {
-      console.log('Navbar: Starting logout process')
       authUtils.logout()
-      console.log('Navbar: Logout completed, navigating to login page')
       setIsProfileDropdownOpen(false)
       // Navigate to login page after logout
       navigate('/login', { replace: true })

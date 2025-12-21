@@ -147,7 +147,6 @@ const NewAppointmentModal = ({ isOpen, onClose, onSave, preselectedPatient = nul
           treatmentId: preselectedPatient.treatmentId || null
         }
 
-        console.log('Submitting appointment data:', appointmentData)
         await onSave(appointmentData)
         handleClose()
       } catch (err) {

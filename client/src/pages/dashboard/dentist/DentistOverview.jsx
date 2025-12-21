@@ -5,9 +5,6 @@ import { AppointmentSchedule } from '../../../components'
 const DentistOverview = ({ userData, onTabChange, appointments = [], onAppointmentClick, onAddAppointment }) => {
   const { isDarkMode } = useTheme()
 
-  console.log('🦷 DentistOverview: Rendering with', appointments?.length || 0, 'appointments')
-  console.log('🦷 DentistOverview: userData:', userData)
-
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -40,7 +37,7 @@ const DentistOverview = ({ userData, onTabChange, appointments = [], onAppointme
         appointments={appointments}
         onAddAppointment={onAddAppointment || (() => onTabChange?.('appointments'))}
         onAppointmentClick={onAppointmentClick || ((appointment) => {
-          console.log('Appointment clicked:', appointment)
+          
         })}
         dentistData={userData}
       />

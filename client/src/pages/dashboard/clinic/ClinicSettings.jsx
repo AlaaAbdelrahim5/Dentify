@@ -57,10 +57,8 @@ const ClinicSettings = () => {
 
   useEffect(() => {
     const user = authUtils.getCurrentUser()
-    console.log('Current user:', user)
     if (user) {
       setCurrentUser(user)
-      console.log('Loading clinic data for user ID:', user.id)
       loadClinicData(user.id)
     }
   }, [])
@@ -69,11 +67,8 @@ const ClinicSettings = () => {
     try {
       setLoading(true)
       const response = await api.get(`/clinics/me`)
-      console.log('Full API response:', response)
-      console.log('Response data:', response.data)
       
       const clinic = response.data.data || response.data // Handle both formats
-      console.log('Clinic data:', clinic)
       
       // Set actual values from database
       setClinicInfo({
@@ -90,11 +85,9 @@ const ClinicSettings = () => {
       
       // Load working hours if they exist
       if (clinic.workingHours && clinic.workingHours.length > 0) {
-        console.log('Working hours from API:', clinic.workingHours)
         const hoursObject = Array.isArray(clinic.workingHours) 
           ? convertWorkingHoursArrayToObject(clinic.workingHours)
           : clinic.workingHours
-        console.log('Converted working hours:', hoursObject)
         setWorkingHours(hoursObject)
       }
     } catch (error) {

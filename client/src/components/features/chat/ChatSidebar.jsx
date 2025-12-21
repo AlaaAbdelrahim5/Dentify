@@ -441,13 +441,6 @@ const ChatWindow = ({ user, onClose }) => {
     }
   };
 
-  // Debug: Log messages
-  useEffect(() => {
-    console.log('ChatWindow - Messages:', messages);
-    console.log('ChatWindow - Active conversation:', activeConversation);
-    console.log('ChatWindow - User ID:', userId);
-  }, [messages, activeConversation, userId]);
-
   return (
     <div className="flex flex-col h-full">
       {/* Header */}

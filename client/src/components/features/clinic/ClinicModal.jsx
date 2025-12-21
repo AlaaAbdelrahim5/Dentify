@@ -369,10 +369,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         workingHours: workingHoursArray
       };
 
-      console.log('Sending request to:', url);
-      console.log('Request method:', method);
-      console.log('Request data:', requestData);
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -383,9 +379,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       });
 
       const data = await response.json();
-
-      console.log('Response status:', response.status);
-      console.log('Response data:', data);
 
       if (data.success) {
         onSave(data.data, clinic ? "updated" : "created");

@@ -44,13 +44,6 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
         ? patientStatsRes.value.data 
         : { total: 0 }
 
-      console.log('Admin Stats Debug:', {
-        dentistStats,
-        clinicStats,
-        radiologyStats,
-        patientStats
-      })
-
       setStats({
         totalClinics: clinicStats.total || 0,
         pendingDentists: dentistStats.pending || 0,

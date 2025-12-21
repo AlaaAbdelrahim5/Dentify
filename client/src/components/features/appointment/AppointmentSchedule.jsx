@@ -15,19 +15,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       apt.status !== 'PENDING' && apt.status !== 'CANCELLED'
     )
     
-    // Debug: Log appointment data to help troubleshoot
-    console.log('📅 Total appointments received:', appointments.length)
-    console.log('📅 Filtered appointments (non-pending/cancelled):', filtered.length)
-    if (filtered.length > 0) {
-      console.log('📅 Sample appointment:', {
-        id: filtered[0].id,
-        patient: filtered[0].patient?.firstName || filtered[0].patient?.name,
-        startTime: filtered[0].startTime,
-        startTimeFormatted: new Date(filtered[0].startTime).toLocaleString(),
-        status: filtered[0].status
-      })
-    }
-    
     return filtered
   }, [appointments])
 
@@ -87,7 +74,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
   const weekDates = useMemo(() => {
     const dates = getWeekDates(currentWeek)
-    console.log('📅 Week dates:', dates.map(d => d.toDateString()))
     return dates
   }, [currentWeek, getWorkingDaysMap])
 
@@ -163,7 +149,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       grouped[dateKey].push(apt)
     })
     
-    console.log('📅 Grouped appointments by date:', grouped)
     return grouped
   }, [filteredAppointments])
 

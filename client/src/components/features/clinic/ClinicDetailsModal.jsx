@@ -46,19 +46,12 @@ const ClinicDetailsModal = ({
       const response = await dentistsAPI.getAll({ limit: 1000, includeAll: 'true' })
       const allDentists = response.dentists || response.data || response || []
       
-      console.log('=== CLINIC DENTISTS DEBUG ===')
-      console.log('All dentists:', allDentists)
-      console.log('Current clinic object:', clinic)
-      console.log('Clinic keys:', Object.keys(clinic || {}))
-      
       // Filter dentists for this specific clinic
       // The clinicId in dentist references the clinic's userId (which is the primary key)
       // Try multiple possible clinic ID fields
       const clinicPrimaryKey = clinic._id || clinic.userId || clinic.id || clinic.user?.id
-      console.log('Clinic primary key (userId/id):', clinicPrimaryKey)
       
       if (!clinicPrimaryKey) {
-        console.error('No valid clinic ID found!')
         setDentists([])
         return
       }
@@ -66,19 +59,9 @@ const ClinicDetailsModal = ({
       const clinicDentists = allDentists.filter(d => {
         const dentistClinicId = d.clinicId
         const match = dentistClinicId === clinicPrimaryKey
-        if (d.clinic) {
-          console.log(`Dentist: ${d.firstName} ${d.lastName}`, {
-            dentistClinicId,
-            clinicPrimaryKey,
-            match,
-            dentistClinicName: d.clinic.clinicName
-          })
-        }
         return match
       })
       
-      console.log('Filtered dentists count:', clinicDentists.length)
-      console.log('Filtered dentists:', clinicDentists)
       setDentists(clinicDentists)
     } catch (err) {
       console.error('Error fetching dentists:', err)

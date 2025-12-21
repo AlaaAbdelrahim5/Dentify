@@ -273,9 +273,8 @@ const DentistsManagement = () => {
         }
       } else {
         // Add new dentist
-        console.log('📤 Sending dentist creation request:', dentistData)
+        
         const response = await dentistsAPI.create(dentistData)
-        console.log('📥 Response from server:', response)
         if (response.success) {
           // Map the new dentist data to match the structure
           const newDentist = {
@@ -289,17 +288,11 @@ const DentistsManagement = () => {
           // Refresh to update stats
           loadDentists(true)
         } else {
-          console.error('❌ Server returned error:', response.message)
           setError(response.message || 'Failed to create dentist request')
         }
       }
     } catch (error) {
-      console.error('❌ Error saving dentist:', error)
-      console.error('❌ Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      })
+      console.error('Error saving dentist:', error)
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save dentist. Please try again.'
       setError(errorMessage)
     }
