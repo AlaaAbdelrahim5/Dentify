@@ -12,10 +12,10 @@ import {
   FaDollarSign,
   FaExclamationCircle
 } from 'react-icons/fa'
-import { Card, Input, Button, StatsOverview, PatientDetailsModal } from '../../../components'
+import { Card, Input, Button, StatsOverview, PatientDetailsModal, PatientCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
-import { calculateAge, capitalizeFirstLetter, formatDate, getStatusDisplay, safeJsonParse, ensureArray } from '../../../utils/helpers'
+import { safeJsonParse, ensureArray } from '../../../utils/helpers'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
@@ -219,126 +219,6 @@ const DentistPatients = () => {
     setSelectedPatient(null)
   }
 
-  const PatientCard = ({ patient }) => {
-    const getStatusDisplay = (status) => {
-      switch (status) {
-        case 'active':
-          return {
-            label: 'Active',
-            className: isDarkMode 
-              ? 'bg-green-900/30 text-green-400 border-green-600' 
-              : 'bg-green-100 text-green-700 border-green-400'
-          }
-        case 'inactive':
-          return {
-            label: 'Inactive',
-            className: isDarkMode 
-              ? 'bg-gray-700 text-gray-400 border-gray-600' 
-              : 'bg-gray-100 text-gray-600 border-gray-400'
-          }
-        default:
-          return {
-            label: status,
-            className: isDarkMode 
-              ? 'bg-gray-700 text-gray-300 border-gray-600' 
-              : 'bg-gray-100 text-gray-700 border-gray-300'
-          }
-      }
-    }
-
-    const statusDisplay = getStatusDisplay(patient.status)
-
-    return (
-      <Card 
-        hover 
-        onClick={() => handleViewPatient(patient)}
-        className="group cursor-pointer"
-      >
-        <Card.Header className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <div className={`
-                w-12 h-12 rounded-lg flex items-center justify-center
-                ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
-                group-hover:scale-110 transition-transform duration-300
-              `}>
-                <FaUser className="w-6 h-6 text-teal-600" />
-              </div>
-              <div>
-                <h3 className={`text-lg font-bold ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}>
-                  {patient.name}
-                </h3>
-                <p className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {capitalizeFirstLetter(patient.gender) || 'N/A'} • {calculateAge(patient.dateOfBirth)} years
-                </p>
-              </div>
-            </div>
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>
-              {statusDisplay.label}
-            </span>
-          </div>
-        </Card.Header>
-
-        <Card.Content className="space-y-4">
-          {/* Contact Information */}
-          <div className={`
-            p-3 rounded-lg 
-            ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}
-          `}>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <FaPhone className={`w-4 h-4 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {patient.phone}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaEnvelope className={`w-4 h-4 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {patient.email}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaMapMarkerAlt className={`w-4 h-4 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {capitalizeFirstLetter(patient.city)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Birth Date */}
-          <div className="flex items-center gap-2 text-sm">
-            <FaBirthdayCake className={`w-4 h-4 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-              Born: {patient.dateOfBirth && !isNaN(new Date(patient.dateOfBirth).getTime()) 
-                ? new Date(patient.dateOfBirth).toLocaleDateString() 
-                : 'N/A'}
-            </span>
-          </div>
-        </Card.Content>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Show View Patient Page */}
@@ -471,7 +351,7 @@ const DentistPatients = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayPatients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
+            <PatientCard key={patient.id} patient={patient} onClick={handleViewPatient} />
           ))}
         </div>
       )}

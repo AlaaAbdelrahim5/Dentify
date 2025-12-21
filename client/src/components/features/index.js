@@ -16,13 +16,15 @@ export { default as ClinicModal } from './clinic/ClinicModal'
 export { default as AvailableTreatmentsManager } from './clinic/AvailableTreatmentsManager'
 
 // Feature-specific Components - Dentist
-export { default as DentistCard } from './dentist/DentistCard'
 export { default as DentistDetailsModal } from './dentist/DentistDetailsModal'
 export { default as DentistModal } from './dentist/DentistModal'
 
 // Feature-specific Components - Expenses
 export { default as AddInvoiceModal } from './expenses/AddInvoiceModal'
 export { default as AddExpenseModal } from './expenses/AddExpenseModal'
+
+// Feature-specific Components - Radiology
+export { default as RequestCard } from './radiology/RequestCard'
 
 // Feature-specific Components - Inventory
 export { default as ItemModal } from './inventory/ItemModal'
@@ -40,6 +42,7 @@ export { default as NotificationsList } from './notifications/NotificationsList'
 // Feature-specific Components - Patient
 export { default as PatientModal } from './patient/PatientModal'
 export { default as PatientDetailsModal } from './patient/PatientDetailsModal'
+export { default as PatientCard } from './patient/PatientCard'
 
 // Feature-specific Components - Payment
 export { default as PaymentModal } from './payment/PaymentModal'

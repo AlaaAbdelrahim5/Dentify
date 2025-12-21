@@ -7,10 +7,9 @@ import {
   FaIdCard,
   FaSearch,
   FaStethoscope,
-  FaEye,
-  FaTimes
+  FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingState, ErrorState, EmptyState } from '../../../components'
+import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -251,178 +250,14 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
       )}
 
       {/* Dentist Details Modal */}
-      {showDetailsModal && selectedDentist && (
-        <div className="fixed inset-0 z-9999 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
-              onClick={() => setShowDetailsModal(false)}
-            />
-
-            {/* Modal Panel */}
-            <div className={`relative inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full z-50 ${
-              isDarkMode ? 'bg-gray-800' : 'bg-white'
-            }`}>
-              {/* Header */}
-              <div className={`px-6 py-4 border-b flex items-center justify-between ${
-                isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-              }`}>
-                <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Dentist Details
-                </h3>
-                <button
-                  onClick={() => setShowDetailsModal(false)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  <FaTimes className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
-                {/* Personal Information */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <FaUserMd className="text-teal-600" />
-                    Personal Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Full Name</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        Dr. {selectedDentist.firstName} {selectedDentist.lastName}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">License Number</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedDentist.licenseNumber || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedDentist.user?.email || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Phone</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedDentist.user?.phone || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</p>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedDentist.user?.status === 'ACTIVE'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
-                        {selectedDentist.user?.status || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">City</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedDentist.city || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Specialization */}
-                {selectedDentist.specialization && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <FaStethoscope className="text-teal-600" />
-                      Specialization
-                    </h4>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <div className="flex flex-wrap gap-2">
-                        {Array.isArray(selectedDentist.specialization) ? (
-                          selectedDentist.specialization.map((spec, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-full text-sm font-medium">
-                              {spec}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-full text-sm font-medium">
-                            {selectedDentist.specialization}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Clinic Information */}
-                {selectedDentist.clinic && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                      <FaIdCard className="text-teal-600" />
-                      Clinic Information
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clinic Name</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {selectedDentist.clinic.clinicName || 'N/A'}
-                        </p>
-                      </div>
-                      {selectedDentist.clinic.address && (
-                        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Address</p>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {selectedDentist.clinic.address}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Bio */}
-                {selectedDentist.bio && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biography</h4>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {selectedDentist.bio}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className={`px-6 py-4 border-t flex justify-end gap-3 ${
-                isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-              }`}>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDetailsModal(false)}
-                >
-                  Close
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    setShowDetailsModal(false)
-                    onTabChange?.('appointments')
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <FaCalendarAlt className="w-4 h-4" />
-                  View Schedule
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DentistDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setSelectedDentist(null)
+        }}
+        dentistData={selectedDentist}
+      />
     </div>
   )
 }

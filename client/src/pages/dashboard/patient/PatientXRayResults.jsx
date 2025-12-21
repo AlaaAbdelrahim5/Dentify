@@ -19,7 +19,8 @@ import {
   Button, 
   FilterBar, 
   DataTable, 
-  StatsOverview 
+  StatsOverview,
+  RequestCard
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI } from '../../../services/api'
@@ -202,85 +203,15 @@ const PatientXRayResults = () => {
     return statusMap[status] || status
   }
 
-  const RequestCard = ({ request }) => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    } hover:shadow-lg transition-shadow`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'
-          }`}>
-            <FaXRay className="text-blue-600 w-6 h-6" />
-          </div>
-          <div>
-            <h3 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {request.imagingType}
-            </h3>
-            <p className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Request #{request.id}
-            </p>
-          </div>
-        </div>
-        <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 ${
-          getStatusColor(request.status, isDarkMode)
-        }`}>
-          {getStatusIcon(request.status)}
-          {getStatusLabel(request.status)}
-        </span>
-      </div>
-
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <FaStethoscope className="text-gray-500 w-4 h-4" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Dr. {request.dentist?.firstName} {request.dentist?.lastName}
-          </span>
-        </div>
-        {request.radiologyCenter && (
-          <div className="flex items-center gap-2 text-sm">
-            <FaHospital className="text-gray-500 w-4 h-4" />
-            <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              {request.radiologyCenter.centerName}
-            </span>
-          </div>
-        )}
-        {!request.radiologyCenter && (
-          <div className="flex items-center gap-2 text-sm">
-            <FaHospital className="text-gray-500 w-4 h-4" />
-            <span className={`italic ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Not assigned yet
-            </span>
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-sm">
-          <FaCalendarAlt className="text-gray-500 w-4 h-4" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Requested: {formatDateHelper(request.requestDate)}
-          </span>
-        </div>
-        {request.availableDate && (
-          <div className="flex items-center gap-2 text-sm">
-            <FaClock className="text-teal-500 w-4 h-4" />
-            <span className={isDarkMode ? 'text-teal-400' : 'text-teal-600'}>
-              Available: {formatDateHelper(request.availableDate)}
-            </span>
-          </div>
-        )}
-        {request.notes && (
-          <p className={`text-sm ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {request.notes}
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+  // Custom render for patient's request card with download functionality
+  const renderRequestCard = (request) => (
+    <div key={request.id}>
+      <RequestCard 
+        request={request}
+        variant="patient"
+      />
+      {/* Additional download button for patient's view */}
+      <div className="mt-2 flex gap-2">
         {request.reportFile && (
           <Button 
             variant="primary" 
@@ -325,7 +256,7 @@ const PatientXRayResults = () => {
           </Button>
         )}
       </div>
-    </Card>
+    </div>
   )
 
   return (
@@ -467,9 +398,7 @@ const PatientXRayResults = () => {
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map((request) => (
-                <RequestCard key={request.id} request={request} />
-              ))}
+              {filteredRequests.map(renderRequestCard)}
             </div>
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

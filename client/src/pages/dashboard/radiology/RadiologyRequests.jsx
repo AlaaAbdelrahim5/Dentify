@@ -27,7 +27,8 @@ import {
   Button, 
   StatsOverview, 
   DataTable, 
-  StatusBadge, 
+  StatusBadge,
+  RequestCard,
   Select, 
   Input, 
   FilterBar, 
@@ -284,117 +285,14 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     }
   }
 
-  const RequestCard = ({ request }) => (
-    <Card className={`p-6 ${
-      isDarkMode ? 'bg-gray-800' : 'bg-white'
-    } hover:shadow-lg transition-shadow`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'
-          }`}>
-            <FaXRay className="text-blue-600 w-6 h-6" />
-          </div>
-          <div>
-            <h3 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
-            }`}>
-              {request.imagingType}
-            </h3>
-            <p className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              {request.patientName}
-            </p>
-          </div>
-        </div>
-        <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 ${
-          getStatusColor(request.status, isDarkMode)
-        }`}>
-          {getStatusIcon(request.status)}
-          {getStatusLabel(request.status)}
-        </span>
-      </div>
-
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <FaStethoscope className="text-gray-500 w-4 h-4" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            {request.dentistName}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <FaCalendarAlt className="text-gray-500 w-4 h-4" />
-          <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-            Requested: {request.formattedRequestDate}
-          </span>
-        </div>
-        {request.formattedAvailableDate && (
-          <div className="flex items-center gap-2 text-sm">
-            <FaClock className="text-teal-500 w-4 h-4" />
-            <span className={isDarkMode ? 'text-teal-400' : 'text-teal-600'}>
-              Available: {request.formattedAvailableDate}
-            </span>
-          </div>
-        )}
-        {request.notes && (
-          <p className={`text-sm ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {request.notes}
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => handleViewDetails(request)}
-          title="View Details"
-          className="text-blue-600"
-        >
-          <FaEye className="w-4 h-4" />
-        </Button>
-        {request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleUploadResult(request)}
-            title="Upload Result"
-            className="text-green-600"
-          >
-            <FaFileUpload className="w-4 h-4" />
-          </Button>
-        )}
-        {request.status === 'COMPLETED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleUploadResult(request)}
-            title="Update Result"
-            className="text-orange-600"
-          >
-            <FaEdit className="w-4 h-4" />
-          </Button>
-        )}
-        {request.reportFile && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-purple-600"
-            onClick={() => handleDownloadReport(request.reportFile)}
-            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
-          >
-            {isReportFileUrl(request.reportFile) ? (
-              <FaLink className="w-4 h-4" />
-            ) : (
-              <FaDownload className="w-4 h-4" />
-            )}
-          </Button>
-        )}
-      </div>
-    </Card>
+  const renderRequestCard = (request) => (
+    <RequestCard
+      key={request.id}
+      request={request}
+      variant="radiology"
+      onViewDetails={handleViewDetails}
+      onEdit={request.status !== 'COMPLETED' && request.status !== 'CANCELLED' ? handleUploadResult : (request.status === 'COMPLETED' ? handleUploadResult : null)}
+    />
   )
 
   return (
@@ -548,9 +446,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map((request) => (
-                <RequestCard key={request.id} request={request} />
-              ))}
+              {filteredRequests.map(renderRequestCard)}
             </div>
           ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
