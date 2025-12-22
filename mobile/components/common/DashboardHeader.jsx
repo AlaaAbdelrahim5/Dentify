@@ -53,35 +53,64 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
         backgroundColor="transparent"
         translucent={true}
       />
-      <View className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+      <View 
+        className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDarkMode ? 0.3 : 0.1,
+          shadowRadius: 8,
+          elevation: 4
+        }}
+      >
         {/* Status bar spacing */}
         <View />
         
         {/* Header content */}
-        <View className="px-5 pb-3 pt-2">
+        <View className="px-5 pb-4 pt-2">
         {/* Top row: Menu and Icons */}
-        <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center justify-between mb-4">
           {/* Left: Menu button */}
           {onMenuPress && (
             <TouchableOpacity
               onPress={onMenuPress}
-              className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+              className={`w-11 h-11 rounded-xl items-center justify-center`}
+              style={{
+                backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                borderWidth: 1,
+                borderColor: isDarkMode ? '#374151' : '#14B8A6',
+                shadowColor: '#14B8A6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDarkMode ? 0.2 : 0.15,
+                shadowRadius: 4,
+                elevation: 3
+              }}
               activeOpacity={0.7}
             >
-              <Ionicons name="menu" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              <Ionicons name="menu" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
             </TouchableOpacity>
           )}
           
           {/* Right: Action icons */}
-          <View className="flex-row items-center" style={{ gap: 10 }}>
+          <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Search button - Only for patients */}
             {isPatient && (
               <TouchableOpacity
                 onPress={handleSearch}
-                className={`w-10 h-10 rounded-full items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+                className={`w-11 h-11 rounded-xl items-center justify-center`}
+                style={{
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#374151' : '#14B8A6',
+                  shadowColor: '#14B8A6',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: isDarkMode ? 0.2 : 0.15,
+                  shadowRadius: 4,
+                  elevation: 3
+                }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="search-outline" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+                <Ionicons name="search-outline" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
               </TouchableOpacity>
             )}
 
@@ -92,19 +121,45 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
           </View>
         </View>
         
-        {/* Bottom row: Title */}
+        {/* Bottom row: Title with gradient accent */}
         <View>
           <Text 
-            className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-            style={{ letterSpacing: -0.5 }}
+            className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+            style={{ letterSpacing: -0.8 }}
           >
             {title}
           </Text>
+          {subtitle && (
+            <Text 
+              className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+              style={{ letterSpacing: 0.2 }}
+            >
+              {getDefaultSubtitle()}
+            </Text>
+          )}
         </View>
       </View>
       
-      {/* Bottom border */}
-      <View className={`h-px ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`} />
+      {/* Bottom gradient accent */}
+      <View 
+        style={{
+          height: 3,
+          backgroundColor: isDarkMode ? '#1F2937' : '#E5E7EB'
+        }}
+      >
+        <View 
+          style={{
+            height: 3,
+            width: '40%',
+            backgroundColor: '#14B8A6',
+            shadowColor: '#14B8A6',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 8,
+            elevation: 4
+          }}
+        />
+      </View>
       </View>
     </>
   );

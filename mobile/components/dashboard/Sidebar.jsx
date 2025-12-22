@@ -153,45 +153,82 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
           {
             transform: [{ translateX }],
             backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+            borderRightWidth: 2,
+            borderRightColor: isDarkMode ? '#374151' : '#14B8A6',
           }
         ]}
       >
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
           <View className="flex-1">
               {/* Header */}
-              <View className={`px-6 py-5 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <View className={`px-6 py-6`}>
                 <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <View className="w-10 h-10 rounded-full bg-teal-500 items-center justify-center mr-3"
+                  <View className="flex-row items-center flex-1">
+                    <LinearGradient
+                      colors={['#14B8A6', '#06B6D4']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                       style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
                         shadowColor: '#14B8A6',
-                        shadowOpacity: 0.3,
-                        shadowRadius: 8,
-                        shadowOffset: { width: 0, height: 2 },
-                        elevation: 4
+                        shadowOpacity: 0.4,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: 4 },
+                        elevation: 6
                       }}
                     >
-                      <Ionicons name="medical" size={20} color="#FFF" />
-                    </View>
+                      <Ionicons name="medical" size={24} color="#FFF" />
+                    </LinearGradient>
                     <View>
-                      <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-                        style={{ letterSpacing: -0.5 }}
+                      <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                        style={{ letterSpacing: -0.8 }}
                       >
                         Dentify
                       </Text>
-                      <Text className={`text-xs font-medium ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>
+                      <Text className={`text-xs font-semibold mt-0.5 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}
+                        style={{ letterSpacing: 0.5 }}
+                      >
                         {getDashboardTitle()} Portal
                       </Text>
                     </View>
                   </View>
                   <TouchableOpacity
                     onPress={onClose}
-                    className={`w-9 h-9 items-center justify-center rounded-full ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
+                    className={`w-10 h-10 items-center justify-center rounded-xl`}
+                    style={{
+                      backgroundColor: isDarkMode ? '#374151' : '#F0FDFA',
+                      borderWidth: 1,
+                      borderColor: isDarkMode ? '#4B5563' : '#14B8A6',
+                      shadowColor: '#14B8A6',
+                      shadowOpacity: 0.15,
+                      shadowRadius: 4,
+                      shadowOffset: { width: 0, height: 2 },
+                      elevation: 3
+                    }}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="close" size={22} color={isDarkMode ? '#FFF' : '#000'} />
+                    <Ionicons name="close" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
                   </TouchableOpacity>
                 </View>
+                {/* Gradient divider */}
+                <View 
+                  style={{
+                    height: 3,
+                    marginTop: 20,
+                    borderRadius: 1.5,
+                    backgroundColor: '#14B8A6',
+                    shadowColor: '#14B8A6',
+                    shadowOpacity: 0.6,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 0 },
+                    elevation: 4
+                  }}
+                />
               </View>
 
               {/* Navigation Menu - Scrollable */}
@@ -203,16 +240,18 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
                     <TouchableOpacity
                       key={index}
                       onPress={() => handleNavigation(item.id)}
-                      className="mb-2"
+                      className="mb-2.5"
                       activeOpacity={0.7}
                       style={[
                         styles.menuItem,
                         {
+                          borderWidth: active ? 1.5 : 1,
+                          borderColor: active ? '#10B981' : (isDarkMode ? '#374151' : '#E5E7EB'),
                           shadowColor: active ? '#14B8A6' : 'transparent',
-                          shadowOpacity: active ? 0.3 : 0,
-                          shadowRadius: active ? 8 : 0,
+                          shadowOpacity: active ? 0.4 : 0,
+                          shadowRadius: active ? 10 : 0,
                           shadowOffset: { width: 0, height: 2 },
-                          elevation: active ? 4 : 0
+                          elevation: active ? 6 : 0
                         }
                       ]}
                     >
@@ -220,31 +259,43 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
                         <LinearGradient
                           colors={isDarkMode ? ['#0D9488', '#0891B2'] : ['#14B8A6', '#06B6D4']}
                           start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
+                          end={{ x: 1, y: 1 }}
                           style={styles.gradientBackground}
                         />
                       ) : (
-                        <View className={`absolute inset-0 rounded-xl ${isDarkMode ? 'bg-gray-800/30' : 'bg-gray-50'}`} />
+                        <View 
+                          className={`absolute inset-0 rounded-xl`}
+                          style={{
+                            backgroundColor: isDarkMode ? '#1F293780' : '#F9FAFB'
+                          }}
+                        />
                       )}
                       <View style={styles.menuItemContent}>
-                        <View className={`w-8 h-8 rounded-lg items-center justify-center ${
-                          active ? 'bg-white/20' : isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-                        }`}>
+                        <View 
+                          className={`w-9 h-9 rounded-xl items-center justify-center`}
+                          style={{
+                            backgroundColor: active ? 'rgba(255,255,255,0.25)' : (isDarkMode ? '#374151' : '#F0FDFA'),
+                            borderWidth: active ? 0 : 1,
+                            borderColor: isDarkMode ? '#4B5563' : '#CCFBF1'
+                          }}
+                        >
                           <Ionicons 
                             name={item.icon} 
-                            size={18} 
-                            color={active ? '#FFF' : isDarkMode ? '#14B8A6' : '#14B8A6'} 
+                            size={20} 
+                            color={active ? '#FFF' : (isDarkMode ? '#10B981' : '#14B8A6')} 
                           />
                         </View>
-                        <Text className={`font-semibold flex-1 ml-3 text-sm ${
+                        <Text className={`font-semibold flex-1 ml-3 text-base ${
                           active 
                             ? 'text-white' 
                             : isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}>
+                        }`}
+                          style={{ letterSpacing: -0.3 }}
+                        >
                           {item.label}
                         </Text>
                         {active && (
-                          <Ionicons name="chevron-forward" size={16} color="#FFF" />
+                          <Ionicons name="chevron-forward" size={18} color="#FFF" />
                         )}
                       </View>
                     </TouchableOpacity>
@@ -253,42 +304,60 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
             </ScrollView>
 
             {/* Dashboard Title at Bottom - Fixed */}
-              <View className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <View className={`rounded-2xl overflow-hidden ${
-                  isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
-                }`}
+              <View className={`p-4`}
+                style={{
+                  borderTopWidth: 2,
+                  borderTopColor: isDarkMode ? '#374151' : '#E5E7EB'
+                }}
+              >
+                <View className={`rounded-2xl overflow-hidden`}
                   style={{
+                    backgroundColor: isDarkMode ? '#374151' : '#F0FDFA',
+                    borderWidth: 1.5,
+                    borderColor: isDarkMode ? '#4B5563' : '#14B8A6',
                     shadowColor: '#14B8A6',
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
+                    shadowOpacity: 0.2,
+                    shadowRadius: 10,
                     shadowOffset: { width: 0, height: 2 },
-                    elevation: 3
+                    elevation: 4
                   }}
                 >
                   <View style={styles.dashboardCard}>
                     <View style={styles.dashboardContent}>
-                      <View className="w-10 h-10 rounded-xl bg-teal-500 items-center justify-center"
+                      <LinearGradient
+                        colors={['#14B8A6', '#06B6D4']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
                           shadowColor: '#14B8A6',
-                          shadowOpacity: 0.3,
-                          shadowRadius: 6,
+                          shadowOpacity: 0.4,
+                          shadowRadius: 8,
                           shadowOffset: { width: 0, height: 2 },
-                          elevation: 4
+                          elevation: 5
                         }}
                       >
                         <Ionicons 
                           name="apps" 
-                          size={20} 
+                          size={22} 
                           color="#FFF" 
                         />
-                      </View>
+                      </LinearGradient>
                       <View className="flex-col ml-3 flex-1">
-                        <Text className={`text-xs font-medium ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>Dashboard</Text>
+                        <Text className={`text-xs font-semibold ${
+                          isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                        }`}
+                          style={{ letterSpacing: 0.5 }}
+                        >Dashboard</Text>
                         <Text className={`text-base font-bold ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>{getDashboardTitle()}</Text>
+                        }`}
+                          style={{ letterSpacing: -0.4 }}
+                        >{getDashboardTitle()}</Text>
                       </View>
                       <ThemeToggle />
                     </View>
@@ -297,7 +366,12 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
               </View>
 
               {/* Logout - Fixed at bottom */}
-              <View className={`px-4 py-3 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <View className={`px-4 py-3`}
+                style={{
+                  borderTopWidth: 2,
+                  borderTopColor: isDarkMode ? '#374151' : '#E5E7EB'
+                }}
+              >
                 <TouchableOpacity
                   onPress={() => {
                     Alert.alert(
@@ -321,15 +395,32 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
                       ]
                     );
                   }}
-                  className={`flex-row items-center py-3 px-4 rounded-xl ${
-                    isDarkMode ? 'bg-red-900/20' : 'bg-red-50'
-                  }`}
+                  className={`flex-row items-center py-3.5 px-4 rounded-xl`}
+                  style={{
+                    backgroundColor: isDarkMode ? '#7F1D1D40' : '#FEE2E2',
+                    borderWidth: 1.5,
+                    borderColor: isDarkMode ? '#991B1B' : '#FCA5A5',
+                    shadowColor: '#EF4444',
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 3
+                  }}
                   activeOpacity={0.7}
                 >
-                  <View className="w-8 h-8 rounded-lg bg-red-100 items-center justify-center">
-                    <Ionicons name="log-out" size={18} color="#EF4444" />
+                  <View 
+                    className="w-9 h-9 rounded-xl items-center justify-center"
+                    style={{
+                      backgroundColor: isDarkMode ? '#991B1B' : '#FEE2E2',
+                      borderWidth: 1,
+                      borderColor: '#EF4444'
+                    }}
+                  >
+                    <Ionicons name="log-out" size={20} color="#EF4444" />
                   </View>
-                  <Text className="ml-3 text-sm font-semibold text-red-500">
+                  <Text className="ml-3 text-base font-bold text-red-500"
+                    style={{ letterSpacing: -0.3 }}
+                  >
                     Logout
                   </Text>
                 </TouchableOpacity>
@@ -371,7 +462,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   menuItem: {
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   gradientBackground: {
@@ -380,13 +471,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   menuItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   dashboardCard: {
     flexDirection: 'row',

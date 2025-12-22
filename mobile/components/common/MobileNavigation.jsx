@@ -31,21 +31,37 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
   };
 
   return (
-    <View className="absolute bottom-0 left-0 right-0" style={{ paddingBottom: 12, paddingHorizontal: 16 }}>
+    <View className="absolute bottom-0 left-0 right-0" style={{ paddingBottom: 16, paddingHorizontal: 16 }}>
+      {/* Gradient backdrop blur effect */}
       <View 
         className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
         style={{ 
           shadowColor: '#000', 
-          shadowOffset: { width: 0, height: -4 }, 
-          shadowOpacity: isDarkMode ? 0.4 : 0.1, 
-          shadowRadius: 12,
-          elevation: 12,
-          borderRadius: 24,
-          borderWidth: 1,
-          borderColor: isDarkMode ? '#1F2937' : '#E5E7EB'
+          shadowOffset: { width: 0, height: -6 }, 
+          shadowOpacity: isDarkMode ? 0.5 : 0.15, 
+          shadowRadius: 16,
+          elevation: 16,
+          borderRadius: 28,
+          borderWidth: 1.5,
+          borderColor: isDarkMode ? '#374151' : '#14B8A6',
+          overflow: 'hidden'
         }}
       >
-        <View className="flex-row justify-around items-center px-2" style={{ paddingTop: 12, paddingBottom: 12 }}>
+        {/* Top accent gradient line */}
+        <View 
+          style={{
+            height: 3,
+            width: '100%',
+            backgroundColor: '#14B8A6',
+            shadowColor: '#14B8A6',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 6,
+            elevation: 3
+          }}
+        />
+        
+        <View className="flex-row justify-around items-center px-2" style={{ paddingTop: 14, paddingBottom: 14 }}>
         {navItems.map((item) => {
           const active = isActive(item.id);
           const isProfile = item.id === 'settings';
@@ -57,22 +73,27 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
               className="flex-1 items-center"
               activeOpacity={0.6}
             >
-              <View className="items-center" style={{ paddingVertical: 8 }}>
+              <View className="items-center" style={{ paddingVertical: 6 }}>
                 {/* Icon container with active state */}
                 {isProfile ? (
                   // Profile Image
                   <View 
-                    className={`items-center justify-center ${
-                      active ? 'bg-teal-500' : ''
-                    }`}
+                    className={`items-center justify-center overflow-hidden`}
                     style={[
-                      { width: 48, height: 48, borderRadius: 24 },
+                      { 
+                        width: 52, 
+                        height: 52, 
+                        borderRadius: 26,
+                        backgroundColor: active ? '#14B8A6' : (isDarkMode ? '#1F2937' : '#F0FDFA'),
+                        borderWidth: active ? 2 : 1,
+                        borderColor: active ? '#10B981' : (isDarkMode ? '#374151' : '#99F6E4')
+                      },
                       active && {
                         shadowColor: '#14B8A6',
                         shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 6,
-                        elevation: 6
+                        shadowOpacity: 0.4,
+                        shadowRadius: 8,
+                        elevation: 8
                       }
                     ]}
                   >
@@ -84,44 +105,64 @@ const MobileNavigation = ({ userRole = 'patient', activeTab = 'overview', onTabC
                           cache: 'reload'
                         }}
                         style={{ 
-                          width: 30, 
-                          height: 30, 
-                          borderRadius: 15,
-                          borderWidth: 2,
-                          borderColor: '#FFF'
+                          width: 52, 
+                          height: 52, 
+                          borderRadius: 26
                         }}
                       />
                     ) : (
                       <Ionicons 
                         name="person" 
-                        size={24} 
-                        color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
+                        size={26} 
+                        color={active ? '#FFFFFF' : (isDarkMode ? '#10B981' : '#14B8A6')} 
                       />
                     )}
                   </View>
                 ) : (
                   // Regular Icon
                   <View 
-                    className={`items-center justify-center ${
-                      active ? 'bg-teal-500' : ''
-                    }`}
+                    className={`items-center justify-center`}
                     style={[
-                      { width: 48, height: 48, borderRadius: 24 },
+                      { 
+                        width: 52, 
+                        height: 52, 
+                        borderRadius: 26,
+                        backgroundColor: active ? '#14B8A6' : (isDarkMode ? '#1F2937' : '#F0FDFA'),
+                        borderWidth: active ? 2 : 1,
+                        borderColor: active ? '#10B981' : (isDarkMode ? '#374151' : '#99F6E4')
+                      },
                       active && {
                         shadowColor: '#14B8A6',
                         shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 6,
-                        elevation: 6
+                        shadowOpacity: 0.4,
+                        shadowRadius: 8,
+                        elevation: 8
                       }
                     ]}
                   >
                     <Ionicons 
                       name={active ? item.icon : item.iconOutline} 
-                      size={24} 
-                      color={active ? '#FFFFFF' : (isDarkMode ? '#9CA3AF' : '#6B7280')} 
+                      size={26} 
+                      color={active ? '#FFFFFF' : (isDarkMode ? '#10B981' : '#14B8A6')} 
                     />
                   </View>
+                )}
+                {/* Active indicator dot */}
+                {active && (
+                  <View 
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: '#14B8A6',
+                      marginTop: 4,
+                      shadowColor: '#14B8A6',
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.8,
+                      shadowRadius: 4,
+                      elevation: 4
+                    }}
+                  />
                 )}
               </View>
             </TouchableOpacity>
