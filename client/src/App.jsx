@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Home from './pages/Home'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
+import ForgotPassword from './pages/ForgotPassword'
 import Dashboard from './pages/dashboard/Dashboard'
 import NotificationsPage from './pages/NotificationsPage'
 import NotFound from './pages/NotFound'
@@ -107,6 +108,7 @@ const AuthRouter = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/patient/dashboard" element={<Dashboard />} />
         <Route path="/admin/dashboard" element={<Dashboard />} />
