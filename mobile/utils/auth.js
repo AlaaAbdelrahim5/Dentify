@@ -146,6 +146,9 @@ export const authUtils = {
     
     await authUtils.setTokens(tokenData, remember);
     await authUtils.clearLogoutFlag();
+    
+    // Set a timestamp to trigger context refreshes
+    await storage.setItem('dentify_user_changed', Date.now().toString());
   },
 
   // Logout user
@@ -153,6 +156,9 @@ export const authUtils = {
     await authUtils.clearTokens();
     await authUtils.clearUser();
     await authUtils.setLogoutFlag();
+    
+    // Set a timestamp to trigger context refreshes
+    await storage.setItem('dentify_user_changed', Date.now().toString());
   },
 
   // Set logout flag

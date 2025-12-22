@@ -8,6 +8,7 @@ import {
 } from '../services/firebase/chatService';
 import { jwtDecode } from 'jwt-decode';
 import { authUtils } from '../utils/auth';
+import { storage } from '../utils/storage';
 
 const ChatContext = createContext();
 
@@ -26,8 +27,29 @@ export const ChatProvider = ({ children }) => {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [userId, setUserId] = useState(null);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for user changes (login/logout/switch)
+  useEffect(() => {
+    const checkUserChange = async () => {
+      const timestamp = await storage.getItem('dentify_user_changed');
+      if (timestamp) {
+        setRefreshKey(Number(timestamp));
+      }
+    };
+
+    // Check immediately
+    checkUserChange();
+
+    // Set up polling to detect changes
+    const interval = setInterval(checkUserChange, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
+    let unsubscribe = null;
+    
     const initializeChat = async () => {
       try {
         // Get user from token
@@ -35,6 +57,10 @@ export const ChatProvider = ({ children }) => {
         
         if (!currentToken) {
           // Clear all state if no token
+          if (unsubscribe) {
+            unsubscribe();
+            unsubscribe = null;
+          }
           setUserId(null);
           setConversations([]);
           setActiveConversation(null);
@@ -54,20 +80,28 @@ export const ChatProvider = ({ children }) => {
           return;
         }
         
+        // If user changed, cleanup and reset
+        if (userId && userId !== currentUserId) {
+          if (unsubscribe) {
+            unsubscribe();
+            unsubscribe = null;
+          }
+          setConversations([]);
+          setActiveConversation(null);
+          setMessages([]);
+          setTotalUnreadCount(0);
+        }
+        
         // Always update userId to ensure it's current
         setUserId(currentUserId);
         setIsLoadingConversations(true);
 
         // Listen for conversations with error handling
         try {
-          const unsubscribe = getUserConversations(currentUserId, (convs) => {
+          unsubscribe = getUserConversations(currentUserId, (convs) => {
             setConversations(convs);
             setIsLoadingConversations(false);
           });
-
-          return () => {
-            unsubscribe && unsubscribe();
-          };
         } catch (firebaseError) {
           console.log('Firebase chat not available, continuing without chat');
           setConversations([]);
@@ -76,6 +110,10 @@ export const ChatProvider = ({ children }) => {
       } catch (error) {
         console.log('Chat initialization error, continuing without chat');
         // Clear state on error
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
         setUserId(null);
         setConversations([]);
         setActiveConversation(null);
@@ -86,7 +124,14 @@ export const ChatProvider = ({ children }) => {
     };
 
     initializeChat();
-  }, []);
+
+    // Cleanup on unmount or when effect reruns
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [refreshKey]);
 
   // Recalculate total unread count when conversations or activeConversation changes
   useEffect(() => {
@@ -147,6 +192,10 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const refresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <ChatContext.Provider
       value={{
@@ -159,7 +208,8 @@ export const ChatProvider = ({ children }) => {
         isLoadingConversations,
         startConversation,
         sendChatMessage,
-        markConversationAsRead
+        markConversationAsRead,
+        refresh
       }}
     >
       {children}

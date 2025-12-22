@@ -6,6 +6,7 @@ import {
 } from '../services/firebase/notificationService';
 import { jwtDecode } from 'jwt-decode';
 import { authUtils } from '../utils/auth';
+import { storage } from '../utils/storage';
 
 const NotificationContext = createContext();
 
@@ -21,8 +22,29 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for user changes (login/logout/switch)
+  useEffect(() => {
+    const checkUserChange = async () => {
+      const timestamp = await storage.getItem('dentify_user_changed');
+      if (timestamp) {
+        setRefreshKey(Number(timestamp));
+      }
+    };
+
+    // Check immediately
+    checkUserChange();
+
+    // Set up polling to detect changes
+    const interval = setInterval(checkUserChange, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
+    let unsubscribe = null;
+    
     const initializeNotifications = async () => {
       try {
         // Get user from token
@@ -40,8 +62,13 @@ export const NotificationProvider = ({ children }) => {
         const userId = decoded.userId || decoded.id;
         const userIdStr = String(userId);
 
-        // If user changed, reset notifications
+        // If user changed, reset notifications first
         if (currentUserId && currentUserId !== userIdStr) {
+          // Cleanup previous subscription
+          if (unsubscribe) {
+            unsubscribe();
+            unsubscribe = null;
+          }
           setNotifications([]);
           setUnreadCount(0);
         }
@@ -49,7 +76,6 @@ export const NotificationProvider = ({ children }) => {
         setCurrentUserId(userIdStr);
 
         // Listen for notifications - convert userId to string
-        let unsubscribe;
         try {
           unsubscribe = getUserNotifications(userIdStr, (notifs) => {
             setNotifications(notifs);
@@ -61,10 +87,6 @@ export const NotificationProvider = ({ children }) => {
           setNotifications([]);
           setUnreadCount(0);
         }
-
-        return () => {
-          unsubscribe && unsubscribe();
-        };
       } catch (error) {
         console.log('Notification initialization error, continuing without notifications');
         setNotifications([]);
@@ -73,7 +95,14 @@ export const NotificationProvider = ({ children }) => {
     };
 
     initializeNotifications();
-  }, [currentUserId]);
+
+    // Cleanup on unmount or when effect reruns
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [refreshKey]);
 
   const markAsRead = async (notificationId) => {
     try {
@@ -93,13 +122,18 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const refresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <NotificationContext.Provider
       value={{
         notifications,
         unreadCount,
         markAsRead,
-        markAllAsRead
+        markAllAsRead,
+        refresh
       }}
     >
       {children}
