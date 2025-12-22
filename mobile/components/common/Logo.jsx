@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const Logo = ({ size = 'md', showSubtitle = true, className = '' }) => {
+const Logo = ({ size = 'md', showSubtitle = true, className = '', align = 'center' }) => {
   const sizes = {
     sm: { 
       icon: 40, 
@@ -30,7 +30,7 @@ const Logo = ({ size = 'md', showSubtitle = true, className = '' }) => {
   const currentSize = sizes[size] || sizes.md;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { alignItems: align }]}>
       <View style={styles.logoRow}>
         <View
           style={{
@@ -60,7 +60,7 @@ const Logo = ({ size = 'md', showSubtitle = true, className = '' }) => {
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
-                marginLeft: -(currentSize.icon / 2) + 3.5,
+                marginLeft: -(currentSize.icon / 2) + 2.5,
                 marginTop: -(currentSize.icon / 2),
               }}
               resizeMode="contain"

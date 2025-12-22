@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { authUtils } from '../../utils/auth';
 import ThemeToggle from '../common/ThemeToggle';
+import Logo from '../common/Logo';
 
 const { width } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 288; // w-72 = 288px
@@ -161,41 +162,10 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
           <View className="flex-1">
               {/* Header */}
-              <View className={`px-6 py-6`}>
+              <View className={`px-6 py-5`}>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center flex-1">
-                    <LinearGradient
-                      colors={['#14B8A6', '#06B6D4']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 24,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 12,
-                        shadowColor: '#14B8A6',
-                        shadowOpacity: 0.4,
-                        shadowRadius: 12,
-                        shadowOffset: { width: 0, height: 4 },
-                        elevation: 6
-                      }}
-                    >
-                      <Ionicons name="medical" size={24} color="#FFF" />
-                    </LinearGradient>
-                    <View>
-                      <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-                        style={{ letterSpacing: -0.8 }}
-                      >
-                        Dentify
-                      </Text>
-                      <Text className={`text-xs font-semibold mt-0.5 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}
-                        style={{ letterSpacing: 0.5 }}
-                      >
-                        {getDashboardTitle()} Portal
-                      </Text>
-                    </View>
+                    <Logo size="sm" showSubtitle={false} align="flex-start" />
                   </View>
                   <TouchableOpacity
                     onPress={onClose}
@@ -215,11 +185,12 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
                     <Ionicons name="close" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
                   </TouchableOpacity>
                 </View>
+
                 {/* Gradient divider */}
                 <View 
                   style={{
                     height: 3,
-                    marginTop: 20,
+                    marginTop: 16,
                     borderRadius: 1.5,
                     backgroundColor: '#14B8A6',
                     shadowColor: '#14B8A6',
