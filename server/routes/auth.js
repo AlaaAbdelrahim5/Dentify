@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const twoFactorController = require('../controllers/twoFactorController');
 const { authenticate } = require('../middleware/auth');
 
 // Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/login/verify-2fa', twoFactorController.verifyLogin2FA);
 router.post('/refresh', authController.refreshToken);
 
 // Protected routes

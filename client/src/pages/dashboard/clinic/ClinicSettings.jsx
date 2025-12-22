@@ -15,7 +15,7 @@ import {
   FaGlobe,
   FaIdCard
 } from 'react-icons/fa'
-import { Card, Button, Input, ProfileImageUpload } from '../../../components'
+import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth } from '../../../components'
 import { AvailableTreatmentsManager } from '../../../components/features'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'

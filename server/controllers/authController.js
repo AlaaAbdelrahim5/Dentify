@@ -156,12 +156,23 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      // Don't send tokens yet, require 2FA verification
+      return res.json({
+        message: 'Two-factor authentication required',
+        requiresTwoFactor: true,
+        email: user.email
+      });
+    }
+
     // Generate tokens
     const token = generateToken(user.id, user.role);
     const refreshToken = generateRefreshToken(user.id);
 
-    // Remove password from response
+    // Remove password and 2FA secret from response
     delete user.password;
+    delete user.twoFactorSecret;
 
     res.json({
       message: 'Login successful',

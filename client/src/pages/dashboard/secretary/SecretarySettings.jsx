@@ -16,7 +16,7 @@ import {
   FaBirthdayCake,
   FaVenusMars
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { toISODateString } from '../../../utils/helpers'
@@ -509,6 +509,9 @@ const SecretarySettings = () => {
           </Button>
         </div>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorAuth />
     </div>
   )
 
@@ -518,8 +521,7 @@ const SecretarySettings = () => {
   ]
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6">{/* Header */}
       <div>
         <h1 className={`text-2xl font-bold ${
           isDarkMode ? 'text-white' : 'text-gray-800'

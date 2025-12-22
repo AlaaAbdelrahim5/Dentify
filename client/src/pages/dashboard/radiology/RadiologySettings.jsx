@@ -13,7 +13,7 @@ import {
   FaIdCard,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -683,6 +683,9 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           </Button>
         </div>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorAuth />
     </div>
   )
 

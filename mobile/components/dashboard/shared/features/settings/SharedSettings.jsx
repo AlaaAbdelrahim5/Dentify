@@ -7,6 +7,7 @@ import { Input, Select, DatePicker } from '../../../../../components/common';
 import { ProfileHeader } from './SettingsComponents';
 import { LoadingState } from '../../overview/OverviewComponents';
 import PasswordChangeSection from './PasswordChangeSection';
+import { TwoFactorAuth } from '../../../../../components/features';
 import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../../../utils/constants';
 
 /**
@@ -179,6 +180,9 @@ const SharedSettings = ({
 
         {/* Password Change Section */}
         <PasswordChangeSection isDarkMode={isDarkMode} />
+
+        {/* Two-Factor Authentication */}
+        <TwoFactorAuth />
       </ScrollView>
     </View>
   );

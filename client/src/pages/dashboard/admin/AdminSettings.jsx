@@ -9,7 +9,7 @@ import {
   FaEnvelope,
   FaUserShield
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { getImageUrl } from '../../../utils/helpers'
@@ -383,6 +383,9 @@ const AdminSettings = () => {
           </Button>
         </div>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorAuth />
     </div>
   )
 

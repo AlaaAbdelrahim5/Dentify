@@ -70,3 +70,6 @@ export { default as TreatmentDetailsModal } from './treatment/TreatmentDetailsMo
 export { default as TreatmentPlanCard } from './treatment/TreatmentPlanCard'
 export { default as TreatmentSteps } from './treatment/TreatmentSteps'
 export { default as TreatmentTeethStatus } from './treatment/TreatmentTeethStatus'
+
+// Feature-specific Components - Two-Factor Authentication
+export { default as TwoFactorAuth } from './TwoFactorAuth'

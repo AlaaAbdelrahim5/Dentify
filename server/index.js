@@ -105,6 +105,10 @@ app.use('/api/radiology-requests', radiologyRequestRoutes);
 const notificationRoutes = require('./routes/notifications');
 app.use('/api/notifications', notificationRoutes);
 
+// Two-Factor Authentication routes
+const twoFactorRoutes = require('./routes/twoFactor');
+app.use('/api/2fa', twoFactorRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

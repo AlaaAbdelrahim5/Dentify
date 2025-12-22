@@ -17,15 +17,17 @@ datasource db {
 
 // User model
 model User {
-  id           Int        @id @default(autoincrement())
-  email        String     @unique
-  password     String
-  phone        String?
-  role         UserRole
-  profileImage String?
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id              Int        @id @default(autoincrement())
+  email           String     @unique
+  password        String
+  phone           String?
+  role            UserRole
+  profileImage    String?
+  status          UserStatus @default(ACTIVE)
+  twoFactorSecret String?    // Secret key for 2FA
+  twoFactorEnabled Boolean   @default(false) // Whether 2FA is enabled
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   admin     Admin?
   clinic    Clinic?

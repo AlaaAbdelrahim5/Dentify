@@ -49,16 +49,24 @@ export const NotificationProvider = ({ children }) => {
         setCurrentUserId(userIdStr);
 
         // Listen for notifications - convert userId to string
-        const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
-          setNotifications(notifs);
-          const unread = notifs.filter(n => !n.read).length;
-          setUnreadCount(unread);
-        });
+        let unsubscribe;
+        try {
+          unsubscribe = getUserNotifications(userIdStr, (notifs) => {
+            setNotifications(notifs);
+            const unread = notifs.filter(n => !n.read).length;
+            setUnreadCount(unread);
+          });
+        } catch (firebaseError) {
+          console.log('Firebase notifications not available, continuing without notifications');
+          setNotifications([]);
+          setUnreadCount(0);
+        }
 
         return () => {
           unsubscribe && unsubscribe();
         };
       } catch (error) {
+        console.log('Notification initialization error, continuing without notifications');
         setNotifications([]);
         setUnreadCount(0);
       }

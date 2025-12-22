@@ -35,6 +35,9 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorError, setTwoFactorError] = useState('');
 
   // Clear logout flag when component mounts
   useEffect(() => {
@@ -105,6 +108,13 @@ export default function Login() {
         password: formData.password,
       });
 
+      // Check if 2FA is required
+      if (response && response.requiresTwoFactor) {
+        setRequires2FA(true);
+        setApiError('');
+        return;
+      }
+
       // Backend returns { message, user, token, refreshToken } directly
       if (response && response.token && response.user) {
         // Check if user role is allowed on mobile app (patient, dentist, secretary only)
@@ -151,6 +161,146 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+  const handleVerify2FA = async () => {
+    if (!twoFactorCode || twoFactorCode.length !== 6) {
+      setTwoFactorError('Please enter a valid 6-digit code');
+      return;
+    }
+
+    setIsLoading(true);
+    setTwoFactorError('');
+
+    try {
+      const response = await authAPI.verify2FA({
+        email: formData.email.toLowerCase().trim(),
+        token: twoFactorCode,
+      });
+
+      if (response && response.token && response.user) {
+        // Check if user role is allowed on mobile app
+        if (!authUtils.isRoleAllowed(response.user.role)) {
+          Alert.alert(
+            'Access Restricted',
+            `This mobile app is only available for Patients, Dentists, and Secretaries. Your account type (${response.user.role}) cannot access the mobile app. Please use the web application instead.`,
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
+        // Store user data and tokens
+        await authUtils.login(
+          response.user,
+          {
+            token: response.token,
+            refreshToken: response.refreshToken
+          }
+        );
+
+        // Navigate to dashboard
+        const dashboardRoute = await authUtils.getDashboardRoute();
+        router.replace(dashboardRoute);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      let errorMessage = 'Verification failed. Please try again.';
+      
+      if (error.message.includes('Invalid') || error.message.includes('incorrect')) {
+        errorMessage = 'Invalid verification code. Please check and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setTwoFactorError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack2FA = () => {
+    setRequires2FA(false);
+    setTwoFactorCode('');
+    setTwoFactorError('');
+  };
+
+  // Render 2FA verification screen
+  if (requires2FA) {
+    return (
+      <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <ScrollView 
+            className="flex-1"
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <AuthBackground />
+
+            <View className="flex-1 justify-center px-6 py-12">
+              <AuthHeader message="Enter the 6-digit code from your authenticator app." />
+
+              <AuthCard
+                title="Two-Factor Authentication"
+                subtitle="Verify your identity"
+              >
+                {/* Error Message */}
+                {twoFactorError && (
+                  <View className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <View className="flex-row items-start">
+                      <Ionicons name="warning" size={20} color="#DC2626" />
+                      <View className="flex-1 ml-3">
+                        <Text className="font-semibold text-red-800">Verification Failed</Text>
+                        <Text className="text-sm text-red-600 mt-1">{twoFactorError}</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                <View className="mb-6">
+                  <Text className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Verification Code
+                  </Text>
+                  <Input
+                    placeholder="Enter 6-digit code"
+                    value={twoFactorCode}
+                    onChangeText={(value) => {
+                      setTwoFactorCode(value.replace(/[^0-9]/g, ''));
+                      if (twoFactorError) setTwoFactorError('');
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    icon="shield-checkmark-outline"
+                    className="text-center text-2xl tracking-widest"
+                  />
+                </View>
+
+                <Button
+                  onPress={handleVerify2FA}
+                  isLoading={isLoading}
+                  disabled={isLoading || twoFactorCode.length !== 6}
+                  className="mb-3"
+                >
+                  Verify Code
+                </Button>
+
+                <TouchableOpacity
+                  onPress={handleBack2FA}
+                  disabled={isLoading}
+                  className="py-3"
+                >
+                  <Text className="text-center text-primary-600 font-medium">
+                    Back to Login
+                  </Text>
+                </TouchableOpacity>
+              </AuthCard>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>

@@ -141,6 +141,7 @@ export const authAPI = {
   register: (userData) => ApiService.post('/auth/register', userData),
   signup: (userData) => ApiService.post('/auth/register', userData),
   login: (credentials) => ApiService.post('/auth/login', credentials),
+  verify2FA: (data) => ApiService.post('/auth/login/verify-2fa', data),
   logout: () => ApiService.post('/auth/logout'),
   refresh: (refreshToken) => ApiService.post('/auth/refresh', { refreshToken }),
   getCurrentUser: () => ApiService.get('/auth/me'),

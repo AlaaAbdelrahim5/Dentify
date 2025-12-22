@@ -58,16 +58,23 @@ export const ChatProvider = ({ children }) => {
         setUserId(currentUserId);
         setIsLoadingConversations(true);
 
-        // Listen for conversations
-        const unsubscribe = getUserConversations(currentUserId, (convs) => {
-          setConversations(convs);
-          setIsLoadingConversations(false);
-        });
+        // Listen for conversations with error handling
+        try {
+          const unsubscribe = getUserConversations(currentUserId, (convs) => {
+            setConversations(convs);
+            setIsLoadingConversations(false);
+          });
 
-        return () => {
-          unsubscribe && unsubscribe();
-        };
+          return () => {
+            unsubscribe && unsubscribe();
+          };
+        } catch (firebaseError) {
+          console.log('Firebase chat not available, continuing without chat');
+          setConversations([]);
+          setIsLoadingConversations(false);
+        }
       } catch (error) {
+        console.log('Chat initialization error, continuing without chat');
         // Clear state on error
         setUserId(null);
         setConversations([]);

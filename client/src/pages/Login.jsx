@@ -29,6 +29,11 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // 2FA states
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
   // Clear logout flag when component mounts
   useEffect(() => {
@@ -101,6 +106,14 @@ const Login = () => {
         password: formData.password,
       });
 
+      // Check if 2FA is required
+      if (response.requiresTwoFactor) {
+        setRequires2FA(true);
+        setUserEmail(response.email);
+        setApiError("");
+        return;
+      }
+
       // Backend returns { message, user, token, refreshToken } directly
       if (response && response.token && response.user) {
         // Clear any existing error states first
@@ -145,6 +158,62 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+
+    if (!twoFactorCode || twoFactorCode.length !== 6) {
+      setApiError("Please enter a valid 6-digit code");
+      return;
+    }
+
+    setIsLoading(true);
+    setApiError("");
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login/verify-2fa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          token: twoFactorCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Verification failed');
+      }
+
+      // Store user data and tokens
+      authUtils.login(
+        data.user, 
+        {
+          token: data.token,
+          refreshToken: data.refreshToken
+        }, 
+        rememberMe
+      );
+
+      // Navigate to appropriate dashboard
+      const dashboardRoute = authUtils.getDashboardRoute();
+      navigate(dashboardRoute, { replace: true });
+    } catch (error) {
+      console.error("2FA verification error:", error);
+      setApiError(error.message || "Invalid verification code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack2FA = () => {
+    setRequires2FA(false);
+    setTwoFactorCode("");
+    setApiError("");
   };
 
   return (
@@ -213,18 +282,20 @@ const Login = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
-              <Input
-                label="Email Address"
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={errors.email}
-                icon={FaEnvelope}
-              />
+            {!requires2FA ? (
+              // Regular Login Form
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Input */}
+                <Input
+                  label="Email Address"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={errors.email}
+                  icon={FaEnvelope}
+                />
 
               {/* Password Input with Toggle */}
               <div>
@@ -323,6 +394,79 @@ const Login = () => {
                 )}
               </Button>
             </form>
+            ) : (
+              // 2FA Verification Form
+              <form onSubmit={handleVerify2FA} className="space-y-6">
+                <div className="text-center mb-4">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+                    isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+                  }`}>
+                    <FaLock className={`text-3xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
+                  </div>
+                  <h3 className={`text-lg font-semibold mb-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    Two-Factor Authentication
+                  </h3>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Enter the 6-digit code from your authenticator app
+                  </p>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 text-center ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    value={twoFactorCode}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      setTwoFactorCode(value)
+                    }}
+                    placeholder="000000"
+                    maxLength={6}
+                    className={`w-full text-center text-3xl tracking-widest font-mono px-4 py-4 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                    }`}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    className="flex-1"
+                    onClick={handleBack2FA}
+                    disabled={isLoading}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="flex-1 bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                    disabled={isLoading || twoFactorCode.length !== 6}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <LoadingSpinner size="sm" />
+                      </div>
+                    ) : (
+                      "Verify"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
           </Card.Content>
 
           {/* Sign Up Link */}
