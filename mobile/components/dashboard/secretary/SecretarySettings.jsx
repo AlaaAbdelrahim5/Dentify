@@ -7,6 +7,7 @@ import { secretariesAPI } from '../../../services/api';
 import { showErrorAlert, showSuccessAlert } from '../../../utils/errorUtils';
 import { Input, Select, DatePicker } from '../../../components/common';
 import { ProfileHeader, LoadingState, PasswordChangeSection } from '../shared';
+import { TwoFactorAuth } from '../../../components/features';
 import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants';
 
 const SecretarySettings = ({ onProfileUpdate }) => {
@@ -246,6 +247,9 @@ const SecretarySettings = ({ onProfileUpdate }) => {
           isDarkMode={isDarkMode}
           apiChangePassword={secretariesAPI.changePassword}
         />
+
+        {/* Two-Factor Authentication */}
+        <TwoFactorAuth />
 
         {/* Action Buttons */}
         <View style={{ gap: 12, marginBottom: 20 }}>
