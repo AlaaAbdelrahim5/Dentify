@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Logo from '../components/common/Logo';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -74,17 +73,6 @@ export default function NotFound() {
       />
       
       <View className="flex-1 items-center justify-center px-6">
-        {/* Animated Logo at Top */}
-        <Animated.View 
-          style={{ 
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-            marginBottom: 40
-          }}
-        >
-          <Logo size="sm" showSubtitle={false} />
-        </Animated.View>
-
         {/* Animated 404 Icon */}
         <Animated.View 
           style={{ 
@@ -142,34 +130,6 @@ export default function NotFound() {
           
           {/* Action Buttons */}
           <View className="space-y-3 w-full max-w-xs">
-            <TouchableOpacity
-              onPress={() => router.replace('/(auth)/login')}
-              className="w-full"
-            >
-              <LinearGradient
-                colors={['#14b8a6', '#0ea5e9']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  paddingVertical: 16,
-                  paddingHorizontal: 24,
-                  borderRadius: 16,
-                  shadowColor: '#14b8a6',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 6,
-                }}
-              >
-                <View className="flex-row items-center justify-center">
-                  <Ionicons name="home" size={20} color="white" />
-                  <Text className="text-white font-bold text-base ml-2">
-                    Go to Login
-                  </Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-
             <TouchableOpacity
               onPress={() => router.back()}
               className={`w-full py-4 px-6 rounded-2xl border-2 ${
