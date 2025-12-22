@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,13 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { authAPI } from '../../services/api';
 import { authUtils } from '../../utils/auth';
 import { validateEmail } from '../../utils/validation';
@@ -23,7 +26,10 @@ import {
   AuthFooter,
   AuthBackground
 } from '../../components';
+import Logo from '../../components/common/Logo';
 import { useTheme } from '../../contexts/ThemeContext';
+
+const { width } = Dimensions.get('window');
 
 export default function Login() {
   const router = useRouter();
@@ -38,6 +44,41 @@ export default function Login() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [twoFactorError, setTwoFactorError] = useState('');
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const logoScale = useRef(new Animated.Value(0.3)).current;
+  const formSlideAnim = useRef(new Animated.Value(30)).current;
+
+  // Start animations on mount
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 4,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   // Clear logout flag when component mounts
   useEffect(() => {
@@ -227,27 +268,70 @@ export default function Login() {
   // Render 2FA verification screen
   if (requires2FA) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#111827' : '#f0fdfa' }}>
+        <LinearGradient
+          colors={isDarkMode ? ['#111827', '#1F2937', '#111827'] : ['#f0fdfa', '#ccfbf1', '#f0fdfa']}
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+        />
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
         >
           <ScrollView 
             className="flex-1"
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingTop: 40 }}
+            showsVerticalScrollIndicator={false}
           >
-            <AuthBackground />
+            {/* Animated Logo */}
+            <Animated.View 
+              style={{ 
+                opacity: fadeAnim,
+                transform: [{ scale: logoScale }],
+                alignItems: 'center',
+                marginBottom: 30
+              }}
+            >
+              <Logo size="md" showSubtitle={false} />
+            </Animated.View>
 
-            <View className="flex-1 justify-center px-6 py-12">
-              <AuthHeader message="Enter the 6-digit code from your authenticator app." />
+            <Animated.View 
+              style={{ 
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+                paddingHorizontal: 20
+              }}
+            >
+              <View className="items-center mb-6">
+                <View className={`w-20 h-20 rounded-full items-center justify-center mb-4 ${
+                  isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+                }`}>
+                  <Ionicons 
+                    name="shield-checkmark" 
+                    size={40} 
+                    color={isDarkMode ? '#14b8a6' : '#0d9488'} 
+                  />
+                </View>
+                <Text className={`text-2xl font-bold mb-2 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Two-Factor Authentication
+                </Text>
+                <Text className={`text-center px-6 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Enter the 6-digit code from your authenticator app
+                </Text>
+              </View>
 
-              <AuthCard
-                title="Two-Factor Authentication"
-                subtitle="Verify your identity"
-              >
+              <View className={`mx-4 p-6 rounded-3xl shadow-xl ${
+                isDarkMode ? 'bg-gray-800/90' : 'bg-white'
+              }`}>
                 {/* Error Message */}
                 {twoFactorError && (
-                  <View className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <Animated.View 
+                    entering="fadeIn"
+                    className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl"
+                  >
                     <View className="flex-row items-start">
                       <Ionicons name="warning" size={20} color="#DC2626" />
                       <View className="flex-1 ml-3">
@@ -255,15 +339,17 @@ export default function Login() {
                         <Text className="text-sm text-red-600 mt-1">{twoFactorError}</Text>
                       </View>
                     </View>
-                  </View>
+                  </Animated.View>
                 )}
 
                 <View className="mb-6">
-                  <Text className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <Text className={`text-sm font-semibold mb-3 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
                     Verification Code
                   </Text>
                   <Input
-                    placeholder="Enter 6-digit code"
+                    placeholder="000000"
                     value={twoFactorCode}
                     onChangeText={(value) => {
                       setTwoFactorCode(value.replace(/[^0-9]/g, ''));
@@ -272,7 +358,7 @@ export default function Login() {
                     keyboardType="number-pad"
                     maxLength={6}
                     icon="shield-checkmark-outline"
-                    className="text-center text-2xl tracking-widest"
+                    className="text-center text-2xl tracking-widest font-bold"
                   />
                 </View>
 
@@ -282,7 +368,10 @@ export default function Login() {
                   disabled={isLoading || twoFactorCode.length !== 6}
                   className="mb-3"
                 >
-                  Verify Code
+                  <View className="flex-row items-center justify-center">
+                    <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                    <Text className="text-white font-bold text-base ml-2">Verify Code</Text>
+                  </View>
                 </Button>
 
                 <TouchableOpacity
@@ -290,12 +379,14 @@ export default function Login() {
                   disabled={isLoading}
                   className="py-3"
                 >
-                  <Text className="text-center text-primary-600 font-medium">
-                    Back to Login
+                  <Text className={`text-center font-semibold ${
+                    isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                  }`}>
+                    ← Back to Login
                   </Text>
                 </TouchableOpacity>
-              </AuthCard>
-            </View>
+              </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -303,27 +394,67 @@ export default function Login() {
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#1F2937' : '#f0fdfa' }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: isDarkMode ? '#111827' : '#f0fdfa' }}>
+      <LinearGradient
+        colors={isDarkMode ? ['#111827', '#1F2937', '#111827'] : ['#f0fdfa', '#ccfbf1', '#f0fdfa']}
+        style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+      />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <ScrollView 
           className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingTop: 40 }}
+          showsVerticalScrollIndicator={false}
         >
-          <AuthBackground />
+          {/* Animated Logo */}
+          <Animated.View 
+            style={{ 
+              opacity: fadeAnim,
+              transform: [{ scale: logoScale }],
+              alignItems: 'center',
+              marginBottom: 30
+            }}
+          >
+            <Logo size="lg" showSubtitle={true} />
+          </Animated.View>
 
-          <View className="flex-1 justify-center px-6 py-12">
-            <AuthHeader message="Welcome back! Please sign in to continue." />
+          {/* Welcome Text */}
+          <Animated.View 
+            style={{ 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+              paddingHorizontal: 24,
+              marginBottom: 20
+            }}
+          >
+            <Text className={`text-3xl font-bold text-center mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Welcome Back
+            </Text>
+            <Text className={`text-center ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Sign in to manage your dental care
+            </Text>
+          </Animated.View>
 
-            <AuthCard
-              title="Sign In"
-              subtitle="Access your Dentify account"
-            >
+          {/* Login Form */}
+          <Animated.View 
+            style={{ 
+              opacity: fadeAnim,
+              transform: [{ translateY: formSlideAnim }],
+              paddingHorizontal: 20
+            }}
+          >
+            <View className={`mx-4 p-6 rounded-3xl shadow-xl ${
+              isDarkMode ? 'bg-gray-800/90' : 'bg-white'
+            }`}>
               {/* API Error Message */}
               {apiError && (
-                <View className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <View className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
                   <View className="flex-row items-start">
                     <Ionicons name="warning" size={20} color="#DC2626" />
                     <View className="flex-1 ml-3">
@@ -336,14 +467,14 @@ export default function Login() {
 
               <Input
                 label="Email Address"
-                placeholder="Enter your email"
+                placeholder="your.email@example.com"
                 value={formData.email}
                 onChangeText={(value) => handleInputChange('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 icon="mail-outline"
                 error={errors.email}
-                className="mb-2"
+                className="mb-4"
               />
 
               <PasswordInput
@@ -358,7 +489,9 @@ export default function Login() {
               <View className="flex-row justify-end items-center mb-6">
                 <Link href="/forgot-password" asChild>
                   <TouchableOpacity>
-                    <Text className="text-sm text-primary-600 font-medium">
+                    <Text className={`text-sm font-semibold ${
+                      isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                    }`}>
                       Forgot password?
                     </Text>
                   </TouchableOpacity>
@@ -370,18 +503,33 @@ export default function Login() {
                 isLoading={isLoading}
                 disabled={isLoading}
               >
-                Sign In
+                <View className="flex-row items-center justify-center">
+                  <Text className="text-white font-bold text-base">Sign In</Text>
+                  <Ionicons name="arrow-forward" size={20} color="white" style={{ marginLeft: 8 }} />
+                </View>
               </Button>
-            </AuthCard>
-
-            <View className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-              <AuthFooter
-                text="Don't have an account?"
-                linkText="Sign up here"
-                linkHref="/(auth)/signup"
-              />
             </View>
-          </View>
+
+            {/* Sign Up Link */}
+            <View className={`mx-4 mt-6 p-4 rounded-2xl ${
+              isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'
+            }`}>
+              <View className="flex-row items-center justify-center">
+                <Text className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                  Don't have an account?{' '}
+                </Text>
+                <Link href="/(auth)/signup" asChild>
+                  <TouchableOpacity>
+                    <Text className={`font-bold ${
+                      isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                    }`}>
+                      Sign up here
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
