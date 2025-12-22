@@ -21,10 +21,10 @@ const PatientOverview = ({ userData, onTabChange }) => {
         const now = new Date()
         const upcoming = appointments
           .filter(apt => {
-            const aptDate = new Date(apt.appointmentDate)
+            const aptDate = new Date(apt.startTime || apt.appointmentDate)
             return aptDate >= now && apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED'
           })
-          .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+          .sort((a, b) => new Date(a.startTime || a.appointmentDate) - new Date(b.startTime || b.appointmentDate))
           .slice(0, 2)
         
         setUpcomingAppointments(upcoming)
