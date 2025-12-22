@@ -29,7 +29,16 @@ const Avatar = ({
   return (
     <View
       className={`${sizeClass} ${shapeClass} items-center justify-center mr-3 overflow-hidden`}
-      style={{ backgroundColor }}
+      style={{ 
+        backgroundColor,
+        borderWidth: 2,
+        borderColor: '#99F6E4',
+        shadowColor: '#14B8A6',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 3
+      }}
     >
       {showImage ? (
         <Image

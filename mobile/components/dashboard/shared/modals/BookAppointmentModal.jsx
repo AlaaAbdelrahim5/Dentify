@@ -192,30 +192,30 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
       onRequestClose={handleClose}
     >
       <View className="flex-1 bg-black/50">
-        <View className="flex-1 bg-white dark:bg-gray-800 mt-20 rounded-t-3xl">
+        <View className="flex-1 bg-white dark:bg-gray-800 mt-20 rounded-t-3xl" style={{ borderTopWidth: 1.5, borderTopColor: '#14B8A6' }}>
           {/* Header */}
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <Text className="text-xl font-bold text-gray-900 dark:text-white">
+          <View className="flex-row items-center justify-between p-5 border-b" style={{ borderBottomWidth: 1.5, borderBottomColor: '#99F6E4' }}>
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: -0.8 }}>
               Book Appointment
             </Text>
             <TouchableOpacity onPress={handleClose}>
-              <Ionicons name="close" size={24} color={UI_COLORS.iconGray} />
+              <Ionicons name="close" size={28} color={UI_COLORS.iconGray} />
             </TouchableOpacity>
           </View>
 
           {/* Step Indicator */}
-          <View className="flex-row items-center justify-center p-4 space-x-2">
+          <View className="flex-row items-center justify-center p-5 space-x-2">
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
-                <View className={`w-8 h-8 rounded-full items-center justify-center ${
+                <View className={`w-11 h-11 rounded-full items-center justify-center ${
                   step >= s ? 'bg-teal-600' : 'bg-gray-300 dark:bg-gray-600'
-                }`}>
-                  <Text className={`font-bold ${
+                }`} style={step >= s ? { shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 } : {}}>
+                  <Text className={`font-bold text-lg ${
                     step >= s ? 'text-white' : 'text-gray-500'
                   }`}>{s}</Text>
                 </View>
                 {s < 3 && (
-                  <View className={`h-1 w-8 ${
+                  <View className={`h-1.5 w-10 rounded-full ${
                     step > s ? 'bg-teal-600' : 'bg-gray-300 dark:bg-gray-600'
                   }`} />
                 )}
@@ -234,7 +234,7 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                 {loading ? (
                   <ActivityIndicator size="large" color={UI_COLORS.primaryDark} />
                 ) : (
-                  <View className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <View className="rounded-lg overflow-hidden" style={{ borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}>
                     <Picker
                       selectedValue={formData.clinicId}
                       onValueChange={(value) => setFormData({ ...formData, clinicId: value, dentistId: '' })}
@@ -250,7 +250,7 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                       ))}
                     </Picker>
                   </View>
-                )}
+                )}               
                 
                 {errors.clinicId && (
                   <Text className="text-red-500 text-sm">{errors.clinicId}</Text>
@@ -272,7 +272,7 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                     No dentists available at this clinic
                   </Text>
                 ) : (
-                  <View className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <View className="rounded-lg overflow-hidden" style={{ borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}>
                     <Picker
                       selectedValue={formData.dentistId}
                       onValueChange={(value) => setFormData({ ...formData, dentistId: value })}
@@ -288,7 +288,7 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                       ))}
                     </Picker>
                   </View>
-                )}
+                )}               
                 
                 {errors.dentistId && (
                   <Text className="text-red-500 text-sm">{errors.dentistId}</Text>
@@ -305,14 +305,15 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                 
                 {/* Date Input */}
                 <View>
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Appointment Date
                   </Text>
                   <TextInput
                     value={formData.date}
                     onChangeText={(text) => setFormData({ ...formData, date: text, time: '' })}
                     placeholder="YYYY-MM-DD"
-                    className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white"
+                    className="rounded-lg p-4 text-gray-900 dark:text-white"
+                    style={{ borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}
                     placeholderTextColor={UI_COLORS.placeholderLight}
                   />
                   <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -347,15 +348,16 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                               key={slot}
                               onPress={() => !isBooked && setFormData({ ...formData, time: slot })}
                               disabled={isBooked}
-                              className={`px-4 py-2 rounded-lg border ${
+                              className={`px-5 py-3 rounded-xl ${
                                 isBooked
-                                  ? 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                                  ? 'bg-gray-200 dark:bg-gray-700'
                                   : isSelected
-                                  ? 'bg-teal-600 border-teal-600'
-                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                                  ? 'bg-teal-600'
+                                  : 'bg-white dark:bg-gray-800'
                               }`}
+                              style={!isBooked ? { borderWidth: 1.5, borderColor: isSelected ? '#14B8A6' : '#99F6E4', shadowColor: isSelected ? '#14B8A6' : '#06B6D4', shadowOffset: { width: 0, height: 2 }, shadowOpacity: isSelected ? 0.3 : 0.1, shadowRadius: 4, elevation: isSelected ? 4 : 2 } : { borderWidth: 1, borderColor: '#D1D5DB' }}
                             >
-                              <Text className={`text-sm font-medium ${
+                              <Text className={`text-base font-semibold ${
                                 isBooked
                                   ? 'text-gray-400 dark:text-gray-500'
                                   : isSelected
@@ -378,7 +380,7 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
 
                 {/* Notes */}
                 <View>
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Notes (Optional)
                   </Text>
                   <TextInput
@@ -388,7 +390,8 @@ const BookAppointmentModal = ({ visible, onClose, onSuccess }) => {
                     multiline
                     numberOfLines={4}
                     textAlignVertical="top"
-                    className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-white"
+                    className="rounded-lg p-4 text-gray-900 dark:text-white"
+                    style={{ borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}
                     placeholderTextColor={UI_COLORS.placeholderLight}
                   />
                 </View>

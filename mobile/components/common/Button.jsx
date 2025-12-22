@@ -44,14 +44,14 @@ const Button = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={disabled || isLoading}
-        style={styles.shadow}
+        style={styles.shadowEnhanced}
         activeOpacity={0.8}
         {...props}
       >
         <LinearGradient
-          colors={['#14b8a6', '#0ea5e9']}
+          colors={['#14b8a6', '#06b6d4']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={[styles.button, getSizePadding()]}
         >
           {renderContent()}
@@ -92,9 +92,16 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  shadowEnhanced: {
+    shadowColor: '#14b8a6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   text: {
     fontSize: 18,

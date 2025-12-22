@@ -40,13 +40,17 @@ const NotificationBell = () => {
         onPress={() => handleNotificationPress(item)}
         className={`p-4 mx-3 mb-3 rounded-xl ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
-        } ${!item.read ? (isDarkMode ? 'border-l-4 border-teal-500' : 'border-l-4 border-teal-500') : ''}`}
+        } ${
+          !item.read ? 'border-l-4 border-teal-500' : ''
+        }`}
         style={{
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          borderWidth: !item.read ? 0 : 1,
+          borderColor: isDarkMode ? '#374151' : '#E5E7EB',
+          shadowColor: !item.read ? '#14B8A6' : '#000',
+          shadowOpacity: !item.read ? 0.2 : 0.1,
+          shadowRadius: !item.read ? 8 : 4,
           shadowOffset: { width: 0, height: 2 },
-          elevation: 3
+          elevation: !item.read ? 5 : 3
         }}
       >
         <View className="flex-row items-start">
@@ -98,15 +102,33 @@ const NotificationBell = () => {
     <>
       <TouchableOpacity
         onPress={() => setIsOpen(true)}
-        className="relative p-2"
+        className={`w-11 h-11 rounded-xl items-center justify-center`}
+        style={{
+          backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+          borderWidth: 1,
+          borderColor: isDarkMode ? '#374151' : '#14B8A6',
+          shadowColor: '#14B8A6',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDarkMode ? 0.2 : 0.15,
+          shadowRadius: 4,
+          elevation: 3
+        }}
       >
         <Ionicons 
           name="notifications-outline" 
           size={24} 
-          color={isDarkMode ? '#9CA3AF' : '#4B5563'} 
+          color={isDarkMode ? '#10B981' : '#14B8A6'} 
         />
         {unreadCount > 0 && (
-          <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[18px] h-[18px] items-center justify-center px-1">
+          <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[18px] h-[18px] items-center justify-center px-1"
+            style={{
+              shadowColor: '#EF4444',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.4,
+              shadowRadius: 4,
+              elevation: 4
+            }}
+          >
             <Text className="text-white text-xs font-bold">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Text>

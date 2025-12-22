@@ -23,7 +23,7 @@ const Checkbox = ({
           checked ? styles.checkboxChecked : (isDarkMode ? styles.checkboxUncheckedDark : styles.checkboxUnchecked)
         ]}>
           {checked && (
-            <Ionicons name="checkmark" size={14} color="white" />
+            <Ionicons name="checkmark" size={16} color="white" />
           )}
         </View>
         {label && (
@@ -43,29 +43,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     borderWidth: 2,
-    marginRight: 8,
+    marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#0d9488',
-    borderColor: '#0d9488',
+    backgroundColor: '#14B8A6',
+    borderColor: '#14B8A6',
+    shadowColor: '#14B8A6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   checkboxUnchecked: {
     backgroundColor: 'transparent',
-    borderColor: '#d1d5db',
+    borderColor: '#99F6E4',
   },
   checkboxUncheckedDark: {
     backgroundColor: 'transparent',
-    borderColor: '#6B7280',
+    borderColor: '#4B5563',
   },
   label: {
     fontSize: 14,
     color: '#4b5563',
+    flex: 1,
   },
   labelDark: {
     color: '#D1D5DB',

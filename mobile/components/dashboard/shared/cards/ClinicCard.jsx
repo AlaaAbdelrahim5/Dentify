@@ -55,10 +55,14 @@ const ClinicCard = ({ clinic, isDarkMode, onViewDetails }) => {
 
           {clinic.distance !== undefined && clinic.distance !== Infinity && (
             <View className="mt-2">
-              <View className={`px-2 py-1 rounded-full self-start ${
-                isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'
-              }`}>
-                <Text className={`text-xs font-medium ${
+              <View className={`px-3 py-1.5 rounded-full self-start`}
+                style={{
+                  backgroundColor: isDarkMode ? '#0D948820' : '#F0FDFA',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#14B8A6' : '#99F6E4'
+                }}
+              >
+                <Text className={`text-xs font-bold ${
                   isDarkMode ? 'text-teal-300' : 'text-teal-700'
                 }`}>
                   📍 {formatDistance(clinic.distance)}
@@ -69,9 +73,19 @@ const ClinicCard = ({ clinic, isDarkMode, onViewDetails }) => {
 
           <TouchableOpacity
             onPress={() => onViewDetails(clinic)}
-            className="mt-3 bg-blue-600 py-2 rounded-lg items-center"
+            className="mt-3 py-3 rounded-xl items-center"
+            style={{
+              backgroundColor: isDarkMode ? '#1E40AF' : '#3B82F6',
+              borderWidth: 1.5,
+              borderColor: isDarkMode ? '#2563EB' : '#60A5FA',
+              shadowColor: '#3B82F6',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 4
+            }}
           >
-            <Text className="text-white font-medium">View Details</Text>
+            <Text className="text-white font-bold text-base">View Details</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -123,18 +123,18 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
       <View className={`flex-1 items-center justify-center ${
         isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
       }`}>
-        <View className={`w-24 h-24 rounded-full items-center justify-center mb-4 ${
+        <View className={`w-28 h-28 rounded-full items-center justify-center mb-5 ${
           isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
-        }`}>
+        }`} style={{ borderWidth: 1.5, borderColor: '#14B8A6' }}>
           <Ionicons 
             name="chatbubbles-outline" 
-            size={48} 
+            size={56} 
             color={isDarkMode ? '#5EEAD4' : '#14B8A6'} 
           />
         </View>
-        <Text className={`text-xl font-bold mb-2 ${
+        <Text className={`text-2xl font-bold mb-3 ${
           isDarkMode ? 'text-white' : 'text-gray-900'
-        }`}>
+        }`} style={{ letterSpacing: -0.8 }}>
           Select a conversation
         </Text>
         <Text className={`text-center ${
@@ -158,46 +158,55 @@ const ChatWindow = ({ conversation, otherUser, onBack }) => {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingHorizontal: 18,
+            paddingVertical: 14,
             backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-            borderBottomWidth: 1,
-            borderBottomColor: isDarkMode ? '#374151' : '#E5E7EB'
+            borderBottomWidth: 1.5,
+            borderBottomColor: '#99F6E4',
+            shadowColor: '#14B8A6',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 4
           }}
         >
           {onBack && (
             <TouchableOpacity 
               onPress={onBack} 
               style={{
-                marginRight: 12,
-                width: 36,
-                height: 36,
-                borderRadius: 18,
+                marginRight: 14,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6'
+                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
+                borderWidth: 1.5,
+                borderColor: '#99F6E4'
               }}
             >
-              <Ionicons name="chevron-back" size={22} color={isDarkMode ? '#fff' : '#000'} />
+              <Ionicons name="chevron-back" size={24} color={isDarkMode ? '#fff' : '#000'} />
             </TouchableOpacity>
           )}
           {/* Profile Image or Avatar */}
-          <View style={{ marginRight: 12, position: 'relative' }}>
+          <View style={{ marginRight: 14, position: 'relative' }}>
             {imageUrl && !imageError ? (
               <Image
                 source={{ uri: imageUrl }}
                 style={{ 
-                  width: 44, 
-                  height: 44, 
-                  borderRadius: 22
+                  width: 48, 
+                  height: 48, 
+                  borderRadius: 24,
+                  borderWidth: 1.5,
+                  borderColor: '#14B8A6'
                 }}
                 onError={() => setImageError(true)}
               />
             ) : (
               <View 
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   borderRadius: 22,
                   alignItems: 'center',
                   justifyContent: 'center',

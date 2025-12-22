@@ -49,14 +49,16 @@ const ThemeToggle = () => {
   return (
     <TouchableOpacity
       onPress={toggleTheme}
-      className={`w-11 h-11 rounded-xl items-center justify-center ${
-        isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-      }`}
+      className={`w-11 h-11 rounded-xl items-center justify-center`}
       style={{
-        shadowColor: isDarkMode ? '#000' : '#14B8A6',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        backgroundColor: isDarkMode ? '#374151' : '#F0FDFA',
+        borderWidth: 1,
+        borderColor: isDarkMode ? '#4B5563' : '#14B8A6',
+        shadowColor: isDarkMode ? '#14B8A6' : '#14B8A6',
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
         shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
       }}
       activeOpacity={0.7}
     >

@@ -38,40 +38,49 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
       onPress={onPress}
       style={{
         marginHorizontal: 0,
-        marginBottom: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        marginBottom: 2,
+        paddingHorizontal: 18,
+        paddingVertical: 14,
         backgroundColor: isActive ? (isDarkMode ? 'rgba(20, 184, 166, 0.15)' : 'rgba(20, 184, 166, 0.08)') : 'transparent',
-        borderLeftWidth: isActive ? 4 : 0,
-        borderLeftColor: '#14B8A6'
+        borderLeftWidth: isActive ? 1.5 : 0,
+        borderLeftColor: '#14B8A6',
+        shadowColor: isActive ? '#14B8A6' : 'transparent',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isActive ? 0.2 : 0,
+        shadowRadius: 4,
+        elevation: isActive ? 3 : 0
       }}
       activeOpacity={0.7}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         {/* Profile Image or Avatar */}
-        <View style={{ marginRight: 12, position: 'relative' }}>
+        <View style={{ marginRight: 14, position: 'relative' }}>
           {imageUrl && !imageError ? (
             <Image
               source={{ uri: imageUrl }}
               style={{ 
-                width: 56, 
-                height: 56, 
-                borderRadius: 28
+                width: 60, 
+                height: 60, 
+                borderRadius: 30,
+                borderWidth: isActive ? 1.5 : 0,
+                borderColor: '#14B8A6'
               }}
               onError={() => setImageError(true)}
             />
           ) : (
             <View 
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
+                width: 60,
+                height: 60,
+                borderRadius: 30,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#14B8A6'
+                backgroundColor: '#14B8A6',
+                borderWidth: isActive ? 1.5 : 0,
+                borderColor: '#0D9488'
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 22 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 24 }}>
                 {otherUser?.name?.[0]?.toUpperCase() || '?'}
               </Text>
             </View>
@@ -82,21 +91,22 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
               position: 'absolute',
               bottom: 0,
               right: 0,
-              width: 14,
-              height: 14,
+              width: 16,
+              height: 16,
               backgroundColor: '#10B981',
-              borderRadius: 7,
-              borderWidth: 2,
+              borderRadius: 8,
+              borderWidth: 2.5,
               borderColor: isDarkMode ? '#111827' : '#FFFFFF'
             }}
           />
         </View>
         
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
             <Text style={{
-              fontWeight: '600',
-              fontSize: 16,
+              fontWeight: '700',
+              fontSize: 17,
+              letterSpacing: -0.3,
               color: isDarkMode ? '#FFFFFF' : '#111827',
               flex: 1
             }} numberOfLines={1}>
@@ -104,10 +114,10 @@ const ConversationItem = React.memo(({ item, otherUser, unreadCount, isActive, o
             </Text>
             {item.lastMessageAt && (
               <Text style={{
-                fontSize: 11,
-                fontWeight: '500',
+                fontSize: 12,
+                fontWeight: '600',
                 color: isDarkMode ? '#6B7280' : '#9CA3AF',
-                marginLeft: 8
+                marginLeft: 10
               }}>
                 {formatDistanceToNow(item.lastMessageAt.toDate())}
               </Text>

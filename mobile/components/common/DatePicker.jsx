@@ -79,7 +79,7 @@ const DatePicker = ({
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <Ionicons name="calendar-outline" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+          <Ionicons name="calendar-outline" size={20} color={isDarkMode ? '#10B981' : '#14B8A6'} />
         </View>
         <Text style={[
           styles.inputText,
@@ -89,7 +89,7 @@ const DatePicker = ({
           {value ? formatDisplayDate(value) : placeholder}
         </Text>
         <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-down" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+          <Ionicons name="chevron-down" size={20} color={isDarkMode ? '#10B981' : '#14B8A6'} />
         </View>
       </TouchableOpacity>
       
@@ -131,28 +131,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    shadowColor: '#14b8a6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   inputContainerDark: {
     backgroundColor: '#374151',
     borderColor: '#4B5563',
   },
   inputNormal: {
-    borderColor: '#d1d5db',
+    borderColor: '#99F6E4',
   },
   inputError: {
-    borderColor: '#fca5a5',
+    borderColor: '#FCA5A5',
+    shadowColor: '#EF4444',
   },
   iconContainer: {
-    marginRight: 8,
+    marginRight: 10,
   },
   inputText: {
     flex: 1,

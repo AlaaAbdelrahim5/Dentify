@@ -9,9 +9,9 @@ const AuthCard = ({ title, subtitle, children, className = '' }) => {
     <View style={[styles.card, isDarkMode && styles.cardDark]}>
       {/* Header */}
       <LinearGradient
-        colors={['#14b8a6', '#0ea5e9']}
+        colors={['#14b8a6', '#06b6d4']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <Text style={styles.title}>
@@ -35,35 +35,40 @@ const AuthCard = ({ title, subtitle, children, className = '' }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 1.5,
+    borderColor: '#14b8a6',
+    shadowColor: '#14b8a6',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   cardDark: {
     backgroundColor: '#1F2937',
+    borderColor: '#374151',
   },
   header: {
-    padding: 24,
+    padding: 28,
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#ffffff',
+    letterSpacing: -0.8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: 'center',
     marginTop: 8,
     color: '#ffffff',
-    opacity: 0.9,
+    opacity: 0.95,
+    letterSpacing: 0.2,
   },
   content: {
-    padding: 24,
+    padding: 28,
     backgroundColor: '#ffffff',
   },
   contentDark: {

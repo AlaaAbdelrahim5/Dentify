@@ -355,23 +355,23 @@ const NewAppointmentModal = ({
       onRequestClose={handleClose}
     >
       <View className="flex-1 bg-black/50">
-        <View className={`flex-1 mt-20 rounded-t-3xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <View className={`flex-1 mt-20 rounded-t-3xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ borderTopWidth: 1.5, borderTopColor: '#14B8A6' }}>
           {/* Header */}
-          <View className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <View className="p-5" style={{ borderBottomWidth: 1.5, borderBottomColor: '#99F6E4' }}>
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
-                <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.8 }}>
                   Book an Appointment
                 </Text>
                 {patientInfo && (
-                  <Text className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <Text className={`text-base mt-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     for {patientInfo.firstName} {patientInfo.lastName}
                     {dentistInfo && ` with Dr. ${dentistInfo.firstName} ${dentistInfo.lastName}`}
                   </Text>
                 )}
               </View>
               <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
+                <Ionicons name="close" size={28} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
               </TouchableOpacity>
             </View>
           </View>
@@ -442,18 +442,18 @@ const NewAppointmentModal = ({
                                 key={time}
                                 onPress={() => !isBooked && !isPastTime && handleTimeSelect(time)}
                                 disabled={isPastTime || isBooked}
-                                className={`px-4 py-3 rounded-lg ${
+                                className={`px-5 py-3.5 rounded-xl ${
                                   isPastTime
                                     ? isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
                                     : isBooked
-                                    ? 'bg-red-500/20 border-2 border-red-500'
+                                    ? 'bg-red-500/20'
                                     : isSelected
                                     ? 'bg-teal-600'
-                                    : isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-300'
+                                    : isDarkMode ? 'bg-gray-700' : 'bg-white'
                                 }`}
-                                style={{ minWidth: '30%' }}
+                                style={{ minWidth: '30%', ...(isBooked ? { borderWidth: 1.5, borderColor: '#EF4444' } : !isPastTime ? { borderWidth: 1.5, borderColor: isSelected ? '#14B8A6' : '#99F6E4', shadowColor: isSelected ? '#14B8A6' : '#06B6D4', shadowOffset: { width: 0, height: 2 }, shadowOpacity: isSelected ? 0.3 : 0.1, shadowRadius: 4, elevation: isSelected ? 4 : 2 } : {}) }}
                               >
-                                <Text className={`text-sm font-medium text-center ${
+                                <Text className={`text-base font-semibold text-center ${
                                   isPastTime
                                     ? 'text-gray-400 line-through'
                                     : isBooked
@@ -465,7 +465,7 @@ const NewAppointmentModal = ({
                                   {convertTo12Hour(time)}
                                 </Text>
                                 {isBooked && (
-                                  <Text className={`text-xs text-center mt-1 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                                  <Text className={`text-xs text-center mt-1 font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
                                     Booked
                                   </Text>
                                 )}
@@ -501,9 +501,9 @@ const NewAppointmentModal = ({
 
               {/* Session Notes */}
               <View>
-                <View className="flex-row items-center mb-2">
-                  <Ionicons name="document-text-outline" size={18} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
-                  <Text className={`text-sm font-medium ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <View className="flex-row items-center mb-2.5">
+                  <Ionicons name="document-text-outline" size={20} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
+                  <Text className={`text-base font-semibold ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Session Notes (Optional)
                   </Text>
                 </View>
@@ -514,7 +514,8 @@ const NewAppointmentModal = ({
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
-                  className={`border rounded-lg p-3 ${isDarkMode ? 'border-gray-600 text-white bg-gray-700' : 'border-gray-300 text-gray-900 bg-white'}`}
+                  className={`rounded-lg p-4 ${isDarkMode ? 'text-white bg-gray-700' : 'text-gray-900 bg-white'}`}
+                  style={{ borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}
                   placeholderTextColor={isDarkMode ? '#6B7280' : UI_COLORS.placeholderLight}
                 />
               </View>

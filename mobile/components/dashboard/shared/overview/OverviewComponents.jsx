@@ -5,17 +5,25 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 // Welcome Card Component
 export const WelcomeCard = ({ greeting, subtitle, isDarkMode }) => (
-  <View className="rounded-xl overflow-hidden" style={{ elevation: 3 }}>
+  <View className="rounded-2xl overflow-hidden" style={{ 
+    elevation: 6,
+    shadowColor: '#14B8A6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    borderWidth: 1.5,
+    borderColor: isDarkMode ? '#0D9488' : '#99F6E4'
+  }}>
     <LinearGradient
       colors={isDarkMode ? ['#0D9488', '#0891B2'] : ['#14B8A6', '#06B6D4']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ padding: 20 }}
+      style={{ padding: 24 }}
     >
-      <Text className="text-2xl font-bold text-white mb-1">
+      <Text className="text-3xl font-bold text-white mb-2" style={{ letterSpacing: -0.8 }}>
         {greeting}
       </Text>
-      <Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.9)', marginTop: 4 }}>
+      <Text style={{ fontSize: 15, color: 'rgba(255, 255, 255, 0.95)', marginTop: 4, letterSpacing: 0.2 }}>
         {subtitle}
       </Text>
     </LinearGradient>
@@ -24,11 +32,19 @@ export const WelcomeCard = ({ greeting, subtitle, isDarkMode }) => (
 
 // Stat Card Component
 export const StatCard = ({ icon, label, value, colors }) => (
-  <View className="w-32 rounded-xl overflow-hidden" style={{ elevation: 2 }}>
-    <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ padding: 16 }}>
-      <Ionicons name={icon} size={24} color="white" />
-      <Text className="text-2xl font-bold text-white mt-2">{value}</Text>
-      <Text className="text-xs text-white/90 mt-1">{label}</Text>
+  <View className="w-32 rounded-2xl overflow-hidden" style={{ 
+    elevation: 4,
+    shadowColor: colors[0],
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: `${colors[0]}40`
+  }}>
+    <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ padding: 18 }}>
+      <Ionicons name={icon} size={28} color="white" />
+      <Text className="text-2xl font-bold text-white mt-3" style={{ letterSpacing: -0.5 }}>{value}</Text>
+      <Text className="text-xs text-white/95 mt-1.5 font-semibold" style={{ letterSpacing: 0.2 }}>{label}</Text>
     </LinearGradient>
   </View>
 );
@@ -57,8 +73,15 @@ export const EmptyState = ({ icon = 'calendar-outline', title, message, subtitle
 
 // Status Badge Component
 export const StatusBadge = ({ status, isDarkMode }) => (
-  <View className={`px-3 py-1 rounded-full ${isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'}`}>
-    <Text className="text-xs font-medium text-teal-600">
+  <View 
+    className="px-3 py-1.5 rounded-full"
+    style={{
+      backgroundColor: isDarkMode ? '#0D948820' : '#F0FDFA',
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#14B8A6' : '#99F6E4'
+    }}
+  >
+    <Text className="text-xs font-bold text-teal-600">
       {status}
     </Text>
   </View>
@@ -67,7 +90,7 @@ export const StatusBadge = ({ status, isDarkMode }) => (
 // Section Header Component
 export const SectionHeader = ({ title, onViewAll, isDarkMode }) => (
   <View className="flex-row items-center justify-between mb-4">
-    <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+    <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.5 }}>
       {title}
     </Text>
   </View>
@@ -78,14 +101,27 @@ export const SectionHeader = ({ title, onViewAll, isDarkMode }) => (
 
 // Search Bar Component
 export const SearchBar = ({ placeholder = 'Search...', value, onChangeText, isDarkMode }) => (
-  <View className={`mb-4 px-4 py-3 rounded-xl flex-row items-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-    <Ionicons name="search" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+  <View 
+    className={`mb-4 px-4 py-3 rounded-xl flex-row items-center ${
+      isDarkMode ? 'bg-gray-800' : 'bg-white'
+    }`}
+    style={{
+      borderWidth: 1.5,
+      borderColor: isDarkMode ? '#4B5563' : '#99F6E4',
+      shadowColor: '#14B8A6',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 3
+    }}
+  >
+    <Ionicons name="search" size={22} color={isDarkMode ? '#10B981' : '#14B8A6'} />
     <TextInput
       placeholder={placeholder}
       placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
       value={value}
       onChangeText={onChangeText}
-      className={`flex-1 ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+      className={`flex-1 ml-3 text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
     />
   </View>
 );

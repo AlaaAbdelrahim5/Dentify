@@ -40,24 +40,26 @@ const NotificationsScreen = () => {
     return (
       <TouchableOpacity
         onPress={() => handleNotificationPress(item)}
-        className={`p-4 mx-4 mb-3 rounded-xl ${
+        className={`p-5 mx-4 mb-4 rounded-2xl ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
-        } ${!item.read ? (isDarkMode ? 'border-l-4 border-teal-500' : 'border-l-4 border-teal-500') : ''}`}
+        }`}
         style={{
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 3
+          borderLeftWidth: !item.read ? 1.5 : 0,
+          borderLeftColor: !item.read ? '#14B8A6' : 'transparent',
+          shadowColor: !item.read ? '#14B8A6' : '#000',
+          shadowOpacity: !item.read ? 0.25 : 0.1,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: !item.read ? 5 : 3
         }}
       >
         <View className="flex-row items-start">
-          <View className={`w-12 h-12 rounded-full items-center justify-center mr-3 ${
+          <View className={`w-14 h-14 rounded-full items-center justify-center mr-4 ${
             isDarkMode ? 'bg-teal-500/20' : 'bg-teal-100'
-          }`}>
+          }`} style={{ borderWidth: 1.5, borderColor: '#14B8A6' }}>
             <Ionicons 
               name={getNotificationIcon(item.type)} 
-              size={24} 
+              size={28} 
               color={isDarkMode ? '#5EEAD4' : '#14B8A6'} 
             />
           </View>
@@ -99,23 +101,30 @@ const NotificationsScreen = () => {
   return (
     <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className={`flex-row items-center justify-between p-4 border-b ${
-        isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'
-      }`}>
+      <View className="flex-row items-center justify-between p-5" style={{
+        borderBottomWidth: 1.5,
+        borderBottomColor: '#99F6E4',
+        backgroundColor: isDarkMode ? '#111827' : '#FFFFFF',
+        shadowColor: '#14B8A6',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4
+      }}>
         <View className="flex-row items-center">
           <TouchableOpacity 
             onPress={() => router.back()}
-            className="mr-3"
+            className="mr-4"
           >
             <Ionicons 
               name="arrow-back" 
-              size={24} 
+              size={28} 
               color={isDarkMode ? '#FFF' : '#000'} 
             />
           </TouchableOpacity>
-          <Text className={`text-xl font-bold ${
+          <Text className={`text-2xl font-bold ${
             isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
+          }`} style={{ letterSpacing: -0.8 }}>
             Notifications
           </Text>
         </View>
@@ -123,11 +132,12 @@ const NotificationsScreen = () => {
         {notifications.filter(n => !n.read).length > 0 && (
           <TouchableOpacity
             onPress={markAllAsRead}
-            className={`px-3 py-2 rounded-lg ${
+            className={`px-4 py-2.5 rounded-xl ${
               isDarkMode ? 'bg-teal-500/20' : 'bg-teal-100'
             }`}
+            style={{ borderWidth: 1.5, borderColor: '#14B8A6' }}
           >
-            <Text className={`text-sm font-semibold ${
+            <Text className={`text-sm font-bold ${
               isDarkMode ? 'text-teal-400' : 'text-teal-600'
             }`}>
               Mark all read
@@ -139,16 +149,16 @@ const NotificationsScreen = () => {
       {/* Notifications List */}
       {notifications.length === 0 ? (
         <View className="flex-1 items-center justify-center p-6">
-          <View className={`w-24 h-24 rounded-full items-center justify-center mb-4 ${
+          <View className={`w-28 h-28 rounded-full items-center justify-center mb-5 ${
             isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-          }`}>
+          }`} style={{ borderWidth: 1.5, borderColor: isDarkMode ? '#374151' : '#D1D5DB' }}>
             <Ionicons 
               name="notifications-outline" 
-              size={48} 
+              size={56} 
               color={isDarkMode ? '#4B5563' : '#9CA3AF'} 
             />
           </View>
-          <Text className={`text-xl font-bold mb-2 ${
+          <Text className={`text-2xl font-bold mb-3 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             No notifications

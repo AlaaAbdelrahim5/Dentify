@@ -188,32 +188,37 @@ const ChatScreen = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingHorizontal: 20,
-            paddingVertical: 16,
+            paddingVertical: 18,
             backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 5
+            borderBottomWidth: 1.5,
+            borderBottomColor: '#99F6E4',
+            shadowColor: '#14B8A6',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 6
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6'
+                backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
+                borderWidth: 1.5,
+                borderColor: '#99F6E4'
               }}
             >
-              <Ionicons name="chevron-back" size={20} color={isDarkMode ? '#FFFFFF' : '#111827'} />
+              <Ionicons name="chevron-back" size={24} color={isDarkMode ? '#FFFFFF' : '#111827'} />
             </TouchableOpacity>
             <Text style={{
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: 'bold',
+              letterSpacing: -0.8,
               color: isDarkMode ? '#FFFFFF' : '#111827'
             }}>
               Messages
@@ -222,17 +227,19 @@ const ChatScreen = () => {
           <TouchableOpacity
             onPress={() => setIsNewChatModalOpen(true)}
             style={{
-              borderRadius: 24,
-              padding: 12,
+              borderRadius: 28,
+              padding: 14,
               backgroundColor: '#14B8A6',
+              borderWidth: 1.5,
+              borderColor: '#0D9488',
               shadowColor: '#14B8A6',
-              shadowOffset: { width: 0, height: 2 },
+              shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.4,
-              shadowRadius: 4,
-              elevation: 4
+              shadowRadius: 8,
+              elevation: 6
             }}
           >
-            <Ionicons name="create-outline" size={22} color="white" />
+            <Ionicons name="create-outline" size={24} color="white" />
           </TouchableOpacity>
         </View>
       )}
@@ -288,13 +295,14 @@ const ChatScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               paddingHorizontal: 24,
-              paddingVertical: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: isDarkMode ? '#374151' : '#E5E7EB'
+              paddingVertical: 18,
+              borderBottomWidth: 1.5,
+              borderBottomColor: '#99F6E4'
             }}>
               <Text style={{
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: 'bold',
+                letterSpacing: -0.8,
                 color: isDarkMode ? '#FFFFFF' : '#111827'
               }}>
                 New Conversation
@@ -306,21 +314,28 @@ const ChatScreen = () => {
                 }}
                 style={{ padding: 8 }}
               >
-                <Ionicons name="close" size={24} color={isDarkMode ? '#fff' : '#000'} />
+                <Ionicons name="close" size={28} color={isDarkMode ? '#fff' : '#000'} />
               </TouchableOpacity>
             </View>
 
             {/* Search Input */}
-            <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+            <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderRadius: 12,
-                backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6'
+                paddingVertical: 14,
+                borderRadius: 14,
+                backgroundColor: isDarkMode ? '#1F2937' : '#F3F4F6',
+                borderWidth: 1.5,
+                borderColor: '#99F6E4',
+                shadowColor: '#14B8A6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2
               }}>
-                <Ionicons name="search" size={20} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                <Ionicons name="search" size={22} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
                 <TextInput
                   value={searchTerm}
                   onChangeText={setSearchTerm}

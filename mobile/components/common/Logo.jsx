@@ -41,9 +41,9 @@ const Logo = ({ size = 'md', showSubtitle = true, className = '' }) => {
           }}
         >
           <LinearGradient
-            colors={['#14b8a6', '#0ea5e9']}
+            colors={['#14b8a6', '#06b6d4']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={[
               styles.iconContainer,
               {
@@ -93,12 +93,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconContainer: {
-    borderRadius: 12,
-    shadowColor: '#000',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#99F6E4',
+    shadowColor: '#14b8a6',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -107,11 +109,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    color: '#0d9488',
+    color: '#14b8a6',
+    letterSpacing: -0.8,
   },
   subtitle: {
     color: '#4b5563',
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
 

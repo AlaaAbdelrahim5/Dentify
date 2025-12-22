@@ -190,14 +190,14 @@ const TwoFactorAuth = () => {
   }
 
   return (
-    <View className={`rounded-xl p-4 mb-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 2 }}>
+    <View className={`rounded-2xl p-5 mb-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ elevation: 3, borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6 }}>
       {/* Header */}
-      <View className="flex-row items-center mb-4">
-        <View className={`p-3 rounded-lg mr-3 ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-          <Ionicons name="shield-checkmark" size={24} color={isDarkMode ? '#60A5FA' : '#2563EB'} />
+      <View className="flex-row items-center mb-5">
+        <View className={`p-3.5 rounded-xl mr-4 ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`} style={{ borderWidth: 1.5, borderColor: '#60A5FA' }}>
+          <Ionicons name="shield-checkmark" size={28} color={isDarkMode ? '#60A5FA' : '#2563EB'} />
         </View>
         <View className="flex-1">
-          <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.8 }}>
             Two-Factor Authentication
           </Text>
           <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>

@@ -139,18 +139,20 @@ export default function ForgotPassword() {
               alignItems: 'center'
             }}
           >
-            <View className={`w-24 h-24 rounded-full items-center justify-center mb-6 ${
+            <View className={`w-28 h-28 rounded-full items-center justify-center mb-6 ${
               isDarkMode ? 'bg-gray-800' : 'bg-white'
             }`} style={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
+              borderWidth: 1.5,
+              borderColor: '#14B8A6',
+              shadowColor: '#14B8A6',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.25,
               shadowRadius: 12,
-              elevation: 6,
+              elevation: 8,
             }}>
               <Ionicons 
                 name="lock-closed-outline" 
-                size={48} 
+                size={56} 
                 color={isDarkMode ? '#14b8a6' : '#0d9488'} 
               />
             </View>
@@ -178,15 +180,15 @@ export default function ForgotPassword() {
               paddingHorizontal: 20,
             }}
           >
-            <View className={`mx-4 p-6 rounded-3xl shadow-xl ${
+            <View className={`mx-4 p-7 rounded-3xl shadow-xl ${
               isDarkMode ? 'bg-gray-800/90' : 'bg-white'
-            }`}>
+            }`} style={{ borderWidth: 1.5, borderColor: '#14B8A6', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 }}>
               {emailSent ? (
                 <View className="items-center py-4">
-                  <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${
+                  <View className={`w-20 h-20 rounded-full items-center justify-center mb-5 ${
                     isDarkMode ? 'bg-teal-900/30' : 'bg-teal-50'
-                  }`}>
-                    <Ionicons name="checkmark-circle" size={40} color="#10B981" />
+                  }`} style={{ borderWidth: 1.5, borderColor: '#10B981' }}>
+                    <Ionicons name="checkmark-circle" size={48} color="#10B981" />
                   </View>
                   <Text className={`text-center mb-6 ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'

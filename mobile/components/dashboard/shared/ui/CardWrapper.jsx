@@ -12,11 +12,13 @@ import { View, TouchableOpacity } from 'react-native';
 const CardWrapper = ({ isDarkMode, onPress, children, className = '' }) => {
   const cardClasses = `mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} ${className}`;
   const cardStyle = {
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: isDarkMode ? '#374151' : '#E5E7EB',
+    shadowColor: '#14b8a6',
+    shadowOpacity: isDarkMode ? 0.15 : 0.1,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3
+    elevation: 4
   };
 
   if (onPress) {

@@ -56,19 +56,19 @@ const SessionCostModal = ({ visible, onClose, onSave, appointmentInfo }) => {
       onRequestClose={handleClose}
     >
       <View className="flex-1 bg-black/50 justify-center items-center p-4">
-        <View className={`rounded-2xl w-full max-w-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <View className={`rounded-2xl w-full max-w-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} style={{ borderWidth: 1.5, borderColor: '#14B8A6', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 }}>
           {/* Header */}
-          <View className={`flex-row items-center justify-between p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <View className="flex-row items-center justify-between p-5" style={{ borderBottomWidth: 1.5, borderBottomColor: '#99F6E4' }}>
             <View className="flex-row items-center gap-3">
-              <View className={`p-2 rounded-lg ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`}>
-                <Ionicons name="cash-outline" size={20} color={UI_COLORS.primaryDark} />
+              <View className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'}`} style={{ borderWidth: 1.5, borderColor: '#14B8A6' }}>
+                <Ionicons name="cash-outline" size={24} color={UI_COLORS.primaryDark} />
               </View>
-              <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <Text className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.8 }}>
                 Complete Appointment
               </Text>
             </View>
             <TouchableOpacity onPress={handleClose}>
-              <Ionicons name="close" size={24} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
+              <Ionicons name="close" size={28} color={isDarkMode ? '#9CA3AF' : UI_COLORS.iconGray} />
             </TouchableOpacity>
           </View>
 
@@ -95,12 +95,12 @@ const SessionCostModal = ({ visible, onClose, onSave, appointmentInfo }) => {
 
             {/* Session Cost Input */}
             <View>
-              <Text className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <Text className={`text-base font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 Session Cost
               </Text>
               <View className="relative">
-                <View className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
-                  <Text className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</Text>
+                <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                  <Text className={`text-xl font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</Text>
                 </View>
                 <TextInput
                   value={sessionCost}
@@ -111,11 +111,10 @@ const SessionCostModal = ({ visible, onClose, onSave, appointmentInfo }) => {
                   placeholder="0.00"
                   keyboardType="decimal-pad"
                   autoFocus
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg border text-lg ${
-                    error
-                      ? 'border-red-500'
-                      : isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                  } ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                  className={`w-full pl-12 pr-5 py-4 rounded-xl text-xl font-semibold ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}
+                  style={error ? { borderWidth: 1.5, borderColor: '#EF4444' } : { borderWidth: 1.5, borderColor: '#99F6E4', shadowColor: '#14B8A6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 }}
                   placeholderTextColor={isDarkMode ? '#6B7280' : UI_COLORS.placeholderLight}
                 />
               </View>
