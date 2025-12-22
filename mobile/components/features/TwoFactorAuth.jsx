@@ -6,7 +6,8 @@ import { authUtils } from '../../utils/auth';
 import { UI_COLORS } from '../../utils/colors';
 
 // API configuration - matches the mobile API setup
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000';
+// Note: EXPO_PUBLIC_API_BASE_URL already includes /api
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000/api';
 
 const TwoFactorAuth = () => {
   const { isDarkMode } = useTheme();
@@ -30,9 +31,9 @@ const TwoFactorAuth = () => {
   const check2FAStatus = async () => {
     try {
       setLoading(true);
-      const token = authUtils.getAccessToken();
+      const token = await authUtils.getAccessToken();
       
-      const response = await fetch(`${API_BASE_URL}/api/2fa/status`, {
+      const response = await fetch(`${API_BASE_URL}/2fa/status`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -55,9 +56,9 @@ const TwoFactorAuth = () => {
       setError('');
       setSuccess('');
       
-      const token = authUtils.getAccessToken();
+      const token = await authUtils.getAccessToken();
       
-      const response = await fetch(`${API_BASE_URL}/api/2fa/enable`, {
+      const response = await fetch(`${API_BASE_URL}/2fa/enable`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -91,9 +92,9 @@ const TwoFactorAuth = () => {
       setProcessing(true);
       setError('');
       
-      const token = authUtils.getAccessToken();
+      const token = await authUtils.getAccessToken();
       
-      const response = await fetch(`${API_BASE_URL}/api/2fa/verify`, {
+      const response = await fetch(`${API_BASE_URL}/2fa/verify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -132,9 +133,9 @@ const TwoFactorAuth = () => {
       setProcessing(true);
       setError('');
       
-      const token = authUtils.getAccessToken();
+      const token = await authUtils.getAccessToken();
       
-      const response = await fetch(`${API_BASE_URL}/api/2fa/disable`, {
+      const response = await fetch(`${API_BASE_URL}/2fa/disable`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
