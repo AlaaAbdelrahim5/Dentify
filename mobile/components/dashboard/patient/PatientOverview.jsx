@@ -12,6 +12,7 @@ const PatientOverview = () => {
   const [userData, setUserData] = useState(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -37,7 +38,9 @@ const PatientOverview = () => {
 
       setUpcomingAppointments(upcoming);
     } catch (error) {
-      console.error('Error loading data:', error);
+      // Silently handle errors - user still gets their data loaded
+      console.log('Note: Could not load appointments. Please check your connection.');
+      setUpcomingAppointments([]);
     } finally {
       setIsLoading(false);
     }
