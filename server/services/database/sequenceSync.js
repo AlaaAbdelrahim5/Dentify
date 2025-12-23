@@ -17,7 +17,7 @@ async function syncUserSequence(prisma) {
     
     // Get the current maximum ID with timeout
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 5000)
+      setTimeout(() => reject(new Error('Query timeout')), parseInt(process.env.QUERY_TIMEOUT))
     );
     
     const queryPromise = prisma.user.findFirst({

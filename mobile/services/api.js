@@ -2,7 +2,7 @@ import { authUtils } from '../utils/auth';
 
 // API configuration from environment variables
 // Update the .env file to change the API URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // API service for making HTTP requests with JWT support
 class ApiService {

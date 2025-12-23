@@ -1,89 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { db } = require('../config/firebase-admin');
-const admin = require('firebase-admin');
-
-// Helper function to send appointment notifications
-async function sendAppointmentNotification(userId, title, body, data = {}) {
-  try {
-    // Store notification in Firestore
-    await db.collection('notifications').add({
-      userId: userId.toString(),
-      title,
-      body,
-      data,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      type: 'appointment'
-    });
-  } catch (error) {
-  }
-}
-
-// Helper function to format date and time
-function formatDateTime(date) {
-  return new Date(date).toLocaleString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+const prisma = require('../config/database');
+const { sendAppointmentNotification } = require('../services/notification/notificationService');
+const { 
+  appointmentInclude, 
+  autoCancelExpiredAppointments, 
+  getClinicIdForUser,
+  formatDateTime 
+} = require('../services/appointment/appointmentService');
 
 // Get patient's appointments
 router.get('/patient/my-appointments', authenticate, authorize('Patient'), async (req, res) => {
   try {
     // Auto-cancel pending appointments that have passed
-    const now = new Date();
-    await prisma.appointment.updateMany({
-      where: {
-        patientId: req.user.id,
-        status: 'PENDING',
-        endTime: {
-          lt: now
-        }
-      },
-      data: {
-        status: 'CANCELLED'
-      }
-    });
+    await autoCancelExpiredAppointments({ patientId: req.user.id });
 
     const appointments = await prisma.appointment.findMany({
       where: { patientId: req.user.id },
-      include: {
-        dentist: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        clinic: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        treatment: {
-          select: {
-            id: true,
-            treatmentName: true,
-            description: true,
-            status: true
-          }
-        }
-      },
+      include: appointmentInclude,
       orderBy: {
         appointmentDate: 'desc'
       }
@@ -99,52 +34,11 @@ router.get('/patient/my-appointments', authenticate, authorize('Patient'), async
 router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async (req, res) => {
   try {
     // Auto-cancel pending appointments that have passed
-    const now = new Date();
-    await prisma.appointment.updateMany({
-      where: {
-        dentistId: req.user.id,
-        status: 'PENDING',
-        endTime: {
-          lt: now
-        }
-      },
-      data: {
-        status: 'CANCELLED'
-      }
-    });
+    await autoCancelExpiredAppointments({ dentistId: req.user.id });
 
     const appointments = await prisma.appointment.findMany({
       where: { dentistId: req.user.id },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        clinic: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        treatment: {
-          select: {
-            id: true,
-            treatmentName: true,
-            description: true,
-            status: true
-          }
-        }
-      },
+      include: appointmentInclude,
       orderBy: {
         appointmentDate: 'desc'
       }
@@ -159,72 +53,18 @@ router.get('/dentist/my-appointments', authenticate, authorize('Dentist'), async
 // Get clinic's appointments
 router.get('/clinic/my-appointments', authenticate, authorize('Clinic', 'Secretary'), async (req, res) => {
   try {
-    let clinicId;
+    const clinicId = await getClinicIdForUser(req.user);
 
-    // If user is a secretary, get their clinic ID
-    if (req.user.role === 'Secretary') {
-      const secretary = await prisma.secretary.findUnique({
-        where: { userId: req.user.id },
-        select: { clinicId: true }
-      });
-
-      if (!secretary) {
-        return res.status(404).json({ error: 'Secretary profile not found' });
-      }
-
-      clinicId = secretary.clinicId;
-    } else {
-      // User is a clinic owner
-      clinicId = req.user.id;
+    if (!clinicId) {
+      return res.status(404).json({ error: 'Secretary profile not found' });
     }
 
     // Auto-cancel pending appointments that have passed
-    const now = new Date();
-    await prisma.appointment.updateMany({
-      where: {
-        clinicId: clinicId,
-        status: 'PENDING',
-        endTime: {
-          lt: now
-        }
-      },
-      data: {
-        status: 'CANCELLED'
-      }
-    });
+    await autoCancelExpiredAppointments({ clinicId });
 
     const appointments = await prisma.appointment.findMany({
-      where: { clinicId: clinicId },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        dentist: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        treatment: {
-          select: {
-            id: true,
-            treatmentName: true,
-            description: true,
-            status: true
-          }
-        }
-      },
+      where: { clinicId },
+      include: appointmentInclude,
       orderBy: {
         appointmentDate: 'desc'
       }
@@ -240,46 +80,7 @@ router.get('/clinic/my-appointments', authenticate, authorize('Clinic', 'Secreta
 router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const appointments = await prisma.appointment.findMany({
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        dentist: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        clinic: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        treatment: {
-          select: {
-            id: true,
-            treatmentName: true,
-            description: true,
-            status: true
-          }
-        }
-      },
+      include: appointmentInclude,
       orderBy: {
         appointmentDate: 'desc'
       }
@@ -297,46 +98,7 @@ router.get('/:id', authenticate, async (req, res) => {
     const { id } = req.params;
     const appointment = await prisma.appointment.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        dentist: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        clinic: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        treatment: {
-          select: {
-            id: true,
-            treatmentName: true,
-            description: true,
-            status: true
-          }
-        }
-      }
+      include: appointmentInclude
     });
 
     if (!appointment) {
@@ -447,38 +209,7 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
         treatmentId,
         status: req.user.role === 'Patient' ? 'PENDING' : 'CONFIRMED'
       },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        dentist: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        },
-        clinic: {
-          include: {
-            user: {
-              select: {
-                email: true,
-                phone: true
-              }
-            }
-          }
-        }
-      }
+      include: appointmentInclude
     });
 
     // Send notifications

@@ -260,7 +260,7 @@ const UnifiedDashboard = () => {
   // Fetch appointments for dentist
   const fetchAppointments = async (token) => {
     try {
-      const response = await fetch('http://localhost:5000/api/appointments/dentist/my-appointments', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/dentist/my-appointments`, {
         headers: {
           'Authorization': `Bearer ${token || authUtils.getAccessToken()}`,
           'Content-Type': 'application/json'
@@ -287,19 +287,19 @@ const UnifiedDashboard = () => {
           // Admin stats are fetched by AdminOverview component
           break
         case 'Clinic':
-          endpoint = 'http://localhost:5000/api/clinics/me'
+          endpoint = `${import.meta.env.VITE_API_URL}/api/clinics/me`
           break
         case 'Dentist':
-          endpoint = 'http://localhost:5000/api/dentists/me'
+          endpoint = `${import.meta.env.VITE_API_URL}/api/dentists/me`
           break
         case 'Patient':
-          endpoint = 'http://localhost:5000/api/patients/me'
+          endpoint = `${import.meta.env.VITE_API_URL}/api/patients/me`
           break
         case 'RadiologyCenter':
-          endpoint = 'http://localhost:5000/api/radiology-centers/me'
+          endpoint = `${import.meta.env.VITE_API_URL}/api/radiology-centers/me`
           break
         case 'Secretary':
-          endpoint = 'http://localhost:5000/api/secretaries/me'
+          endpoint = `${import.meta.env.VITE_API_URL}/api/secretaries/me`
           break
       }
       
@@ -339,10 +339,10 @@ const UnifiedDashboard = () => {
           // Admin stats are fetched by AdminOverview component
           return
         case 'Dentist':
-          statsEndpoint = 'http://localhost:5000/api/dentists/dashboard-stats'
+          statsEndpoint = `${import.meta.env.VITE_API_URL}/api/dentists/dashboard-stats`
           break
         case 'RadiologyCenter':
-          statsEndpoint = 'http://localhost:5000/api/radiology-requests/stats'
+          statsEndpoint = `${import.meta.env.VITE_API_URL}/api/radiology-requests/stats`
           break
         case 'Clinic':
           // Clinic stats are mocked for now

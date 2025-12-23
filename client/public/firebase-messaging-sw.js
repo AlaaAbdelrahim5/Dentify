@@ -2,30 +2,36 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// Initialize Firebase in the service worker
-firebase.initializeApp({
-  apiKey: "AIzaSyDoPRR4RAf7Jr_AV--EDOvG1_7DItUPn4c",
-  authDomain: "dentify2025.firebaseapp.com",
-  projectId: "dentify2025",
-  storageBucket: "dentify2025.firebasestorage.app",
-  messagingSenderId: "886749037430",
-  appId: "1:886749037430:web:1979b2a45982614a8f3057"
-});
+// Fetch Firebase configuration from server
+// Use self.location.origin to work in both dev and production
+const apiUrl = self.location.hostname === 'localhost' 
+  ? 'http://localhost:5000' 
+  : self.location.origin;
 
-const messaging = firebase.messaging();
+fetch(`${apiUrl}/api/config/firebase`)
+  .then(response => response.json())
+  .then(config => {
+    // Initialize Firebase in the service worker
+    firebase.initializeApp(config);
 
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification.title || 'Notification';
-  const notificationOptions = {
-    body: payload.notification.body || '',
-    icon: '/logo.png',
-    badge: '/badge.png',
-    data: payload.data
-  };
+    const messaging = firebase.messaging();
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+    // Handle background messages
+    messaging.onBackgroundMessage((payload) => {
+      const notificationTitle = payload.notification.title || 'Notification';
+      const notificationOptions = {
+        body: payload.notification.body || '',
+        icon: '/logo.png',
+        badge: '/badge.png',
+        data: payload.data
+      };
+
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  })
+  .catch(error => {
+    console.error('Failed to load Firebase config:', error);
+  });
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {

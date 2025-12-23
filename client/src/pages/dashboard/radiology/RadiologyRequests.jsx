@@ -155,7 +155,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       setError(null)
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/radiology-requests/center/my-requests', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/radiology-requests/center/my-requests`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -265,7 +265,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     try {
       const token = authUtils.getAccessToken()
       
-      const response = await fetch(`http://localhost:5000/api/radiology-requests/${requestId}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/radiology-requests/${requestId}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

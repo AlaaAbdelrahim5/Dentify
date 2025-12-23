@@ -6,7 +6,7 @@ import { useChat } from '../../../contexts/ChatContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;

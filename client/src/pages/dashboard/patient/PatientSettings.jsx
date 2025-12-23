@@ -53,7 +53,7 @@ const PatientSettings = () => {
       setError(null)
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/patients/me', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/patients/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ const PatientSettings = () => {
         city: profile.city
       }
 
-      const response = await fetch(`http://localhost:5000/api/patients/${patientId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/patients/${patientId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -153,7 +153,7 @@ const PatientSettings = () => {
       setSaving(true)
       const token = authUtils.getAccessToken()
 
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

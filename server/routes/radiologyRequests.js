@@ -1,25 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { db, admin } = require('../config/firebase-admin');
-
-// Helper function to send radiology notifications
-const sendRadiologyNotification = async (userId, title, body, data = {}) => {
-  try {
-    await db.collection('notifications').add({
-      userId: String(userId),
-      title,
-      body,
-      type: 'radiology',
-      data,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (error) {
-    // Silent fail
-  }
-};
+const prisma = require('../config/database');
+const { sendRadiologyNotification } = require('../services/notification/notificationService');
+const { validateEntityExists } = require('../helpers/validation');
 
 // Get radiology request statistics for dentist or radiology center
 router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), async (req, res) => {
@@ -348,22 +332,12 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
     }
 
     // Check if patient exists
-    const patient = await prisma.patient.findUnique({
-      where: { userId: parseInt(patientId) }
-    });
-
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
+    const patient = await validateEntityExists(prisma, 'patient', patientId, 'Patient', res, 'userId');
+    if (!patient) return;
 
     // Check if radiology center exists
-    const radiologyCenter = await prisma.radiologyCenter.findUnique({
-      where: { userId: parseInt(radiologyCenterId) }
-    });
-
-    if (!radiologyCenter) {
-      return res.status(404).json({ error: 'Radiology center not found' });
-    }
+    const radiologyCenter = await validateEntityExists(prisma, 'radiologyCenter', radiologyCenterId, 'Radiology center', res, 'userId');
+    if (!radiologyCenter) return;
 
     // Check if treatment exists (if provided)
     if (treatmentId) {

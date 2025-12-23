@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const bcrypt = require('bcrypt');
-const { successResponse, errorResponse, notFoundResponse } = require('../utils/responseHelper');
+const prisma = require('../config/database');
+const { successResponse, errorResponse, notFoundResponse } = require('../helpers/response');
+const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
+const { hashPassword } = require('../helpers/hash');
+const { transformSecretary } = require('../utils/responseTransformers');
+const { standardUserSelect } = require('../utils/queryHelpers');
 
 // Get current secretary's info (for Secretary role)
 router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
@@ -14,15 +17,7 @@ router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
       where: { userId },
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         },
         clinic: {
           include: {
@@ -42,33 +37,7 @@ router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
       return notFoundResponse(res, 'Secretary');
     }
 
-    // Transform data to match frontend expectations
-    const transformedSecretary = {
-      _id: secretary.userId,
-      firstName: secretary.firstName,
-      lastName: secretary.lastName,
-      birthDate: secretary.birthDate,
-      gender: secretary.gender,
-      city: secretary.city,
-      clinic: {
-        id: secretary.clinic.userId,
-        clinicName: secretary.clinic.clinicName,
-        registrationNumber: secretary.clinic.registrationNumber,
-        city: secretary.clinic.city,
-        contactNumber: secretary.clinic.user.phone
-      },
-      userId: {
-        id: secretary.user.id,
-        email: secretary.user.email,
-        phone: secretary.user.phone,
-        status: secretary.user.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: secretary.user.profileImage
-      },
-      createdAt: secretary.user.createdAt,
-      updatedAt: secretary.user.updatedAt
-    };
-
-    return successResponse(res, transformedSecretary, 'Secretary profile fetched successfully');
+    return successResponse(res, transformSecretary(secretary), 'Secretary profile fetched successfully');
   } catch (error) {
     return errorResponse(res, 'Failed to fetch secretary profile', 500);
   }
@@ -83,15 +52,7 @@ router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
       where: { clinicId },
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         }
       },
       orderBy: {
@@ -99,26 +60,7 @@ router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
       }
     });
 
-    // Transform data to match frontend expectations
-    const transformedSecretaries = secretaries.map(secretary => ({
-      _id: secretary.userId,
-      firstName: secretary.firstName,
-      lastName: secretary.lastName,
-      birthDate: secretary.birthDate,
-      gender: secretary.gender,
-      address: {
-        city: secretary.city
-      },
-      userId: {
-        id: secretary.user.id,
-        email: secretary.user.email,
-        phone: secretary.user.phone,
-        status: secretary.user.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: secretary.user.profileImage
-      },
-      createdAt: secretary.user.createdAt,
-      updatedAt: secretary.user.updatedAt
-    }));
+    const transformedSecretaries = secretaries.map(transformSecretary);
 
     return successResponse(res, transformedSecretaries, 'Secretaries fetched successfully');
   } catch (error) {
@@ -132,15 +74,7 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
     const secretaries = await prisma.secretary.findMany({
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         },
         clinic: {
           include: {
@@ -169,13 +103,7 @@ router.get('/:id', authenticate, async (req, res) => {
       where: { userId: id },
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true
-          }
+          select: standardUserSelect
         },
         clinic: {
           include: {
@@ -224,10 +152,10 @@ router.get('/clinic/:clinicId', authenticate, authorize('Admin', 'Clinic'), asyn
   }
 });
 
-// Create secretary (Clinic only)
+// Create secretary - using consolidated user service
 router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
   try {
-    const clinicId = req.user.id; // The authenticated clinic's user ID
+    const clinicId = req.user.id;
     const { firstName, lastName, birthDate, gender, address, userId } = req.body;
 
     // Validate required fields
@@ -235,82 +163,28 @@ router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
       return errorResponse(res, 'All required fields must be provided', 400);
     }
 
-    // Check if user with this email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: userId.email }
-    });
-
-    if (existingUser) {
-      return errorResponse(res, 'A user with this email already exists', 400);
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(userId.password, 12);
-
-    // Create user and secretary in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create user
-      const user = await tx.user.create({
-        data: {
-          email: userId.email,
-          password: hashedPassword,
-          phone: userId.phone,
-          role: 'Secretary',
-          status: 'ACTIVE'
-        }
-      });
-
-      // Create secretary
-      const secretary = await tx.secretary.create({
-        data: {
-          userId: user.id,
-          firstName,
-          lastName,
-          birthDate: new Date(birthDate),
-          gender: gender.charAt(0).toUpperCase() + gender.slice(1), // Capitalize first letter
-          city: address.city,
-          clinicId: clinicId
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true,
-              createdAt: true,
-              updatedAt: true
-            }
-          }
-        }
-      });
-
-      return secretary;
-    });
-
-    // Transform response to match frontend expectations
-    const transformedSecretary = {
-      _id: result.userId,
-      firstName: result.firstName,
-      lastName: result.lastName,
-      birthDate: result.birthDate,
-      gender: result.gender,
-      address: {
-        city: result.city
-      },
-      userId: {
-        id: result.user.id,
-        email: result.user.email,
-        phone: result.user.phone,
-        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: result.user.profileImage
-      },
-      createdAt: result.user.createdAt,
-      updatedAt: result.user.updatedAt
+    // Prepare user and profile data
+    const userData = {
+      email: userId.email,
+      password: userId.password,
+      phone: userId.phone,
+      role: 'Secretary',
+      status: 'ACTIVE'
     };
 
-    return successResponse(res, transformedSecretary, 'Secretary created successfully', 201);
+    const profileData = {
+      firstName,
+      lastName,
+      birthDate,
+      gender,
+      city: address.city,
+      clinicId
+    };
+
+    // Create using service
+    const result = await createUserWithProfile(userData, profileData, 'secretary');
+
+    return successResponse(res, transformSecretary(result), 'Secretary created successfully', 201);
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to create secretary', 500);
   }
@@ -376,33 +250,7 @@ router.put('/me', authenticate, authorize('Secretary'), async (req, res) => {
       return secretary;
     });
 
-    // Transform response
-    const transformedSecretary = {
-      _id: result.userId,
-      firstName: result.firstName,
-      lastName: result.lastName,
-      birthDate: result.birthDate,
-      gender: result.gender,
-      city: result.city,
-      clinic: {
-        id: result.clinic.userId,
-        clinicName: result.clinic.clinicName,
-        registrationNumber: result.clinic.registrationNumber,
-        city: result.clinic.city,
-        contactNumber: result.clinic.user.phone
-      },
-      userId: {
-        id: result.user.id,
-        email: result.user.email,
-        phone: result.user.phone,
-        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: result.user.profileImage
-      },
-      createdAt: result.user.createdAt,
-      updatedAt: result.user.updatedAt
-    };
-
-    return successResponse(res, transformedSecretary, 'Secretary profile updated successfully');
+    return successResponse(res, transformSecretary(result), 'Secretary profile updated successfully');
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to update secretary profile', 500);
   }
@@ -462,7 +310,7 @@ router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
 
       // Only update password if provided
       if (userData.password) {
-        userUpdateData.password = await bcrypt.hash(userData.password, 12);
+        userUpdateData.password = await hashPassword(userData.password);
       }
 
       await tx.user.update({
@@ -498,28 +346,7 @@ router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
       return secretary;
     });
 
-    // Transform response
-    const transformedSecretary = {
-      _id: result.userId,
-      firstName: result.firstName,
-      lastName: result.lastName,
-      birthDate: result.birthDate,
-      gender: result.gender,
-      address: {
-        city: result.city
-      },
-      userId: {
-        id: result.user.id,
-        email: result.user.email,
-        phone: result.user.phone,
-        status: result.user.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: result.user.profileImage
-      },
-      createdAt: result.user.createdAt,
-      updatedAt: result.user.updatedAt
-    };
-
-    return successResponse(res, transformedSecretary, 'Secretary updated successfully');
+    return successResponse(res, transformSecretary(result), 'Secretary updated successfully');
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to update secretary', 500);
   }

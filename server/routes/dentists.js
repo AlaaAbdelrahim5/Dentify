@@ -1,58 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
+const prisma = require('../config/database');
+const { hashPassword } = require('../helpers/hash');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../helpers/response');
+const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
+const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
+const { getClinicIdForUser } = require('../services/appointment/appointmentService');
+const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
 
-// Get dentists statistics
-router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const total = await prisma.dentist.count();
-    const pending = await prisma.user.count({
-      where: {
-        role: 'Dentist',
-        status: 'PENDING'
-      }
-    });
-    const active = await prisma.user.count({
-      where: {
-        role: 'Dentist',
-        status: 'ACTIVE'
-      }
-    });
-
-    res.json({ 
-      data: {
-        total,
-        pending,
-        active
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch dentist statistics' });
-  }
-});
+// Get dentists statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('dentist', 'Dentist'));
 
 // Get dentists for logged-in clinic (MUST BE BEFORE /:id route)
 router.get('/clinic', authenticate, authorize('Clinic', 'Secretary'), async (req, res) => {
   try {
-    let clinicUserId;
+    const clinicUserId = await getClinicIdForUser(req.user);
     
-    // If user is a secretary, get their clinic ID
-    if (req.user.role === 'Secretary') {
-      const secretary = await prisma.secretary.findUnique({
-        where: { userId: req.user.id },
-        select: { clinicId: true }
-      });
-      
-      if (!secretary) {
-        return errorResponse(res, 'Secretary profile not found', 404);
-      }
-      
-      clinicUserId = secretary.clinicId;
-    } else {
-      // User is clinic
-      clinicUserId = req.user.id;
+    if (!clinicUserId) {
+      return errorResponse(res, 'Secretary profile not found', 404);
     }
 
     // Get all dentists belonging to this clinic
@@ -109,52 +75,27 @@ router.get('/', authenticate, async (req, res) => {
       includeAll = 'false'
     } = req.query;
     
-    // Build where clause
-    const whereClause = {
-      AND: []
-    };
-
-    // Search filter
-    if (search) {
-      whereClause.AND.push({
-        OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { licenseNumber: { contains: search, mode: 'insensitive' } },
-          { user: { email: { contains: search, mode: 'insensitive' } } }
-        ]
-      });
-    }
-
-    // City filter
-    if (city) {
-      whereClause.AND.push({ city: { contains: city, mode: 'insensitive' } });
-    }
-
-    // Status filter
-    if (status) {
-      const statusMap = {
-        'pending': 'PENDING',
-        'active': 'ACTIVE',
-        'suspended': 'DEACTIVATED'
-      };
-      whereClause.AND.push({ user: { status: statusMap[status] || status.toUpperCase() } });
-    } else if (includeAll !== 'true') {
-      // By default, only show active dentists if not admin
-      whereClause.AND.push({ user: { status: 'ACTIVE' } });
-    }
-
-    // Specialization filter
+    // Build where clause using helper
+    const searchFields = ['firstName', 'lastName', 'licenseNumber', 'user.email'];
+    const customFilters = {};
+    
+    // Add specialization filter if provided
     if (specialization) {
-      whereClause.AND.push({ 
-        specialization: {
-          has: specialization
-        }
-      });
+      customFilters.specialization = { has: specialization };
     }
-
-    // If no filters, remove AND array
-    const finalWhere = whereClause.AND.length > 0 ? whereClause : {};
+    
+    // Add default active filter if includeAll is false
+    if (includeAll !== 'true' && !status) {
+      customFilters.user = { status: 'ACTIVE' };
+    }
+    
+    const finalWhere = buildWhereClause({ 
+      search, 
+      searchFields, 
+      city, 
+      status, 
+      customFilters 
+    });
 
     // Get total count
     const total = await prisma.dentist.count({ where: finalWhere });
@@ -169,15 +110,7 @@ router.get('/', authenticate, async (req, res) => {
       take: pagination.limit,
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         },
         clinic: {
           select: {
@@ -269,24 +202,16 @@ router.get('/dashboard-stats', authenticate, authorize('Dentist'), async (req, r
   }
 });
 
-// Get current logged-in dentist profile
+// Get current logged-in dentist profile - using reusable handler with custom include
 router.get('/me', authenticate, authorize('Dentist'), async (req, res) => {
   try {
-    const dentistUserId = req.user.id;
-
     const dentist = await prisma.dentist.findUnique({
-      where: { userId: dentistUserId },
+      where: { userId: req.user.id },
       include: {
         user: {
           select: {
-            id: true,
-            email: true,
-            phone: true,
-            role: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
+            ...standardUserSelect,
+            role: true
           }
         },
         clinic: {
@@ -316,7 +241,6 @@ router.get('/me', authenticate, authorize('Dentist'), async (req, res) => {
 // Update current logged-in dentist profile
 router.put('/me', authenticate, authorize('Dentist'), async (req, res) => {
   try {
-    const bcrypt = require('bcryptjs');
     const dentistUserId = req.user.id;
     const updateData = req.body;
 
@@ -340,7 +264,7 @@ router.put('/me', authenticate, authorize('Dentist'), async (req, res) => {
       if (updateData.email) userUpdateData.email = updateData.email;
       if (updateData.phone) userUpdateData.phone = updateData.phone;
       if (updateData.password) {
-        userUpdateData.password = await bcrypt.hash(updateData.password, 10);
+        userUpdateData.password = await hashPassword(updateData.password);
       }
       if (updateData.profileImage) userUpdateData.profileImage = updateData.profileImage;
 
@@ -420,10 +344,9 @@ router.put('/me', authenticate, authorize('Dentist'), async (req, res) => {
   }
 });
 
-// Create dentist (Clinic creates dentist request)
+// Create dentist - using consolidated user service
 router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) => {
   try {
-    const bcrypt = require('bcryptjs');
     const { 
       email, 
       password, 
@@ -440,7 +363,7 @@ router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) =>
       socialLinks = {}
     } = req.body;
 
-    // Get clinic ID (if created by clinic, use their ID; if admin, use provided clinicId)
+    // Get clinic ID
     const clinicId = req.user.role === 'Clinic' ? req.user.id : req.body.clinicId;
 
     if (!clinicId) {
@@ -452,73 +375,34 @@ router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) =>
       return errorResponse(res, 'All required fields must be provided', 400);
     }
 
-    // Check if user with email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    // Prepare user and profile data
+    const userData = { email, password, phone, role: 'Dentist', status: 'PENDING' };
+    const profileData = {
+      firstName,
+      lastName,
+      licenseNumber,
+      specialization: specialization || [],
+      birthDate,
+      gender,
+      city,
+      clinicId,
+      appointmentDuration,
+      workingHours,
+      socialLinks
+    };
 
-    if (existingUser) {
-      return errorResponse(res, 'A user with this email already exists', 400);
-    }
+    // Create using service
+    const result = await createUserWithProfile(userData, profileData, 'dentist');
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user and dentist in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create user
-      const user = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          phone,
-          role: 'Dentist',
-          status: 'PENDING' // Pending approval from admin
-        }
-      });
-
-      // Create dentist profile
-      const dentist = await tx.dentist.create({
-        data: {
-          userId: user.id,
-          firstName,
-          lastName,
-          licenseNumber,
-          specialization: specialization || [],
-          birthDate: new Date(birthDate),
-          gender,
-          city,
-          clinicId,
-          appointmentDuration,
-          workingHours,
-          socialLinks
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              createdAt: true
-            }
-          },
-          clinic: {
-            select: {
-              userId: true,
-              clinicName: true,
-              city: true
-            }
-          }
-        }
-      });
-
-      return dentist;
-    });
-
-    return successResponse(res, result, 'Dentist request created successfully. Awaiting admin approval.', 201);
+    return successResponse(res, result, 'Dentist created successfully', 201);
   } catch (error) {
-    return errorResponse(res, error.message || 'Failed to create dentist');
+    if (error.message.includes('already exists')) {
+      return errorResponse(res, error.message, 400);
+    }
+    if (error.code === 'P2002') {
+      return errorResponse(res, 'Email or license number already exists', 400);
+    }
+    return errorResponse(res, 'Failed to create dentist');
   }
 });
 
@@ -555,7 +439,6 @@ router.get('/:id', authenticate, async (req, res) => {
 // Update dentist
 router.put('/:id', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (req, res) => {
   try {
-    const bcrypt = require('bcryptjs');
     const { id } = req.params;
     const { userData, dentistData } = req.body;
 
@@ -588,7 +471,7 @@ router.put('/:id', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async 
         if (userData.email) userUpdateData.email = userData.email;
         if (userData.phone) userUpdateData.phone = userData.phone;
         if (userData.password) {
-          userUpdateData.password = await bcrypt.hash(userData.password, 10);
+          userUpdateData.password = await hashPassword(userData.password);
         }
 
         if (Object.keys(userUpdateData).length > 0) {

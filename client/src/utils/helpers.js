@@ -348,7 +348,7 @@ export const getImageUrl = (profileImage) => {
   if (!profileImage) return null
   if (profileImage.startsWith('data:')) return profileImage // base64 image
   if (profileImage.startsWith('http')) return profileImage // full URL
-  return `http://localhost:5000${profileImage}` // relative path
+  return `${import.meta.env.VITE_API_URL}${profileImage}` // relative path
 }
 
 /**

@@ -1,6 +1,7 @@
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
-const prisma = require('../utils/prisma');
+const { comparePassword } = require('../helpers/hash');
+const prisma = require('../config/database');
 
 // Enable 2FA - Generate secret and QR code
 exports.enable2FA = async (req, res) => {
@@ -21,8 +22,8 @@ exports.enable2FA = async (req, res) => {
 
     // Generate a secret for the user
     const secret = speakeasy.generateSecret({
-      name: `Dentify (${user.email})`,
-      length: 32
+      name: `${process.env.APP_NAME} (${user.email})`,
+      length: parseInt(process.env.TWO_FACTOR_SECRET_LENGTH)
     });
 
     // Generate QR code as data URL
@@ -110,7 +111,6 @@ exports.disable2FA = async (req, res) => {
     }
 
     // Get user with password
-    const bcrypt = require('bcryptjs');
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { 
@@ -127,7 +127,7 @@ exports.disable2FA = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid password' });
     }
@@ -203,7 +203,7 @@ exports.verifyLogin2FA = async (req, res) => {
     }
 
     // Get full user data
-    const { generateToken, generateRefreshToken } = require('../utils/jwt');
+    const { generateToken, generateRefreshToken } = require('../services/auth/jwt');
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {

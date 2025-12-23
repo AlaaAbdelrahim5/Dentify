@@ -87,7 +87,7 @@ const ClinicsManagement = () => {
       }
 
       const queryString = new URLSearchParams(params).toString()
-      const response = await fetch(`http://localhost:5000/api/clinics?${queryString}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/clinics?${queryString}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('dentify_access_token') || sessionStorage.getItem('dentify_access_token')}`,
           'Content-Type': 'application/json'

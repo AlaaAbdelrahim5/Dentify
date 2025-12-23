@@ -7,7 +7,7 @@ import { UI_COLORS } from '../../utils/colors';
 
 // API configuration - matches the mobile API setup
 // Note: EXPO_PUBLIC_API_BASE_URL already includes /api
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const TwoFactorAuth = () => {
   const { isDarkMode } = useTheme();

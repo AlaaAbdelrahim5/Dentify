@@ -9,7 +9,7 @@ import ConversationsList from '../../components/features/chat/ConversationsList'
 import ChatWindow from '../../components/features/chat/ChatWindow';
 import { userAPI } from '../../services/api';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.15:5000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;

@@ -62,7 +62,7 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", on
       formData.append('profileImage', file)
       formData.append('oldImageUrl', currentImage || '')
 
-      const response = await fetch('http://localhost:5000/api/upload/profile-image', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/profile-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -117,7 +117,7 @@ const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", on
       setUploading(true)
 
       const token = authUtils.getAccessToken()
-      const response = await fetch('http://localhost:5000/api/upload/profile-image', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload/profile-image`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

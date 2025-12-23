@@ -73,7 +73,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
     try {
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/dentists/clinic', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/dentists/clinic`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 // Create transporter
 const createTransporter = () => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: process.env.EMAIL_SERVICE,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
@@ -17,12 +17,13 @@ const sendPasswordResetEmail = async (email, resetToken, firstName = '') => {
   try {
     const transporter = createTransporter();
     
-    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
     
+    const appName = process.env.APP_NAME;
     const mailOptions = {
-      from: `"Dentify" <${process.env.EMAIL_USER}>`,
+      from: `"${appName}" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Password Reset Request - Dentify',
+      subject: `Password Reset Request - ${appName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -164,12 +165,12 @@ const sendPasswordResetEmail = async (email, resetToken, firstName = '') => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Dentify</h1>
+              <h1>${appName}</h1>
               <p>Password Reset Request</p>
             </div>
             <div class="content">
               <h2>Hello${firstName ? ' ' + firstName : ''}! 👋</h2>
-              <p>We received a request to reset your password for your Dentify account.</p>
+              <p>We received a request to reset your password for your ${appName} account.</p>
               <p>Click the button below to create a new password:</p>
               <div class="button-container">
                 <a href="${resetUrl}" class="button">🔐 Reset My Password</a>
@@ -196,7 +197,7 @@ const sendPasswordResetEmail = async (email, resetToken, firstName = '') => {
               </div>
             </div>
             <div class="footer">
-              <p><strong>© 2025 Dentify</strong> - Your Trusted Dental Care Platform</p>
+              <p><strong>© ${new Date().getFullYear()} ${appName}</strong> - Your Trusted Dental Care Platform</p>
               <p>All rights reserved.</p>
               <p style="margin-top: 15px;">Need help? Contact our support team at <a href="mailto:${process.env.EMAIL_USER}" style="color: #0891b2; text-decoration: none;">${process.env.EMAIL_USER}</a></p>
             </div>
@@ -219,11 +220,12 @@ const sendPasswordResetEmail = async (email, resetToken, firstName = '') => {
 const sendPasswordChangedEmail = async (email, firstName = '') => {
   try {
     const transporter = createTransporter();
+    const appName = process.env.APP_NAME;
     
     const mailOptions = {
-      from: `"Dentify" <${process.env.EMAIL_USER}>`,
+      from: `"${appName}" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Password Changed Successfully - Dentify',
+      subject: `Password Changed Successfully - ${appName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -360,7 +362,7 @@ const sendPasswordChangedEmail = async (email, firstName = '') => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Dentify</h1>
+              <h1>${appName}</h1>
               <p>Password Changed Successfully</p>
             </div>
             <div class="content">
@@ -369,7 +371,7 @@ const sendPasswordChangedEmail = async (email, firstName = '') => {
                 <strong><span class="checkmark">✓</span> Success!</strong>
                 <p>Your password has been changed successfully.</p>
               </div>
-              <p>This is a confirmation that your Dentify account password was recently changed.</p>
+              <p>This is a confirmation that your ${appName} account password was recently changed.</p>
               <div class="info-box">
                 <strong>📅 Change Details:</strong>
                 <p><strong>Date & Time:</strong> ${new Date().toLocaleString('en-US', { 
@@ -392,12 +394,12 @@ const sendPasswordChangedEmail = async (email, firstName = '') => {
                 <strong>🔐 Security Tips:</strong>
                 <p>• Keep your password secure and don't share it with anyone</p>
                 <p>• Enable two-factor authentication for extra security</p>
-                <p>• Use a unique password for your Dentify account</p>
+                <p>• Use a unique password for your ${appName} account</p>
                 <p>• Be cautious of phishing emails asking for your password</p>
               </div>
             </div>
             <div class="footer">
-              <p><strong>© 2025 Dentify</strong> - Your Trusted Dental Care Platform</p>
+              <p><strong>© ${new Date().getFullYear()} ${appName}</strong> - Your Trusted Dental Care Platform</p>
               <p>All rights reserved.</p>
               <p style="margin-top: 15px;">Need help? Contact our support team at <a href="mailto:${process.env.EMAIL_USER}" style="color: #0891b2; text-decoration: none;">${process.env.EMAIL_USER}</a></p>
             </div>

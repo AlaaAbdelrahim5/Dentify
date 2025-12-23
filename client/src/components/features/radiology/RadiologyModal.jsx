@@ -325,8 +325,8 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         sessionStorage.getItem("dentify_access_token");
 
       const url = center
-        ? `http://localhost:5000/api/radiology-centers/${center.userId}`
-        : "http://localhost:5000/api/radiology-centers";
+        ? `${import.meta.env.VITE_API_URL}/api/radiology-centers/${center.userId}`
+        : `${import.meta.env.VITE_API_URL}/api/radiology-centers`;
 
       const method = center ? "PUT" : "POST";
 

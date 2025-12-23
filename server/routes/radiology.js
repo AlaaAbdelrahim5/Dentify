@@ -1,88 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
+const prisma = require('../config/database');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../helpers/response');
+const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
+const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
+const { standardUserSelect, buildPagination, buildWhereClause } = require('../utils/queryHelpers');
 
-// Get radiology centers statistics
-router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    // Count all users with RadiologyCenter role
-    const total = await prisma.user.count({
-      where: {
-        role: 'RadiologyCenter'
-      }
-    });
-    
-    const active = await prisma.user.count({
-      where: {
-        role: 'RadiologyCenter',
-        status: 'ACTIVE'
-      }
-    });
-    
-    // Count inactive centers (PENDING, DEACTIVATED, or DELETED)
-    const inactive = await prisma.user.count({
-      where: {
-        role: 'RadiologyCenter',
-        status: {
-          in: ['PENDING', 'DEACTIVATED', 'DELETED']
-        }
-      }
-    });
+// Get radiology centers statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('radiologyCenter', 'RadiologyCenter', true));
 
-    res.json({ 
-      success: true,
-      data: {
-        total,
-        active,
-        pending: inactive  // Frontend expects 'pending' key for inactive centers
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to fetch radiology center statistics' });
-  }
-});
-
-// Get current radiology center profile
-router.get('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const radiologyCenter = await prisma.radiologyCenter.findUnique({
-      where: { userId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            role: true,
-            status: true,
-            createdAt: true
-          }
-        }
-      }
-    });
-
-    if (!radiologyCenter) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Radiology center profile not found' 
-      });
-    }
-
-    res.json({ 
-      success: true,
-      data: radiologyCenter
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fetch radiology center profile' 
-    });
-  }
-});
+// Get current radiology center profile - using reusable handler
+router.get('/me', authenticate, authorize('RadiologyCenter'), createGetProfileHandler('radiologyCenter'));
 
 // Update current radiology center profile
 router.put('/me', authenticate, authorize('RadiologyCenter'), async (req, res) => {
@@ -143,51 +72,9 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
     
-    // Build where clause
-    const whereClause = {
-      AND: []
-    };
-
-    // Search filter
-    if (search) {
-      whereClause.AND.push({
-        OR: [
-          { centerName: { contains: search, mode: 'insensitive' } },
-          { registrationNumber: { contains: search, mode: 'insensitive' } },
-          { city: { contains: search, mode: 'insensitive' } },
-          { location: { contains: search, mode: 'insensitive' } },
-          { user: { email: { contains: search, mode: 'insensitive' } } }
-        ]
-      });
-    }
-
-    // City filter
-    if (city) {
-      whereClause.AND.push({ 
-        city: {
-          contains: city
-        }
-      });
-    }
-
-    // Status filter
-    if (isActive) {
-      if (isActive === 'true') {
-        whereClause.AND.push({ user: { status: 'ACTIVE' } });
-      } else if (isActive === 'false') {
-        // Include all inactive statuses
-        whereClause.AND.push({ 
-          user: { 
-            status: {
-              in: ['PENDING', 'DEACTIVATED', 'DELETED']
-            }
-          } 
-        });
-      }
-    }
-
-    // If no filters, remove AND array
-    const finalWhere = whereClause.AND.length > 0 ? whereClause : {};
+    // Build where clause using helper
+    const searchFields = ['centerName', 'registrationNumber', 'city', 'location', 'user.email'];
+    const finalWhere = buildWhereClause({ search, searchFields, city, isActive });
 
     // Get total count
     const total = await prisma.radiologyCenter.count({ where: finalWhere });
@@ -245,11 +132,9 @@ router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req,
       return notFoundResponse(res, 'Radiology center');
     }
 
-    // Toggle status: ACTIVE <-> DEACTIVATED
-    const currentStatus = existingCenter.user.status;
-    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
-
-    // Update status
+    // Toggle status
+    const newStatus = existingCenter.user.status === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+    
     await prisma.user.update({
       where: { id: parseInt(id) },
       data: { status: newStatus }
@@ -270,15 +155,7 @@ router.get('/:id', authenticate, async (req, res) => {
       where: { userId: parseInt(id) },
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         }
       }
     });
@@ -317,17 +194,12 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
+    if (await checkUserExists(email)) {
       return errorResponse(res, 'User with this email already exists', 400);
     }
 
     // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     // Create user and radiology center in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -376,7 +248,7 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
   }
 });
 
-// Update radiology center
+// Update radiology center - using consolidated user service  
 router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -403,48 +275,24 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
       return notFoundResponse(res, 'Radiology center');
     }
 
-    // Update in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update user if email or phone changed
-      if (email || phone) {
-        await tx.user.update({
-          where: { id: parseInt(id) },
-          data: {
-            ...(email && { email }),
-            ...(phone && { phone })
-          }
-        });
-      }
+    // Prepare update data
+    const userData = {};
+    if (email) userData.email = email;
+    if (phone) userData.phone = phone;
 
-      // Update radiology center
-      const updatedCenter = await tx.radiologyCenter.update({
-        where: { userId: parseInt(id) },
-        data: {
-          ...(centerName && { centerName }),
-          ...(registrationNumber && { registrationNumber }),
-          ...(city && { city }),
-          ...(location !== undefined && { location }),
-          ...(coordinates !== undefined && { coordinates }),
-          ...(website !== undefined && { website }),
-          ...(description !== undefined && { description }),
-          ...(supportedTypes && { supportedTypes }),
-          ...(workingHours !== undefined && { workingHours })
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true
-            }
-          }
-        }
-      });
+    const profileData = {};
+    if (centerName) profileData.centerName = centerName;
+    if (registrationNumber) profileData.registrationNumber = registrationNumber;
+    if (city) profileData.city = city;
+    if (location !== undefined) profileData.location = location;
+    if (coordinates !== undefined) profileData.coordinates = coordinates;
+    if (website !== undefined) profileData.website = website;
+    if (description !== undefined) profileData.description = description;
+    if (supportedTypes) profileData.supportedTypes = supportedTypes;
+    if (workingHours !== undefined) profileData.workingHours = workingHours;
 
-      return updatedCenter;
-    });
+    // Update using service
+    const result = await updateUserWithProfile(parseInt(id), userData, profileData, 'radiologyCenter');
 
     return successResponse(res, result, 'Radiology center updated successfully');
   } catch (error) {

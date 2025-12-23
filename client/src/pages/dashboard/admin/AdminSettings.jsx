@@ -49,7 +49,7 @@ const AdminSettings = () => {
       setError(null)
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/admin/me', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -104,7 +104,7 @@ const AdminSettings = () => {
         gender: profile.gender
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/${adminId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/${adminId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -145,7 +145,7 @@ const AdminSettings = () => {
       setSaving(true)
       const token = authUtils.getAccessToken()
 
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

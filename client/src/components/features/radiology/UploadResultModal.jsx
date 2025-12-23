@@ -266,7 +266,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
 
       const token = authUtils.getAccessToken()
       
-      const response = await fetch(`http://localhost:5000/api/radiology-requests/${request.id}/upload-result`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/radiology-requests/${request.id}/upload-result`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -29,7 +29,7 @@ const TwoFactorAuth = () => {
       setLoading(true)
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/2fa/status', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/2fa/status`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -54,7 +54,7 @@ const TwoFactorAuth = () => {
       
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/2fa/enable', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/2fa/enable`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -90,7 +90,7 @@ const TwoFactorAuth = () => {
       
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/2fa/verify', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/2fa/verify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -130,7 +130,7 @@ const TwoFactorAuth = () => {
       
       const token = authUtils.getAccessToken()
       
-      const response = await fetch('http://localhost:5000/api/2fa/disable', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/2fa/disable`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

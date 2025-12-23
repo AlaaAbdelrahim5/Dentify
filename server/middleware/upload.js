@@ -49,7 +49,7 @@ const radiologyFileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: parseInt(process.env.PROFILE_IMAGE_MAX_SIZE)
   },
   fileFilter: imageFileFilter
 });
@@ -58,7 +58,7 @@ const upload = multer({
 const radiologyUpload = multer({
   storage: storage,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit for medical imaging files
+    fileSize: parseInt(process.env.RADIOLOGY_FILE_MAX_SIZE)
   },
   fileFilter: radiologyFileFilter
 });

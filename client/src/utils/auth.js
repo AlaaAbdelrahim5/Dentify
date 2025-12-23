@@ -27,7 +27,7 @@ export const authUtils = {
 
     try {
       // Use the /auth/me endpoint to validate token since /auth/verify doesn't exist
-      const response = await fetch('http://localhost:5000/api/auth/me', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -259,7 +259,7 @@ export const authUtils = {
       if (refreshToken) {
         // Try to refresh the token
         try {
-          const response = await fetch('http://localhost:5000/api/auth/refresh', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

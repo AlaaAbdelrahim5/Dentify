@@ -1,37 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
+const prisma = require('../config/database');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../helpers/response');
+const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
+const {
+  createStatsHandler,
+  createGetProfileHandler,
+  createToggleStatusHandler,
+  createDeleteHandler,
+  createGetByIdHandler
+} = require('../factories/routeHandlers');
+const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
 
-// Get current clinic profile
-router.get('/me', authenticate, authorize('Clinic'), async (req, res) => {
-  try {
-    const clinic = await prisma.clinic.findUnique({
-      where: { userId: req.user.id },
-      include: {
-        user: {
-          select: {
-            email: true,
-            phone: true,
-            status: true
-          }
-        }
-      }
-    });
-
-    if (!clinic) {
-      return notFoundResponse(res, 'Clinic not found');
-    }
-
-    res.json({ 
-      success: true,
-      data: clinic
-    });
-  } catch (error) {
-    errorResponse(res, 'Failed to fetch clinic profile');
-  }
-});
+// Get current clinic profile - using reusable handler
+router.get('/me', authenticate, authorize('Clinic'), createGetProfileHandler('clinic'));
 
 // Update current clinic profile
 router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
@@ -71,96 +54,17 @@ router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
   }
 });
 
-// Get clinics statistics
-router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    // Count all users with Clinic role (excluding DELETED completely from total)
-    const total = await prisma.user.count({
-      where: {
-        role: 'Clinic'
-      }
-    });
-    
-    const active = await prisma.user.count({
-      where: {
-        role: 'Clinic',
-        status: 'ACTIVE'
-      }
-    });
-    
-    // Count inactive clinics (PENDING, DEACTIVATED, or DELETED)
-    const inactive = await prisma.user.count({
-      where: {
-        role: 'Clinic',
-        status: {
-          in: ['PENDING', 'DEACTIVATED', 'DELETED']
-        }
-      }
-    });
-    
-    res.json({ 
-      success: true,
-      data: {
-        total,
-        active,
-        pending: inactive  // Frontend expects 'pending' key for inactive clinics
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to fetch clinic statistics' });
-  }
-});
+// Get clinics statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('clinic', 'Clinic', true));
 
 // Get all clinics with pagination and filtering
 router.get('/', authenticate, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', city = '', isActive = '' } = req.query;
     
-    // Build where clause
-    const whereClause = {
-      AND: []
-    };
-
-    // Search filter
-    if (search) {
-      whereClause.AND.push({
-        OR: [
-          { clinicName: { contains: search } },
-          { registrationNumber: { contains: search } },
-          { city: { contains: search } },
-          { user: { email: { contains: search } } }
-        ]
-      });
-    }
-
-    // City filter
-    if (city) {
-      // Use case-insensitive ILIKE for PostgreSQL
-      whereClause.AND.push({ 
-        city: {
-          contains: city
-        }
-      });
-    }
-
-    // Status filter
-    if (isActive) {
-      if (isActive === 'true') {
-        whereClause.AND.push({ user: { status: 'ACTIVE' } });
-      } else if (isActive === 'false') {
-        // Include all inactive statuses
-        whereClause.AND.push({ 
-          user: { 
-            status: {
-              in: ['PENDING', 'DEACTIVATED', 'DELETED']
-            }
-          } 
-        });
-      }
-    }
-
-    // If no filters, remove AND array
-    const finalWhere = whereClause.AND.length > 0 ? whereClause : {};
+    // Build where clause using helper
+    const searchFields = ['clinicName', 'registrationNumber', 'city', 'user.email'];
+    const finalWhere = buildWhereClause({ search, searchFields, city, isActive });
 
     // Get total count
     const total = await prisma.clinic.count({ where: finalWhere });
@@ -175,15 +79,7 @@ router.get('/', authenticate, async (req, res) => {
       take: pagination.limit,
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         },
         dentists: {
           select: {
@@ -275,7 +171,7 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Create new clinic
+// Create new clinic - using consolidated user service
 router.post('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const { 
@@ -297,62 +193,27 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
       return errorResponse(res, 'Email, password, clinic name, registration number, and city are required', 400);
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    // Prepare user and profile data
+    const userData = { email, password, phone, role: 'Clinic', status: 'ACTIVE' };
+    const profileData = {
+      clinicName,
+      registrationNumber,
+      city,
+      location: location || null,
+      coordinates: coordinates || null,
+      website: website || null,
+      description: description || null,
+      workingHours: workingHours || null
+    };
 
-    if (existingUser) {
-      return errorResponse(res, 'User with this email already exists', 400);
-    }
-
-    // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user and clinic in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          phone: phone || null,
-          role: 'Clinic',
-          status: 'ACTIVE'
-        }
-      });
-
-      const clinic = await tx.clinic.create({
-        data: {
-          userId: user.id,
-          clinicName,
-          registrationNumber,
-          city,
-          location: location || null,
-          coordinates: coordinates || null,
-          website: website || null,
-          description: description || null,
-          workingHours: workingHours || null
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true
-            }
-          }
-        }
-      });
-
-      return clinic;
-    });
+    // Create using service
+    const result = await createUserWithProfile(userData, profileData, 'clinic');
 
     return successResponse(res, result, 'Clinic created successfully', 201);
   } catch (error) {
-
+    if (error.message.includes('already exists')) {
+      return errorResponse(res, error.message, 400);
+    }
     return errorResponse(res, `Failed to create clinic: ${error.message}`, 500);
   }
 });
@@ -386,69 +247,11 @@ router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) 
   }
 });
 
-// Toggle clinic status (activate/deactivate)
-router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
+// Toggle clinic status - using reusable handler
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), createToggleStatusHandler('clinic', 'Clinic'));
 
-    // Check if clinic exists
-    const existingClinic = await prisma.clinic.findUnique({
-      where: { userId: parseInt(id) },
-      include: {
-        user: {
-          select: {
-            status: true
-          }
-        }
-      }
-    });
-
-    if (!existingClinic) {
-      return notFoundResponse(res, 'Clinic');
-    }
-
-    // Toggle status: ACTIVE <-> DEACTIVATED
-    const currentStatus = existingClinic.user.status;
-    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
-
-    // Update status
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { status: newStatus }
-    });
-
-    const message = newStatus === 'ACTIVE' ? 'Clinic activated successfully' : 'Clinic deactivated successfully';
-    return successResponse(res, { status: newStatus }, message);
-  } catch (error) {
-    return errorResponse(res, 'Failed to toggle clinic status');
-  }
-});
-
-// Delete clinic (soft delete)
-router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if clinic exists
-    const existingClinic = await prisma.clinic.findUnique({
-      where: { userId: parseInt(id) }
-    });
-
-    if (!existingClinic) {
-      return notFoundResponse(res, 'Clinic');
-    }
-
-    // Soft delete by updating status
-    await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { status: 'DELETED' }
-    });
-
-    return successResponse(res, null, 'Clinic deleted successfully');
-  } catch (error) {
-    return errorResponse(res, 'Failed to delete clinic');
-  }
-});
+// Delete clinic - using reusable handler
+router.delete('/:id', authenticate, authorize('Admin'), createDeleteHandler('clinic', 'Clinic'));
 
 // Get available treatments for a clinic
 router.get('/:id/available-treatments', authenticate, async (req, res) => {

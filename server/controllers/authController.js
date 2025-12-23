@@ -1,9 +1,9 @@
-const bcrypt = require('bcryptjs');
+const { hashPassword, comparePassword } = require('../helpers/hash');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const prisma = require('../utils/prisma');
-const { generateToken, generateRefreshToken } = require('../utils/jwt');
-const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../utils/emailService');
+const prisma = require('../config/database');
+const { generateToken, generateRefreshToken } = require('../services/auth/jwt');
+const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../services/email/emailService');
 
 // Register new user
 exports.register = async (req, res) => {
@@ -36,7 +36,7 @@ exports.register = async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     // Create user with role-specific profile
     let user;
@@ -145,7 +145,7 @@ exports.login = async (req, res) => {
     }
 
     // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await comparePassword(password, user.password);
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -248,14 +248,14 @@ exports.changePassword = async (req, res) => {
     }
 
     // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    const isValidPassword = await comparePassword(currentPassword, user.password);
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
 
     // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
 
     // Update password
     await prisma.user.update({
@@ -336,14 +336,14 @@ exports.forgotPassword = async (req, res) => {
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = crypto.randomBytes(parseInt(process.env.RESET_TOKEN_BYTES_LENGTH)).toString('hex');
     const resetTokenHash = crypto
       .createHash('sha256')
       .update(resetToken)
       .digest('hex');
 
-    // Set token expiry (1 hour)
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    // Set token expiry (default: 1 hour)
+    const resetTokenExpiry = new Date(Date.now() + parseInt(process.env.PASSWORD_RESET_TOKEN_EXPIRY));
 
     // Save reset token to database
     await prisma.user.update({
@@ -423,7 +423,7 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
 
     // Update password and clear reset token
     await prisma.user.update({

@@ -1,74 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
+const prisma = require('../config/database');
+const { updateUserWithProfile } = require('../services/user/userService');
+const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
+const { standardUserSelect } = require('../utils/queryHelpers');
 
-// Get patients statistics
-router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const total = await prisma.patient.count();
-    const active = await prisma.user.count({
-      where: {
-        role: 'Patient',
-        status: 'ACTIVE'
-      }
-    });
-    const inactive = await prisma.user.count({
-      where: {
-        role: 'Patient',
-        status: {
-          in: ['DEACTIVATED', 'PENDING', 'DELETED']
-        }
-      }
-    });
+// Get patients statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('patient', 'Patient'));
 
-    res.json({ 
-      data: {
-        total,
-        active,
-        inactive
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch patient statistics' });
-  }
-});
+// Get current patient's profile - using reusable handler
+router.get('/me', authenticate, authorize('Patient'), createGetProfileHandler('patient'));
 
-// Get current patient's profile (for logged-in patient)
-router.get('/me', authenticate, authorize('Patient'), async (req, res) => {
-  try {
-    const patient = await prisma.patient.findUnique({
-      where: { userId: req.user.id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            role: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
-    });
-
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient profile not found' });
-    }
-
-    res.json({ 
-      success: true,
-      data: patient
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch patient profile' });
-  }
-});
-
-// Update current patient's profile (for logged-in patient)
+// Update current patient's profile - using consolidated user service
 router.put('/me', authenticate, authorize('Patient'), async (req, res) => {
   try {
     const userId = req.user.id;
@@ -82,44 +26,12 @@ router.put('/me', authenticate, authorize('Patient'), async (req, res) => {
       });
     }
 
-    // Update in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update user data if phone is provided
-      if (phone) {
-        await tx.user.update({
-          where: { id: userId },
-          data: { phone }
-        });
-      }
+    // Prepare update data
+    const userData = phone ? { phone } : {};
+    const profileData = { firstName, lastName, birthDate, gender, city };
 
-      // Update patient data
-      const patient = await tx.patient.update({
-        where: { userId },
-        data: {
-          firstName,
-          lastName,
-          birthDate: new Date(birthDate),
-          gender: gender.charAt(0).toUpperCase() + gender.slice(1),
-          city
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true,
-              role: true,
-              createdAt: true,
-              updatedAt: true
-            }
-          }
-        }
-      });
-
-      return patient;
-    });
+    // Update using service
+    const result = await updateUserWithProfile(userId, userData, profileData, 'patient');
 
     res.json({ 
       success: true,
@@ -314,8 +226,7 @@ router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (r
     }
 
     // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     // Create user and patient in a transaction
     const result = await prisma.$transaction(async (tx) => {

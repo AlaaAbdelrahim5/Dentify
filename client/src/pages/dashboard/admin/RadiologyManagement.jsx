@@ -89,7 +89,7 @@ const RadiologyManagement = () => {
         ...(filterStatus && { isActive: filterStatus })
       })
 
-      const response = await fetch(`http://localhost:5000/api/radiology-centers?${params}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/radiology-centers?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

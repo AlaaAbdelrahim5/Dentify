@@ -311,8 +311,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         sessionStorage.getItem("dentify_access_token");
 
       const url = clinic
-        ? `http://localhost:5000/api/clinics/${clinic.userId}`
-        : "http://localhost:5000/api/clinics";
+        ? `${import.meta.env.VITE_API_URL}/api/clinics/${clinic.userId}`
+        : `${import.meta.env.VITE_API_URL}/api/clinics`;
 
       const method = clinic ? "PUT" : "POST";
 

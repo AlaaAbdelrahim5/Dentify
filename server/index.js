@@ -8,8 +8,9 @@ const prisma = new PrismaClient();
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '100mb' })); // Increased limit for base64 images and medical files (DICOM)
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+const bodyLimit = process.env.REQUEST_BODY_LIMIT;
+app.use(express.json({ limit: bodyLimit })); // Increased limit for base64 images and medical files (DICOM)
+app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 
 // Note: Static file serving for uploads removed - images now stored in database as base64
 
@@ -22,7 +23,7 @@ app.use((req, res, next) => {
 // Test route
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'Dentify API is running',
+    message: `${process.env.APP_NAME} API is running`,
     status: 'success',
     timestamp: new Date().toISOString()
   });
@@ -50,6 +51,10 @@ app.get('/api/health', async (req, res) => {
 // Auth routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+
+// Config routes (Firebase config for service workers)
+const configRoutes = require('./routes/config');
+app.use('/api/config', configRoutes);
 
 // User routes
 const userRoutes = require('./routes/users');
@@ -125,10 +130,10 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 // Import sequence sync utilities
-const { syncUserSequence } = require('./utils/sequenceSync');
+const { syncUserSequence } = require('./services/database/sequenceSync');
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -148,10 +153,11 @@ app.listen(PORT, async () => {
     console.log(`🚀 Server starting on port ${PORT}...`);
     
     // Test database connection on startup with timeout
+    const dbTimeout = parseInt(process.env.DB_CONNECTION_TIMEOUT);
     const connectionTimeout = setTimeout(() => {
-      console.error('❌ Database connection timeout (10s)');
+      console.error(`❌ Database connection timeout (${dbTimeout / 1000}s)`);
       process.exit(1);
-    }, 10000);
+    }, dbTimeout);
     
     await prisma.$connect();
     clearTimeout(connectionTimeout);
@@ -163,7 +169,7 @@ app.listen(PORT, async () => {
     });
     
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV}`);
   } catch (error) {
     console.error('❌ Database connection failed:', error);
     process.exit(1);

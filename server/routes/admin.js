@@ -1,77 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../utils/responseHelper');
-const bcrypt = require('bcryptjs');
+const prisma = require('../config/database');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../helpers/response');
+const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
+const {
+  createStatsHandler,
+  createGetProfileHandler,
+  createToggleStatusHandler,
+  createDeleteHandler,
+  createGetByIdHandler
+} = require('../factories/routeHandlers');
+const { standardUserSelect } = require('../utils/queryHelpers');
 
-// Get current admin profile
-router.get('/me', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const admin = await prisma.admin.findUnique({
-      where: { userId: req.user.id },
-      include: {
-        user: {
-          select: {
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true
-          }
-        }
-      }
-    });
+// Get current admin profile - using reusable handler
+router.get('/me', authenticate, authorize('Admin'), createGetProfileHandler('admin'));
 
-    if (!admin) {
-      return notFoundResponse(res, 'Admin not found');
-    }
-
-    res.json({ 
-      success: true,
-      data: admin
-    });
-  } catch (error) {
-    errorResponse(res, 'Failed to fetch admin profile');
-  }
-});
-
-// Get admin statistics
-router.get('/stats', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    // Get total admins
-    const total = await prisma.admin.count();
-    
-    // Get active admins
-    const active = await prisma.admin.count({
-      where: {
-        user: {
-          status: 'ACTIVE'
-        }
-      }
-    });
-    
-    // Get inactive admins (DEACTIVATED, PENDING, DELETED)
-    const inactive = await prisma.admin.count({
-      where: {
-        user: {
-          status: {
-            in: ['DEACTIVATED', 'PENDING', 'DELETED']
-          }
-        }
-      }
-    });
-
-    const stats = {
-      total,
-      active,
-      inactive
-    };
-
-    return successResponse(res, stats, 'Admin statistics fetched successfully');
-  } catch (error) {
-    return errorResponse(res, 'Failed to fetch admin statistics');
-  }
-});
+// Get admin statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('admin', 'Admin'));
 
 // Get all admins with pagination and search
 router.get('/', authenticate, authorize('Admin'), async (req, res) => {
@@ -101,15 +47,7 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
       take: pagination.limit,
       include: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: standardUserSelect
         }
       },
       orderBy: {
@@ -143,38 +81,10 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   }
 });
 
-// Get admin by ID
-router.get('/:id', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const admin = await prisma.admin.findUnique({
-      where: { userId: parseInt(id) },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            status: true,
-            profileImage: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
-    });
+// Get admin by ID - using reusable handler
+router.get('/:id', authenticate, authorize('Admin'), createGetByIdHandler('admin', 'Admin'));
 
-    if (!admin) {
-      return notFoundResponse(res, 'Admin');
-    }
-
-    return successResponse(res, admin, 'Admin fetched successfully');
-  } catch (error) {
-    return errorResponse(res, 'Failed to fetch admin');
-  }
-});
-
-// Create new admin
+// Create new admin - using consolidated user service
 router.post('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const { email, password, phone, firstName, lastName, gender } = req.body;
@@ -184,65 +94,23 @@ router.post('/', authenticate, authorize('Admin'), async (req, res) => {
       return errorResponse(res, 'Email, password, first name, and last name are required', 400);
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    // Prepare user and profile data
+    const userData = { email, password, phone, role: 'Admin', status: 'ACTIVE' };
+    const profileData = { firstName, lastName, gender };
 
-    if (existingUser) {
-      return errorResponse(res, 'User with this email already exists', 400);
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Normalize gender value to match enum (capitalize first letter)
-    const normalizedGender = gender 
-      ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()
-      : null;
-
-    // Create user and admin in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          phone,
-          role: 'Admin',
-          status: 'ACTIVE'
-        }
-      });
-
-      const admin = await tx.admin.create({
-        data: {
-          userId: user.id,
-          firstName,
-          lastName,
-          gender: normalizedGender
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true
-            }
-          }
-        }
-      });
-
-      return admin;
-    });
+    // Create user with profile using service
+    const result = await createUserWithProfile(userData, profileData, 'admin');
 
     return successResponse(res, result, 'Admin created successfully', 201);
   } catch (error) {
+    if (error.message.includes('already exists')) {
+      return errorResponse(res, error.message, 400);
+    }
     return errorResponse(res, 'Failed to create admin');
   }
 });
 
-// Update admin
+// Update admin - using consolidated user service
 router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -257,47 +125,18 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
       return notFoundResponse(res, 'Admin');
     }
 
-    // Normalize gender value to match enum (capitalize first letter)
-    const normalizedGender = gender 
-      ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()
-      : undefined;
+    // Prepare update data
+    const userData = {};
+    if (email) userData.email = email;
+    if (phone) userData.phone = phone;
 
-    // Update in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update user info if provided
-      if (email || phone) {
-        await tx.user.update({
-          where: { id: parseInt(id) },
-          data: {
-            ...(email && { email }),
-            ...(phone && { phone })
-          }
-        });
-      }
+    const profileData = {};
+    if (firstName) profileData.firstName = firstName;
+    if (lastName) profileData.lastName = lastName;
+    if (gender) profileData.gender = gender;
 
-      // Update admin info
-      const admin = await tx.admin.update({
-        where: { userId: parseInt(id) },
-        data: {
-          ...(firstName && { firstName }),
-          ...(lastName && { lastName }),
-          ...(normalizedGender && { gender: normalizedGender })
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              phone: true,
-              status: true,
-              profileImage: true
-            }
-          }
-        }
-      });
-
-      return admin;
-    });
+    // Update using service
+    const result = await updateUserWithProfile(parseInt(id), userData, profileData, 'admin');
 
     return successResponse(res, result, 'Admin updated successfully');
   } catch (error) {
@@ -305,68 +144,10 @@ router.put('/:id', authenticate, authorize('Admin'), async (req, res) => {
   }
 });
 
-// Toggle admin status (activate/deactivate) - MUST BE BEFORE /:id route
-router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
+// Toggle admin status - using reusable handler
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), createToggleStatusHandler('admin', 'Admin'));
 
-    // Check if admin exists
-    const existingAdmin = await prisma.admin.findUnique({
-      where: { userId: parseInt(id) },
-      include: {
-        user: {
-          select: {
-            status: true
-          }
-        }
-      }
-    });
-
-    if (!existingAdmin) {
-      return notFoundResponse(res, 'Admin');
-    }
-
-    // Toggle status: ACTIVE <-> DEACTIVATED
-    const currentStatus = existingAdmin.user.status;
-    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
-
-    // Update status
-    await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { status: newStatus }
-    });
-
-    const message = newStatus === 'ACTIVE' ? 'Admin activated successfully' : 'Admin deactivated successfully';
-    return successResponse(res, { status: newStatus }, message);
-  } catch (error) {
-    return errorResponse(res, 'Failed to toggle admin status');
-  }
-});
-
-// Delete admin (soft delete by changing status)
-router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if admin exists
-    const existingAdmin = await prisma.admin.findUnique({
-      where: { userId: parseInt(id) }
-    });
-
-    if (!existingAdmin) {
-      return notFoundResponse(res, 'Admin');
-    }
-
-    // Soft delete by updating status
-    await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { status: 'DELETED' }
-    });
-
-    return successResponse(res, null, 'Admin deleted successfully');
-  } catch (error) {
-    return errorResponse(res, 'Failed to delete admin');
-  }
-});
+// Delete admin - using reusable handler
+router.delete('/:id', authenticate, authorize('Admin'), createDeleteHandler('admin', 'Admin'));
 
 module.exports = router;

@@ -1,24 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { db, admin } = require('../config/firebase-admin');
-
-// Helper function to send payment notifications
-const sendPaymentNotification = async (userId, title, body, data = {}) => {
-  try {
-    await db.collection('notifications').add({
-      userId: String(userId),
-      title,
-      body,
-      type: 'payment',
-      data,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (error) {
-  }
-};
+const prisma = require('../config/database');
+const { sendPaymentNotification } = require('../services/notification/notificationService');
+const { getClinicIdForUser } = require('../services/appointment/appointmentService');
 
 // Get payment statistics for dentist
 router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
@@ -414,16 +399,13 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
       }
     } else if (userRole === 'Secretary') {
       // Check if secretary belongs to the same clinic as the dentist
-      const secretary = await prisma.secretary.findUnique({
-        where: { userId },
-        select: { clinicId: true }
-      });
-
-      if (!secretary) {
+      const clinicId = await getClinicIdForUser(req.user);
+      
+      if (!clinicId) {
         return res.status(404).json({ error: 'Secretary profile not found' });
       }
 
-      if (treatment.dentist.clinicId !== secretary.clinicId) {
+      if (treatment.dentist.clinicId !== clinicId) {
         return res.status(403).json({ error: 'Access denied' });
       }
     } else if (userRole === 'Clinic') {

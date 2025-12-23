@@ -1,24 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-const prisma = require('../utils/prisma');
-const { db, admin } = require('../config/firebase-admin');
-
-// Helper function to send treatment notifications
-const sendTreatmentNotification = async (userId, title, body, data = {}) => {
-  try {
-    await db.collection('notifications').add({
-      userId: String(userId),
-      title,
-      body,
-      type: 'treatment',
-      data,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (error) {
-  }
-};
+const prisma = require('../config/database');
+const { sendTreatmentNotification } = require('../services/notification/notificationService');
+const { validateEntityExists } = require('../helpers/validation');
 
 // Get treatments statistics for dentist
 router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
@@ -401,13 +386,8 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
     }
 
     // Check if patient exists
-    const patient = await prisma.patient.findUnique({
-      where: { userId: parseInt(patientId) }
-    });
-
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
+    const patient = await validateEntityExists(prisma, 'patient', patientId, 'Patient', res, 'userId');
+    if (!patient) return;
 
     const treatment = await prisma.treatment.create({
       data: {
