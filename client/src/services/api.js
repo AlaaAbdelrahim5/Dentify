@@ -151,6 +151,8 @@ export const authAPI = {
   logout: () => ApiService.post('/auth/logout'),
   refresh: (refreshToken) => ApiService.post('/auth/refresh', { refreshToken }),
   getCurrentUser: () => ApiService.get('/auth/me'),
+  forgotPassword: (data) => ApiService.post('/auth/forgot-password', data),
+  resetPassword: (data) => ApiService.post('/auth/reset-password', data),
 };
 
 // User API functions

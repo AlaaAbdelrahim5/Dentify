@@ -1,6 +1,9 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prisma');
 const { generateToken, generateRefreshToken } = require('../utils/jwt');
+const { sendPasswordResetEmail, sendPasswordChangedEmail } = require('../utils/emailService');
 
 // Register new user
 exports.register = async (req, res) => {
@@ -296,3 +299,166 @@ exports.refreshToken = async (req, res) => {
     res.status(401).json({ error: 'Invalid refresh token' });
   }
 };
+
+// Forgot password - Send reset email
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        patient: true,
+        dentist: true,
+        secretary: true,
+        admin: true
+      }
+    });
+
+    // Always return success message (security best practice)
+    // Don't reveal if email exists or not
+    if (!user) {
+      return res.json({ 
+        message: 'If the email exists, a password reset link has been sent' 
+      });
+    }
+
+    // Check if account is active
+    if (user.status !== 'ACTIVE') {
+      return res.json({ 
+        message: 'If the email exists, a password reset link has been sent' 
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Set token expiry (1 hour)
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Save reset token to database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: resetTokenHash,
+        resetPasswordExpiry: resetTokenExpiry
+      }
+    });
+
+    // Get user's first name for personalization
+    let firstName = '';
+    if (user.patient) firstName = user.patient.firstName;
+    else if (user.dentist) firstName = user.dentist.firstName;
+    else if (user.secretary) firstName = user.secretary.firstName;
+    else if (user.admin) firstName = user.admin.name?.split(' ')[0];
+
+    // Send reset email
+    await sendPasswordResetEmail(email, resetToken, firstName);
+
+    res.json({ 
+      message: 'If the email exists, a password reset link has been sent' 
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process password reset request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Reset password with token
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ 
+        error: 'Token and new password are required' 
+      });
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 6 characters long' 
+      });
+    }
+
+    // Hash the token to compare with stored hash
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find user with valid reset token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: resetTokenHash,
+        resetPasswordExpiry: {
+          gte: new Date() // Token not expired
+        }
+      },
+      include: {
+        patient: true,
+        dentist: true,
+        secretary: true,
+        admin: true
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired reset token' 
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpiry: null
+      }
+    });
+
+    // Get user's first name for confirmation email
+    let firstName = '';
+    if (user.patient) firstName = user.patient.firstName;
+    else if (user.dentist) firstName = user.dentist.firstName;
+    else if (user.secretary) firstName = user.secretary.firstName;
+    else if (user.admin) firstName = user.admin.name?.split(' ')[0];
+
+    // Send confirmation email
+    try {
+      await sendPasswordChangedEmail(user.email, firstName);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ 
+      message: 'Password has been reset successfully. You can now log in with your new password.' 
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ 
+      error: 'Failed to reset password',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+

@@ -26,6 +26,8 @@ model User {
   status          UserStatus @default(ACTIVE)
   twoFactorSecret String?    // Secret key for 2FA
   twoFactorEnabled Boolean   @default(false) // Whether 2FA is enabled
+  resetPasswordToken String?  // Hashed token for password reset
+  resetPasswordExpiry DateTime? // Expiry time for reset token
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 

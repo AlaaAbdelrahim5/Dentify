@@ -64,11 +64,7 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      // TODO: Implement forgot password API call
-      // await authAPI.forgotPassword({ email: email.toLowerCase().trim() });
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await authAPI.forgotPassword({ email: email.toLowerCase().trim() });
       
       setEmailSent(true);
       Alert.alert(
