@@ -27,6 +27,9 @@ dist-ssr/
 config/serviceAccountKey.json
 firebase-debug.log*
 firestore-debug.log*
+ui-debug.log
+.firebase/
+.firebaserc.local
 
 # Prisma
 prisma/.env
