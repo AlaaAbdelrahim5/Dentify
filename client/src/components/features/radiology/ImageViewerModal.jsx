@@ -29,6 +29,7 @@ import {
 } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { Button } from '../../common'
+import * as dicomParser from 'dicom-parser'
 
 const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, patientName = '' }) => {
   const { isDarkMode } = useTheme()
@@ -51,9 +52,13 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
   const [windowLevel, setWindowLevel] = useState(50)
   const [windowWidth, setWindowWidth] = useState(50)
   const [activeToolGroup, setActiveToolGroup] = useState('transform') // 'transform', 'adjust', 'advanced'
+  const [isDicom, setIsDicom] = useState(false)
+  const [dicomImage, setDicomImage] = useState(null)
+  const [isLoadingDicom, setIsLoadingDicom] = useState(false)
   
   const containerRef = useRef(null)
   const imageRef = useRef(null)
+  const canvasRef = useRef(null)
 
   // Add custom styles for sliders
   useEffect(() => {
@@ -140,6 +145,216 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
   })()
 
   const currentImage = parsedImages[currentIndex] || ''
+
+  // Check if current image is DICOM
+  const checkIfDicom = (url) => {
+    if (!url) return false
+    const lowerUrl = url.toLowerCase()
+    // Check for .dcm extension or dicom in URL
+    // Also check for common Firebase Storage patterns with .dcm
+    // Check for data URIs with octet-stream (commonly used for DICOM)
+    return lowerUrl.includes('.dcm') || 
+           lowerUrl.includes('dicom') ||
+           lowerUrl.includes('%2Edcm') || // URL encoded .dcm
+           lowerUrl.includes('.dcm?') || // .dcm with query parameters
+           lowerUrl.includes('data:application/octet-stream') || // Base64 DICOM
+           lowerUrl.includes('data:application/dicom') // Base64 DICOM with proper MIME
+  }
+
+  // Load and render DICOM image
+  const loadDicomImage = async (url) => {
+    try {
+      setIsLoadingDicom(true)
+      console.log('Fetching DICOM file from URL:', url.substring(0, 100) + '...')
+      
+      let byteArray
+      
+      // Handle data URI (base64)
+      if (url.startsWith('data:')) {
+        console.log('Detected data URI, decoding base64...')
+        const base64Data = url.split(',')[1]
+        const binaryString = atob(base64Data)
+        byteArray = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          byteArray[i] = binaryString.charCodeAt(i)
+        }
+        console.log('Decoded base64 data, size:', byteArray.length, 'bytes')
+      } else {
+        // Handle regular URL
+        console.log('Fetching from URL...')
+        const response = await fetch(url, {
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        console.log('Fetch response status:', response.status, response.statusText)
+        console.log('Content-Type:', response.headers.get('content-type'))
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const arrayBuffer = await response.arrayBuffer()
+        byteArray = new Uint8Array(arrayBuffer)
+        console.log('Array buffer size:', arrayBuffer.byteLength, 'bytes')
+      }
+      
+      // Log first few bytes to verify it's a DICOM file
+      console.log('First 4 bytes:', Array.from(byteArray.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      console.log('Bytes 128-132 (DICOM magic):', String.fromCharCode(...byteArray.slice(128, 132)))
+      
+      // Parse DICOM file
+      const dataSet = dicomParser.parseDicom(byteArray)
+      console.log('DICOM parsed successfully')
+      
+      // Extract image data
+      const pixelDataElement = dataSet.elements.x7fe00010
+      if (!pixelDataElement) {
+        console.error('Available DICOM elements:', Object.keys(dataSet.elements))
+        throw new Error('No pixel data found in DICOM file')
+      }
+      
+      console.log('Pixel data element found:', pixelDataElement)
+      
+      const width = dataSet.uint16('x00280011')
+      const height = dataSet.uint16('x00280010')
+      console.log('Image dimensions:', width, 'x', height)
+      
+      // Check bits allocated to determine data type
+      const bitsAllocated = dataSet.uint16('x00280100') || 16
+      let pixelData
+      
+      if (bitsAllocated === 8) {
+        pixelData = new Uint8Array(
+          dataSet.byteArray.buffer,
+          pixelDataElement.dataOffset,
+          pixelDataElement.length
+        )
+      } else {
+        pixelData = new Uint16Array(
+          dataSet.byteArray.buffer,
+          pixelDataElement.dataOffset,
+          pixelDataElement.length / 2
+        )
+      }
+      
+      // Get windowing parameters if available, otherwise use defaults
+      let windowCenter = 2048 // Default for typical dental radiographs
+      let windowWidthDicom = 4096 // Default window width
+      
+      try {
+        const wcString = dataSet.string('x00281050')
+        const wwString = dataSet.string('x00281051')
+        if (wcString) windowCenter = parseFloat(wcString.split('\\')[0])
+        if (wwString) windowWidthDicom = parseFloat(wwString.split('\\')[0])
+      } catch (e) {
+        console.log('Using default windowing values')
+      }
+      
+      // Update UI sliders to match DICOM windowing (normalized to 0-100)
+      // Find max pixel value using a loop to avoid stack overflow with large arrays
+      let maxPixelValue = 0
+      for (let i = 0; i < pixelData.length; i++) {
+        if (pixelData[i] > maxPixelValue) {
+          maxPixelValue = pixelData[i]
+        }
+      }
+      console.log('Max pixel value:', maxPixelValue)
+      console.log('DICOM Window Center:', windowCenter, 'Window Width:', windowWidthDicom)
+      
+      setDicomImage({
+        width,
+        height,
+        pixelData,
+        windowCenter,
+        windowWidth: windowWidthDicom,
+        maxPixelValue,
+        bitsAllocated,
+        dataSet
+      })
+      
+      setIsLoadingDicom(false)
+    } catch (error) {
+      console.error('Error loading DICOM image:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        url: url
+      })
+      setIsLoadingDicom(false)
+      setIsDicom(false)
+      // Show error message to user
+      alert('Error loading DICOM image: ' + error.message + '\n\nCheck browser console for details.')
+    }
+  }
+
+  // Render DICOM to canvas
+  useEffect(() => {
+    if (!dicomImage || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    
+    canvas.width = dicomImage.width
+    canvas.height = dicomImage.height
+    
+    const imageData = ctx.createImageData(dicomImage.width, dicomImage.height)
+    const pixelData = dicomImage.pixelData
+    
+    // Use actual DICOM windowing values from the file
+    // For DICOM images, we should use the stored values unless user adjusts them
+    const wc = dicomImage.windowCenter
+    const ww = dicomImage.windowWidth
+    
+    const lower = wc - ww / 2
+    const upper = wc + ww / 2
+    const range = upper - lower || 1 // Prevent division by zero
+    
+    console.log('Rendering with Window Center:', wc, 'Window Width:', ww)
+    
+    for (let i = 0; i < pixelData.length; i++) {
+      let pixel = pixelData[i]
+      
+      // Apply windowing (VOI LUT)
+      if (pixel <= lower) {
+        pixel = 0
+      } else if (pixel >= upper) {
+        pixel = 255
+      } else {
+        pixel = ((pixel - lower) / range) * 255
+      }
+      
+      // For DICOM images, only apply brightness/contrast if user changed them
+      // Don't apply by default to preserve medical image quality
+      if (brightness !== 100 || contrast !== 100) {
+        pixel = (pixel - 127.5) * (contrast / 100) + 127.5 + (brightness - 100)
+      }
+      
+      pixel = Math.max(0, Math.min(255, pixel))
+      
+      const idx = i * 4
+      imageData.data[idx] = pixel     // R
+      imageData.data[idx + 1] = pixel // G
+      imageData.data[idx + 2] = pixel // B
+      imageData.data[idx + 3] = 255   // A
+    }
+    
+    ctx.putImageData(imageData, 0, 0)
+  }, [dicomImage, windowLevel, windowWidth, brightness, contrast])
+
+  // Check and load DICOM when image changes
+  useEffect(() => {
+    console.log('Current image URL:', currentImage)
+    const isDicomFile = checkIfDicom(currentImage)
+    console.log('Is DICOM file:', isDicomFile)
+    setIsDicom(isDicomFile)
+    
+    if (isDicomFile) {
+      console.log('Loading DICOM image from:', currentImage)
+      loadDicomImage(currentImage)
+    } else {
+      setDicomImage(null)
+    }
+  }, [currentImage])
 
   // Reset transformations when image changes
   useEffect(() => {
@@ -348,6 +563,14 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
                   <span className="text-sm text-gray-200 font-medium">{patientName}</span>
                 </div>
               )}
+              {isDicom && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="px-2 py-1 bg-linear-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-lg shadow-lg">
+                    DICOM
+                  </span>
+                  <span className="text-xs text-slate-300">Advanced medical imaging format</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -405,31 +628,63 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
           <div className="relative max-h-full max-w-full flex items-center justify-center">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-linear-to-br from-teal-400/20 via-cyan-500/20 to-blue-500/20 rounded-3xl blur-3xl transform scale-110 animate-pulse" />
-            <img
-              ref={imageRef}
-              src={currentImage}
-              alt={`Medical image ${currentIndex + 1}`}
-              className="max-h-full max-w-full object-contain select-none rounded-xl shadow-2xl relative z-10 ring-1 ring-white/10"
-              draggable={false}
-              style={{
-                transform: `
-                  translate(${position.x}px, ${position.y}px) 
-                  scale(${scale}) 
-                  rotate(${rotation}deg) 
-                  scaleX(${flipHorizontal ? -1 : 1}) 
-                  scaleY(${flipVertical ? -1 : 1})
-                `,
-                filter: `
-                  brightness(${brightness}%) 
-                  contrast(${contrast}%) 
-                  saturate(${saturation}%)
-                  ${isInverted ? 'invert(1)' : ''} 
-                  ${sharpness > 0 ? `contrast(${100 + sharpness}%) brightness(${100 - sharpness * 0.1}%)` : ''}
-                  drop-shadow(0 25px 50px rgba(0,0,0,0.5))
-                `,
-                transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            />
+            
+            {isLoadingDicom ? (
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-teal-500/20 rounded-full blur-2xl" />
+                  <div className="relative w-20 h-20 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <p className="text-slate-300 text-lg font-medium mt-4">Loading DICOM image...</p>
+              </div>
+            ) : isDicom && dicomImage ? (
+              <canvas
+                ref={canvasRef}
+                className="max-h-full max-w-full object-contain select-none rounded-xl shadow-2xl relative z-10 ring-1 ring-white/10"
+                style={{
+                  transform: `
+                    translate(${position.x}px, ${position.y}px) 
+                    scale(${scale}) 
+                    rotate(${rotation}deg) 
+                    scaleX(${flipHorizontal ? -1 : 1}) 
+                    scaleY(${flipVertical ? -1 : 1})
+                  `,
+                  filter: `
+                    saturate(${saturation}%)
+                    ${isInverted ? 'invert(1)' : ''} 
+                    ${sharpness > 0 ? `contrast(${100 + sharpness}%) brightness(${100 - sharpness * 0.1}%)` : ''}
+                    drop-shadow(0 25px 50px rgba(0,0,0,0.5))
+                  `,
+                  transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+              />
+            ) : (
+              <img
+                ref={imageRef}
+                src={currentImage}
+                alt={`Medical image ${currentIndex + 1}`}
+                className="max-h-full max-w-full object-contain select-none rounded-xl shadow-2xl relative z-10 ring-1 ring-white/10"
+                draggable={false}
+                style={{
+                  transform: `
+                    translate(${position.x}px, ${position.y}px) 
+                    scale(${scale}) 
+                    rotate(${rotation}deg) 
+                    scaleX(${flipHorizontal ? -1 : 1}) 
+                    scaleY(${flipVertical ? -1 : 1})
+                  `,
+                  filter: `
+                    brightness(${brightness}%) 
+                    contrast(${contrast}%) 
+                    saturate(${saturation}%)
+                    ${isInverted ? 'invert(1)' : ''} 
+                    ${sharpness > 0 ? `contrast(${100 + sharpness}%) brightness(${100 - sharpness * 0.1}%)` : ''}
+                    drop-shadow(0 25px 50px rgba(0,0,0,0.5))
+                  `,
+                  transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+              />
+            )}
           </div>
         ) : (
           <div className="text-center">
@@ -680,7 +935,16 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
 
           {/* Advanced Tools */}
           {activeToolGroup === 'advanced' && (
-            <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex flex-col gap-4">
+              {isDicom && (
+                <div className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl">
+                  <FaEye className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm text-purple-200 font-medium">
+                    Window Level/Width controls are optimized for DICOM medical images
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center justify-center gap-4">
               {/* Window Level (Medical Imaging) */}
               <div className="flex flex-col gap-2 bg-slate-700/60 backdrop-blur-sm rounded-2xl p-4 border border-slate-600/50 shadow-xl min-w-60">
                 <div className="flex items-center justify-between px-2">
@@ -754,6 +1018,7 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
                 <FaDownload className="w-4 h-4" />
                 <span className="text-sm">Download</span>
               </button>
+            </div>
             </div>
           )}
 
