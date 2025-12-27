@@ -1,4 +1,4 @@
-import { useTheme } from '../../contexts/ThemeContext'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 const Card = ({ children, className = '', hover = false, ...props }) => {
   const { isDarkMode } = useTheme()

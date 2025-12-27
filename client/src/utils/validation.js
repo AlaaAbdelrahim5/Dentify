@@ -131,6 +131,170 @@ export const validateNumberRange = (value, min, max, fieldName = 'Value') => {
 }
 
 /**
+ * Validate required fields in form data
+ * @param {Object} data - Form data object
+ * @param {Array} requiredFields - Array of required field names or config objects
+ * @returns {Object} Validation errors object
+ */
+export const validateRequiredFields = (data, requiredFields) => {
+  const errors = {}
+
+  requiredFields.forEach(field => {
+    const fieldName = typeof field === 'string' ? field : field.field
+    const label = typeof field === 'string' 
+      ? fieldName.charAt(0).toUpperCase() + fieldName.slice(1) 
+      : field.label
+
+    if (!data[fieldName] || (typeof data[fieldName] === 'string' && !data[fieldName].trim())) {
+      errors[fieldName] = `${label} is required`
+    }
+  })
+
+  return errors
+}
+
+/**
+ * Validate date fields
+ * @param {string} date - Date string
+ * @param {Object} options - Validation options
+ * @returns {string|null} Error message or null
+ */
+export const validateDate = (date, options = {}) => {
+  const { 
+    required = false, 
+    pastOnly = false, 
+    futureOnly = false,
+    minAge = null,
+    maxAge = null,
+    label = 'Date'
+  } = options
+
+  if (!date) {
+    return required ? `${label} is required` : null
+  }
+
+  const selectedDate = new Date(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (isNaN(selectedDate.getTime())) {
+    return `Invalid ${label.toLowerCase()}`
+  }
+
+  if (pastOnly && selectedDate > today) {
+    return `${label} cannot be in the future`
+  }
+
+  if (futureOnly && selectedDate < today) {
+    return `${label} cannot be in the past`
+  }
+
+  if (minAge !== null) {
+    const age = Math.floor((today - selectedDate) / (365.25 * 24 * 60 * 60 * 1000))
+    if (age < minAge) {
+      return `Must be at least ${minAge} years old`
+    }
+  }
+
+  if (maxAge !== null) {
+    const age = Math.floor((today - selectedDate) / (365.25 * 24 * 60 * 60 * 1000))
+    if (age > maxAge) {
+      return `Must be at most ${maxAge} years old`
+    }
+  }
+
+  return null
+}
+
+/**
+ * Validate that two fields match (e.g., password confirmation)
+ * @param {string} value1 - First value
+ * @param {string} value2 - Second value
+ * @param {string} label - Field label for error message
+ * @returns {string|null} Error message or null
+ */
+export const validateMatch = (value1, value2, label = 'Password') => {
+  if (value1 !== value2) {
+    return `${label}s do not match`
+  }
+  return null
+}
+
+/**
+ * Validate numeric value
+ * @param {number|string} value - Numeric value
+ * @param {Object} options - Validation options
+ * @returns {string|null} Error message or null
+ */
+export const validateNumber = (value, options = {}) => {
+  const {
+    required = false,
+    min = null,
+    max = null,
+    integer = false,
+    positive = false,
+    label = 'Value'
+  } = options
+
+  if (value === null || value === undefined || value === '') {
+    return required ? `${label} is required` : null
+  }
+
+  const num = Number(value)
+
+  if (isNaN(num)) {
+    return `${label} must be a number`
+  }
+
+  if (integer && !Number.isInteger(num)) {
+    return `${label} must be a whole number`
+  }
+
+  if (positive && num <= 0) {
+    return `${label} must be positive`
+  }
+
+  if (min !== null && num < min) {
+    return `${label} must be at least ${min}`
+  }
+
+  if (max !== null && num > max) {
+    return `${label} must be at most ${max}`
+  }
+
+  return null
+}
+
+/**
+ * Validate appointment date/time combination
+ * @param {string} date - Date string
+ * @param {string} time - Time string
+ * @returns {Object} Validation errors object
+ */
+export const validateAppointmentDateTime = (date, time) => {
+  const errors = {}
+
+  if (!date) {
+    errors.date = 'Date is required'
+  }
+
+  if (!time) {
+    errors.time = 'Time is required'
+  }
+
+  if (date && time) {
+    const appointmentDateTime = new Date(`${date}T${time}`)
+    const now = new Date()
+
+    if (appointmentDateTime <= now) {
+      errors.time = 'Appointment must be scheduled for a future time'
+    }
+  }
+
+  return errors
+}
+
+/**
  * Common validation rules for different field types
  * Extended validation rule system for form validation
  */

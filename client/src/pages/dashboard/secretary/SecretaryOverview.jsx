@@ -5,12 +5,10 @@ import {
   FaClock,
   FaCheckCircle,
   FaUserMd,
-  FaPlus,
-  FaFilter,
   FaPhone,
-  FaEnvelope
+  FaUserTie
 } from 'react-icons/fa'
-import { Card, Button, StatsOverview, LoadingSpinner, StatusBadge } from '../../../components'
+import { Card, Button, StatsOverview, LoadingSpinner, StatusBadge, WelcomeCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'
 
@@ -103,18 +101,12 @@ const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className={`p-6 rounded-xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      } shadow-lg`}>
-        <div>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-            Welcome, {userData?.firstName || 'Secretary'}!
-          </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {userData?.clinic?.clinicName || 'Clinic'} • {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-      </div>
+      <WelcomeCard
+        title={`Welcome, ${userData?.firstName || 'Secretary'}!`}
+        subtitle={`${userData?.clinic?.clinicName || 'Clinic'} • ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+        icon={FaUserTie}
+        iconGradient="from-purple-600 to-pink-600"
+      />
 
       {/* Stats Cards */}
       <StatsOverview stats={[

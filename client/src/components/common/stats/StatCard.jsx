@@ -1,5 +1,5 @@
-import { useTheme } from '../../contexts/ThemeContext'
-import { Card } from './'
+import { useTheme } from '../../../contexts/ThemeContext'
+import Card from '../layout/Card'
 import { FaArrowUp, FaArrowDown } from 'react-icons/fa'
 
 /**

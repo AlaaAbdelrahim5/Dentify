@@ -1,6 +1,6 @@
 import { useTheme } from '../../../contexts/ThemeContext'
 import { FaTooth, FaExclamationTriangle, FaCheckCircle, FaClock } from 'react-icons/fa'
-import Button from '../../common/Button'
+import { Button } from '../../common'
 
 /**
  * Component to display affected teeth in a treatment with their conditions

@@ -1,6 +1,7 @@
 import React from 'react'
-import { Card, LoadingSpinner } from './'
-import { useTheme } from '../../contexts/ThemeContext'
+import Card from '../layout/Card'
+import LoadingSpinner from '../states/LoadingSpinner'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 /**
  * DataTable Component

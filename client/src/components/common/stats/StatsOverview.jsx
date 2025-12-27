@@ -1,5 +1,5 @@
-import { useTheme } from '../../contexts/ThemeContext'
-import { Card } from './'
+import { useTheme } from '../../../contexts/ThemeContext'
+import Card from '../layout/Card'
 
 /**
  * StatsOverview Component

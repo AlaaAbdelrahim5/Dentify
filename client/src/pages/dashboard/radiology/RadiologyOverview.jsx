@@ -2,12 +2,11 @@ import {
   FaFileImage,
   FaCheckCircle,
   FaChartBar,
-  FaCog,
   FaHospital,
-  FaClock
+  FaXRay
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Card, Button, StatsOverview } from '../../../components'
+import { Card, StatsOverview, WelcomeCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 
 const RadiologyOverview = ({ currentUser, userData, stats, onTabChange }) => {
@@ -50,6 +49,14 @@ const RadiologyOverview = ({ currentUser, userData, stats, onTabChange }) => {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Section */}
+      <WelcomeCard
+        title={userData?.centerName || 'Radiology Center'}
+        subtitle={`${userData?.city || 'City'} • Registration: ${userData?.registrationNumber || 'N/A'}`}
+        icon={FaXRay}
+        iconGradient="from-green-600 to-teal-600"
+      />
+
       {/* Statistics Cards */}
       <StatsOverview stats={statsData} />
 

@@ -6,8 +6,7 @@ import {
   FaExclamationTriangle, FaClock, FaCheckCircle, FaEye, FaPhone,
   FaTimesCircle, FaFileInvoiceDollar, FaPrescriptionBottle, FaPrint
 } from 'react-icons/fa'
-import { Button, Card, LoadingSpinner } from '../../common'
-import Toast from '../../common/Toast'
+import { Button, Card, LoadingSpinner, Toast } from '../../common'
 import generatePaymentReceipt from '../payment/PaymentReceipt'
 import TreatmentTeethStatus from './TreatmentTeethStatus'
 import { appointmentsAPI, treatmentsAPI } from '../../../services/api'

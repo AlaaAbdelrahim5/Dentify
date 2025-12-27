@@ -1,5 +1,5 @@
-import { useTheme } from '../../contexts/ThemeContext'
-import { Button } from './'
+import { useTheme } from '../../../contexts/ThemeContext'
+import Button from '../forms/Button'
 
 /**
  * PageHeader Component

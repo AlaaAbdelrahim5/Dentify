@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { FaCamera, FaTrash, FaUser } from 'react-icons/fa'
-import { useTheme } from '../../contexts/ThemeContext'
-import { authUtils } from '../../utils/auth'
-import { getImageUrl as getImageUrlHelper } from '../../utils/helpers'
-import ConfirmationModal from './ConfirmationModal'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { authUtils } from '../../../utils/auth'
+import { getImageUrl as getImageUrlHelper } from '../../../utils/helpers'
+import ConfirmationModal from '../modals/ConfirmationModal'
 
 const ProfileImageUpload = ({ currentImage, onImageUpdate, userName = "User", onToast }) => {
   const { isDarkMode } = useTheme()

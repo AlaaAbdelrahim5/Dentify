@@ -5,10 +5,9 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaClock,
-  FaFilter,
-  FaPlus
+  FaHospital
 } from 'react-icons/fa'
-import { Card, Button, StatsOverview } from '../../../components'
+import { Card, StatsOverview, WelcomeCard, RecentActivities } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI, dentistsAPI, appointmentsAPI, patientsAPI } from '../../../services/api'
 
@@ -92,18 +91,12 @@ const ClinicOverview = ({ userData, stats: propStats }) => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className={`p-6 rounded-xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      } shadow-lg`}>
-        <div>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-            Welcome to {userData?.clinicName || 'Your Clinic'}
-          </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {userData?.city} • Registration: {userData?.registrationNumber}
-          </p>
-        </div>
-      </div>
+      <WelcomeCard
+        title={`Welcome to ${userData?.clinicName || 'Your Clinic'}`}
+        subtitle={`${userData?.city || 'City'} • Registration: ${userData?.registrationNumber || 'N/A'}`}
+        icon={FaHospital}
+        iconGradient="from-blue-600 to-cyan-600"
+      />
 
       {/* Stats Cards */}
       {isLoading ? (
@@ -156,32 +149,25 @@ const ClinicOverview = ({ userData, stats: propStats }) => {
       )}
 
       {/* Recent Activities */}
-      <Card className="p-6">
-        <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>Recent Activities</h3>
-        <div className="space-y-4">
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>New secretary added: Sarah Ahmed</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>2 hours ago</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Appointment scheduled: John Doe with Dr. Smith</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>4 hours ago</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Patient record updated: Maria Johnson</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>1 day ago</p>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <RecentActivities 
+        activities={[
+          {
+            message: 'New secretary added: Sarah Ahmed',
+            time: '2 hours ago',
+            color: 'green'
+          },
+          {
+            message: 'Appointment scheduled: John Doe with Dr. Smith',
+            time: '4 hours ago',
+            color: 'blue'
+          },
+          {
+            message: 'Patient record updated: Maria Johnson',
+            time: '1 day ago',
+            color: 'yellow'
+          }
+        ]}
+      />
     </div>
   )
 }

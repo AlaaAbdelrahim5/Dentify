@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { 
   FaHospital,
   FaUsers,
-  FaSearch,
-  FaXRay
+  FaXRay,
+  FaUserShield
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Card, Button, StatsOverview } from '../../../components'
+import { Card, StatsOverview, WelcomeCard, RecentActivities } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../../services/api'
 
@@ -74,11 +74,12 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className={`p-6 rounded-xl ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      } shadow-lg`}>
-        <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>System Overview</h2>
-      </div>
+      <WelcomeCard
+        title="System Overview"
+        subtitle="Manage and monitor your dental platform"
+        icon={FaUserShield}
+        iconGradient="from-blue-600 to-cyan-600"
+      />
       
       {statsError && (
         <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-red-900/20 border border-red-700/30 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
@@ -131,32 +132,25 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
       )}
 
       {/* Recent Activities */}
-      <Card className="p-6">
-        <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>Recent Activities</h3>
-        <div className="space-y-4">
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>New clinic registered: "Smile Dental Center"</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>2 hours ago</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Dentist approval pending: Dr. Ahmad Salem</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>4 hours ago</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-4 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>New radiology center added: "Advanced Imaging"</p>
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>1 day ago</p>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <RecentActivities 
+        activities={[
+          {
+            message: 'New clinic registered: "Smile Dental Center"',
+            time: '2 hours ago',
+            color: 'green'
+          },
+          {
+            message: 'Dentist approval pending: Dr. Ahmad Salem',
+            time: '4 hours ago',
+            color: 'yellow'
+          },
+          {
+            message: 'New radiology center added: "Advanced Imaging"',
+            time: '1 day ago',
+            color: 'blue'
+          }
+        ]}
+      />
     </div>
   )
 }

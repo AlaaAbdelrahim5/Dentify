@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FaTooth, FaUserMd, FaCalendarAlt } from 'react-icons/fa'
-import { Card, Button, StatusBadge } from '../../../components'
+import { Card, Button, StatusBadge, WelcomeCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
 
@@ -46,33 +46,14 @@ const PatientOverview = ({ userData, onTabChange }) => {
   }
 
   return (
-    <div className="space-y-8">{/* Welcome Section */}
-      {/* Welcome Section */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className={`text-2xl font-bold mb-2 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Welcome back, {getUserFirstName()}!
-            </h1>
-            {userData?.city && (
-              <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                📍 {userData.city}
-              </p>
-            )}
-          </div>
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-            isDarkMode 
-              ? 'bg-linear-to-br from-teal-600 to-cyan-600' 
-              : 'bg-linear-to-br from-teal-500 to-cyan-500'
-          }`}>
-            <FaTooth className="w-8 h-8 text-white" />
-          </div>
-        </div>
-      </Card>
+    <div className="space-y-6">
+      <WelcomeCard
+        title={`Welcome back, ${getUserFirstName()}!`}
+        subtitle={userData?.city ? `📍 ${userData.city}` : undefined}
+        icon={FaTooth}
+        iconGradient="from-teal-600 to-cyan-600"
+      />
 
-      {/* Upcoming Appointments Preview */}
       {isLoading ? (
         <Card className="p-6">
           <div className="flex justify-between items-center mb-4">

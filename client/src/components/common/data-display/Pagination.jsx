@@ -1,5 +1,5 @@
-import { Button } from './'
-import { useTheme } from '../../contexts/ThemeContext'
+import Button from '../forms/Button'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 /**
  * Pagination Component

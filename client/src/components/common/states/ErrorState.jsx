@@ -1,6 +1,6 @@
-import { useTheme } from '../../contexts/ThemeContext'
+import { useTheme } from '../../../contexts/ThemeContext'
 import { FaExclamationTriangle } from 'react-icons/fa'
-import { Button } from './'
+import Button from '../forms/Button'
 
 /**
  * ErrorState Component
