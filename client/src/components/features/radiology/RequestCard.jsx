@@ -1,4 +1,4 @@
-import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash } from 'react-icons/fa'
+import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash, FaDownload, FaLink, FaFileUpload } from 'react-icons/fa'
 import { Card, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { formatDate } from '../../../utils/helpers'
@@ -6,12 +6,24 @@ import { formatDate } from '../../../utils/helpers'
 const RequestCard = ({ 
   request, 
   onViewDetails, 
+  onViewImages,
+  onDownload,
   onEdit, 
   onDelete,
   onAssignRadiology,
   variant = 'default' // 'default', 'patient', 'radiology', 'dentist'
 }) => {
   const { isDarkMode } = useTheme()
+
+  // Check if reportFile is a URL (not base64)
+  const isReportFileUrl = (reportFile) => {
+    if (!reportFile) return false
+    try {
+      const parsed = JSON.parse(reportFile)
+      if (Array.isArray(parsed)) return false
+    } catch (e) {}
+    return reportFile.startsWith('http://') || reportFile.startsWith('https://')
+  }
 
   const getStatusColor = (status) => {
     const colors = {
@@ -165,47 +177,111 @@ const RequestCard = ({
       </div>
 
       <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-        {onViewDetails && (
+        {/* Eye Button - View Images or disabled */}
+        {variant === 'radiology' && (
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onViewDetails(request)}
-            title="View Details"
-            className="text-blue-600"
+            onClick={() => request.reportFile ? onViewImages(request) : onViewDetails(request)}
+            title={request.reportFile ? "View Images" : "View Details"}
+            className={request.reportFile ? "text-teal-600" : "text-blue-600"}
           >
             <FaEye className="w-4 h-4" />
           </Button>
         )}
-        {onEdit && request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && (
+        
+        {(variant === 'dentist' || variant === 'patient') && request.reportFile && onViewImages && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onViewImages(request)}
+            title="View Images"
+            className="text-teal-600"
+          >
+            <FaEye className="w-4 h-4" />
+          </Button>
+        )}
+
+        {(variant === 'dentist' || variant === 'patient') && !request.reportFile && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            disabled
+            title="No images available"
+            className="text-gray-400"
+          >
+            <FaEye className="w-4 h-4" />
+          </Button>
+        )}
+
+        {/* Download Button - only when reportFile exists */}
+        {request.reportFile && onDownload && variant === 'radiology' && request.status === 'COMPLETED' && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onDownload(request)}
+            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+            className="text-purple-600"
+          >
+            {isReportFileUrl(request.reportFile) ? (
+              <FaLink className="w-4 h-4" />
+            ) : (
+              <FaDownload className="w-4 h-4" />
+            )}
+          </Button>
+        )}
+
+        {request.reportFile && onDownload && (variant === 'dentist' || variant === 'patient') && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onDownload(request)}
+            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+            className="text-purple-600"
+          >
+            {isReportFileUrl(request.reportFile) ? (
+              <FaLink className="w-4 h-4" />
+            ) : (
+              <FaDownload className="w-4 h-4" />
+            )}
+          </Button>
+        )}
+
+        {/* Radiology Center - Upload/Update Result buttons */}
+        {variant === 'radiology' && request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && onEdit && (
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => onEdit(request)}
-            title="Edit Request"
+            title="Upload Result"
+            className="text-green-600"
+          >
+            <FaFileUpload className="w-4 h-4" />
+          </Button>
+        )}
+
+        {variant === 'radiology' && request.status === 'COMPLETED' && onEdit && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => onEdit(request)}
+            title="Update Result"
+            className="text-orange-600"
           >
             <FaEdit className="w-4 h-4" />
           </Button>
         )}
-        {onDelete && request.status === 'PENDING' && (
+
+        {/* Dentist - Cancel button only for Requested status */}
+        {variant === 'dentist' && request.status === 'Requested' && onDelete && (
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onDelete(request.id)}
-            title="Delete Request"
+            onClick={() => onDelete(request)}
+            title="Cancel Request"
             className="text-red-600"
           >
             <FaTrash className="w-4 h-4" />
-          </Button>
-        )}
-        {onAssignRadiology && !request.radiologyCenterId && request.status !== 'CANCELLED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onAssignRadiology(request)}
-            title="Assign Radiology Center"
-            className="text-green-600"
-          >
-            <FaHospital className="w-4 h-4" />
           </Button>
         )}
       </div>

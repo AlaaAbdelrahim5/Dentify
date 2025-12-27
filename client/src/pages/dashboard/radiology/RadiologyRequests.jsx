@@ -18,7 +18,8 @@ import {
   FaListAlt,
   FaCheck,
   FaEdit,
-  FaLink
+  FaLink,
+  FaImage
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
 import { formatDate as formatDateHelper, getStatusColor } from '../../../utils/helpers'
@@ -38,6 +39,7 @@ import {
   RequestDetailsModal,
   UploadResultModal
 } from '../../../components'
+import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -51,6 +53,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
   const [error, setError] = useState(null)
 
@@ -232,6 +235,11 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const handleUploadResult = (request) => {
     setSelectedRequest(request)
     setIsUploadModalOpen(true)
+  }
+
+  const handleViewImages = (request) => {
+    setSelectedRequest(request)
+    setIsImageViewerOpen(true)
   }
 
   const getStatusIcon = (status) => {
@@ -434,7 +442,9 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   key={request.id}
                   request={request}
                   variant="radiology"
+                  onViewImages={request.reportFile ? handleViewImages : null}
                   onViewDetails={handleViewDetails}
+                  onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
                   onEdit={request.status !== 'COMPLETED' && request.status !== 'CANCELLED' ? handleUploadResult : (request.status === 'COMPLETED' ? handleUploadResult : null)}
                 />
               ))}
@@ -455,7 +465,13 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   },
                   {
                     label: 'Dentist',
-                    accessor: 'dentistName'
+                    accessor: 'dentistName',
+                    render: (value) => (
+                      <div className="flex items-center gap-2">
+                        <FaStethoscope className="text-teal-500 w-4 h-4" />
+                        <span>{value}</span>
+                      </div>
+                    )
                   },
                   {
                     label: 'Imaging Type',
@@ -503,9 +519,9 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleViewDetails(row)}
-                          title="View Details"
-                          className="text-blue-600"
+                          onClick={() => row.reportFile ? handleViewImages(row) : handleViewDetails(row)}
+                          title={row.reportFile ? "View Images" : "View Details"}
+                          className={row.reportFile ? "text-teal-600" : "text-blue-600"}
                         >
                           <FaEye className="w-4 h-4" />
                         </Button>
@@ -531,13 +547,13 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                             <FaEdit className="w-4 h-4" />
                           </Button>
                         )}
-                        {row.reportFile && (
+                        {row.reportFile && row.status === 'COMPLETED' && (
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="text-purple-600"
                             onClick={() => handleDownloadReport(row.reportFile)}
                             title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
+                            className="text-purple-600"
                           >
                             {isReportFileUrl(row.reportFile) ? (
                               <FaLink className="w-4 h-4" />
@@ -585,6 +601,18 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
               onStatsUpdate()
             }
           }}
+        />
+      )}
+
+      {isImageViewerOpen && selectedRequest && selectedRequest.reportFile && (
+        <ImageViewerModal
+          isOpen={isImageViewerOpen}
+          onClose={() => {
+            setIsImageViewerOpen(false)
+            setSelectedRequest(null)
+          }}
+          images={selectedRequest.reportFile}
+          patientName={selectedRequest.patientName}
         />
       )}
     </div>

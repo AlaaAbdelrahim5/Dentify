@@ -20,8 +20,10 @@ import {
   FilterBar, 
   DataTable, 
   StatsOverview,
-  RequestCard
+  RequestCard,
+  LoadingSpinner
 } from '../../../components'
+import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI } from '../../../services/api'
 import { formatDate as formatDateHelper, getStatusColor } from '../../../utils/helpers'
@@ -37,6 +39,7 @@ const PatientXRayResults = () => {
   const [selectedImagingType, setSelectedImagingType] = useState('all')
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
 
   // Fetch data when filters change
@@ -180,6 +183,11 @@ const PatientXRayResults = () => {
     }
   }
 
+  const handleViewImages = (request) => {
+    setSelectedRequest(request)
+    setIsImageViewerOpen(true)
+  }
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'REQUESTED':
@@ -318,7 +326,13 @@ const PatientXRayResults = () => {
       </Card>
 
       {/* Requests - Table or Grid View */}
-      {!isLoading && !filtering && filteredRequests.length === 0 ? (
+      {isLoading || filtering ? (
+        <Card className={`p-8 text-center ${
+          isDarkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <LoadingSpinner size="lg" text={isLoading ? "Loading X-ray requests..." : "Filtering results..."} />
+        </Card>
+      ) : filteredRequests.length === 0 ? (
         <Card className={`p-8 text-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'
         }`}>
@@ -343,58 +357,13 @@ const PatientXRayResults = () => {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredRequests.map((request) => (
-                <div key={request.id}>
-                  <RequestCard 
-                    request={request}
-                    variant="patient"
-                  />
-                  {/* Additional download button for patient's view */}
-                  <div className="mt-2 flex gap-2">
-                    {request.reportFile && (
-                      <Button 
-                        variant="primary" 
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleDownloadReport(request.reportFile)}
-                        title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Result"}
-                      >
-                        {isReportFileUrl(request.reportFile) ? (
-                          <>
-                            <FaLink className="w-4 h-4 mr-2" />
-                            View Report
-                          </>
-                        ) : (
-                          <>
-                            <FaDownload className="w-4 h-4 mr-2" />
-                            Download Result
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    {!request.reportFile && request.status === 'COMPLETED' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="flex-1"
-                        disabled
-                      >
-                        <FaFileAlt className="w-4 h-4 mr-2" />
-                        No File Available
-                      </Button>
-                    )}
-                    {request.status !== 'COMPLETED' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="flex-1"
-                        disabled
-                      >
-                        <FaClock className="w-4 h-4 mr-2" />
-                        Pending Result
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  variant="patient"
+                  onViewImages={request.reportFile ? handleViewImages : null}
+                  onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
+                />
               ))}
             </div>
           ) : (
@@ -416,16 +385,22 @@ const PatientXRayResults = () => {
                     label: 'Dentist',
                     accessor: 'dentist',
                     render: (value, row) => (
-                      <span>Dr. {row.dentist?.firstName} {row.dentist?.lastName}</span>
+                      <div className="flex items-center gap-2">
+                        <FaStethoscope className="text-teal-500 w-4 h-4" />
+                        <span>Dr. {row.dentist?.firstName} {row.dentist?.lastName}</span>
+                      </div>
                     )
                   },
                   {
                     label: 'Radiology Center',
                     accessor: 'radiologyCenter',
                     render: (value) => (
-                      <span className={value?.centerName ? '' : 'text-gray-500 italic'}>
-                        {value?.centerName || 'Not assigned yet'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <FaHospital className="text-teal-500 w-4 h-4" />
+                        <span className={value?.centerName ? '' : 'text-gray-500 italic'}>
+                          {value?.centerName || 'Not assigned yet'}
+                        </span>
+                      </div>
                     )
                   },
                   {
@@ -463,32 +438,40 @@ const PatientXRayResults = () => {
                     render: (value, row) => (
                       <div className="flex gap-2">
                         {row.reportFile && (
-                          <Button 
-                            variant="primary" 
-                            size="sm"
-                            onClick={() => handleDownloadReport(row.reportFile)}
-                            title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
-                          >
-                            {isReportFileUrl(row.reportFile) ? (
-                              <>
-                                <FaLink className="w-4 h-4 mr-1" />
-                                View
-                              </>
-                            ) : (
-                              <>
-                                <FaDownload className="w-4 h-4 mr-1" />
-                                Download
-                              </>
-                            )}
-                          </Button>
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewImages(row)}
+                              title="View Images"
+                              className="text-teal-600"
+                            >
+                              <FaEye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDownloadReport(row.reportFile)}
+                              title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
+                              className="text-purple-600"
+                            >
+                              {isReportFileUrl(row.reportFile) ? (
+                                <FaLink className="w-4 h-4" />
+                              ) : (
+                                <FaDownload className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </>
                         )}
                         {!row.reportFile && row.status === 'COMPLETED' && (
                           <Button 
                             variant="outline" 
                             size="sm"
                             disabled
+                            title="No images available"
+                            className="text-gray-400"
                           >
-                            No File
+                            <FaEye className="w-4 h-4" />
                           </Button>
                         )}
                         {row.status !== 'COMPLETED' && (
@@ -511,6 +494,18 @@ const PatientXRayResults = () => {
             </Card>
           )}
         </>
+      )}
+
+      {isImageViewerOpen && selectedRequest && selectedRequest.reportFile && (
+        <ImageViewerModal
+          isOpen={isImageViewerOpen}
+          onClose={() => {
+            setIsImageViewerOpen(false)
+            setSelectedRequest(null)
+          }}
+          images={selectedRequest.reportFile}
+          patientName={`${selectedRequest.patient?.firstName || ''} ${selectedRequest.patient?.lastName || ''}`.trim()}
+        />
       )}
     </div>
   )

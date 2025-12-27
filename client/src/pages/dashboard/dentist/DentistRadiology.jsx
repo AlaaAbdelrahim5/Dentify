@@ -21,6 +21,7 @@ import {
   FaListAlt
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard, LoadingSpinner } from '../../../components'
+import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
 const DentistRadiology = () => {
@@ -31,6 +32,7 @@ const DentistRadiology = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState(null)
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
 
   // Data states
@@ -255,6 +257,11 @@ const DentistRadiology = () => {
   const handleDeleteRequest = (request) => {
     setSelectedRequest(request)
     setIsDeleteModalOpen(true)
+  }
+
+  const handleViewImages = (request) => {
+    setSelectedRequest(request)
+    setIsImageViewerOpen(true)
   }
 
   const handleConfirmDelete = async () => {
@@ -491,6 +498,8 @@ const DentistRadiology = () => {
                   key={request.id}
                   request={request}
                   variant="dentist"
+                  onViewImages={request.reportFile ? handleViewImages : null}
+                  onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
                   onEdit={request.status === 'Requested' ? handleEditRequest : null}
                   onDelete={request.status === 'Requested' ? handleDeleteRequest : null}
                 />
@@ -512,14 +521,20 @@ const DentistRadiology = () => {
                   },
                   {
                     label: 'Imaging Type',
-                    accessor: 'imagingType'
+                    accessor: 'imagingType',
+                    render: (value) => (
+                      <div className="flex items-center gap-2">
+                        <FaXRay className="text-blue-500 w-4 h-4" />
+                        <span>{value}</span>
+                      </div>
+                    )
                   },
                   {
                     label: 'Radiology Center',
                     accessor: 'radiologyCenterName',
                     render: (value) => (
                       <div className="flex items-center gap-2">
-                        <FaHospital className="text-gray-500 w-4 h-4" />
+                        <FaHospital className="text-teal-500 w-4 h-4" />
                         <span>{value}</span>
                       </div>
                     )
@@ -559,18 +574,40 @@ const DentistRadiology = () => {
                     render: (value, row) => (
                       <div className="flex gap-2">
                         {row.reportFile && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewImages(row)}
+                              title="View Images"
+                              className="text-teal-600"
+                            >
+                              <FaEye className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDownloadReport(row.reportFile)}
+                              title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
+                              className="text-purple-600"
+                            >
+                              {isReportFileUrl(row.reportFile) ? (
+                                <FaLink className="w-4 h-4" />
+                              ) : (
+                                <FaDownload className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                        {!row.reportFile && row.status !== 'Requested' && (
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleDownloadReport(row.reportFile)}
-                            title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
-                            className="text-green-600"
+                            disabled
+                            title="No images available"
+                            className="text-gray-400"
                           >
-                            {isReportFileUrl(row.reportFile) ? (
-                              <FaLink className="w-4 h-4" />
-                            ) : (
-                              <FaDownload className="w-4 h-4" />
-                            )}
+                            <FaEye className="w-4 h-4" />
                           </Button>
                         )}
                         {row.status === 'Requested' && (
@@ -617,6 +654,18 @@ const DentistRadiology = () => {
         itemName={selectedRequest?.imagingType || 'Request'}
         itemType="Radiology Request"
       />
+
+      {isImageViewerOpen && selectedRequest && selectedRequest.reportFile && (
+        <ImageViewerModal
+          isOpen={isImageViewerOpen}
+          onClose={() => {
+            setIsImageViewerOpen(false)
+            setSelectedRequest(null)
+          }}
+          images={selectedRequest.reportFile}
+          patientName={selectedRequest.patientName}
+        />
+      )}
 
       {/* Toast Notification */}
       {toast && (
