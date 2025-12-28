@@ -457,7 +457,7 @@ const ToothChartModal = ({
                           <div className="flex justify-between">
                             <span>Date:</span>
                             <span className="font-semibold">
-                              {new Date(formData.date).toLocaleDateString()}
+                              {new Date(formData.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </div>
                         </div>

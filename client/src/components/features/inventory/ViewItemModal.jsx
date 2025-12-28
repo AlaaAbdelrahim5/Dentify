@@ -176,7 +176,7 @@ const ViewItemModal = ({ isOpen, onClose, item, onEdit, canEdit = false }) => {
                   </h5>
                 </div>
                 <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {item.lastRestocked ? new Date(item.lastRestocked).toLocaleDateString() : 'N/A'}
+                  {item.lastRestocked ? new Date(item.lastRestocked).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                 </p>
               </div>
             </div>
@@ -200,7 +200,7 @@ const ViewItemModal = ({ isOpen, onClose, item, onEdit, canEdit = false }) => {
                       daysUntilExpiry < 90 ? 'text-yellow-700 dark:text-yellow-400' : 
                       'text-green-700 dark:text-green-400'
                     }`}>
-                      Expiry Date: {new Date(item.expiryDate).toLocaleDateString()}
+                      Expiry Date: {new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                     <p className={`text-sm mt-1 ${
                       daysUntilExpiry < 30 ? 'text-red-600 dark:text-red-500' : 

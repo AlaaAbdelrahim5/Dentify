@@ -12,9 +12,9 @@ const RequestDetailsModal = ({ request, isOpen, onClose, onStatusUpdate }) => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     })

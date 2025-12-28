@@ -95,7 +95,7 @@ const PatientCard = ({ patient, onClick }) => {
           }`} />
           <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
             Born: {patient.dateOfBirth && !isNaN(new Date(patient.dateOfBirth).getTime()) 
-              ? new Date(patient.dateOfBirth).toLocaleDateString() 
+              ? new Date(patient.dateOfBirth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
               : 'N/A'}
           </span>
         </div>

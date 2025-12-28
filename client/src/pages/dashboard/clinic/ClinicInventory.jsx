@@ -595,7 +595,7 @@ const ClinicInventory = () => {
                         Last Restocked:
                       </span>
                       <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {new Date(item.lastRestocked).toLocaleDateString()}
+                        {new Date(item.lastRestocked).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
@@ -603,7 +603,7 @@ const ClinicInventory = () => {
                         Expiry Date:
                       </span>
                       <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {new Date(item.expiryDate).toLocaleDateString()}
+                        {new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
@@ -722,7 +722,7 @@ const ClinicInventory = () => {
                         Last Order:
                       </span>
                       <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {new Date(supplier.lastOrder).toLocaleDateString()}
+                        {new Date(supplier.lastOrder).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
@@ -828,7 +828,7 @@ const ClinicInventory = () => {
                           <div>
                             <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Expected:</p>
                             <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {new Date(order.expectedDate).toLocaleDateString()}
+                              {new Date(order.expectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
                         </div>
@@ -906,7 +906,7 @@ const ClinicInventory = () => {
                           <div>
                             <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Date:</p>
                             <p className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {new Date(usage.date).toLocaleDateString()}
+                              {new Date(usage.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
                         </div>

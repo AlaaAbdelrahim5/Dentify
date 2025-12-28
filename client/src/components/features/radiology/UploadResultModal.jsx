@@ -324,7 +324,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
       }`}>
         {/* Header with gradient */}
         <div className={`sticky top-0 z-10 overflow-hidden ${
-          isDarkMode ? 'bg-linear-to-r from-blue-600 to-cyan-600' : 'bg-linear-to-r from-blue-500 to-cyan-500'
+          isDarkMode ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'
         }`}>
           <div className="px-6 py-5">
             <div className="flex items-center justify-between">
@@ -368,7 +368,7 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
           <div className={`p-4 rounded-xl border ${
             isDarkMode 
               ? 'bg-gray-700/50 border-gray-600' 
-              : 'bg-linear-to-br from-blue-50 to-cyan-50 border-blue-200'
+              : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200'
           }`}>
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -683,8 +683,8 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               disabled={isSubmitting}
               className={`px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                 isDarkMode
-                  ? 'bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/30'
-                  : 'bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/30'
+                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30'
               }`}
             >
               {isSubmitting ? (

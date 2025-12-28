@@ -227,8 +227,8 @@ const Login = () => {
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden ${
       isDarkMode 
-        ? 'bg-linear-to-br from-gray-900 via-gray-800 to-gray-900'
-        : 'bg-linear-to-br from-teal-50 via-blue-50 to-cyan-50'
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -253,7 +253,7 @@ const Login = () => {
 
         {/* Login Form */}
         <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
-          <Card.Header className={isDarkMode ? 'bg-linear-to-r from-gray-800 to-gray-700' : 'bg-linear-to-r from-teal-500 to-cyan-500'}>
+          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
             <h2 className="text-3xl font-bold text-center text-white">
               Sign In
             </h2>
@@ -382,7 +382,7 @@ const Login = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -453,7 +453,7 @@ const Login = () => {
                   <Button
                     type="submit"
                     size="lg"
-                    className="flex-1 bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                     disabled={isLoading || twoFactorCode.length !== 6}
                   >
                     {isLoading ? (
@@ -471,7 +471,7 @@ const Login = () => {
 
           {/* Sign Up Link */}
           <Card.Footer className={`text-center ${
-            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-linear-to-r from-gray-50 to-gray-100'
+            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-gradient-to-r from-gray-50 to-gray-100'
           }`}>
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'

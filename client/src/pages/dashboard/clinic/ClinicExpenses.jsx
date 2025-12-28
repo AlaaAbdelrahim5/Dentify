@@ -370,13 +370,13 @@ const ClinicExpenses = () => {
                         <div>
                           <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Invoice Date:</p>
                           <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {new Date(invoice.invoiceDate).toLocaleDateString()}
+                            {new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
                         <div>
                           <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Due Date:</p>
                           <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {new Date(invoice.dueDate).toLocaleDateString()}
+                            {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
                         <div>
@@ -504,7 +504,7 @@ const ClinicExpenses = () => {
                         Date:
                       </span>
                       <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {new Date(expense.date).toLocaleDateString()}
+                        {new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">

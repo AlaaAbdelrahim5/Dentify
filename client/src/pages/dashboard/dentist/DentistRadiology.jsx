@@ -524,7 +524,7 @@ const DentistRadiology = () => {
                   {
                     label: 'Request Date',
                     accessor: 'requestDate',
-                    render: (value) => new Date(value).toLocaleDateString()
+                    render: (value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                   },
                   {
                     label: 'Available Date',
@@ -532,7 +532,7 @@ const DentistRadiology = () => {
                     render: (value) => value ? (
                       <div className="flex items-center gap-2 text-teal-500">
                         <FaClock className="w-4 h-4" />
-                        <span>{new Date(value).toLocaleDateString()}</span>
+                        <span>{new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       </div>
                     ) : (
                       <span className="text-gray-400">Pending</span>

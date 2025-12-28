@@ -40,8 +40,8 @@ export default function ForgotPassword() {
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden ${
       isDarkMode 
-        ? 'bg-linear-to-br from-gray-900 via-gray-800 to-gray-900'
-        : 'bg-linear-to-br from-teal-50 via-blue-50 to-cyan-50'
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-br from-teal-50 via-blue-50 to-cyan-50'
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
 
         {/* Password Reset Form */}
         <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
-          <Card.Header className={isDarkMode ? 'bg-linear-to-r from-gray-800 to-gray-700' : 'bg-linear-to-r from-teal-500 to-cyan-500'}>
+          <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
             <div className="flex items-center justify-center mb-2">
               <FaLock className="text-3xl text-white" />
             </div>
@@ -129,7 +129,7 @@ export default function ForgotPassword() {
                 <Button
                   onClick={() => navigate('/login')}
                   size="lg"
-                  className="w-full bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   Back to Login
                 </Button>
@@ -152,7 +152,7 @@ export default function ForgotPassword() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full bg-linear-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isLoading || !email}
                 >
                   {isLoading ? (
@@ -197,7 +197,7 @@ export default function ForgotPassword() {
 
           {/* Login Link */}
           <Card.Footer className={`text-center ${
-            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-linear-to-r from-gray-50 to-gray-100'
+            isDarkMode ? 'bg-gray-800 bg-opacity-50' : 'bg-gradient-to-r from-gray-50 to-gray-100'
           }`}>
             <p className={`text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'

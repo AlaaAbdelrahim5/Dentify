@@ -156,7 +156,7 @@ const ViewSupplierModal = ({ isOpen, onClose, supplier, onEdit, canEdit = true }
                     <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Last Order</p>
                   </div>
                   <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {supplier.lastOrder ? new Date(supplier.lastOrder).toLocaleDateString() : 'No orders yet'}
+                    {supplier.lastOrder ? new Date(supplier.lastOrder).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No orders yet'}
                   </p>
                 </div>
 

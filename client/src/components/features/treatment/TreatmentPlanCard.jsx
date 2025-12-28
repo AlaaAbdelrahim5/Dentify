@@ -173,7 +173,7 @@ const TreatmentPlanCard = ({
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`} />
           <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-            Started: {new Date(treatment.creationDate).toLocaleDateString()}
+            Started: {new Date(treatment.creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
 

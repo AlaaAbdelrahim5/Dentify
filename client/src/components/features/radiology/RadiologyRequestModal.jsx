@@ -267,7 +267,7 @@ const RadiologyRequestModal = ({
                 </option>
                 {filteredTreatments && filteredTreatments.map(t => (
                   <option key={t.id} value={t.id}>
-                    {t.treatmentName} {t.date ? `(${new Date(t.date).toLocaleDateString()})` : ''}
+                    {t.treatmentName} {t.date ? `(${new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})` : ''}
                   </option>
                 ))}
               </select>

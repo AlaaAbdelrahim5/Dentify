@@ -88,7 +88,7 @@ const PatientOverview = ({ userData, onTabChange }) => {
             {upcomingAppointments.map((appointment) => {
               // Use startTime for the actual appointment time
               const startTime = new Date(appointment.startTime)
-              const formattedDate = startTime.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+              const formattedDate = startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               const formattedTime = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
               
               return (

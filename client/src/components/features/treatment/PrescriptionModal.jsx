@@ -237,7 +237,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
         <div class="patient-info">
           <div><strong>Patient Name:</strong> ${patientInfo?.name || 'N/A'}</div>
           <div><strong>Treatment:</strong> ${treatmentInfo?.treatmentName || 'N/A'}</div>
-          <div><strong>Date:</strong> ${new Date(prescriptionDate).toLocaleDateString()}</div>
+          <div><strong>Date:</strong> ${new Date(prescriptionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
         </div>
 
         <div class="medications">
@@ -376,7 +376,7 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
                   isDarkMode ? 'text-white' : 'text-gray-800'
                 }`}>
                   <FaCalendarAlt className="inline mr-2" />
-                  {new Date().toLocaleDateString()}
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
             </div>

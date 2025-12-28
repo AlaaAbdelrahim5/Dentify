@@ -493,8 +493,8 @@ const UnifiedDashboard = () => {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode 
-          ? 'bg-linear-to-br from-gray-900 to-gray-800' 
-          : 'bg-linear-to-br from-teal-50 to-blue-50'
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
       }`}>
         <div className="text-center">
           <LoadingSpinner size="lg" />
@@ -508,8 +508,8 @@ const UnifiedDashboard = () => {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode 
-          ? 'bg-linear-to-br from-gray-900 to-gray-800' 
-          : 'bg-linear-to-br from-teal-50 to-blue-50'
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-teal-50 to-blue-50'
       }`}>
         <LoadingSpinner size="lg" />
       </div>
@@ -521,8 +521,8 @@ const UnifiedDashboard = () => {
   return (
     <div className={`min-h-screen ${
       isDarkMode 
-        ? 'bg-linear-to-br from-gray-900 to-gray-800' 
-        : 'bg-linear-to-br from-teal-50 to-blue-50'
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
       {/* Unified Header */}
       <Navbar 

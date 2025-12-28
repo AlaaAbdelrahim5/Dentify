@@ -78,7 +78,7 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookA
               Started
             </Text>
             <Text className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {new Date(treatment.startDate).toLocaleDateString()}
+              {new Date(treatment.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </Text>
           </View>
         )}

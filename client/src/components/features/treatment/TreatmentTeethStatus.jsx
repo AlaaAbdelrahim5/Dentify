@@ -194,7 +194,7 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
                     Diagnosed Date
                   </p>
                   <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {new Date(tooth.diagnosedDate).toLocaleDateString()}
+                    {new Date(tooth.diagnosedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               )}

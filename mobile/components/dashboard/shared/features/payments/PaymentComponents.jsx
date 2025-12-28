@@ -42,7 +42,7 @@ export const PaymentCard = ({ payment, isDarkMode, role = 'patient' }) => {
         <View className="flex-row items-center">
           <Ionicons name="calendar-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
           <Text className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {new Date(payment.paymentDate).toLocaleDateString()}
+            {new Date(payment.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </Text>
         </View>
         <View className={`px-2 py-1 rounded-full ${payment.method === 'CASH' ? 'bg-green-100' : 'bg-blue-100'}`}>

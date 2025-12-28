@@ -218,7 +218,7 @@ const TreatmentDetailsModal = ({
         <div class="patient-info">
           <div><strong>Patient Name:</strong> ${treatmentData.patientName || 'N/A'}</div>
           <div><strong>Treatment:</strong> ${treatmentData.treatmentName || 'N/A'}</div>
-          <div><strong>Date:</strong> ${new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString()}</div>
+          <div><strong>Date:</strong> ${new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
         </div>
 
         <div class="medications">
@@ -604,7 +604,7 @@ const TreatmentDetailsModal = ({
                           Created
                         </p>
                         <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-blue-900'}`}>
-                          {new Date(treatmentData.creationDate).toLocaleDateString()}
+                          {new Date(treatmentData.creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
                       <FaCalendarAlt className={`w-8 h-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
@@ -787,7 +787,7 @@ const TreatmentDetailsModal = ({
                 </Card>
 
                 {(treatmentData.treatmentDiscount || 0) > 0 && (
-                  <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-orange-50 to-orange-100'}>
+                  <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-orange-50 to-orange-100'}>
                     <Card.Content className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -804,7 +804,7 @@ const TreatmentDetailsModal = ({
                   </Card>
                 )}
 
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-teal-50 to-teal-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-teal-50 to-teal-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -821,8 +821,8 @@ const TreatmentDetailsModal = ({
                 </Card>
 
                 <Card className={isDarkMode ? 'bg-gray-700/50' : remainingBalance > 0 
-                  ? 'bg-linear-to-br from-red-50 to-red-100' 
-                  : 'bg-linear-to-br from-blue-50 to-blue-100'
+                  ? 'bg-gradient-to-br from-red-50 to-red-100' 
+                  : 'bg-gradient-to-br from-blue-50 to-blue-100'
                 }>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
@@ -869,8 +869,8 @@ const TreatmentDetailsModal = ({
                       <div
                         className={`h-full transition-all duration-500 ${
                           paymentProgress === 100 
-                            ? 'bg-linear-to-r from-green-500 to-green-600'
-                            : 'bg-linear-to-r from-teal-500 to-teal-600'
+                            ? 'bg-gradient-to-r from-green-500 to-green-600'
+                            : 'bg-gradient-to-r from-teal-500 to-teal-600'
                         }`}
                         style={{ width: `${paymentProgress}%` }}
                       />
@@ -940,7 +940,7 @@ const TreatmentDetailsModal = ({
                               <span className={`text-sm ${
                                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
                               }`}>
-                                {new Date(payment.paymentDate).toLocaleDateString()}
+                                {new Date(payment.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </span>
                             </div>
 
@@ -1086,7 +1086,7 @@ const TreatmentDetailsModal = ({
                               <span className={`text-sm font-medium ${
                                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
                               }`}>
-                                {new Date(appointment.appointmentDate).toLocaleDateString()}
+                                {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </span>
                             </div>
 
@@ -1210,7 +1210,7 @@ const TreatmentDetailsModal = ({
                                     isDarkMode ? 'text-gray-400' : 'text-gray-500'
                                   }`} />
                                   <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                                    {new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString()}
+                                    {new Date(prescription.prescriptionDate || prescription.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                   </span>
                                 </div>
                               </div>

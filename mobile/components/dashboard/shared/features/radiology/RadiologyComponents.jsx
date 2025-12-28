@@ -51,7 +51,7 @@ export const RadiologyRequestCard = ({ request, isDarkMode }) => (
     <View className="flex-row items-center mt-1">
       <Ionicons name="calendar-outline" size={16} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
       <Text className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-        {new Date(request.requestDate).toLocaleDateString()}
+        {new Date(request.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
       </Text>
     </View>
 

@@ -429,7 +429,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
                   }}
                 />
               ) : null}
-              <div className={`w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center ${appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? 'hidden' : ''}`}>
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center ${appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? 'hidden' : ''}`}>
                 <FaUser className="text-white text-sm" />
               </div>
             </div>

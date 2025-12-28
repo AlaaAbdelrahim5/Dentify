@@ -633,12 +633,12 @@ const PatientDetailsModal = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Gradient */}
-          <div className="relative bg-linear-to-br from-teal-500 to-cyan-600 p-8">
+          <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/20 transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
             >
-              <FaTimes className="w-5 h-5 text-white" />
+              <FaTimes className="w-5 h-5" />
             </button>
             
             <div className="flex items-center gap-4">
@@ -647,52 +647,56 @@ const PatientDetailsModal = ({
                   <img
                     src={getImageUrl(patientData.user?.profileImage || patientData.profileImage)}
                     alt={`${patientData.firstName} ${patientData.lastName}`}
-                    className="w-20 h-20 rounded-full object-cover shadow-lg"
+                    className="w-24 h-24 rounded-full object-cover shadow-lg"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextElementSibling.style.display = 'flex';
                     }}
                   />
                 ) : null}
-                <div className={`w-20 h-20 rounded-full bg-white flex items-center justify-center relative ${patientData.user?.profileImage || patientData.profileImage ? 'hidden' : ''}`}>
-                  <FaUser className="text-teal-600 text-3xl" />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
-                    <FaCheckCircle className="text-white w-3 h-3" />
-                  </div>
+                <div className={`w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg ${patientData.user?.profileImage || patientData.profileImage ? 'hidden' : ''}`}>
+                  <FaUser className="w-12 h-12 text-teal-600" />
                 </div>
-                {(patientData.user?.profileImage || patientData.profileImage) && (
-                  <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
-                    <FaCheckCircle className="text-white w-3 h-3" />
-                  </div>
-                )}
+                <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
+                  patientData.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-red-500'
+                }`}>
+                  {patientData.status?.toLowerCase() === 'active' ? (
+                    <FaCheckCircle className="w-3 h-3 text-white" />
+                  ) : (
+                    <FaTimesCircle className="w-3 h-3 text-white" />
+                  )}
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-1">
                   {patientData.firstName || patientData.name || 'Patient'} {patientData.lastName || ''}
                 </h2>
-                <p className="text-teal-50 text-sm mt-1">
+                <p className="text-teal-100 text-sm mb-2">
                   {patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : ''} • {calculateAge(patientData.dateOfBirth)} years
                 </p>
-                {patientData.status && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <FaCheckCircle className="text-green-300 w-4 h-4" />
-                    <span className="text-sm text-green-300">
-                      {patientData.status.charAt(0).toUpperCase() + patientData.status.slice(1)}
-                    </span>
-                  </div>
-                )}
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                  patientData.status?.toLowerCase() === 'active'
+                    ? 'bg-green-900/20 text-green-300 border-green-700'
+                    : 'bg-red-900/20 text-red-300 border-red-700'
+                }`}>
+                  {patientData.status?.toLowerCase() === 'active' ? (
+                    <FaCheckCircle className="w-3 h-3" />
+                  ) : (
+                    <FaTimesCircle className="w-3 h-3" />
+                  )}
+                  {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1).toLowerCase() || 'Inactive'}
+                </span>
               </div>
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(patientData)}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
+                >
+                  <FaEdit className="w-4 h-4" />
+                  Edit
+                </button>
+              )}
             </div>
-            
-            {onEdit && (
-              <button
-                onClick={() => onEdit(patientData)}
-                className="absolute top-4 right-16 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
-              >
-                <FaEdit className="w-4 h-4" />
-                Edit Patient
-              </button>
-            )}
           </div>
 
         {/* Tab Navigation */}

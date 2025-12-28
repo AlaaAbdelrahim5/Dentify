@@ -258,7 +258,7 @@ const SecretaryPayments = () => {
       render: (value) => (
         <div className="flex items-center gap-2">
           <FaCalendarAlt className="text-gray-500 w-4 h-4" />
-          <span>{new Date(value).toLocaleDateString()}</span>
+          <span>{new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </div>
       )
     },
@@ -384,7 +384,7 @@ const SecretaryPayments = () => {
 
       {/* Patient Summary Section - Shows when patient filter is selected */}
       {selectedPatient !== 'all' && (
-        <Card className={`p-6 ${isDarkMode ? 'bg-linear-to-br from-teal-900/20 to-blue-900/20 border-teal-700' : 'bg-linear-to-br from-teal-50 to-blue-50 border-teal-200'} border-2`}>
+        <Card className={`p-6 ${isDarkMode ? 'bg-gradient-to-br from-teal-900/20 to-blue-900/20 border-teal-700' : 'bg-gradient-to-br from-teal-50 to-blue-50 border-teal-200'} border-2`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className={`text-lg font-semibold flex items-center gap-2 ${
               isDarkMode ? 'text-white' : 'text-gray-800'

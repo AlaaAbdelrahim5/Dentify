@@ -61,7 +61,7 @@ export const generatePaymentReceipt = (payment) => {
             </div>
             <div class="info-row">
               <span class="info-label">Date of Payment:</span>
-              <span class="info-value">${new Date(payment.paymentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span class="info-value">${new Date(payment.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
           </div>
           

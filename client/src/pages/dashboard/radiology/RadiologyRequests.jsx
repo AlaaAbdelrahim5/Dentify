@@ -187,14 +187,14 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       patientName: `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.trim(),
       dentistName: `Dr. ${r.dentist?.firstName || ''} ${r.dentist?.lastName || ''}`.trim(),
       formattedRequestDate: new Date(r.requestDate).toLocaleDateString('en-US', {
-        year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        year: 'numeric'
       }),
       formattedAvailableDate: r.availableDate ? new Date(r.availableDate).toLocaleDateString('en-US', {
-        year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        year: 'numeric'
       }) : null
     }))
   , [requests])

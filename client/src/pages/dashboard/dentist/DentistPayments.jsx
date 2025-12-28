@@ -257,7 +257,7 @@ const DentistPayments = () => {
       render: (value) => (
         <div className="flex items-center gap-2">
           <FaCalendarAlt className="text-gray-500 w-4 h-4" />
-          <span>{new Date(value).toLocaleDateString()}</span>
+          <span>{new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
         </div>
       )
     },
