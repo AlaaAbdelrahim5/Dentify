@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FaUserMd, FaHospital } from 'react-icons/fa'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { Button } from '../../../components'
 import FindDentist from './FindDentist'
 import FindClinic from './FindClinic'
 
@@ -23,22 +24,21 @@ const SearchPage = () => {
           {tabs.map(tab => {
             const Icon = tab.icon
             return (
-              <button
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all duration-200 ${
+                variant={activeTab === tab.id ? 'primary' : 'ghost'}
+                className={`flex items-center gap-2 border-b-2 rounded-none ${
                   activeTab === tab.id
                     ? isDarkMode
                       ? 'border-teal-500 text-teal-400'
                       : 'border-teal-600 text-teal-600'
-                    : isDarkMode
-                    ? 'border-transparent text-gray-400 hover:text-gray-300'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    : 'border-transparent'
                 }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{tab.label}</span>
-              </button>
+              </Button>
             )
           })}
         </div>

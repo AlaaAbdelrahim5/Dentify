@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaLock, FaEye, FaEyeSlash, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
-import { Logo, Button, Input, Card, LoadingSpinner } from '../components';
+import { Logo, Button, Input, Card, LoadingSpinner, Alert } from '../components';
 import { authAPI } from '../services/api';
 
 export default function ResetPassword() {
@@ -132,32 +132,22 @@ export default function ResetPassword() {
           <Card.Content className="p-8">
             {/* Success Message */}
             {resetSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaCheck className="text-green-600 text-2xl" />
-                  <div>
-                    <h3 className="font-medium text-green-800">
-                      Password Reset Successfully!
-                    </h3>
-                    <p className="text-sm text-green-600 mt-1">
-                      You can now log in with your new password. Redirecting...
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="success"
+                title="Password Reset Successfully!"
+                message="You can now log in with your new password. Redirecting..."
+                className="mb-6"
+              />
             )}
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaExclamationTriangle className="text-red-600" />
-                  <div>
-                    <h3 className="font-medium text-red-800">Error</h3>
-                    <p className="text-sm text-red-600 mt-1">{error}</p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="error"
+                title="Error"
+                message={error}
+                className="mb-6"
+              />
             )}
 
             {resetSuccess ? (

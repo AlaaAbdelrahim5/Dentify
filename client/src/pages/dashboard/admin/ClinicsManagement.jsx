@@ -216,7 +216,8 @@ const ClinicsManagement = () => {
   }
 
   const handleToggleClinicStatus = async (clinic) => {
-    const isActive = clinic.user?.status === 'ACTIVE'
+    const status = clinic.user?.status
+    const isActive = status === 'ACTIVE' || status === 'active'
     const action = isActive ? 'deactivate' : 'activate'
     
     setSelectedClinic(clinic)

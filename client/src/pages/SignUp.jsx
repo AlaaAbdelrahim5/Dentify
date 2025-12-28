@@ -19,6 +19,7 @@ import {
   PhoneInput,
   Card,
   LoadingSpinner,
+  Alert,
 } from "../components";
 import { authAPI } from "../services/api";
 import { authUtils } from "../utils/auth";
@@ -315,32 +316,22 @@ const SignUp = () => {
           <Card.Content className="p-8">
             {/* Success Message */}
             {isSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaCheck className="text-green-600" />
-                  <div>
-                    <h3 className="font-medium text-green-800">
-                      Account Created Successfully!
-                    </h3>
-                    <p className="text-sm text-green-600 mt-1">
-                      Redirecting you to the login page...
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="success"
+                title="Account Created Successfully!"
+                message="Redirecting you to the login page..."
+                className="mb-6"
+              />
             )}
 
             {/* API Error Message */}
             {apiError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaExclamationTriangle className="text-red-600" />
-                  <div>
-                    <h3 className="font-medium text-red-800">Signup Failed</h3>
-                    <p className="text-sm text-red-600 mt-1">{apiError}</p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="error"
+                title="Signup Failed"
+                message={apiError}
+                className="mb-6"
+              />
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">

@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, StatusBadge } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { getImageUrl } from '../../../utils/helpers'
 
 const DoctorCard = ({ 
   doctor, 
@@ -60,15 +61,15 @@ const DoctorCard = ({
           <div className="flex items-start space-x-6">
             {/* Doctor Avatar */}
             <div className="shrink-0">
-              {doctor.photoUrl && !imageError ? (
+              {(doctor.user?.profileImage || doctor.profileImage) && !imageError ? (
                 <img
-                  src={doctor.photoUrl}
+                  src={getImageUrl(doctor.user?.profileImage || doctor.profileImage)}
                   alt={fullName}
                   onError={() => setImageError(true)}
                   className="w-24 h-24 rounded-xl object-cover shadow-lg"
                 />
               ) : (
-                <div className={`w-24 h-24 rounded-xl flex items-center justify-center bg-linear-to-br ${getAvatarColor()} shadow-lg`}>
+                <div className={`w-24 h-24 rounded-xl flex items-center justify-center bg-gradient-to-br ${getAvatarColor()} shadow-lg`}>
                   <span className="text-white text-3xl font-bold">
                     {getAvatarPlaceholder()}
                   </span>
@@ -211,10 +212,10 @@ const DoctorCard = ({
       <Card.Content className="p-6">
         {/* Doctor Avatar with enhanced styling */}
         <div className="flex justify-center mb-4">
-          {doctor.photoUrl && !imageError ? (
+          {(doctor.user?.profileImage || doctor.profileImage) && !imageError ? (
             <div className="relative">
               <img
-                src={doctor.photoUrl}
+                src={getImageUrl(doctor.user?.profileImage || doctor.profileImage)}
                 alt={fullName}
                 onError={() => setImageError(true)}
                 className="w-24 h-24 rounded-full object-cover shadow-xl ring-4 ring-offset-2 ring-teal-500/20"

@@ -9,7 +9,7 @@ import {
   FaEnvelope,
   FaUserShield
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { getImageUrl } from '../../../utils/helpers'
@@ -265,25 +265,17 @@ const AdminSettings = () => {
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Gender
-            </label>
-            <select
+            <Select
+              label="Gender"
               value={profile.gender}
               onChange={(e) => handleProfileUpdate('gender', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+              options={[
+                { value: 'Male', label: 'Male' },
+                { value: 'Female', label: 'Female' }
+              ]}
+              placeholder="Select Gender"
+            />
           </div>
         </div>
 

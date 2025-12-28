@@ -20,7 +20,7 @@ import {
   FaTh,
   FaListAlt
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard, LoadingSpinner } from '../../../components'
+import { Card, Button, Input, PageHeader, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard, LoadingSpinner, EmptyState } from '../../../components'
 import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
 
@@ -364,24 +364,16 @@ const DentistRadiology = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Radiology Requests
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Manage diagnostic imaging requests
-          </p>
-        </div>
-        <Button variant="primary" onClick={handleNewRequest} className="bg-purple-600 hover:bg-purple-700">
-          <FaPlus className="w-4 h-4 mr-2" />
-          New Request
-        </Button>
-      </div>
+      <PageHeader
+        title="Radiology Requests"
+        description="Manage diagnostic imaging requests"
+        action={{
+          label: 'New Request',
+          onClick: handleNewRequest,
+          icon: FaPlus,
+          className: 'bg-purple-600 hover:bg-purple-700'
+        }}
+      />
 
 
 
@@ -460,34 +452,24 @@ const DentistRadiology = () => {
           <LoadingSpinner size="lg" text="Loading radiology requests..." />
         </Card>
       ) : filteredRequests.length === 0 ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaXRay className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {transformedRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {transformedRequests.length === 0 
+        <Card>
+          <EmptyState
+            icon={FaXRay}
+            title={transformedRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
+            description={transformedRequests.length === 0 
               ? 'Create your first radiology request to get started'
               : 'Try adjusting your search or filter criteria'}
-          </p>
-          {transformedRequests.length === 0 && (
-            <Button 
-              variant="primary" 
-              onClick={handleNewRequest}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <FaPlus className="w-4 h-4 mr-2" />
-              Create First Request
-            </Button>
-          )}
+            action={transformedRequests.length === 0 ? (
+              <Button 
+                variant="primary" 
+                onClick={handleNewRequest}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <FaPlus className="w-4 h-4 mr-2" />
+                Create First Request
+              </Button>
+            ) : null}
+          />
         </Card>
       ) : (
         <>

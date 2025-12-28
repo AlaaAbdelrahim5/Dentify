@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes } from 'react-icons/fa'
+import { useTheme } from '../../../contexts/ThemeContext'
 
 const Toast = ({ message, type = 'success', onClose, duration = 3000 }) => {
+  const { isDarkMode } = useTheme()
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose()
@@ -14,22 +17,27 @@ const Toast = ({ message, type = 'success', onClose, duration = 3000 }) => {
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-green-500',
+          bg: isDarkMode ? 'bg-green-600' : 'bg-green-500',
           icon: <FaCheckCircle className="w-5 h-5" />
         }
       case 'error':
         return {
-          bg: 'bg-red-500',
+          bg: isDarkMode ? 'bg-red-600' : 'bg-red-500',
           icon: <FaExclamationTriangle className="w-5 h-5" />
         }
       case 'info':
         return {
-          bg: 'bg-blue-500',
+          bg: isDarkMode ? 'bg-blue-600' : 'bg-blue-500',
           icon: <FaInfoCircle className="w-5 h-5" />
+        }
+      case 'warning':
+        return {
+          bg: isDarkMode ? 'bg-yellow-600' : 'bg-yellow-500',
+          icon: <FaExclamationTriangle className="w-5 h-5" />
         }
       default:
         return {
-          bg: 'bg-green-500',
+          bg: isDarkMode ? 'bg-green-600' : 'bg-green-500',
           icon: <FaCheckCircle className="w-5 h-5" />
         }
     }

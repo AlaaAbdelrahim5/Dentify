@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fa'
 import { Button, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { formatDate as formatDateHelper, formatTime } from '../../../utils/helpers'
+import { formatDate as formatDateHelper, formatTime, getImageUrl } from '../../../utils/helpers'
 import { FaTimes } from 'react-icons/fa'
 
 const AppointmentDetailsModal = ({ 
@@ -107,44 +107,51 @@ const AppointmentDetailsModal = ({
                 <FaUser className="w-5 h-5 text-teal-500" />
                 Patient Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={`text-sm font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Name</label>
-                  <p className={`mt-1 font-semibold ${
+              <div className="flex items-start gap-4 mb-4">
+                <div className="relative shrink-0">
+                  {appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? (
+                    <img
+                      src={getImageUrl(appointment.patient?.user?.profileImage || appointment.patient?.profileImage)}
+                      alt={appointment.patient?.name || `${appointment.patient?.firstName} ${appointment.patient?.lastName}`}
+                      className="w-16 h-16 rounded-full object-cover shadow-lg"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? 'hidden' : ''} ${
+                    isDarkMode ? 'bg-gradient-to-br from-teal-600 to-cyan-600' : 'bg-gradient-to-br from-teal-500 to-cyan-500'
+                  }`}>
+                    <FaUser className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className={`text-xl font-bold mb-1 ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {appointment.patient?.name || 
                      `${appointment.patient?.firstName} ${appointment.patient?.lastName}` ||
                      'N/A'}
                   </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Phone</label>
-                  <p className={`mt-1 flex items-center gap-2 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <FaPhone className="w-3 h-3" />
-                    {appointment.patient?.phone || 
-                     appointment.patient?.user?.phone || 
-                     'N/A'}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className={`text-sm font-medium ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>Email</label>
-                  <p className={`mt-1 flex items-center gap-2 ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    <FaEnvelope className="w-3 h-3" />
-                    {appointment.patient?.email || 
-                     appointment.patient?.user?.email || 
-                     'N/A'}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className={`flex items-center gap-2 text-sm ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      <FaEnvelope className="w-3 h-3" />
+                      {appointment.patient?.email || 
+                       appointment.patient?.user?.email || 
+                       'N/A'}
+                    </p>
+                    <p className={`flex items-center gap-2 text-sm ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      <FaPhone className="w-3 h-3" />
+                      {appointment.patient?.phone || 
+                       appointment.patient?.user?.phone || 
+                       'N/A'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

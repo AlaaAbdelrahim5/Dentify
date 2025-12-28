@@ -23,7 +23,7 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="2xl" noPadding>
       {/* Header with gradient background */}
-      <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 p-6">
+      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"

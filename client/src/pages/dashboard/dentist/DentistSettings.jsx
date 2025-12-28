@@ -17,7 +17,7 @@ import {
   FaTiktok,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
@@ -362,25 +362,17 @@ const DentistSettings = () => {
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Gender
-            </label>
-            <select
+            <Select
+              label="Gender"
               value={profile.gender}
               onChange={(e) => handleProfileUpdate('gender', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+              options={[
+                { value: 'Male', label: 'Male' },
+                { value: 'Female', label: 'Female' }
+              ]}
+              placeholder="Select Gender"
+            />
           </div>
 
           <div>
@@ -661,20 +653,15 @@ const DentistSettings = () => {
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
-              <button
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-teal-600 text-white'
-                    : isDarkMode
-                      ? 'text-gray-300 hover:bg-gray-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                variant={activeTab === tab.id ? 'primary' : 'ghost'}
+                className="flex items-center gap-2"
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-              </button>
+              </Button>
             )
           })}
         </div>

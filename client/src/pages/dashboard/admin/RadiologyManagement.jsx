@@ -201,7 +201,8 @@ const RadiologyManagement = () => {
   }
 
   const handleToggleCenterStatus = async (center) => {
-    const isActive = center.user?.status === 'ACTIVE'
+    const status = center.user?.status
+    const isActive = status === 'ACTIVE' || status === 'active'
     const action = isActive ? 'deactivate' : 'activate'
     
     setSelectedCenter(center)

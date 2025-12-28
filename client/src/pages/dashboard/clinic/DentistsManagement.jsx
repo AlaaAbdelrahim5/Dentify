@@ -201,7 +201,7 @@ const DentistsManagement = () => {
 
   const handleToggleStatus = (dentist) => {
     const currentStatus = dentist.userId?.status
-    const action = currentStatus === 'ACTIVE' ? 'deactivate' : 'activate'
+    const action = currentStatus === 'ACTIVE' || currentStatus === 'active' ? 'deactivate' : 'activate'
     
     setDentistToToggle(dentist)
     setConfirmAction(action)

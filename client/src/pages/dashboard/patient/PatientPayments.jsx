@@ -13,7 +13,7 @@ import {
   FaUserMd,
   FaTooth
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, generatePaymentReceipt } from '../../../components'
+import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, generatePaymentReceipt, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI } from '../../../services/api'
 
 const PatientPayments = () => {
@@ -330,23 +330,13 @@ const PatientPayments = () => {
       </Card>
 
       {/* Payments Table */}
-      <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <Card>
         {!loading && !filtering && filteredPayments.length === 0 ? (
-          <div className="p-8 text-center">
-            <FaMoneyBillWave className={`w-12 h-12 mx-auto mb-4 ${
-              isDarkMode ? 'text-gray-500' : 'text-gray-400'
-            }`} />
-            <h3 className={`text-lg font-semibold mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              No payments found
-            </h3>
-            <p className={`${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              No payments match your current filters
-            </p>
-          </div>
+          <EmptyState
+            icon={FaMoneyBillWave}
+            title="No payments found"
+            description="No payments match your current filters"
+          />
         ) : (
           <DataTable
             columns={columns}

@@ -20,7 +20,7 @@ import {
   FaSave,
   FaPrescriptionBottle
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast } from '../../../components'
+import { Card, Button, Input, PageHeader, LoadingSpinner, EmptyState, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast } from '../../../components'
 import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { calculateRemainingBalance, safeJsonParse, ensureArray, sumField, countWhere, normalizeStatus } from '../../../utils/helpers'
 
@@ -660,24 +660,15 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       {currentPage === 'list' && (
         <>
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Treatment Management
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Manage treatment plans and track progress
-          </p>
-        </div>
-        <Button variant="primary" onClick={handleNewTreatment}>
-          <FaPlus className="w-4 h-4 mr-2" />
-          New Treatment Plan
-        </Button>
-      </div>
+      <PageHeader
+        title="Treatment Management"
+        description="Manage treatment plans and track progress"
+        action={{
+          label: 'New Treatment Plan',
+          onClick: handleNewTreatment,
+          icon: FaPlus
+        }}
+      />
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -788,22 +779,12 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           </div>
         </Card>
       ) : filteredTreatments.length === 0 ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaStethoscope className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            No treatments found
-          </h3>
-          <p className={`${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            No treatments match your current filters
-          </p>
+        <Card>
+          <EmptyState
+            icon={FaStethoscope}
+            title="No treatments found"
+            description="No treatments match your current filters"
+          />
         </Card>
       ) : (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>

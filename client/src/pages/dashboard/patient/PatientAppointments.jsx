@@ -304,8 +304,21 @@ const PatientAppointments = () => {
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-              <FaUser className="text-white text-sm" />
+            <div className="shrink-0">
+              {appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage ? (
+                <img
+                  src={getImageUrl(appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage)}
+                  alt={`Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center ${appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage ? 'hidden' : ''}`}>
+                <FaUser className="text-white text-sm" />
+              </div>
             </div>
             <div>
               <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -495,14 +508,14 @@ const PatientAppointments = () => {
           <Button
             variant={activeView === 'upcoming' ? 'primary' : 'outline'}
             onClick={() => setActiveView('upcoming')}
-            className={activeView === 'upcoming' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Upcoming ({upcomingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'past' ? 'primary' : 'outline'}
             onClick={() => setActiveView('past')}
-            className={activeView === 'past' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Past ({pastAppointments.length})
           </Button>
@@ -526,7 +539,7 @@ const PatientAppointments = () => {
             <p className="text-lg font-semibold mb-2">Error Loading Appointments</p>
             <p>{error}</p>
           </div>
-          <Button onClick={() => fetchAppointments()} className="bg-linear-to-r from-teal-600 to-cyan-600">
+          <Button onClick={() => fetchAppointments()} className="bg-gradient-to-r from-teal-600 to-cyan-600">
             Try Again
           </Button>
         </div>
@@ -568,7 +581,8 @@ const PatientAppointments = () => {
         itemType="Appointment"
       />
 
-      {/* Toast Notification */}      {toast && (
+      {/* Toast Notification */}
+      {toast && (
         <Toast
           message={toast.message}
           type={toast.type}

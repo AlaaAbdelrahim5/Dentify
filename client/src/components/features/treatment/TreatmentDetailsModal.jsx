@@ -596,7 +596,7 @@ const TreatmentDetailsModal = ({
             <div className="space-y-6">
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-blue-50 to-blue-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50 to-blue-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -628,7 +628,7 @@ const TreatmentDetailsModal = ({
                   </Card.Content>
                 </Card>
 
-                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-linear-to-br from-purple-50 to-purple-100'}>
+                <Card className={isDarkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-purple-50 to-purple-100'}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div>

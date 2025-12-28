@@ -883,7 +883,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
+                  className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
                 >
                   {loading ? (
                     <LoadingSpinner size="sm" />

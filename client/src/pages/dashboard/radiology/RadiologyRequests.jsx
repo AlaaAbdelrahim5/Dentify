@@ -27,7 +27,8 @@ import {
   Card, 
   Button, 
   StatsOverview, 
-  DataTable, 
+  DataTable,
+  EmptyState, 
   StatusBadge,
   RequestCard,
   Select, 
@@ -296,20 +297,10 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Imaging Requests
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Manage and process radiology imaging requests
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Imaging Requests"
+        description="Manage and process radiology imaging requests"
+      />
 
       {/* Stats Overview */}
       <StatsOverview stats={[
@@ -408,30 +399,18 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
 
       {/* Requests - Table or Grid View */}
       {isLoading ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
+        <Card className="p-8 text-center">
           <LoadingSpinner size="lg" text="Loading radiology requests..." />
         </Card>
       ) : filteredRequests.length === 0 ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaXRay className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {requests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {requests.length === 0 
+        <Card>
+          <EmptyState
+            icon={FaXRay}
+            title={requests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
+            description={requests.length === 0 
               ? 'Waiting for dentists to submit imaging requests'
               : 'Try adjusting your search or filter criteria'}
-          </p>
+          />
         </Card>
       ) : (
         <>

@@ -12,7 +12,7 @@ import {
   FaBirthdayCake,
   FaArrowLeft
 } from 'react-icons/fa'
-import { Card, Button, Input, StatsOverview, PatientDetailsModal, PatientCard } from '../../../components'
+import { Card, Button, Input, PageHeader, StatsOverview, PatientDetailsModal, PatientCard, LoadingState, ErrorState, EmptyState } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, appointmentsAPI } from '../../../services/api'
 import { calculateRemainingBalance } from '../../../utils/helpers'
@@ -209,20 +209,10 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       {currentPage === 'list' && (
         <>
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className={`text-2xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Clinic Patients
-          </h1>
-          <p className={`mt-1 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            View and manage patient records
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Clinic Patients"
+        description="View and manage patient records"
+      />
 
       {/* Stats Overview */}
       <StatsOverview stats={[
@@ -267,52 +257,23 @@ const ClinicPatients = ({ userData, onTabChange }) => {
 
       {/* Patients Display */}
       {loading ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <div className="flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mb-4"></div>
-            <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-              Loading patients...
-            </p>
-          </div>
+        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+          <LoadingState message="Loading patients..." />
         </Card>
       ) : error ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaUsers className={`w-12 h-12 mx-auto mb-4 text-red-500`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Error Loading Patients
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {error}
-          </p>
-          <Button onClick={fetchPatientsAndStats}>
-            Try Again
-          </Button>
+        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+          <ErrorState 
+            message={error}
+            onRetry={fetchPatientsAndStats}
+          />
         </Card>
       ) : displayPatients.length === 0 ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaUser className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            No patients found
-          </h3>
-          <p className={`${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            No patients match your current search
-          </p>
+        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+          <EmptyState
+            icon={FaUser}
+            title="No patients found"
+            description="No patients match your current search"
+          />
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

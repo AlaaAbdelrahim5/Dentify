@@ -14,13 +14,15 @@ import {
   PageHeader, 
   Button, 
   LoadingSpinner,
+  ErrorState,
   FilterBar,
   DataTable,
   ClinicDetailsModal,
   BookAppointmentModal,
   Toast,
   Card,
-  MultiLocationMap
+  MultiLocationMap,
+  ClinicCard
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
@@ -331,26 +333,10 @@ const FindClinic = () => {
           title="Find a Clinic"
           description="Search and browse dental clinics"
         />
-        <div className={`p-12 text-center rounded-lg ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaBuilding className={`mx-auto text-5xl mb-4 ${
-            isDarkMode ? 'text-red-400' : 'text-red-600'
-          }`} />
-          <h3 className={`text-xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            Error Loading Clinics
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </p>
-          <Button onClick={fetchClinics}>
-            Try Again
-          </Button>
-        </div>
+        <ErrorState
+          message={error}
+          onRetry={fetchClinics}
+        />
       </div>
     )
   }
@@ -388,6 +374,14 @@ const FindClinic = () => {
               <FaList className="w-4 h-4" />
             </Button>
             <Button
+              variant={viewMode === 'grid' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+            >
+              <FaBuilding className="w-4 h-4" />
+            </Button>
+            <Button
               variant={viewMode === 'map' ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setViewMode('map')}
@@ -411,6 +405,52 @@ const FindClinic = () => {
           emptyTitle="No Clinics Found"
           hasFilters={searchQuery !== '' || selectedCity !== 'all'}
         />
+      )}
+
+      {/* Grid View */}
+      {viewMode === 'grid' && (
+        isLoading || filtering ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className={`h-96 rounded-lg ${
+                isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+              } animate-pulse`} />
+            ))}
+          </div>
+        ) : filteredClinics.length === 0 ? (
+          <div className={`p-12 text-center rounded-lg ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <FaBuilding className={`mx-auto text-5xl mb-4 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`} />
+            <h3 className={`text-xl font-bold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              No Clinics Found
+            </h3>
+            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+              {searchQuery !== '' || selectedCity !== 'all'
+                ? 'Try adjusting your filters'
+                : 'No clinics available at the moment'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClinics.map((clinic) => (
+              <ClinicCard
+                key={clinic.id}
+                clinic={clinic}
+                layout="grid"
+                onViewDetails={() => handleViewDetails(clinic)}
+                onBookAppointment={() => {
+                  setSelectedClinic(clinic)
+                  setShowDetailsModal(true)
+                }}
+              />
+            ))}
+          </div>
+        )
       )}
 
       {/* Map View */}

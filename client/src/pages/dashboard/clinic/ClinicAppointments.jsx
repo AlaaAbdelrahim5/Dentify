@@ -20,12 +20,15 @@ import {
   StatsOverview,
   FilterBar,
   DataTable,
+  LoadingState,
+  ErrorState,
   ConfirmationModal,
   NewAppointmentModal,
   SessionCostModal
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
+import { getImageUrl } from '../../../utils/helpers'
 import { appointmentsAPI } from '../../../services/api'
 
 const ClinicAppointments = ({ userData, onTabChange }) => {
@@ -414,8 +417,21 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
-              <FaUser className="text-white text-sm" />
+            <div className="shrink-0">
+              {appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? (
+                <img
+                  src={getImageUrl(appointment.patient?.user?.profileImage || appointment.patient?.profileImage)}
+                  alt={appointment.patient.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center ${appointment.patient?.user?.profileImage || appointment.patient?.profileImage ? 'hidden' : ''}`}>
+                <FaUser className="text-white text-sm" />
+              </div>
             </div>
             <div>
               <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -519,35 +535,35 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
           <Button
             variant={activeView === 'today' ? 'primary' : 'outline'}
             onClick={() => setActiveView('today')}
-            className={activeView === 'today' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'today' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Today ({loading ? '-' : todayAppointments.length})
           </Button>
           <Button
             variant={activeView === 'pending' ? 'primary' : 'outline'}
             onClick={() => setActiveView('pending')}
-            className={activeView === 'pending' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'pending' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Pending ({loading ? '-' : pendingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'upcoming' ? 'primary' : 'outline'}
             onClick={() => setActiveView('upcoming')}
-            className={activeView === 'upcoming' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'upcoming' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Upcoming ({loading ? '-' : upcomingAppointments.length})
           </Button>
           <Button
             variant={activeView === 'past' ? 'primary' : 'outline'}
             onClick={() => setActiveView('past')}
-            className={activeView === 'past' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'past' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             Past ({loading ? '-' : pastAppointments.length})
           </Button>
           <Button
             variant={activeView === 'all' ? 'primary' : 'outline'}
             onClick={() => setActiveView('all')}
-            className={activeView === 'all' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
+            className={activeView === 'all' ? 'bg-gradient-to-r from-teal-600 to-cyan-600' : ''}
           >
             All Status ({loading ? '-' : allAppointments.length})
           </Button>
@@ -565,30 +581,15 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
 
       {/* Appointments Table */}
       {loading ? (
-        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-          </div>
-          <p className={`mt-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Loading appointments...
-          </p>
+        <Card>
+          <LoadingState message="Loading appointments..." />
         </Card>
       ) : error ? (
-        <Card className={`p-8 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <FaCalendarAlt className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-red-400' : 'text-red-500'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Error Loading Appointments
-          </h3>
-          <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {error}
-          </p>
-          <Button onClick={fetchAppointments}>
-            Try Again
-          </Button>
+        <Card>
+          <ErrorState 
+            message={error}
+            onRetry={fetchAppointments}
+          />
         </Card>
       ) : (
         <DataTable

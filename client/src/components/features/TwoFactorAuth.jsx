@@ -186,7 +186,7 @@ const TwoFactorAuth = () => {
   }
 
   return (
-    <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+    <Card className="p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
           <FaShieldAlt className={`text-2xl ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
@@ -218,7 +218,9 @@ const TwoFactorAuth = () => {
       )}
 
       {!showSetup && !showDisableModal && (
-        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+        <div className={`p-4 rounded-lg ${
+          isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -256,7 +258,9 @@ const TwoFactorAuth = () => {
 
       {/* Setup Modal */}
       {showSetup && (
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+        <div className={`p-6 rounded-lg ${
+          isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+        }`}>
           <h4 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
             <FaQrcode /> Set Up Two-Factor Authentication
           </h4>
@@ -321,7 +325,9 @@ const TwoFactorAuth = () => {
 
       {/* Disable Modal */}
       {showDisableModal && (
-        <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+        <div className={`p-6 rounded-lg ${
+          isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+        }`}>
           <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-red-500">
             <FaShieldAlt /> Disable Two-Factor Authentication
           </h4>

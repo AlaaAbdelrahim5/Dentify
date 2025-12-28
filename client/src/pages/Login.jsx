@@ -8,7 +8,7 @@ import {
   FaCheck,
   FaExclamationTriangle,
 } from "react-icons/fa";
-import { Logo, Button, Input, Card, LoadingSpinner } from "../components";
+import { Logo, Button, Input, Card, LoadingSpinner, Alert } from "../components";
 import { authAPI } from "../services/api";
 import { authUtils } from "../utils/auth";
 import { useTheme } from "../contexts/ThemeContext";
@@ -145,9 +145,17 @@ const Login = () => {
           "Invalid email or password. Please check your credentials and try again."
         );
       } else if (error.message.includes("not active") || error.message.includes("deactivated")) {
-        setApiError(
-          "Your account has been deactivated. Please contact support for assistance."
-        );
+        // Check if the account is pending approval
+        const status = error.response?.data?.status;
+        if (status === "PENDING") {
+          setApiError(
+            "Your account is pending approval. Please wait for an administrator to activate your account."
+          );
+        } else {
+          setApiError(
+            "Your account has been deactivated. Please contact support for assistance."
+          );
+        }
       } else if (error.message.includes("Email and password are required")) {
         setApiError("Please enter both email and password.");
       } else {
@@ -256,30 +264,22 @@ const Login = () => {
           <Card.Content className="p-8">
             {/* Success Message from Signup */}
             {successMessage && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaCheck className="text-green-600" />
-                  <div>
-                    <h3 className="font-medium text-green-800">Success!</h3>
-                    <p className="text-sm text-green-600 mt-1">
-                      {successMessage}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="success"
+                title="Success!"
+                message={successMessage}
+                className="mb-6"
+              />
             )}
 
             {/* API Error Message */}
             {apiError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaExclamationTriangle className="text-red-600" />
-                  <div>
-                    <h3 className="font-medium text-red-800">Login Failed</h3>
-                    <p className="text-sm text-red-600 mt-1">{apiError}</p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="error"
+                title="Login Failed"
+                message={apiError}
+                className="mb-6"
+              />
             )}
 
             {!requires2FA ? (

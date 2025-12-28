@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa'
 import { StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { calculateAge, formatDate } from '../../../utils/helpers'
+import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 import { CITY_OPTIONS_LOWERCASE } from '../../../utils/constants'
 
 const SecretaryDetailsModal = ({ isOpen, secretary, onClose }) => {
@@ -31,7 +31,7 @@ const SecretaryDetailsModal = ({ isOpen, secretary, onClose }) => {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} size="2xl" noPadding>
       {/* Header with gradient background */}
-      <div className="relative bg-linear-to-r from-teal-600 to-cyan-600 p-6">
+      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
@@ -42,7 +42,18 @@ const SecretaryDetailsModal = ({ isOpen, secretary, onClose }) => {
         {/* Avatar and basic info */}
         <div className="flex items-center gap-4 mt-8">
           <div className="relative">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg ${
+            {secretary.userId?.profileImage ? (
+              <img
+                src={getImageUrl(secretary.userId.profileImage)}
+                alt={`${secretary.firstName} ${secretary.lastName}`}
+                className="w-24 h-24 rounded-full object-cover shadow-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg ${secretary.userId?.profileImage ? 'hidden' : ''} ${
               secretary.gender?.toLowerCase() === 'female' ? 'bg-pink-100' : 'bg-blue-100'
             }`}>
               {secretary.gender?.toLowerCase() === 'female' ? (

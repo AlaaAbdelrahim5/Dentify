@@ -35,6 +35,7 @@ export { default as MultiLocationMap } from './maps/MultiLocationMap'
 
 // UI Elements
 export { default as ActionButtons } from './ui/ActionButtons'
+export { default as Alert } from './ui/Alert'
 export { default as ProfileImageUpload } from './ui/ProfileImageUpload'
 export { default as StatusBadge } from './ui/StatusBadge'
 export { default as Toast } from './ui/Toast'

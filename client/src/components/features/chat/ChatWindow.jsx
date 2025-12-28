@@ -3,6 +3,7 @@ import { useChat } from '../../../contexts/ChatContext';
 import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiMessageSquare } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
 import { LoadingSpinner } from '../../common';
+import { getImageUrl } from '../../../utils/helpers';
 
 const ChatWindow = ({ conversation, otherUser }) => {
   const { messages, sendChatMessage, markConversationAsRead, userId } = useChat();
@@ -74,7 +75,18 @@ const ChatWindow = ({ conversation, otherUser }) => {
       <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900">
+            {otherUser?.profileImage ? (
+              <img
+                src={getImageUrl(otherUser.profileImage)}
+                alt={otherUser.name}
+                className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-teal-100 dark:ring-teal-900"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900 ${otherUser?.profileImage ? 'hidden' : ''}`}>
               {otherUser?.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"></div>

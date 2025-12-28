@@ -91,7 +91,8 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
    */
   const confirmDelete = useCallback((item) => confirmOperation(item, 'delete'), [confirmOperation])
   const confirmToggleStatus = useCallback((item) => {
-    const action = item.user?.status === 'ACTIVE' || item.userId?.status === 'active' ? 'deactivate' : 'activate'
+    const status = item.user?.status || item.userId?.status
+    const action = status === 'ACTIVE' || status === 'active' ? 'deactivate' : 'activate'
     confirmOperation(item, action)
   }, [confirmOperation])
   const confirmApprove = useCallback((item) => confirmOperation(item, 'approve'), [confirmOperation])

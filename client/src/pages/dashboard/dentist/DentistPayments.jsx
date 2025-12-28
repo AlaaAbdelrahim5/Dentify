@@ -14,7 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast } from '../../../components'
+import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast, LoadingState, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 
 const DentistPayments = () => {
@@ -542,34 +542,15 @@ const DentistPayments = () => {
       {/* Payments Table */}
       <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="flex justify-center items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            </div>
-            <p className={`mt-4 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              Loading payments...
-            </p>
-          </div>
+          <LoadingState message="Loading payments..." size="lg" />
         ) : filteredPayments.length === 0 ? (
-          <div className="p-8 text-center">
-            <FaMoneyBillWave className={`w-12 h-12 mx-auto mb-4 ${
-              isDarkMode ? 'text-gray-500' : 'text-gray-400'
-            }`} />
-            <h3 className={`text-lg font-semibold mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {mockPayments.length === 0 ? 'No payments recorded yet' : 'No payments match your filters'}
-            </h3>
-            <p className={`mb-4 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              {mockPayments.length === 0 
-                ? 'Record your first payment to get started'
-                : 'Try adjusting your search or filter criteria'}
-            </p>
-            {mockPayments.length === 0 && (
+          <EmptyState
+            icon={FaMoneyBillWave}
+            title={mockPayments.length === 0 ? 'No payments recorded yet' : 'No payments match your filters'}
+            message={mockPayments.length === 0 
+              ? 'Record your first payment to get started'
+              : 'Try adjusting your search or filter criteria'}
+            action={mockPayments.length === 0 ? (
               <Button 
                 variant="primary" 
                 onClick={() => handleAddPayment()}
@@ -578,8 +559,8 @@ const DentistPayments = () => {
                 <FaPlus className="w-4 h-4 mr-2" />
                 Record First Payment
               </Button>
-            )}
-          </div>
+            ) : null}
+          />
         ) : (
           <DataTable
             columns={columns}

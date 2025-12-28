@@ -184,7 +184,7 @@ const ToothChartModal = ({
         >
           {/* Header */}
           <div className={`flex items-center justify-between p-6 border-b ${
-            isDarkMode ? 'border-gray-700 bg-linear-to-r from-teal-900/50 to-cyan-900/50' : 'border-gray-200 bg-linear-to-r from-teal-50 to-cyan-50'
+            isDarkMode ? 'border-gray-700 bg-gradient-to-r from-teal-900/50 to-cyan-900/50' : 'border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50'
           }`}>
             <div className="flex items-center gap-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
@@ -314,11 +314,11 @@ const ToothChartModal = ({
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={3}
                     placeholder="Enter general examination notes..."
-                    className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    className={`w-full px-4 py-3 rounded-lg border shadow-sm transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20 ${
                       isDarkMode
-                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-teal-500'
-                    } focus:ring-2 focus:ring-teal-500/20 focus:outline-none`}
+                        ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400'
+                        : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -395,11 +395,11 @@ const ToothChartModal = ({
                         onChange={(e) => handleToothNoteChange(e.target.value)}
                         rows={4}
                         placeholder={`Specific notes for tooth #${currentTooth}...`}
-                        className={`w-full px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        className={`w-full px-3 py-2 rounded-lg border text-sm shadow-sm transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20 ${
                           isDarkMode
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-teal-500'
-                        } focus:ring-2 focus:ring-teal-500/20 focus:outline-none`}
+                            ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400'
+                            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                        }`}
                       />
                     </div>
 
@@ -540,11 +540,11 @@ const ToothChartModal = ({
                   onChange={(e) => setFormData({ ...formData, treatmentPlan: e.target.value })}
                   rows={3}
                   placeholder="Enter comprehensive treatment plan..."
-                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  className={`w-full px-4 py-3 rounded-lg border shadow-sm transition-all duration-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-20 ${
                     isDarkMode
-                      ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-teal-500'
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-teal-500'
-                  } focus:ring-2 focus:ring-teal-500/20 focus:outline-none`}
+                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400'
+                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
+                  }`}
                 />
               </div>
 

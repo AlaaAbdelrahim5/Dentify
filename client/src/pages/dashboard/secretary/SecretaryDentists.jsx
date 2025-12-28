@@ -9,7 +9,7 @@ import {
   FaStethoscope,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal, StatusBadge } from '../../../components'
+import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal, DentistCard, StatusBadge } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 
@@ -116,129 +116,16 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDentists.map((dentist) => (
-            <Card
+            <DentistCard
               key={dentist.userId}
-              className={`p-6 transition-all hover:shadow-xl border ${
-                isDarkMode 
-                  ? 'bg-gray-800/50 border-gray-700 hover:border-teal-500/50' 
-                  : 'bg-white border-gray-200 hover:border-teal-300'
-              }`}
-            >
-              <div className="flex flex-col">
-                {/* Header with Avatar and Name */}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold shrink-0">
-                    {getInitials(dentist.firstName, dentist.lastName)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-lg font-semibold truncate ${
-                      isDarkMode ? 'text-gray-200' : 'text-gray-800'
-                    }`}>
-                      Dr. {dentist.firstName} {dentist.lastName}
-                    </h3>
-                    <div className="mt-1">
-                      <StatusBadge 
-                        isActive={dentist.user?.status === 'ACTIVE'}
-                        activeLabel="Active"
-                        inactiveLabel="Inactive"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Specialization */}
-                {dentist.specialization && Array.isArray(dentist.specialization) && dentist.specialization.length > 0 && (
-                  <div className={`mb-4 p-3 rounded-lg ${
-                    isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex items-start gap-2">
-                      <FaStethoscope className={`w-4 h-4 mt-0.5 shrink-0 ${
-                        isDarkMode ? 'text-teal-400' : 'text-teal-600'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium mb-1 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          Specialization
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {dentist.specialization.map((spec, idx) => (
-                            <span key={idx} className={`text-xs px-2 py-0.5 rounded ${
-                              isDarkMode 
-                                ? 'bg-teal-900/30 text-teal-400' 
-                                : 'bg-teal-100 text-teal-700'
-                            }`}>
-                              {spec}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Contact Info */}
-                <div className={`space-y-2 mb-4 p-3 rounded-lg ${
-                  isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-                }`}>
-                  {dentist.user?.email && (
-                    <div className={`flex items-start gap-2 text-sm ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      <FaEnvelope className={`w-4 h-4 mt-0.5 shrink-0 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`} />
-                      <span className="truncate">{dentist.user.email}</span>
-                    </div>
-                  )}
-                  {dentist.user?.phone && (
-                    <div className={`flex items-center gap-2 text-sm ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      <FaPhone className={`w-4 h-4 shrink-0 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`} />
-                      <span>{dentist.user.phone}</span>
-                    </div>
-                  )}
-                  {dentist.licenseNumber && (
-                    <div className={`flex items-center gap-2 text-sm ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      <FaIdCard className={`w-4 h-4 shrink-0 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`} />
-                      <span className="truncate">License: {dentist.licenseNumber}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => {
-                      setSelectedDentist(dentist)
-                      setShowDetailsModal(true)
-                    }}
-                  >
-                    <FaEye className="w-4 h-4" />
-                    Details
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => onTabChange?.('appointments')}
-                  >
-                    <FaCalendarAlt className="w-4 h-4" />
-                    Schedule
-                  </Button>
-                </div>
-              </div>
-            </Card>
+              doctor={dentist}
+              layout="grid"
+              onViewProfile={() => {
+                setSelectedDentist(dentist)
+                setShowDetailsModal(true)
+              }}
+              onBookAppointment={() => onTabChange?.('appointments')}
+            />
           ))}
         </div>
       )}

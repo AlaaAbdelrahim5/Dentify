@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
-import { Logo, Button, Input, Card, LoadingSpinner } from '../components';
+import { Logo, Button, Input, Card, LoadingSpinner, Alert } from '../components';
 import { validateEmail } from '../utils/validation';
 import { authAPI } from '../services/api';
 
@@ -87,32 +87,26 @@ export default function ForgotPassword() {
           <Card.Content className="p-8">
             {/* Success Message */}
             {emailSent && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaCheck className="text-green-600" />
-                  <div>
-                    <h3 className="font-medium text-green-800">
-                      Email Sent Successfully!
-                    </h3>
-                    <p className="text-sm text-green-600 mt-1">
-                      We've sent password reset instructions to <span className="font-semibold">{email}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="success"
+                title="Email Sent Successfully!"
+                message={
+                  <>
+                    We've sent password reset instructions to <span className="font-semibold">{email}</span>
+                  </>
+                }
+                className="mb-6"
+              />
             )}
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FaExclamationTriangle className="text-red-600" />
-                  <div>
-                    <h3 className="font-medium text-red-800">Error</h3>
-                    <p className="text-sm text-red-600 mt-1">{error}</p>
-                  </div>
-                </div>
-              </div>
+              <Alert
+                variant="error"
+                title="Error"
+                message={error}
+                className="mb-6"
+              />
             )}
 
             {emailSent ? (

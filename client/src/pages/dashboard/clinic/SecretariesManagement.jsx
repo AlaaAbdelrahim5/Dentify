@@ -35,7 +35,7 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
 import { CITY_OPTIONS_LOWERCASE, GENDER_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
-import { calculateAge, capitalizeFirstLetter } from '../../../utils/helpers'
+import { calculateAge, capitalizeFirstLetter, getImageUrl } from '../../../utils/helpers'
 import { useDebounce } from '../../../hooks'
 import { formatDate as formatDateHelper } from '../../../utils/helpers'
 
@@ -191,7 +191,8 @@ const SecretariesManagement = () => {
   }
 
   const handleToggleSecretaryStatus = async (secretary) => {
-    const action = secretary.userId?.status?.toLowerCase() === 'active' ? 'deactivate' : 'activate'
+    const status = secretary.userId?.status
+    const action = status === 'ACTIVE' || status === 'active' ? 'deactivate' : 'activate'
     
     setSelectedSecretary(secretary)
     setConfirmAction(action)
@@ -364,16 +365,29 @@ const SecretariesManagement = () => {
       <tr key={secretary._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              secretary.gender?.toLowerCase() === 'female'
-                ? 'bg-pink-100 text-pink-600'
-                : 'bg-blue-100 text-blue-600'
-            }`}>
-              {secretary.gender?.toLowerCase() === 'female' ? (
-                <FaVenus className="w-5 h-5" />
-              ) : (
-                <FaMars className="w-5 h-5" />
-              )}
+            <div className="shrink-0 h-10 w-10">
+              {secretary.userId?.profileImage ? (
+                <img
+                  className="h-10 w-10 rounded-full object-cover"
+                  src={getImageUrl(secretary.userId.profileImage)}
+                  alt={`${secretary.firstName} ${secretary.lastName}`}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${secretary.userId?.profileImage ? 'hidden' : ''} ${
+                secretary.gender?.toLowerCase() === 'female'
+                  ? 'bg-pink-100 text-pink-600'
+                  : 'bg-blue-100 text-blue-600'
+              }`}>
+                {secretary.gender?.toLowerCase() === 'female' ? (
+                  <FaVenus className="w-5 h-5" />
+                ) : (
+                  <FaMars className="w-5 h-5" />
+                )}
+              </div>
             </div>
             <div className="ml-3">
               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

@@ -30,7 +30,7 @@ import {
 } from 'react-icons/fa'
 import { Button, StatusBadge, Card } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { calculateAge, formatDate } from '../../../utils/helpers'
+import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 import TeethHistoryTab from '../treatment/TeethHistoryTab'
 import AppointmentsHistoryTab from '../appointment/AppointmentsHistoryTab'
 
@@ -642,11 +642,29 @@ const PatientDetailsModal = ({
             </button>
             
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center relative">
-                <FaUser className="text-teal-600 text-3xl" />
-                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
-                  <FaCheckCircle className="text-white w-3 h-3" />
+              <div className="relative">
+                {patientData.user?.profileImage || patientData.profileImage ? (
+                  <img
+                    src={getImageUrl(patientData.user?.profileImage || patientData.profileImage)}
+                    alt={`${patientData.firstName} ${patientData.lastName}`}
+                    className="w-20 h-20 rounded-full object-cover shadow-lg"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`w-20 h-20 rounded-full bg-white flex items-center justify-center relative ${patientData.user?.profileImage || patientData.profileImage ? 'hidden' : ''}`}>
+                  <FaUser className="text-teal-600 text-3xl" />
+                  <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
+                    <FaCheckCircle className="text-white w-3 h-3" />
+                  </div>
                 </div>
+                {(patientData.user?.profileImage || patientData.profileImage) && (
+                  <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-4 border-white flex items-center justify-center">
+                    <FaCheckCircle className="text-white w-3 h-3" />
+                  </div>
+                )}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">

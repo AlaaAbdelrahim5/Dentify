@@ -59,8 +59,8 @@ const DataTable = ({
         <div className="text-center py-16 px-6">
           <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
             isDarkMode 
-              ? 'bg-linear-to-br from-gray-700 to-gray-800' 
-              : 'bg-linear-to-br from-gray-100 to-gray-200'
+              ? 'bg-gradient-to-br from-gray-700 to-gray-800' 
+              : 'bg-gradient-to-br from-gray-100 to-gray-200'
           }`}>
             {EmptyIcon && (
               <EmptyIcon className={`w-10 h-10 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -80,8 +80,8 @@ const DataTable = ({
           <table className="w-full">
             <thead className={`${
               isDarkMode 
-                ? 'bg-linear-to-r from-gray-800 to-gray-700 border-b border-gray-600' 
-                : 'bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200'
+                ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600' 
+                : 'bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200'
             }`}>
               <tr>
                 {columns.map((column, index) => (

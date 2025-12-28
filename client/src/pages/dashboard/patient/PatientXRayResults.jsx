@@ -21,7 +21,8 @@ import {
   DataTable, 
   StatsOverview,
   RequestCard,
-  LoadingSpinner
+  LoadingSpinner,
+  EmptyState
 } from '../../../components'
 import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -327,30 +328,18 @@ const PatientXRayResults = () => {
 
       {/* Requests - Table or Grid View */}
       {isLoading || filtering ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
+        <Card className="p-8 text-center">
           <LoadingSpinner size="lg" text={isLoading ? "Loading X-ray requests..." : "Filtering results..."} />
         </Card>
       ) : filteredRequests.length === 0 ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaXRay className={`w-12 h-12 mx-auto mb-4 ${
-            isDarkMode ? 'text-gray-500' : 'text-gray-400'
-          }`} />
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {requests.length === 0 ? 'No X-ray requests yet' : 'No requests match your filters'}
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            {requests.length === 0 
+        <Card>
+          <EmptyState
+            icon={FaXRay}
+            title={requests.length === 0 ? 'No X-ray requests yet' : 'No requests match your filters'}
+            description={requests.length === 0 
               ? 'Your dentist will request X-rays when needed for your treatment'
               : 'Try adjusting your search or filter criteria'}
-          </p>
+          />
         </Card>
       ) : (
         <>

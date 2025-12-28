@@ -130,8 +130,25 @@ const AdminsManagement = () => {
     <tr key={admin._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-linear-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-            <FaUserShield className="w-5 h-5 text-white" />
+          <div className="shrink-0 h-10 w-10">
+            {admin.userId?.profileImage ? (
+              <img
+                className="h-10 w-10 rounded-full object-cover"
+                src={getImageUrl(admin.userId.profileImage)}
+                alt={admin.fullName}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${admin.userId?.profileImage ? 'hidden' : ''} ${
+                isDarkMode 
+                  ? 'bg-linear-to-br from-blue-600 to-indigo-600' 
+                  : 'bg-linear-to-br from-blue-500 to-indigo-500'
+              }`}>
+              <FaUserShield className="text-white text-lg" />
+            </div>
           </div>
           <div className="ml-3">
             <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

@@ -9,7 +9,7 @@ import {
   FaTimes,
   FaCheck
 } from 'react-icons/fa'
-import { Card, Button, Input, Toast } from '../../../components'
+import { Card, Button, Input, Toast, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 import { formatTime } from '../../../utils/helpers'
@@ -253,7 +253,7 @@ const DentistSchedule = () => {
       {/* Schedule Overview */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          <LoadingSpinner size="large" />
         </div>
       ) : (
         <>

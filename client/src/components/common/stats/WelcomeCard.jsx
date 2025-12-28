@@ -37,7 +37,7 @@ const WelcomeCard = ({
           )}
         </div>
         {Icon && (
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg bg-gradient-to-br ${iconGradient}`}>
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg bg-linear-to-br ${iconGradient}`}>
             <Icon className="w-8 h-8 text-white" />
           </div>
         )}

@@ -66,8 +66,8 @@ const BaseModal = ({
         <div
           className={`relative rounded-2xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all ${
             isDarkMode
-              ? 'bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700'
-              : 'bg-linear-to-br from-white to-gray-50 border border-gray-200'
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700'
+              : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200'
           } ${className}`}
           onClick={(e) => e.stopPropagation()}
         >

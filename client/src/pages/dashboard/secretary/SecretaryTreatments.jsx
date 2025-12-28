@@ -14,7 +14,7 @@ import {
   FaArrowLeft,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
@@ -234,20 +234,10 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
       {currentPage === 'list' && (
         <>
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                Treatment Management
-              </h1>
-              <p className={`mt-1 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                View and track treatment plans for all clinic patients
-              </p>
-            </div>
-          </div>
+          <PageHeader
+            title="Treatment Management"
+            description="View and track treatment plans for all clinic patients"
+          />
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -369,43 +359,19 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
               <LoadingSpinner size="lg" text="Loading treatments..." />
             </div>
           ) : error ? (
-            <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="text-center">
-                <FaExclamationTriangle className={`w-12 h-12 mx-auto mb-4 ${
-                  isDarkMode ? 'text-red-400' : 'text-red-500'
-                }`} />
-                <p className={`text-lg font-medium mb-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}>
-                  Error Loading Data
-                </p>
-                <p className={`mb-4 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  {error}
-                </p>
-                <Button onClick={fetchAllData}>
-                  Try Again
-                </Button>
-              </div>
+            <Card>
+              <ErrorState
+                message={error}
+                onRetry={fetchAllData}
+              />
             </Card>
           ) : filteredTreatments.length === 0 ? (
-            <Card className={`p-8 text-center ${
-              isDarkMode ? 'bg-gray-800' : 'bg-white'
-            }`}>
-              <FaStethoscope className={`w-12 h-12 mx-auto mb-4 ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-400'
-              }`} />
-              <h3 className={`text-lg font-semibold mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                No treatments found
-              </h3>
-              <p className={`${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                No treatments match your current filters
-              </p>
+            <Card>
+              <EmptyState
+                icon={FaStethoscope}
+                title="No treatments found"
+                description="No treatments match your current filters"
+              />
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

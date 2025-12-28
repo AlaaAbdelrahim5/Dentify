@@ -25,7 +25,7 @@ import {
 } from 'react-icons/fa'
 import { Button, Card, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { calculateAge, formatDate } from '../../../utils/helpers'
+import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 
 const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
   const { isDarkMode } = useTheme()
@@ -503,7 +503,18 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
         {/* Profile section */}
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+            {dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? (
+              <img
+                src={getImageUrl(dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage)}
+                alt={`Dr. ${dentistData.firstName} ${dentistData.lastName}`}
+                className="w-16 h-16 rounded-full object-cover shadow-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg ${dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? 'hidden' : ''}`}>
               <FaUser className="text-teal-600 text-2xl" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">

@@ -15,12 +15,14 @@ import {
   PageHeader, 
   Button, 
   LoadingSpinner,
+  ErrorState,
   FilterBar,
   DataTable,
   BookAppointmentModal,
   Toast,
   ClinicDetailsModal,
-  DentistDetailsModal
+  DentistDetailsModal,
+  DentistCard
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
@@ -34,6 +36,7 @@ const FindDoctor = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
   const [userLocation, setUserLocation] = useState(null)
+  const [viewMode, setViewMode] = useState('table') // 'table' or 'grid'
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('')
@@ -308,26 +311,10 @@ const FindDoctor = () => {
           title="Find a Dentist"
           description="Search and browse qualified dentists"
         />
-        <div className={`p-12 text-center rounded-lg ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <FaUserMd className={`mx-auto text-5xl mb-4 ${
-            isDarkMode ? 'text-red-400' : 'text-red-600'
-          }`} />
-          <h3 className={`text-xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            Error Loading Dentists
-          </h3>
-          <p className={`mb-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </p>
-          <Button onClick={fetchDoctors}>
-            Try Again
-          </Button>
-        </div>
+        <ErrorState
+          message={error}
+          onRetry={fetchDoctors}
+        />
       </div>
     )
   }
@@ -350,17 +337,98 @@ const FindDoctor = () => {
         onClearFilters={handleClearFilters}
       />
 
-      {/* Dentists Table */}
-      <DataTable
-        columns={tableColumns}
-        data={filteredDoctors}
-        renderRow={renderTableRow}
-        loading={isLoading || filtering}
-        emptyMessage="No dentists found matching your criteria"
-        emptyIcon={FaUserMd}
-        emptyTitle="No Dentists Found"
-        hasFilters={searchQuery !== '' || selectedSpecialty !== 'all' || selectedLocation !== 'all'}
-      />
+      {/* View Toggle */}
+      <div className="flex justify-end">
+        <div className={`inline-flex rounded-lg border ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-colors ${
+              viewMode === 'table'
+                ? isDarkMode
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-teal-50 text-teal-700'
+                : isDarkMode
+                ? 'text-gray-400 hover:text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Table View
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-colors ${
+              viewMode === 'grid'
+                ? isDarkMode
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-teal-50 text-teal-700'
+                : isDarkMode
+                ? 'text-gray-400 hover:text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Grid View
+          </button>
+        </div>
+      </div>
+
+      {/* Dentists Display */}
+      {viewMode === 'grid' ? (
+        isLoading || filtering ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className={`h-96 rounded-lg ${
+                isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+              } animate-pulse`} />
+            ))}
+          </div>
+        ) : filteredDoctors.length === 0 ? (
+          <div className={`p-12 text-center rounded-lg ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <FaUserMd className={`mx-auto text-5xl mb-4 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`} />
+            <h3 className={`text-xl font-bold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              No Dentists Found
+            </h3>
+            <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+              {searchQuery !== '' || selectedSpecialty !== 'all' || selectedLocation !== 'all'
+                ? 'Try adjusting your filters'
+                : 'No dentists available at the moment'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDoctors.map((doctor) => (
+              <DentistCard
+                key={doctor.id}
+                doctor={doctor}
+                layout="grid"
+                onViewProfile={() => {
+                  setSelectedDoctor(doctor)
+                  setShowDetailsModal(true)
+                }}
+                onBookAppointment={() => handleBookAppointment(doctor)}
+              />
+            ))}
+          </div>
+        )
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={filteredDoctors}
+          renderRow={renderTableRow}
+          loading={isLoading || filtering}
+          emptyMessage="No dentists found matching your criteria"
+          emptyIcon={FaUserMd}
+          emptyTitle="No Dentists Found"
+          hasFilters={searchQuery !== '' || selectedSpecialty !== 'all' || selectedLocation !== 'all'}
+        />
+      )}
 
       {/* Modals */}
       <BookAppointmentModal

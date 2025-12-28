@@ -437,20 +437,19 @@ const DentistReports = () => {
           { id: 'clinical', label: 'Clinical', icon: FaTooth },
           { id: 'patients', label: 'Patients', icon: FaUsers }
         ].map(tab => (
-          <button
+          <Button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${
+            variant={activeTab === tab.id ? 'primary' : 'ghost'}
+            className={`flex items-center gap-2 border-b-2 rounded-none ${
               activeTab === tab.id
                 ? 'border-teal-600 text-teal-600'
-                : isDarkMode
-                ? 'border-transparent text-gray-400 hover:text-gray-300'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+                : 'border-transparent'
             }`}
           >
             <tab.icon />
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 

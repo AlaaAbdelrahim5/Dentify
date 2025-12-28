@@ -229,17 +229,28 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
   }
 
   const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'CONFIRMED':
-        return 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-300'
-      case 'PENDING':
-        return 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-300'
-      case 'COMPLETED':
-        return 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300'
-      case 'CANCELLED':
-        return 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-300'
-      default:
-        return 'bg-gray-500/20 border-gray-500 text-gray-700 dark:text-gray-300'
+    const statusUpper = status?.toUpperCase()
+    
+    if (statusUpper === 'CONFIRMED') {
+      return isDarkMode
+        ? 'bg-green-500/20 border-green-500 text-green-300'
+        : 'bg-green-100 border-green-500 text-green-800'
+    } else if (statusUpper === 'PENDING') {
+      return isDarkMode
+        ? 'bg-yellow-500/20 border-yellow-500 text-yellow-300'
+        : 'bg-yellow-100 border-yellow-500 text-yellow-800'
+    } else if (statusUpper === 'COMPLETED') {
+      return isDarkMode
+        ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+        : 'bg-blue-100 border-blue-500 text-blue-800'
+    } else if (statusUpper === 'CANCELLED') {
+      return isDarkMode
+        ? 'bg-red-500/20 border-red-500 text-red-300'
+        : 'bg-red-100 border-red-500 text-red-800'
+    } else {
+      return isDarkMode
+        ? 'bg-gray-500/20 border-gray-500 text-gray-300'
+        : 'bg-gray-100 border-gray-500 text-gray-800'
     }
   }
 
@@ -296,7 +307,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
           {/* Day Headers */}
           <div 
             className={`grid border-b sticky top-0 z-10 ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
             }`}
             style={{ gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
           >
@@ -312,7 +323,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                   key={index}
                   className={`p-3 text-center ${
                     isToday(dateObj)
-                      ? 'bg-teal-500/10'
+                      ? isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'
                       : ''
                   }`}
                 >
@@ -341,7 +352,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
               <div
                 key={time}
                 className={`grid border-b ${
-                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  isDarkMode ? 'border-gray-700' : 'border-gray-300'
                 }`}
                 style={{ minHeight: '60px', gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
               >
@@ -349,7 +360,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                 <div className={`p-2 text-xs font-medium text-center border-r ${
                   isDarkMode 
                     ? 'text-gray-400 border-gray-700' 
-                    : 'text-gray-600 border-gray-200'
+                    : 'text-gray-700 border-gray-300 bg-gray-50'
                 }`}>
                   {convertTo12Hour(time)}
                 </div>
@@ -363,9 +374,11 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                     <div
                       key={dateIndex}
                       className={`relative p-1 border-r ${
-                        isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                        isDarkMode ? 'border-gray-700' : 'border-gray-300'
                       } ${
-                        isToday(dateObj) ? 'bg-teal-500/5' : ''
+                        isToday(dateObj) 
+                          ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
+                          : ''
                       }`}
                     >
                       {appointments.map((apt, aptIndex) => (
