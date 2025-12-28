@@ -276,40 +276,6 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
     }
   }
 
-  // Computed stats using useMemo
-  const stats = useMemo(() => [
-    {
-      label: 'Today',
-      value: loading ? '-' : todayAppointments.length,
-      icon: FaCalendarAlt,
-      gradient: 'from-teal-600 to-cyan-600'
-    },
-    {
-      label: 'Pending',
-      value: loading ? '-' : pendingAppointments.length,
-      icon: FaHourglassHalf,
-      gradient: 'from-yellow-600 to-orange-600'
-    },
-    {
-      label: 'Upcoming',
-      value: loading ? '-' : upcomingAppointments.length,
-      icon: FaClock,
-      gradient: 'from-emerald-600 to-teal-600'
-    },
-    {
-      label: 'Past',
-      value: loading ? '-' : pastAppointments.length,
-      icon: FaCheckCircle,
-      gradient: 'from-blue-600 to-indigo-600'
-    },
-    {
-      label: 'All',
-      value: loading ? '-' : allAppointments.length,
-      icon: FaCheckCircle,
-      gradient: 'from-purple-600 to-purple-700'
-    }
-  ], [loading, todayAppointments, upcomingAppointments, pendingAppointments, pastAppointments, allAppointments])
-
   // Filtered appointments using useMemo
   const filteredAppointments = useMemo(() => {
     let filtered = currentAppointments
@@ -525,9 +491,6 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
         title="Appointments"
         description="View and manage all clinic appointments"
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={stats} />
 
       {/* View Toggle */}
       <div className="flex items-center justify-between">

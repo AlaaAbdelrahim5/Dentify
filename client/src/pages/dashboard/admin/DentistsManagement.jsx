@@ -173,7 +173,7 @@ const DentistsManagement = () => {
   // Columns configuration
   const columns = [
     { key: 'dentist', label: 'Dentist' },
-    { key: 'license', label: 'License & Specialization' },
+    { key: 'license', label: 'License' },
     { key: 'clinic', label: 'Clinic & Location' },
     { key: 'status', label: 'Status' },
     { key: 'date', label: 'Registration Date' },
@@ -217,13 +217,10 @@ const DentistsManagement = () => {
         </div>
       </td>
 
-      {/* License & Specialization */}
+      {/* License */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
           {dentist.licenseNumber}
-        </div>
-        <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {Array.isArray(dentist.specialization) ? dentist.specialization.join(', ') : dentist.specialization}
         </div>
       </td>
 

@@ -17,7 +17,7 @@ import {
   FaTrash
 } from 'react-icons/fa'
 import { FaTiktok } from 'react-icons/fa'
-import { Button, Input, BaseModal } from '../../common'
+import { Button, Input, Select, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { PALESTINIAN_CITIES, DENTAL_SPECIALIZATIONS, DAYS_OF_WEEK } from '../../../utils/constants'
 import { validateEmail, validatePhone, validateAge, validatePassword } from '../../../utils/validation'
@@ -370,54 +370,28 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Gender *
-                    </label>
-                    <select
-                      value={formData.gender}
-                      onChange={(e) => handleInputChange('gender', e.target.value)}
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      } ${errors.gender ? 'border-red-500' : ''}`}
-                    >
-                      <option value="">Select gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                    {errors.gender && (
-                      <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
-                    )}
-                  </div>
+                  <Select
+                    label="Gender *"
+                    value={formData.gender}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    error={errors.gender}
+                    options={[
+                      { value: 'Male', label: 'Male' },
+                      { value: 'Female', label: 'Female' }
+                    ]}
+                    placeholder="Select gender"
+                    icon={FaUser}
+                  />
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      City *
-                    </label>
-                    <select
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      } ${errors.city ? 'border-red-500' : ''}`}
-                    >
-                      <option value="">Select city</option>
-                      {PALESTINIAN_CITIES.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                    {errors.city && (
-                      <p className="mt-1 text-sm text-red-600">{errors.city}</p>
-                    )}
-                  </div>
+                  <Select
+                    label="City *"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    error={errors.city}
+                    options={PALESTINIAN_CITIES.map(city => ({ value: city, label: city }))}
+                    placeholder="Select city"
+                    icon={FaMapMarkerAlt}
+                  />
                 </div>
               </div>
 

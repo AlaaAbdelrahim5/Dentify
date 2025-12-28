@@ -204,35 +204,16 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
           {!treatmentInfo && (
             <>
               <div>
-                <label className={`block text-sm font-medium mb-2 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  Select Patient <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <FaUser className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`} />
-                  <select
-                    value={selectedPatient}
-                    onChange={(e) => setSelectedPatient(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                  >
-                    <option value="">Choose a patient...</option>
-                    {patients.map(patient => (
-                      <option key={patient.id} value={patient.id}>
-                        {patient.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.patient && (
-                  <p className="text-red-500 text-sm mt-1">{errors.patient}</p>
-                )}
+                <Select
+                  label="Select Patient *"
+                  name="selectedPatient"
+                  value={selectedPatient}
+                  onChange={(e) => setSelectedPatient(e.target.value)}
+                  error={errors.patient}
+                  options={patients.map(patient => ({ value: patient.id, label: patient.name }))}
+                  placeholder="Choose a patient..."
+                  icon={FaUser}
+                />
               </div>
 
               {/* Treatment Selection - Only show when patient is selected */}
@@ -245,33 +226,21 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
                   </label>
                   {patientTreatments.length > 0 ? (
                     <>
-                      <div className="relative">
-                        <FaStethoscope className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`} />
-                        <select
-                          value={selectedTreatment}
-                          onChange={(e) => setSelectedTreatment(e.target.value)}
-                          className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                            isDarkMode
-                              ? 'bg-gray-700 border-gray-600 text-white'
-                              : 'bg-white border-gray-300 text-gray-900'
-                          } focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                        >
-                          <option value="">Choose a treatment...</option>
-                          {patientTreatments.map(treatment => {
-                            const balance = treatment.totalAmount - treatment.paidAmount
-                            return (
-                              <option key={treatment.id} value={treatment.id}>
-                                {treatment.treatmentName} - Balance: ${balance.toFixed(2)}
-                              </option>
-                            )
-                          })}
-                        </select>
-                      </div>
-                      {errors.treatment && (
-                        <p className="text-red-500 text-sm mt-1">{errors.treatment}</p>
-                      )}
+                      <Select
+                        name="selectedTreatment"
+                        value={selectedTreatment}
+                        onChange={(e) => setSelectedTreatment(e.target.value)}
+                        error={errors.treatment}
+                        options={patientTreatments.map(treatment => {
+                          const balance = treatment.totalAmount - treatment.paidAmount
+                          return {
+                            value: treatment.id,
+                            label: `${treatment.treatmentName} - Balance: $${balance.toFixed(2)}`
+                          }
+                        })}
+                        placeholder="Choose a treatment..."
+                        icon={FaStethoscope}
+                      />
                     </>
                   ) : (
                     <div className={`p-4 rounded-lg border ${

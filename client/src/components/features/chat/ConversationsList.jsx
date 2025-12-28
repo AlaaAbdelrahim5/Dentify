@@ -115,13 +115,14 @@ const ConversationsList = ({ onSelectConversation, users = [] }) => {
               {searchTerm ? 'Try a different search term' : 'Start a new conversation to get started'}
             </p>
             {!searchTerm && (
-              <button
+              <Button
                 onClick={() => setShowNewChatModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold hover:scale-105 transform"
+                variant="primary"
+                size="lg"
               >
-                <FiPlus className="w-5 h-5" />
+                <FiPlus className="w-5 h-5 mr-2" />
                 Start a conversation
-              </button>
+              </Button>
             )}
           </div>
         ) : (

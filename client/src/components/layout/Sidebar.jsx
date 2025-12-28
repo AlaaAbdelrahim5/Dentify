@@ -49,6 +49,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         description: 'Review and approve dentist registrations'
       },
       { 
+        id: 'secretaries', 
+        label: 'Secretaries', 
+        icon: FaUserTie,
+        description: 'Manage clinic secretaries'
+      },
+      { 
         id: 'patients', 
         label: 'Patients', 
         icon: FaUsers,

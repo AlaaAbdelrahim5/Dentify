@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { getTodayISO } from '../../../utils/helpers'
-import { Card, Button, Input } from '../../common'
+import { BaseModal, Button, Input } from '../../common'
 import { FaTimes, FaSave, FaShoppingCart } from 'react-icons/fa'
 
 /**
@@ -18,7 +18,7 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
     notes: ''
   })
 
-  if (!isOpen || !item) return null
+  if (!item) return null
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -50,33 +50,27 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-                <FaShoppingCart className="text-white text-lg" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Reorder Item
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Create a reorder request for {item.name}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      noPadding
+    >
+      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+          <FaShoppingCart className="text-white text-lg" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Reorder Item
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Create a reorder request for {item.name}
+          </p>
+        </div>
+      </div>
+      
+      <div className="p-6">
           {/* Current Item Info */}
           <div className={`mb-6 p-4 rounded-lg border ${
             isDarkMode ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50'
@@ -225,9 +219,8 @@ const ReorderItemModal = ({ isOpen, onClose, onSubmit, item, suppliers = [] }) =
               </Button>
             </div>
           </form>
-        </Card.Content>
-      </Card>
-    </div>
+      </div>
+    </BaseModal>
   )
 }
 

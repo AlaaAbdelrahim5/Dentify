@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { getTodayISO } from '../../../utils/helpers'
-import { Card, Button, Input, BaseModal } from '../../common'
+import { Card, Button, Input, Select, BaseModal } from '../../common'
 import { FaSave, FaMoneyBillWave, FaTimes } from 'react-icons/fa'
 
 /**
@@ -87,29 +87,14 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
       <div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Category */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Category *
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Category *"
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                options={categories.map(cat => ({ value: cat, label: cat }))}
+                placeholder="Select Category"
+                required
+              />
 
               {/* Amount */}
               <div>
@@ -155,29 +140,14 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              {/* Payment Method */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Payment Method *
-                </label>
-                <select
-                  value={formData.paymentMethod}
-                  onChange={(e) => handleChange('paymentMethod', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  required
-                >
-                  <option value="">Select Payment Method</option>
-                  {paymentMethods.map(method => (
-                    <option key={method} value={method}>
-                      {method}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Payment Method *"
+                value={formData.paymentMethod}
+                onChange={(e) => handleChange('paymentMethod', e.target.value)}
+                options={paymentMethods.map(method => ({ value: method, label: method }))}
+                placeholder="Select Payment Method"
+                required
+              />
 
               {/* Receipt Number */}
               <div>
@@ -192,25 +162,16 @@ const AddExpenseModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              {/* Status */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Status *
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  required
-                >
-                  <option value="paid">Paid</option>
-                  <option value="pending">Pending</option>
-                </select>
-              </div>
+              <Select
+                label="Status *"
+                value={formData.status}
+                onChange={(e) => handleChange('status', e.target.value)}
+                options={[
+                  { value: 'paid', label: 'Paid' },
+                  { value: 'pending', label: 'Pending' }
+                ]}
+                required
+              />
             </div>
 
             {/* Amount Preview */}

@@ -1,6 +1,6 @@
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, StatusBadge } from '../../common'
-import { FaTimes, FaTruck, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBoxes, FaCalendarAlt, FaEdit, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { BaseModal, Button, StatusBadge } from '../../common'
+import { FaTruck, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBoxes, FaCalendarAlt, FaEdit, FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa'
 
 /**
  * ViewSupplierModal Component
@@ -10,7 +10,7 @@ import { FaTimes, FaTruck, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBoxes, FaCalen
 const ViewSupplierModal = ({ isOpen, onClose, supplier, onEdit, canEdit = true }) => {
   const { isDarkMode } = useTheme()
 
-  if (!isOpen || !supplier) return null
+  if (!supplier) return null
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -36,33 +36,27 @@ const ViewSupplierModal = ({ isOpen, onClose, supplier, onEdit, canEdit = true }
   const StatusIcon = statusConfig.icon
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                <FaTruck className="text-white text-xl" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Supplier Details
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Complete supplier information and history
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="3xl"
+      noPadding
+    >
+      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+          <FaTruck className="text-white text-xl" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Supplier Details
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Complete supplier information and history
+          </p>
+        </div>
+      </div>
+      
+      <div className="p-6">
           <div className="space-y-6">
             {/* Supplier Name & Status */}
             <div className="flex items-start justify-between">
@@ -218,7 +212,7 @@ const ViewSupplierModal = ({ isOpen, onClose, supplier, onEdit, canEdit = true }
                     onClose()
                     onEdit && onEdit(supplier)
                   }}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                  className="flex-1"
                 >
                   <FaEdit className="mr-2" />
                   Edit Supplier
@@ -234,9 +228,8 @@ const ViewSupplierModal = ({ isOpen, onClose, supplier, onEdit, canEdit = true }
               </Button>
             </div>
           </div>
-        </Card.Content>
-      </Card>
-    </div>
+      </div>
+    </BaseModal>
   )
 }
 

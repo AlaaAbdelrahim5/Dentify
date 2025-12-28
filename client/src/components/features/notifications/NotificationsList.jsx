@@ -1,5 +1,6 @@
 import { useNotifications } from '../../../contexts/NotificationContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { Button } from '../../common';
 import { FiBell, FiCheck, FiTrash2 } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
 
@@ -29,13 +30,14 @@ const NotificationsList = () => {
           )}
         </div>
         {unreadCount > 0 && (
-          <button
+          <Button
             onClick={markAllAsRead}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-sm hover:shadow-md"
+            variant="primary"
+            size="sm"
           >
-            <FiCheck className="w-4 h-4" />
-            <span className="font-medium">Mark all as read</span>
-          </button>
+            <FiCheck className="w-4 h-4 mr-2" />
+            Mark all as read
+          </Button>
         )}
       </div>
 

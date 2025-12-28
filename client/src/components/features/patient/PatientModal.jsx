@@ -9,7 +9,7 @@ import {
   FaVenusMars,
   FaLock
 } from 'react-icons/fa'
-import { Button, BaseModal } from '../../common'
+import { Button, BaseModal, Input, Select } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants'
 import { validateEmail } from '../../../utils/validation'
@@ -184,154 +184,61 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg ${
-                        errors.firstName 
-                          ? 'border-red-500' 
-                          : isDarkMode
-                            ? 'border-gray-600 bg-gray-700 text-white'
-                            : 'border-gray-300 bg-white text-gray-900'
-                      }`}
-                      placeholder="Enter first name"
-                    />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
-                    )}
-                  </div>
+                  <Input
+                    label="First Name *"
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    error={errors.firstName}
+                    placeholder="Enter first name"
+                    icon={FaUser}
+                  />
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-lg ${
-                        errors.lastName 
-                          ? 'border-red-500' 
-                          : isDarkMode
-                            ? 'border-gray-600 bg-gray-700 text-white'
-                            : 'border-gray-300 bg-white text-gray-900'
-                      }`}
-                      placeholder="Enter last name"
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-                    )}
-                  </div>
+                  <Input
+                    label="Last Name *"
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    error={errors.lastName}
+                    placeholder="Enter last name"
+                    icon={FaUser}
+                  />
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Date of Birth *
-                    </label>
-                    <div className="relative">
-                      <FaCalendarAlt className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`} />
-                      <input
-                        type="date"
-                        name="dateOfBirth"
-                        value={formData.dateOfBirth}
-                        onChange={handleInputChange}
-                        max={getTodayISO()}
-                        className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                          errors.dateOfBirth 
-                            ? 'border-red-500' 
-                            : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white'
-                              : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                      />
-                    </div>
-                    {errors.dateOfBirth && (
-                      <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
-                    )}
-                  </div>
+                  <Input
+                    label="Date of Birth *"
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    error={errors.dateOfBirth}
+                    max={getTodayISO()}
+                    icon={FaCalendarAlt}
+                  />
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Gender *
-                    </label>
-                    <div className="relative">
-                      <FaVenusMars className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`} />
-                      <select
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleInputChange}
-                        className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                          errors.gender 
-                            ? 'border-red-500' 
-                            : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white'
-                              : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                      >
-                        <option value="">Select gender</option>
-                        {GENDER_OPTIONS.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {errors.gender && (
-                      <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
-                    )}
-                  </div>
+                  <Select
+                    label="Gender *"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    error={errors.gender}
+                    options={GENDER_OPTIONS}
+                    placeholder="Select gender"
+                    icon={FaVenusMars}
+                  />
 
                   <div className="md:col-span-2">
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      City *
-                    </label>
-                    <div className="relative">
-                      <FaMapMarkerAlt className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`} />
-                      <select
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                          errors.city 
-                            ? 'border-red-500' 
-                            : isDarkMode
-                              ? 'border-gray-600 bg-gray-700 text-white'
-                              : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                      >
-                        <option value="">Select city</option>
-                        {CITY_OPTIONS.map(city => (
-                          <option key={city.value} value={city.value}>
-                            {city.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {errors.city && (
-                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-                    )}
+                    <Select
+                      label="City *"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      error={errors.city}
+                      options={CITY_OPTIONS}
+                      placeholder="Select city"
+                      icon={FaMapMarkerAlt}
+                    />
                   </div>
                 </div>
               </div>
@@ -347,95 +254,38 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Phone Number *
-                      </label>
-                      <div className="relative">
-                        <FaPhone className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                        }`} />
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                            errors.phone 
-                              ? 'border-red-500' 
-                              : isDarkMode
-                                ? 'border-gray-600 bg-gray-700 text-white'
-                                : 'border-gray-300 bg-white text-gray-900'
-                          }`}
-                          placeholder="Enter phone number"
-                        />
-                      </div>
-                      {errors.phone && (
-                        <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                      )}
-                    </div>
+                    <Input
+                      label="Phone Number *"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      error={errors.phone}
+                      placeholder="Enter phone number"
+                      icon={FaPhone}
+                    />
 
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Email *
-                      </label>
-                      <div className="relative">
-                        <FaEnvelope className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                        }`} />
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                            errors.email 
-                              ? 'border-red-500' 
-                              : isDarkMode
-                                ? 'border-gray-600 bg-gray-700 text-white'
-                                : 'border-gray-300 bg-white text-gray-900'
-                          }`}
-                          placeholder="Enter email address"
-                        />
-                      </div>
-                      {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                      )}
-                    </div>
+                    <Input
+                      label="Email *"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      error={errors.email}
+                      placeholder="Enter email address"
+                      icon={FaEnvelope}
+                    />
 
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        Password *
-                      </label>
-                      <div className="relative">
-                        <FaLock className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                        }`} />
-                        <input
-                          type="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                            errors.password 
-                              ? 'border-red-500' 
-                              : isDarkMode
-                                ? 'border-gray-600 bg-gray-700 text-white'
-                                : 'border-gray-300 bg-white text-gray-900'
-                          }`}
-                          placeholder="Enter temporary password"
-                        />
-                      </div>
-                      {errors.password && (
-                        <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                      )}
-                    </div>
+                    <Input
+                      label="Password *"
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      error={errors.password}
+                      placeholder="Enter temporary password"
+                      icon={FaLock}
+                    />
                   </div>
                 </div>
               )}

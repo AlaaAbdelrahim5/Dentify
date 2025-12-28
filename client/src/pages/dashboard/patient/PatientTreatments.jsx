@@ -123,23 +123,6 @@ const PatientTreatments = () => {
     })
   }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
 
-  // Calculate stats
-  const stats = useMemo(() => {
-    if (loading) {
-      return { total: 0, active: 0, completed: 0, totalPaid: 0, pendingPayments: 0 }
-    }
-    const total = displayTreatments.length
-    const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
-    const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
-    const totalPaid = sumField(displayTreatments, 'paidAmount')
-    const pendingPayments = displayTreatments.reduce((sum, t) => 
-      sum + calculateRemainingBalance(t.totalAmount, t.paidAmount), 0)
-    
-    return { total, active, completed, totalPaid, pendingPayments }
-  }, [displayTreatments, loading])
-
-
-
   // Error state
   if (error) {
     return (

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, Input } from '../../common'
+import { BaseModal, Button, Input } from '../../common'
 import { FaTimes, FaBoxes, FaSearch, FaDollarSign, FaWarehouse } from 'react-icons/fa'
 
 /**
@@ -26,7 +26,7 @@ const SupplierItemsModal = ({ isOpen, onClose, supplier, items = [] }) => {
   const totalValue = supplierItems.reduce((sum, item) => sum + (item.quantity * item.price), 0)
   const totalItems = supplierItems.length
 
-  if (!isOpen || !supplier) return null
+  if (!supplier) return null
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -42,33 +42,27 @@ const SupplierItemsModal = ({ isOpen, onClose, supplier, items = [] }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
-                <FaBoxes className="text-white text-xl" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Items from {supplier.name}
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {totalItems} items • Total Value: ${totalValue.toFixed(2)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6 flex-1 overflow-y-auto">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="5xl"
+      noPadding
+    >
+      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center">
+          <FaBoxes className="text-white text-xl" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Items from {supplier.name}
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {totalItems} items • Total Value: ${totalValue.toFixed(2)}
+          </p>
+        </div>
+      </div>
+      
+      <div className="p-6 flex-1 overflow-y-auto">
           <div className="space-y-6">
             {/* Search Bar */}
             <div className="relative">
@@ -196,20 +190,19 @@ const SupplierItemsModal = ({ isOpen, onClose, supplier, items = [] }) => {
               </div>
             )}
           </div>
-        </Card.Content>
 
-        <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} p-4`}>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="w-full"
-          >
-            <FaTimes className="mr-2" />
-            Close
-          </Button>
-        </div>
-      </Card>
-    </div>
+          <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} p-4 mt-6`}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="w-full"
+            >
+              <FaTimes className="mr-2" />
+              Close
+            </Button>
+          </div>
+      </div>
+    </BaseModal>
   )
 }
 

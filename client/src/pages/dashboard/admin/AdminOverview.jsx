@@ -6,7 +6,7 @@ import {
   FaUserShield
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
-import { Card, StatsOverview, WelcomeCard, RecentActivities } from '../../../components'
+import { Card, StatsOverview, WelcomeCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, clinicsAPI, radiologyAPI, patientsAPI } from '../../../services/api'
 
@@ -131,26 +131,7 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
         ]} />
       )}
 
-      {/* Recent Activities */}
-      <RecentActivities 
-        activities={[
-          {
-            message: 'New clinic registered: "Smile Dental Center"',
-            time: '2 hours ago',
-            color: 'green'
-          },
-          {
-            message: 'Dentist approval pending: Dr. Ahmad Salem',
-            time: '4 hours ago',
-            color: 'yellow'
-          },
-          {
-            message: 'New radiology center added: "Advanced Imaging"',
-            time: '1 day ago',
-            color: 'blue'
-          }
-        ]}
-      />
+
     </div>
   )
 }

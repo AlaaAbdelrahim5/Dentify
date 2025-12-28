@@ -11,6 +11,7 @@ import RadiologyManagement from './admin/RadiologyManagement'
 import DentistsManagement from './admin/DentistsManagement'
 import PatientsManagement from './admin/PatientsManagement'
 import AdminsManagement from './admin/AdminsManagement'
+import AdminSecretariesManagement from './admin/SecretariesManagement'
 import AdminSettings from './admin/AdminSettings'
 
 // Import clinic components
@@ -107,6 +108,7 @@ const UnifiedDashboard = () => {
           overview: { component: AdminOverview, label: 'Overview' },
           clinics: { component: ClinicsManagement, label: 'Clinics' },
           dentists: { component: DentistsManagement, label: 'Dentists' },
+          secretaries: { component: AdminSecretariesManagement, label: 'Secretaries' },
           patients: { component: PatientsManagement, label: 'Patients' },
           radiology: { component: RadiologyManagement, label: 'Radiology' },
           admins: { component: AdminsManagement, label: 'Admins' },

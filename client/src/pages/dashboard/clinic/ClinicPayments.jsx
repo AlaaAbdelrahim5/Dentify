@@ -14,7 +14,7 @@ import {
   FaUser,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, LoadingState, EmptyState } from '../../../components'
+import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, LoadingState, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
 import { calculateRemainingBalance } from '../../../utils/helpers'
 
@@ -183,40 +183,6 @@ const ClinicPayments = () => {
     })
   }, [mockPayments, selectedDateRange, searchTerm, selectedPaymentMethod, selectedPatient])
 
-  // Calculate stats - use useMemo for performance
-  const stats = useMemo(() => {
-    // Apply date filter for stats
-    let dateFilteredPayments = mockPayments
-    
-    if (selectedDateRange !== 'all') {
-      const now = new Date()
-      dateFilteredPayments = mockPayments.filter(payment => {
-        const paymentDate = new Date(payment.paymentDate)
-        
-        switch (selectedDateRange) {
-          case 'today':
-            return paymentDate.toDateString() === now.toDateString()
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-            return paymentDate >= weekAgo
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-            return paymentDate >= monthAgo
-          default:
-            return true
-        }
-      })
-    }
-
-    const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
-    const totalDiscount = dateFilteredPayments.reduce((sum, p) => sum + p.discount, 0)
-    const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
-    const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CARD').reduce((sum, p) => sum + p.amount, 0)
-    const count = dateFilteredPayments.length
-    
-    return { total, totalDiscount, cashPayments, cardPayments, count }
-  }, [mockPayments, selectedDateRange])
-
   const handleAddPayment = (treatment = null) => {
     setSelectedTreatment(treatment)
     setIsPaymentModalOpen(true)
@@ -348,42 +314,6 @@ const ClinicPayments = () => {
           gradient: 'from-green-600 to-green-700'
         }}
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        {
-          label: `${selectedDateRange === 'all' ? 'Total' : 
-                   selectedDateRange === 'today' ? 'Today' :
-                   selectedDateRange === 'week' ? 'This Week' : 'This Month'} Revenue`,
-          value: loading ? '-' : `$${stats.total.toFixed(2)}`,
-          icon: FaDollarSign,
-          gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Total Discounts',
-          value: loading ? '-' : `$${stats.totalDiscount.toFixed(2)}`,
-          icon: FaFileInvoiceDollar,
-          gradient: 'from-orange-600 to-orange-700'
-        },
-        {
-          label: 'Cash Payments',
-          value: loading ? '-' : `$${stats.cashPayments.toFixed(2)}`,
-          icon: FaMoneyBillWave,
-          gradient: 'from-emerald-600 to-emerald-700'
-        },
-        {
-          label: 'Card Payments',
-          value: loading ? '-' : `$${stats.cardPayments.toFixed(2)}`,
-          icon: FaCreditCard,
-          gradient: 'from-blue-600 to-blue-700'
-        },
-        {
-          label: 'Transactions',
-          value: loading ? '-' : stats.count,
-          icon: FaChartLine,
-          gradient: 'from-purple-600 to-purple-700'
-        }
-      ]} />
 
       {/* Patient Summary Section - Shows when patient filter is selected */}
       {selectedPatient !== 'all' && (

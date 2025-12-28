@@ -7,7 +7,7 @@ import {
   FaClock,
   FaHospital
 } from 'react-icons/fa'
-import { Card, StatsOverview, WelcomeCard, RecentActivities } from '../../../components'
+import { Card, StatsOverview, WelcomeCard } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI, dentistsAPI, appointmentsAPI, patientsAPI } from '../../../services/api'
 
@@ -148,26 +148,7 @@ const ClinicOverview = ({ userData, stats: propStats }) => {
       ]} />
       )}
 
-      {/* Recent Activities */}
-      <RecentActivities 
-        activities={[
-          {
-            message: 'New secretary added: Sarah Ahmed',
-            time: '2 hours ago',
-            color: 'green'
-          },
-          {
-            message: 'Appointment scheduled: John Doe with Dr. Smith',
-            time: '4 hours ago',
-            color: 'blue'
-          },
-          {
-            message: 'Patient record updated: Maria Johnson',
-            time: '1 day ago',
-            color: 'yellow'
-          }
-        ]}
-      />
+
     </div>
   )
 }

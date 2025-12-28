@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { FaFileUpload, FaTimes, FaCalendarAlt, FaImage, FaFilePdf, FaFileAlt, FaCloudUploadAlt, FaLink, FaCheckCircle } from 'react-icons/fa'
-import { Button, Input } from '../../common'
+import { Button, Input, LoadingSpinner } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -311,45 +311,19 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop with blur */}
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      ></div>
-
-      {/* Modal panel - centered and properly sized */}
-      <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${
-        isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'
-      }`}>
-        {/* Header with gradient */}
-        <div className={`sticky top-0 z-10 overflow-hidden ${
-          isDarkMode ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-        }`}>
-          <div className="px-6 py-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-                  <FaCloudUploadAlt className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Upload Radiology Result</h3>
-                  <p className="text-blue-100 text-sm">Request #{request.id} - {request.imagingType}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors text-white"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      title="Upload Radiology Result"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Request Info */}
+        <div className={`p-3 rounded-lg border ${isDarkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
+          <p className={`text-sm ${isDarkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+            Request #{request.id} - {request.imagingType}
+          </p>
         </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
             <div className={`flex items-start gap-3 p-4 rounded-xl border-l-4 ${
               isDarkMode 
@@ -597,24 +571,15 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               <label className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Report File URL <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLink className={isDarkMode ? 'text-gray-500' : 'text-gray-400'} />
-                </div>
-                <input
-                  type="url"
-                  name="reportFile"
-                  value={formData.reportFile}
-                  onChange={handleChange}
-                  placeholder="https://example.com/report.pdf"
-                  required
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-500 transition-all ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500'
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                  }`}
-                />
-              </div>
+              <Input
+                type="url"
+                name="reportFile"
+                value={formData.reportFile}
+                onChange={handleChange}
+                placeholder="https://example.com/report.pdf"
+                icon={FaLink}
+                required
+              />
               {formData.reportFile && (
                 <div className={`mt-3 p-4 rounded-lg border ${
                   isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-blue-50 border-blue-200'
@@ -678,34 +643,26 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
             >
               Cancel
             </Button>
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className={`px-6 py-3 rounded-xl font-medium text-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                isDarkMode
-                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/30'
-                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/30'
-              }`}
+              variant="primary"
             >
               {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                  </svg>
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
                   Uploading...
-                </span>
+                </>
               ) : (
-                <span className="flex items-center gap-2">
-                  <FaCloudUploadAlt className="w-5 h-5" />
+                <>
+                  <FaCloudUploadAlt className="w-5 h-5 mr-2" />
                   Upload Result
-                </span>
+                </>
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   )
 }
 

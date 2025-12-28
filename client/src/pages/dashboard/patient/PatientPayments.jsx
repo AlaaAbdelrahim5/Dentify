@@ -13,7 +13,7 @@ import {
   FaUserMd,
   FaTooth
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, StatsOverview, FilterBar, PageHeader, generatePaymentReceipt, EmptyState } from '../../../components'
+import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, generatePaymentReceipt, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI } from '../../../services/api'
 
 const PatientPayments = () => {
@@ -130,21 +130,6 @@ const PatientPayments = () => {
     return matchesSearch && matchesPaymentMethod && matchesTreatment
   })
 
-  const getStats = () => {
-    if (loading) {
-      return { total: 0, cashPayments: 0, cardPayments: 0, count: 0 }
-    }
-    const dateFilteredPayments = filterPaymentsByDate(mockPayments)
-    const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
-    const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
-    const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CARD').reduce((sum, p) => sum + p.amount, 0)
-    const count = dateFilteredPayments.length
-    
-    return { total, cashPayments, cardPayments, count }
-  }
-
-  const stats = getStats()
-
   // Get treatment summary
   const getTreatmentSummary = () => {
     const totalTreatmentCost = mockTreatments.reduce((sum, t) => sum + t.totalAmount, 0)
@@ -252,36 +237,6 @@ const PatientPayments = () => {
         description="View your treatment payments and financial overview"
         icon={FaMoneyBillWave}
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        {
-          label: `${selectedDateRange === 'all' ? 'Total' : 
-                   selectedDateRange === 'today' ? 'Today' :
-                   selectedDateRange === 'week' ? 'This Week' : 'This Month'} Paid`,
-          value: loading ? '-' : `$${stats.total.toFixed(2)}`,
-          icon: FaDollarSign,
-          gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Cash Payments',
-          value: loading ? '-' : `$${stats.cashPayments.toFixed(2)}`,
-          icon: FaMoneyBillWave,
-          gradient: 'from-emerald-600 to-emerald-700'
-        },
-        {
-          label: 'Card Payments',
-          value: loading ? '-' : `$${stats.cardPayments.toFixed(2)}`,
-          icon: FaCreditCard,
-          gradient: 'from-blue-600 to-blue-700'
-        },
-        {
-          label: 'Transactions',
-          value: loading ? '-' : stats.count,
-          icon: FaChartLine,
-          gradient: 'from-purple-600 to-purple-700'
-        }
-      ]} />
 
       {/* Filters */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

@@ -81,15 +81,21 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
             user: {
               select: {
                 id: true,
-                email: true
+                email: true,
+                phone: true
               }
             }
           }
         }
+      },
+      orderBy: {
+        userId: 'desc'
       }
     });
 
-    return successResponse(res, secretaries, 'Secretaries fetched successfully');
+    const transformedSecretaries = secretaries.map(transformSecretary);
+
+    return successResponse(res, transformedSecretaries, 'Secretaries fetched successfully');
   } catch (error) {
     return errorResponse(res, 'Failed to fetch secretaries', 500);
   }

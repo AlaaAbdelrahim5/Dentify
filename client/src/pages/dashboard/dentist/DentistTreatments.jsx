@@ -236,18 +236,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     })
   }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
 
-  // Calculate stats - MEMOIZED to avoid recalculating on every render
-  const stats = useMemo(() => {
-    const total = displayTreatments.length
-    const active = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'IN_PROGRESS')
-    const completed = countWhere(displayTreatments, t => normalizeStatus(t.treatmentStatus) === 'COMPLETED')
-    const totalRevenue = sumField(displayTreatments, 'paidAmount')
-    const pendingPayments = displayTreatments.reduce((sum, t) => 
-      sum + calculateRemainingBalance(t.totalAmount, t.paidAmount), 0)
-    
-    return { total, active, completed, totalRevenue, pendingPayments }
-  }, [displayTreatments])
-
   // Fetch payments and prescriptions for a specific treatment
   const fetchTreatmentPayments = async (treatmentId) => {
     try {
@@ -669,57 +657,6 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
           icon: FaPlus
         }}
       />
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Total Treatments</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{loading ? '-' : stats.total}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
-              <FaStethoscope className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Active</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{loading ? '-' : stats.active}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
-              <FaExclamationTriangle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Completed</p>
-              <p className={`text-2xl font-bold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>{loading ? '-' : stats.completed}</p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
-              <FaCheck className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-      </div>
 
       {/* Filters and Search */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

@@ -178,40 +178,6 @@ const DentistPayments = () => {
     })
   }, [mockPayments, selectedDateRange, searchTerm, selectedPaymentMethod, selectedPatient])
 
-  // Calculate stats - use useMemo for performance
-  const stats = useMemo(() => {
-    // Apply date filter for stats
-    let dateFilteredPayments = mockPayments
-    
-    if (selectedDateRange !== 'all') {
-      const now = new Date()
-      dateFilteredPayments = mockPayments.filter(payment => {
-        const paymentDate = new Date(payment.paymentDate)
-        
-        switch (selectedDateRange) {
-          case 'today':
-            return paymentDate.toDateString() === now.toDateString()
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-            return paymentDate >= weekAgo
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-            return paymentDate >= monthAgo
-          default:
-            return true
-        }
-      })
-    }
-
-    const total = dateFilteredPayments.reduce((sum, p) => sum + p.amount, 0)
-    const totalDiscount = dateFilteredPayments.reduce((sum, p) => sum + p.discount, 0)
-    const cashPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CASH').reduce((sum, p) => sum + p.amount, 0)
-    const cardPayments = dateFilteredPayments.filter(p => p.paymentMethod === 'CARD').reduce((sum, p) => sum + p.amount, 0)
-    const count = dateFilteredPayments.length
-    
-    return { total, totalDiscount, cashPayments, cardPayments, count }
-  }, [mockPayments, selectedDateRange])
-
   const handleAddPayment = (treatment = null) => {
     setSelectedTreatment(treatment)
     setIsPaymentModalOpen(true)

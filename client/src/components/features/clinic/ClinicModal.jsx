@@ -11,7 +11,7 @@ import {
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
-import { Button, Input, LoadingSpinner, BaseModal } from "../../common";
+import { Button, Input, Select, LoadingSpinner, BaseModal } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validatePassword } from "../../../utils/validation";
@@ -467,40 +467,15 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      City *
-                    </label>
-                    <select
-                      value={formData.city}
-                      onChange={(e) =>
-                        handleInputChange("city", e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                        errors.city
-                          ? "border-red-500"
-                          : isDarkMode
-                          ? "border-gray-600 bg-gray-700 text-white"
-                          : "border-gray-300 bg-white text-gray-900"
-                      }`}
-                    >
-                      <option value="">Select City</option>
-                      {CITY_OPTIONS.map((city) => (
-                        <option key={city.value} value={city.value}>
-                          {city.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.city && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.city}
-                      </p>
-                    )}
-                  </div>
+                  <Select
+                    label="City *"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    error={errors.city}
+                    options={CITY_OPTIONS}
+                    placeholder="Select City"
+                    icon={FaMapMarkerAlt}
+                  />
 
                   <div>
                     <label

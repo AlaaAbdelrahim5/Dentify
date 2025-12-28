@@ -1,5 +1,5 @@
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, StatusBadge } from '../../common'
+import { BaseModal, Button, StatusBadge } from '../../common'
 import { FaTimes, FaBoxes, FaTruck, FaCalendarAlt, FaDollarSign, FaExclamationTriangle, FaEdit } from 'react-icons/fa'
 
 /**
@@ -10,7 +10,7 @@ import { FaTimes, FaBoxes, FaTruck, FaCalendarAlt, FaDollarSign, FaExclamationTr
 const ViewItemModal = ({ isOpen, onClose, item, onEdit, canEdit = false }) => {
   const { isDarkMode } = useTheme()
 
-  if (!isOpen || !item) return null
+  if (!item) return null
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -51,33 +51,27 @@ const ViewItemModal = ({ isOpen, onClose, item, onEdit, canEdit = false }) => {
   const daysUntilExpiry = calculateDaysUntilExpiry()
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-                <FaBoxes className="text-white text-xl" />
-              </div>
-              <div>
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Item Details
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Complete information about this inventory item
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            >
-              <FaTimes className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-            </button>
-          </div>
-        </Card.Header>
-        
-        <Card.Content className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="3xl"
+      noPadding
+    >
+      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+          <FaBoxes className="text-white text-xl" />
+        </div>
+        <div>
+          <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Item Details
+          </h3>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Complete information about this inventory item
+          </p>
+        </div>
+      </div>
+      
+      <div className="p-6">
           <div className="space-y-6">
             {/* Item Name & Status */}
             <div className="flex items-start justify-between">
@@ -258,9 +252,8 @@ const ViewItemModal = ({ isOpen, onClose, item, onEdit, canEdit = false }) => {
               </Button>
             </div>
           </div>
-        </Card.Content>
-      </Card>
-    </div>
+      </div>
+    </BaseModal>
   )
 }
 

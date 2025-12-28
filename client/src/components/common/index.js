@@ -16,7 +16,7 @@ export { default as PageHeader } from './layout/PageHeader'
 export { default as DataTable } from './data-display/DataTable'
 export { default as FilterBar } from './data-display/FilterBar'
 export { default as Pagination } from './data-display/Pagination'
-export { default as RecentActivities } from './data-display/RecentActivities'
+
 
 // State Components
 export { default as EmptyState } from './states/EmptyState'

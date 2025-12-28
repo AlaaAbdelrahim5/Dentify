@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { Card, Button, Input, BaseModal } from '../../common'
+import { Card, Button, Input, Select, BaseModal } from '../../common'
 import { FaSave, FaBoxes, FaEdit } from 'react-icons/fa'
 
 /**
@@ -127,56 +127,32 @@ const ItemModal = ({ isOpen, onClose, onSubmit, item = null, suppliers = [] }) =
                 />
               </div>
 
-              {/* Category */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Category *
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => handleChange('category', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  <option value="Filling Materials">Filling Materials</option>
-                  <option value="Anesthetics">Anesthetics</option>
-                  <option value="PPE">PPE (Personal Protective Equipment)</option>
-                  <option value="Impression Materials">Impression Materials</option>
-                  <option value="Cements">Cements</option>
-                  <option value="Instruments">Instruments</option>
-                  <option value="Cleaning Supplies">Cleaning Supplies</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              <Select
+                label="Category *"
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                options={[
+                  { value: 'Filling Materials', label: 'Filling Materials' },
+                  { value: 'Anesthetics', label: 'Anesthetics' },
+                  { value: 'PPE', label: 'PPE (Personal Protective Equipment)' },
+                  { value: 'Impression Materials', label: 'Impression Materials' },
+                  { value: 'Cements', label: 'Cements' },
+                  { value: 'Instruments', label: 'Instruments' },
+                  { value: 'Cleaning Supplies', label: 'Cleaning Supplies' },
+                  { value: 'Other', label: 'Other' }
+                ]}
+                placeholder="Select Category"
+                required
+              />
 
-              {/* Supplier */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Supplier *
-                </label>
-                <select
-                  value={formData.supplierId}
-                  onChange={(e) => handleChange('supplierId', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  required
-                >
-                  <option value="">Select Supplier</option>
-                  {suppliers.map(supplier => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Supplier *"
+                value={formData.supplierId}
+                onChange={(e) => handleChange('supplierId', e.target.value)}
+                options={suppliers.map(supplier => ({ value: supplier.id, label: supplier.name }))}
+                placeholder="Select Supplier"
+                required
+              />
 
               {/* Quantity */}
               <div>

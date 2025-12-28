@@ -19,7 +19,6 @@ import {
   Card,
   Button,
   Input,
-  StatsOverview,
   PageHeader,
   DataTable,
   FilterBar,
@@ -166,63 +165,7 @@ const PatientAppointments = () => {
 
   const displayAppointments = activeView === 'upcoming' ? upcomingAppointments : pastAppointments
 
-  // Computed stats
-  const stats = useMemo(() => {
-    if (loading) {
-      return [
-        {
-          label: 'Upcoming',
-          value: '-',
-          icon: FaCalendarAlt,
-          gradient: 'from-teal-600 to-cyan-600'
-        },
-        {
-          label: 'Confirmed',
-          value: '-',
-          icon: FaCheckCircle,
-          gradient: 'from-green-600 to-emerald-600'
-        },
-        {
-          label: 'Pending',
-          value: '-',
-          icon: FaHourglassHalf,
-          gradient: 'from-yellow-600 to-orange-600'
-        },
-        {
-          label: 'Total Visits',
-          value: '-',
-          icon: FaCheckCircle,
-          gradient: 'from-blue-600 to-indigo-600'
-        }
-      ]
-    }
-    return [
-      {
-        label: 'Upcoming',
-        value: upcomingAppointments.length,
-        icon: FaCalendarAlt,
-        gradient: 'from-teal-600 to-cyan-600'
-      },
-      {
-        label: 'Confirmed',
-        value: upcomingAppointments.filter(a => a.status === 'CONFIRMED').length,
-        icon: FaCheckCircle,
-        gradient: 'from-green-600 to-emerald-600'
-      },
-      {
-        label: 'Pending',
-        value: upcomingAppointments.filter(a => a.status === 'PENDING').length,
-        icon: FaHourglassHalf,
-        gradient: 'from-yellow-600 to-orange-600'
-      },
-      {
-        label: 'Total Visits',
-        value: pastAppointments.filter(a => a.status === 'COMPLETED').length,
-        icon: FaCheckCircle,
-        gradient: 'from-blue-600 to-indigo-600'
-      }
-    ]
-  }, [upcomingAppointments, pastAppointments, loading])
+
 
   // Filtered appointments
   const filteredAppointments = useMemo(() => {
@@ -498,9 +441,6 @@ const PatientAppointments = () => {
           gradient: 'from-teal-600 to-cyan-600'
         }}
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={stats} />
 
       {/* View Toggle */}
       <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FaXRay, FaUser, FaCalendarAlt, FaHospital, FaStickyNote, FaTimes } from 'react-icons/fa'
-import { Card, Button } from '../../common'
+import { BaseModal, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { formatDate as formatDateHelper } from '../../../utils/helpers'
 
@@ -33,38 +33,20 @@ const RequestDetailsModal = ({ request, isOpen, onClose, onStatusUpdate }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div 
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-          onClick={onClose}
-        ></div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      noPadding
+    >
+      <div className={`flex items-center gap-2 p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <FaXRay className={isDarkMode ? 'text-blue-400' : 'text-blue-600'} />
+        <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          Request Details
+        </h3>
+      </div>
 
-        {/* Modal panel */}
-        <div className={`inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          {/* Header */}
-          <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className={`text-xl font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                <FaXRay className={isDarkMode ? 'text-blue-400' : 'text-blue-600'} />
-                Request Details
-              </h3>
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
-                }`}
-              >
-                <FaTimes />
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="px-6 py-4 space-y-6">
+      <div className="p-6 space-y-6">
             {/* Request Info */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -209,9 +191,7 @@ const RequestDetailsModal = ({ request, isOpen, onClose, onStatusUpdate }) => {
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </BaseModal>
   )
 }
 
