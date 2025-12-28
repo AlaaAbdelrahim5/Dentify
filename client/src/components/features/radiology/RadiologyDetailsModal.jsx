@@ -7,8 +7,8 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaCheck,
-  FaCog,
-  FaClock
+  FaClock,
+  FaGlobe
 } from 'react-icons/fa'
 import { BaseModal, LocationMap } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -21,8 +21,8 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
   const cityLabel = center.city
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="2xl" noPadding>
-      {/* Header with gradient background */}
+    <BaseModal isOpen={isOpen} onClose={onClose} size="5xl" showCloseButton={false} noPadding={true}>
+      {/* Header with gradient */}
       <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
         <button
           onClick={onClose}
@@ -31,13 +31,12 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
           <FaTimes className="w-5 h-5" />
         </button>
         
-        {/* Avatar and basic info */}
-        <div className="flex items-center gap-4 mt-8">
+        {/* Profile section */}
+        <div className="flex items-center gap-4">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
               <FaXRay className="w-12 h-12 text-teal-600" />
             </div>
-            {/* Status indicator on avatar */}
             <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
               center.user?.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
             }`}>
@@ -69,51 +68,92 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Basic Information */}
         <div>
-          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+          <h3 className={`text-lg font-semibold mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            <FaXRay className="w-5 h-5 text-teal-600" />
             Basic Information
           </h3>
-          <div className={`grid grid-cols-2 gap-4 p-4 rounded-lg ${
-            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <div>
-              <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Center Name
-              </p>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {center.centerName || center.registrationNumber}
-              </p>
-            </div>
-            <div>
-              <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Registration Number
-              </p>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {center.registrationNumber || 'N/A'}
-              </p>
-            </div>
-            {center.website && (
-              <div className="col-span-2">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Website
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaXRay className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Center Name
                 </p>
-                <a href={center.website} target="_blank" rel="noopener noreferrer" 
-                   className="text-sm font-medium text-teal-600 hover:underline">
+                <p className={`font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {center.centerName || center.registrationNumber}
+                </p>
+              </div>
+            </div>
+
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaXRay className="text-teal-500 mt-1 text-xl" />
+              <div className="flex-1">
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Registration Number
+                </p>
+                <p className={`font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {center.registrationNumber || 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="space-y-4">
+            {center.website && (
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <FaGlobe className="text-teal-500" />
+                  <p className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    Website
+                  </p>
+                </div>
+                <a 
+                  href={center.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`font-medium hover:underline wrap-break-word ${
+                    isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
+                  }`}
+                >
                   {center.website}
                 </a>
               </div>
             )}
+
             {center.description && (
-              <div className="col-span-2">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className={`text-sm font-medium mb-3 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   Description
                 </p>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`leading-relaxed ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {center.description}
                 </p>
               </div>
@@ -123,41 +163,44 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
 
         {/* Location */}
         <div>
-          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+          <h3 className={`text-lg font-semibold mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
             Location
           </h3>
-          <div className={`space-y-3 p-4 rounded-lg ${
-            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-600' : 'bg-white'
-              }`}>
-                <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
-              </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaMapMarkerAlt className="text-teal-500 mt-1 text-xl" />
               <div className="flex-1">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   City
                 </p>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {cityLabel}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-600' : 'bg-white'
-              }`}>
-                <FaMapMarkerAlt className="w-4 h-4 text-teal-600" />
-              </div>
+
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaMapMarkerAlt className="text-teal-500 mt-1 text-xl" />
               <div className="flex-1">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   Street Address
                 </p>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {center.location || 'N/A'}
                 </p>
               </div>
@@ -168,14 +211,13 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
         {/* Location Map */}
         {center.coordinates && (
           <div>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+            <h3 className={`text-lg font-semibold mb-6 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
               Location Map
             </h3>
-            <div className={`p-4 rounded-lg ${
-              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            <div className={`p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
               <LocationMap
                 coordinates={center.coordinates}
@@ -195,41 +237,44 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
 
         {/* Contact Information */}
         <div>
-          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+          <h3 className={`text-lg font-semibold mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            <FaEnvelope className="w-5 h-5 text-teal-600" />
             Contact Information
           </h3>
-          <div className={`space-y-3 p-4 rounded-lg ${
-            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-600' : 'bg-white'
-              }`}>
-                <FaEnvelope className="w-4 h-4 text-teal-600" />
-              </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaEnvelope className="text-teal-500 mt-1 text-xl" />
               <div className="flex-1">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   Email Address
                 </p>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`font-semibold wrap-break-word ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {center.user?.email || 'N/A'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                isDarkMode ? 'bg-gray-600' : 'bg-white'
-              }`}>
-                <FaPhone className="w-4 h-4 text-teal-600" />
-              </div>
+
+            <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <FaPhone className="text-teal-500 mt-1 text-xl" />
               <div className="flex-1">
-                <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   Phone Number
                 </p>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                   {center.user?.phone || 'N/A'}
                 </p>
               </div>
@@ -238,22 +283,24 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
         </div>
 
         {/* Services & Equipment */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Services / Supported Types */}
-          {center.supportedTypes && center.supportedTypes.length > 0 && (
-            <div>
-              <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                <FaCog className="w-5 h-5 text-teal-600" />
-                Supported Types
-              </h3>
+        {center.supportedTypes && center.supportedTypes.length > 0 && (
+          <div>
+            <h3 className={`text-lg font-semibold mb-6 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Supported Types
+            </h3>
+            <div className={`p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
               <div className="flex flex-wrap gap-2">
                 {center.supportedTypes.map((service, index) => (
                   <span
                     key={index}
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      isDarkMode ? 'bg-teal-900/20 text-teal-400 border border-teal-800' : 'bg-teal-100 text-teal-700 border border-teal-200'
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                      isDarkMode
+                        ? 'bg-teal-900/30 text-teal-400 border border-teal-700'
+                        : 'bg-teal-50 text-teal-700 border border-teal-200'
                     }`}
                   >
                     {service}
@@ -261,34 +308,41 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
                 ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Working Hours */}
         {center.workingHours && (
           <div>
-            <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+            <h3 className={`text-lg font-semibold mb-6 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              <FaClock className="w-5 h-5 text-teal-600" />
               Working Hours
             </h3>
-            <div className={`p-4 rounded-lg ${
-              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            <div className={`p-4 rounded-lg border ${
+              isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
+              <div className="flex items-center gap-2 mb-3">
+                <FaClock className="text-teal-500" />
+                <p className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Working Schedule
+                </p>
+              </div>
               <div className="space-y-2">
                 {(() => {
                   const hours = center.workingHours;
                   if (Array.isArray(hours) && hours.length > 0) {
                     return hours.map((schedule, index) => (
-                      <div key={index} className="flex justify-between items-center">
+                      <div key={index} className="flex justify-between items-center py-1">
                         <span className={`font-medium ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           {schedule.day}
                         </span>
                         <span className={`${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
                           {schedule.startTime} - {schedule.endTime}
                         </span>
@@ -296,14 +350,14 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
                     ));
                   } else if (typeof hours === 'object' && Object.keys(hours).length > 0) {
                     return Object.entries(hours).map(([day, schedule]) => (
-                      <div key={day} className="flex justify-between items-center">
+                      <div key={day} className="flex justify-between items-center py-1">
                         <span className={`font-medium capitalize ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           {day}
                         </span>
                         <span className={`${
-                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
                           {schedule.isOpen ? `${schedule.start} - ${schedule.end}` : 'Closed'}
                         </span>

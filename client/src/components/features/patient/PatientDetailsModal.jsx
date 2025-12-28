@@ -625,7 +625,7 @@ const PatientDetailsModal = ({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
+          className={`relative rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col ${
             isDarkMode
               ? "bg-gray-800 border border-gray-700"
               : "bg-white border border-gray-200"
@@ -727,7 +727,7 @@ const PatientDetailsModal = ({
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-8 overflow-y-auto max-h-[calc(90vh-200px)]">
           {renderTabContent()}
         </div>
       </div>
