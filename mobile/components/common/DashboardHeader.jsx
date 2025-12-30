@@ -131,7 +131,7 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="sparkles" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+                <Ionicons name="sparkles-outline" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
               </TouchableOpacity>
             )}
 

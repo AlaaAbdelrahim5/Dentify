@@ -523,7 +523,7 @@ const SearchPage = () => {
                 <View>
                   <Text className={`text-base font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {filteredResults.length} {filteredResults.length === 1 ? 'result' : 'results'} found
-                    {userLocation && Array.isArray(userLocation) && ' (sorted by distance)'}
+                    {userLocation && Array.isArray(userLocation)}
                   </Text>
                   
                   {/* Dentist Cards */}
