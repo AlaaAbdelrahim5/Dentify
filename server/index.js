@@ -114,6 +114,10 @@ app.use('/api/notifications', notificationRoutes);
 const twoFactorRoutes = require('./routes/twoFactor');
 app.use('/api/2fa', twoFactorRoutes);
 
+// AI Chatbot routes
+const chatbotRoutes = require('./routes/chatbot');
+app.use('/api/chatbot', chatbotRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

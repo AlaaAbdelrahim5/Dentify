@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
+    "axios": "^1.13.2",
     "chart.js": "^4.5.0",
     "dicom-parser": "^1.8.21",
     "emoji-picker-react": "^4.12.3",

@@ -9,6 +9,7 @@ import Dashboard from './pages/dashboard/Dashboard'
 import NotificationsPage from './pages/NotificationsPage'
 import NotFound from './pages/NotFound'
 import { LoadingSpinner } from './components'
+import AIChatbot from './components/features/AIChatbot'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { ChatProvider } from './contexts/ChatContext'
@@ -21,6 +22,7 @@ const AuthRouter = () => {
   const [isInitializing, setIsInitializing] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const location = useLocation()
 
   // Function to check auth state
@@ -106,22 +108,30 @@ const AuthRouter = () => {
         : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home onOpenChatbot={() => setIsChatOpen(true)} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/patient/dashboard" element={<Dashboard />} />
-        <Route path="/admin/dashboard" element={<Dashboard />} />
-        <Route path="/clinic/dashboard" element={<Dashboard />} />
-        <Route path="/dentist/dashboard" element={<Dashboard />} />
-        <Route path="/secretary/dashboard" element={<Dashboard />} />
-        <Route path="/radiology/dashboard" element={<Dashboard />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/patient/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/admin/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/clinic/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/dentist/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/secretary/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/radiology/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/notifications" element={<NotificationsPage onOpenChatbot={() => setIsChatOpen(true)} />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* AI Chatbot - Only show when user is authenticated */}
+      {isAuthenticated && user && (
+        <AIChatbot 
+          isOpen={isChatOpen} 
+          onClose={() => setIsChatOpen(false)} 
+        />
+      )}
     </div>
   )
 }

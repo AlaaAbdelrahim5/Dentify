@@ -85,7 +85,7 @@ const ComingSoon = ({ label, icon: Icon = FaChartBar, isDarkMode }) => (
   </div>
 )
 
-const UnifiedDashboard = () => {
+const UnifiedDashboard = ({ onOpenChatbot }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDarkMode } = useTheme()
@@ -532,6 +532,7 @@ const UnifiedDashboard = () => {
         dashboardTitle={dashboardConfig.title}
         userRole={currentUser.role}
         onToggleSidebar={toggleSidebar}
+        onOpenChatbot={onOpenChatbot}
       />
 
       {/* Fixed Sidebar */}

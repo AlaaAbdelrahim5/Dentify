@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FaTimes, FaBars, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown, FaEnvelope } from 'react-icons/fa'
 import { MdDashboard, MdNotifications } from 'react-icons/md'
+import { HiSparkles } from 'react-icons/hi'
 import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '../common'
@@ -13,7 +14,7 @@ import { ChatButton, ChatSidebar } from '../features/chat'
 import { authUtils } from '../../utils/auth'
 import { getImageUrl } from '../../utils/helpers'
 
-const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null }) => {
+const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSidebar = null, onOpenChatbot = null }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false)
@@ -168,6 +169,27 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
               ) : (
                 // Authenticated user navigation
                 <>
+                  {/* AI Chatbot Button */}
+                  {onOpenChatbot && (
+                    <button
+                      onClick={onOpenChatbot}
+                      className={`relative p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group ${
+                        isDarkMode 
+                          ? 'hover:bg-linear-to-br from-purple-500/20 to-pink-500/20 hover:shadow-lg hover:shadow-purple-500/20' 
+                          : 'hover:bg-linear-to-br from-purple-50 to-pink-50 hover:shadow-md'
+                      }`}
+                      title="AI Assistant"
+                    >
+                      <div className={`relative transition-all duration-200 ${
+                        isDarkMode
+                          ? 'text-gray-400 group-hover:text-purple-400'
+                          : 'text-gray-600 group-hover:text-purple-600'
+                      }`}>
+                        <HiSparkles className="w-6 h-6" />
+                      </div>
+                    </button>
+                  )}
+
                   {/* Chat Button */}
                   <ChatButton onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)} />
 
