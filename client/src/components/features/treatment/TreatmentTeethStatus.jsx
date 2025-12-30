@@ -106,7 +106,7 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
           >
             <FaTooth className="w-3 h-3" />
             <span>#{tooth.toothNumber}</span>
-            {tooth.treatmentPriority?.toLowerCase() === 'high' && (
+            {tooth.priority?.toLowerCase() === 'high' && (
               <FaExclamationTriangle className="w-3 h-3 text-red-500" />
             )}
           </div>
@@ -158,36 +158,21 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
                   {statusBadge.text}
                 </span>
                 {/* Priority Badge */}
-                {tooth.treatmentPriority && (
+                {tooth.priority && (
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                    tooth.treatmentPriority.toLowerCase() === 'high'
+                    tooth.priority.toLowerCase() === 'high'
                       ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-600'
-                      : tooth.treatmentPriority.toLowerCase() === 'medium'
+                      : tooth.priority.toLowerCase() === 'medium'
                         ? 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-600'
                         : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-600'
                   }`}>
-                    {tooth.treatmentPriority} Priority
+                    {tooth.priority} Priority
                   </span>
-                )}
-                {/* Mark as Complete Button - Small on the side */}
-                {editable && !isCompleted && onMarkComplete && (
-                  <button
-                    onClick={() => onMarkComplete(tooth.toothNumber)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                      isDarkMode 
-                        ? 'bg-green-600 hover:bg-green-700 text-white' 
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                    title="Mark as Complete"
-                  >
-                    <FaCheckCircle className="w-3.5 h-3.5" />
-                    Complete
-                  </button>
                 )}
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-sm mb-3">
               {tooth.diagnosedDate && (
                 <div>
                   <p className={`${isDarkMode ? 'text-gray-500' : 'text-gray-500'} text-xs`}>
@@ -201,13 +186,31 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
             </div>
             
             {tooth.notes && (
-              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
                 <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mb-1`}>
                   Notes
                 </p>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   {tooth.notes}
                 </p>
+              </div>
+            )}
+
+            {/* Mark as Complete Button - At the bottom */}
+            {editable && !isCompleted && onMarkComplete && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => onMarkComplete(tooth.toothNumber)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                    isDarkMode 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                  title="Mark as Complete"
+                >
+                  <FaCheckCircle className="w-4 h-4" />
+                  Complete
+                </button>
               </div>
             )}
           </div>

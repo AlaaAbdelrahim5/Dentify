@@ -196,6 +196,11 @@ model Payment {
   method      PaymentMethod
   paymentDate DateTime      @default(now())
   notes       String?
+  
+  // Card payment information (last 4 digits only for security)
+  cardLastFour String? // Last 4 digits of the card
+  cardHolder   String? // Name on the card
+  cardType     String? // Visa, Mastercard, Amex, etc.
 
   treatment     Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
   Patient       Patient?  @relation(fields: [patientUserId], references: [userId])

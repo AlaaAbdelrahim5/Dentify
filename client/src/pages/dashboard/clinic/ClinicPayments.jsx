@@ -271,12 +271,22 @@ const ClinicPayments = () => {
       label: 'Method',
       accessor: 'paymentMethod',
       render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${
+        <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit ${
           value === 'CASH'
-            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+            ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400 border border-green-500/30'
+            : 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/30'
         }`}>
-          {value === 'CASH' ? '💵 Cash' : '💳 Card'}
+          {value === 'CASH' ? (
+            <>
+              <FaMoneyBillWave className="w-3 h-3" />
+              <span>Cash</span>
+            </>
+          ) : (
+            <>
+              <FaCreditCard className="w-3 h-3" />
+              <span>Card</span>
+            </>
+          )}
         </span>
       )
     },

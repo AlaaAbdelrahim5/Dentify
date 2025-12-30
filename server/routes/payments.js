@@ -5,6 +5,27 @@ const prisma = require('../config/database');
 const { sendPaymentNotification } = require('../services/notification/notificationService');
 const { getClinicIdForUser } = require('../services/appointment/appointmentService');
 
+/**
+ * PAYMENT GATEWAY INTEGRATION NOTE:
+ * 
+ * For production use, integrate with a payment gateway like:
+ * - Stripe (https://stripe.com/docs/api)
+ * - PayPal (https://developer.paypal.com/)
+ * - Square (https://developer.squareup.com/)
+ * 
+ * Important Security Considerations:
+ * - NEVER store full card numbers, CVV, or expiry dates in your database
+ * - Use payment gateway tokens instead of handling card data directly
+ * - Ensure PCI DSS compliance when processing card payments
+ * - Use HTTPS for all payment-related communications
+ * - Implement proper fraud detection and prevention
+ * 
+ * Current Implementation:
+ * - Stores only last 4 digits of card for reference
+ * - Validates card information before processing
+ * - Ready for payment gateway integration
+ */
+
 // Get payment statistics for dentist
 router.get('/stats', authenticate, authorize('Dentist'), async (req, res) => {
   try {
@@ -369,11 +390,40 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
-    const { treatmentId, amount, discount = 0, method, notes } = req.body;
+    const { treatmentId, amount, discount = 0, method, notes, cardInfo } = req.body;
 
     // Validate required fields
     if (!treatmentId || !amount || !method) {
       return res.status(400).json({ error: 'Treatment ID, amount, and payment method are required' });
+    }
+
+    // Validate card information if method is CARD
+    if (method.toUpperCase() === 'CARD') {
+      if (!cardInfo || !cardInfo.cardNumber || !cardInfo.cardHolder || !cardInfo.expiryDate || !cardInfo.cvv) {
+        return res.status(400).json({ error: 'Card information is required for card payments' });
+      }
+
+      // Basic card validation
+      const cardNumber = cardInfo.cardNumber.replace(/\s/g, '');
+      if (cardNumber.length < 13 || cardNumber.length > 19) {
+        return res.status(400).json({ error: 'Invalid card number' });
+      }
+
+      if (cardInfo.cvv.length < 3 || cardInfo.cvv.length > 4) {
+        return res.status(400).json({ error: 'Invalid CVV' });
+      }
+
+      // Validate expiry date format and check if not expired
+      const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+      if (!expiryRegex.test(cardInfo.expiryDate)) {
+        return res.status(400).json({ error: 'Invalid expiry date format. Use MM/YY' });
+      }
+
+      const [month, year] = cardInfo.expiryDate.split('/');
+      const expiry = new Date(2000 + parseInt(year), parseInt(month) - 1);
+      if (expiry < new Date()) {
+        return res.status(400).json({ error: 'Card has expired' });
+      }
     }
 
     // Check if treatment exists
@@ -433,15 +483,41 @@ router.post('/', authenticate, authorize('Dentist', 'Secretary', 'Clinic'), asyn
     }
 
     // Create payment
+    const paymentData = {
+      treatmentId: parseInt(treatmentId),
+      patientUserId: treatment.patientId,
+      amount: parseFloat(amount),
+      discount: parseFloat(discount),
+      method: method.toUpperCase(),
+      notes
+    };
+
+    // If payment method is CARD, store only last 4 digits and card holder name
+    // NEVER store full card number, CVV, or expiry date for PCI compliance
+    if (method.toUpperCase() === 'CARD' && cardInfo) {
+      const cardNumber = cardInfo.cardNumber.replace(/\s/g, '');
+      paymentData.cardLastFour = cardNumber.slice(-4);
+      paymentData.cardHolder = cardInfo.cardHolder;
+      
+      // Detect card type from first digit(s)
+      const firstDigit = cardNumber[0];
+      if (firstDigit === '4') {
+        paymentData.cardType = 'Visa';
+      } else if (firstDigit === '5') {
+        paymentData.cardType = 'Mastercard';
+      } else if (firstDigit === '3') {
+        paymentData.cardType = 'Amex';
+      } else {
+        paymentData.cardType = 'Other';
+      }
+
+      // Here you would integrate with a payment gateway like Stripe, PayPal, etc.
+      // For now, we're just storing the payment record
+      // Example: await processCardPayment(cardInfo, amount);
+    }
+
     const payment = await prisma.payment.create({
-      data: {
-        treatmentId: parseInt(treatmentId),
-        patientUserId: treatment.patientId,
-        amount: parseFloat(amount),
-        discount: parseFloat(discount),
-        method: method.toUpperCase(),
-        notes
-      },
+      data: paymentData,
       include: {
         treatment: {
           include: {

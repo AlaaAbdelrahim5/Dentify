@@ -10,7 +10,7 @@ import {
   FaClock,
   FaPrint
 } from 'react-icons/fa'
-import { BaseModal, Button, Input } from '../../common'
+import { BaseModal, Button, Input, Card } from '../../common'
 import { getTodayISO } from '../../../utils/helpers'
 
 const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo }) => {

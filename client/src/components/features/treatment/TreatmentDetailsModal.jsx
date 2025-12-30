@@ -485,20 +485,6 @@ const TreatmentDetailsModal = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {treatmentData.priority && (
-            <div className={`
-              px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium
-              ${treatmentData.priority === 'High' 
-                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                : treatmentData.priority === 'Medium'
-                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              }
-            `}>
-              <FaExclamationTriangle className="w-3 h-3" />
-              {treatmentData.priority}
-            </div>
-          )}
           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>
             <StatusIcon className="w-3 h-3" />
             {statusDisplay.label}
@@ -1056,11 +1042,12 @@ const TreatmentDetailsModal = ({
                     <div className="space-y-4">
                       {/* Table Header */}
                       <div className={`
-                        grid grid-cols-3 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
+                        grid grid-cols-4 gap-4 p-3 rounded-lg font-semibold text-sm uppercase tracking-wide
                         ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-100 text-gray-700'}
                       `}>
                         <div>DATE</div>
                         <div>TIME</div>
+                        <div>SESSION COST</div>
                         <div>STATUS</div>
                       </div>
 
@@ -1070,7 +1057,7 @@ const TreatmentDetailsModal = ({
                           <div
                             key={appointment.id}
                             className={`
-                              grid grid-cols-3 gap-4 p-3 rounded-lg border items-center
+                              grid grid-cols-4 gap-4 p-3 rounded-lg border items-center
                               ${isDarkMode 
                                 ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' 
                                 : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -1107,6 +1094,18 @@ const TreatmentDetailsModal = ({
                                   minute: '2-digit',
                                   hour12: true 
                                 })}
+                              </span>
+                            </div>
+
+                            {/* Session Cost */}
+                            <div className="flex items-center gap-2">
+                              <FaDollarSign className={`w-4 h-4 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm font-semibold ${
+                                isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                              }`}>
+                                {appointment.sessionCost ? `$${appointment.sessionCost.toFixed(2)}` : '-'}
                               </span>
                             </div>
 

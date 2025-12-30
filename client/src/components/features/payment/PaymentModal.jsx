@@ -13,7 +13,11 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
     amount: '',
     discount: '',
     paymentMethod: 'Cash',
-    notes: ''
+    notes: '',
+    cardNumber: '',
+    cardHolder: '',
+    expiryDate: '',
+    cvv: ''
   })
   const [errors, setErrors] = useState({})
 
@@ -34,7 +38,11 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
         amount: '',
         discount: '',
         paymentMethod: 'Cash',
-        notes: ''
+        notes: '',
+        cardNumber: '',
+        cardHolder: '',
+        expiryDate: '',
+        cvv: ''
       })
       setErrors({})
     }
@@ -53,9 +61,31 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    let processedValue = value
+
+    // Format card number with spaces every 4 digits
+    if (name === 'cardNumber') {
+      processedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim()
+      // Limit to 19 characters (16 digits + 3 spaces)
+      processedValue = processedValue.slice(0, 19)
+    }
+
+    // Format expiry date as MM/YY
+    if (name === 'expiryDate') {
+      processedValue = value.replace(/\D/g, '')
+      if (processedValue.length >= 2) {
+        processedValue = processedValue.slice(0, 2) + '/' + processedValue.slice(2, 4)
+      }
+    }
+
+    // Format CVV to only numbers
+    if (name === 'cvv') {
+      processedValue = value.replace(/\D/g, '').slice(0, 4)
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }))
     // Clear error for this field
     if (errors[name]) {
@@ -83,6 +113,33 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
 
     if (formData.discount && parseFloat(formData.discount) < 0) {
       newErrors.discount = 'Discount cannot be negative'
+    }
+
+    // Validate card information if Card payment method is selected
+    if (formData.paymentMethod === 'Card') {
+      if (!formData.cardNumber || formData.cardNumber.length < 13) {
+        newErrors.cardNumber = 'Please enter a valid card number'
+      }
+      
+      if (!formData.cardHolder || formData.cardHolder.trim().length < 3) {
+        newErrors.cardHolder = 'Please enter the cardholder name'
+      }
+      
+      if (!formData.expiryDate || !/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
+        newErrors.expiryDate = 'Please enter expiry date (MM/YY)'
+      } else {
+        // Validate expiry date is not in the past
+        const [month, year] = formData.expiryDate.split('/')
+        const expiry = new Date(2000 + parseInt(year), parseInt(month) - 1)
+        const now = new Date()
+        if (expiry < now) {
+          newErrors.expiryDate = 'Card has expired'
+        }
+      }
+      
+      if (!formData.cvv || formData.cvv.length < 3) {
+        newErrors.cvv = 'Please enter a valid CVV'
+      }
     }
 
     const treatment = treatmentInfo || treatments.find(t => t.id.toString() === selectedTreatment)
@@ -115,6 +172,17 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
         method: formData.paymentMethod, // Backend expects 'method' not 'paymentMethod'
         notes: formData.notes || undefined
       }
+
+      // Include card information if payment method is Card
+      if (formData.paymentMethod === 'Card') {
+        paymentData.cardInfo = {
+          cardNumber: formData.cardNumber,
+          cardHolder: formData.cardHolder,
+          expiryDate: formData.expiryDate,
+          cvv: formData.cvv
+        }
+      }
+
       onSave(paymentData)
       onClose()
     }
@@ -128,7 +196,11 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       amount: '',
       discount: '',
       paymentMethod: 'Cash',
-      notes: ''
+      notes: '',
+      cardNumber: '',
+      cardHolder: '',
+      expiryDate: '',
+      cvv: ''
     })
     setErrors({})
     onClose()
@@ -384,6 +456,110 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               </button>
             </div>
           </div>
+
+          {/* Card Information Fields - Only show when Card is selected */}
+          {formData.paymentMethod === 'Card' && (
+            <div className={`p-4 rounded-lg border-2 space-y-4 ${
+              isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <h4 className={`text-sm font-semibold ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Card Information
+              </h4>
+
+              {/* Card Number */}
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Card Number <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  name="cardNumber"
+                  value={formData.cardNumber}
+                  onChange={handleChange}
+                  placeholder="1234 5678 9012 3456"
+                  maxLength="19"
+                  icon={FaCreditCard}
+                />
+                {errors.cardNumber && (
+                  <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>
+                )}
+              </div>
+
+              {/* Cardholder Name */}
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Cardholder Name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  name="cardHolder"
+                  value={formData.cardHolder}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  icon={FaUser}
+                />
+                {errors.cardHolder && (
+                  <p className="text-red-500 text-sm mt-1">{errors.cardHolder}</p>
+                )}
+              </div>
+
+              {/* Expiry Date and CVV */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Expiry Date <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleChange}
+                    placeholder="MM/YY"
+                    maxLength="5"
+                  />
+                  {errors.expiryDate && (
+                    <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    CVV <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    name="cvv"
+                    value={formData.cvv}
+                    onChange={handleChange}
+                    placeholder="123"
+                    maxLength="4"
+                  />
+                  {errors.cvv && (
+                    <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className={`flex items-start gap-2 text-xs ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                <FaCreditCard className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <p>
+                  Your card information is securely processed. We do not store your card details on our servers.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Notes */}
           <div>
