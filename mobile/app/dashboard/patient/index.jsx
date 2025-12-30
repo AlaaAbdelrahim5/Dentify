@@ -12,6 +12,7 @@ import PatientXRayResults from '../../../components/dashboard/patient/PatientXRa
 import PatientPayments from '../../../components/dashboard/patient/PatientPayments';
 import SearchPage from '../../../components/dashboard/patient/SearchPage';
 import PatientSettings from '../../../components/dashboard/patient/PatientSettings';
+import AIChatbot from '../../../components/features/AIChatbot';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 /**
@@ -24,6 +25,7 @@ export default function PatientDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     initializeDashboard();
@@ -122,6 +124,7 @@ export default function PatientDashboard() {
         userData={userData}
         onMenuPress={() => setSidebarVisible(true)}
         onSearch={() => setActiveTab('search')}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
       />
 
       <View className="flex-1">
@@ -148,8 +151,11 @@ export default function PatientDashboard() {
         onClose={() => setSidebarVisible(false)}
         userData={userData}
         role="patient"
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
+      />
+
+      <AIChatbot 
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
       />
     </SafeAreaView>
   );

@@ -8,14 +8,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 import { 
   sendChatMessage, 
   clearChatHistory 
 } from '../../services/chatbotService';
 
-const AIChatbot = () => {
+const AIChatbot = ({ isOpen, onClose }) => {
+  const { isDarkMode } = useTheme();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -27,13 +31,6 @@ const AIChatbot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef(null);
-
-  const quickActions = [
-    { id: 1, label: 'Book Appointment', icon: '📅' },
-    { id: 2, label: 'Treatment Info', icon: '🦷' },
-    { id: 3, label: 'Post-Care Tips', icon: '💊' },
-    { id: 4, label: 'Dental FAQs', icon: '❓' }
-  ];
 
   useEffect(() => {
     scrollToBottom();
@@ -83,27 +80,14 @@ const AIChatbot = () => {
     }
   };
 
-  const handleQuickAction = async (action) => {
-    let message = '';
-    
-    switch (action.id) {
-      case 1:
-        message = "I'd like to book an appointment";
-        break;
-      case 2:
-        message = "Can you tell me about different dental treatments?";
-        break;
-      case 3:
-        message = "I need post-care instructions";
-        break;
-      case 4:
-        message = "I have some questions about dental health";
-        break;
-      default:
-        return;
-    }
-
-    await handleSendMessage(message);
+  const handleConfirmBooking = (appointmentDetails) => {
+    const confirmMessage = {
+      id: messages.length + 1,
+      text: `Great! I'll help you book this appointment:\n\nDate: ${appointmentDetails.date}\nTime: ${appointmentDetails.time}\nReason: ${appointmentDetails.reason}\n\nPlease go to the Appointments page in your dashboard to complete the booking process.`,
+      sender: 'bot',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, confirmMessage]);
   };
 
   const handleClearHistory = () => {
@@ -136,91 +120,162 @@ const AIChatbot = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      className="flex-1 bg-gray-50"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    <Modal
+      visible={isOpen}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
     >
-      {/* Header */}
-      <View className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 flex-row items-center justify-between shadow-lg">
-        <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 bg-white rounded-full items-center justify-center">
-            <Text className="text-3xl">🤖</Text>
-          </View>
-          <View>
-            <Text className="text-white font-bold text-lg">Dentify AI</Text>
-            <Text className="text-blue-100 text-xs">Your dental assistant</Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          onPress={handleClearHistory}
-          className="p-2 bg-blue-600 rounded-full"
-        >
-          <Text className="text-white text-lg">🗑️</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Quick Actions */}
-      <View className="p-3 bg-white border-b border-gray-200">
-        <View className="flex-row justify-between gap-2">
-          {quickActions.map(action => (
-            <TouchableOpacity
-              key={action.id}
-              onPress={() => handleQuickAction(action)}
-              className="flex-1 items-center gap-1 p-2 bg-gray-50 rounded-lg border border-gray-200"
-              disabled={isLoading}
-            >
-              <Text className="text-2xl">{action.icon}</Text>
-              <Text className="text-[10px] text-gray-700 text-center">
-                {action.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        className="flex-1 p-4"
-        contentContainerStyle={{ paddingBottom: 20 }}
+      <KeyboardAvoidingView 
+        className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
+        {/* Header */}
+        <View 
+          className={isDarkMode ? 'bg-gray-900' : 'bg-white'}
+          style={{
+            paddingTop: 48,
+            paddingHorizontal: 16,
+            paddingBottom: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isDarkMode ? 0.3 : 0.1,
+            shadowRadius: 8,
+            elevation: 4,
+            borderBottomWidth: 3,
+            borderBottomColor: '#14B8A6'
+          }}
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center" style={{ gap: 12 }}>
+              <View 
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                  borderWidth: 1.5,
+                  borderColor: '#14B8A6',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Ionicons name="sparkles" size={22} color="#14B8A6" />
+              </View>
+              <View>
+                <Text className={`font-bold text-2xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.8 }}>Dentify AI</Text>
+                <Text className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} style={{ letterSpacing: 0.2 }}>Your dental assistant</Text>
+              </View>
+            </View>
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <TouchableOpacity
+                onPress={handleClearHistory}
+                className={`w-10 h-10 rounded-xl items-center justify-center`}
+                style={{
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#374151' : '#14B8A6'
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="trash-outline" size={20} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onClose}
+                className={`w-10 h-10 rounded-xl items-center justify-center`}
+                style={{
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#374151' : '#14B8A6'
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={20} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Messages */}
+        <ScrollView
+          ref={scrollViewRef}
+          className={`flex-1 p-4 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
         {messages.map(message => (
           <View
             key={message.id}
             className={`mb-3 ${message.sender === 'user' ? 'items-end' : 'items-start'}`}
           >
             <View
-              className={`max-w-[80%] rounded-lg p-3 ${
+              style={[
+                {
+                  maxWidth: '80%',
+                  borderRadius: 16,
+                  padding: 12
+                },
                 message.sender === 'user'
-                  ? 'bg-blue-600'
+                  ? {
+                      backgroundColor: '#14B8A6',
+                      shadowColor: '#14B8A6',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 2
+                    }
                   : message.isError
-                  ? 'bg-red-50 border border-red-200'
-                  : 'bg-white border border-gray-200'
-              }`}
+                  ? {
+                      backgroundColor: '#FEE2E2',
+                      borderWidth: 1,
+                      borderColor: '#FCA5A5'
+                    }
+                  : {
+                      backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+                      borderWidth: 1,
+                      borderColor: isDarkMode ? '#374151' : '#E5E7EB'
+                    }
+              ]}
             >
               <Text
                 className={`text-sm ${
-                  message.sender === 'user' ? 'text-white' : 'text-gray-800'
+                  message.sender === 'user' 
+                    ? 'text-white' 
+                    : isDarkMode 
+                    ? 'text-gray-100' 
+                    : 'text-gray-800'
                 }`}
               >
                 {message.text}
               </Text>
               {message.appointmentBooking && (
-                <View className="mt-2 pt-2 border-t border-gray-200">
-                  <Text className="text-xs font-bold mb-1">Appointment Details:</Text>
-                  <Text className="text-xs">Date: {message.appointmentBooking.date}</Text>
-                  <Text className="text-xs">Time: {message.appointmentBooking.time}</Text>
-                  <Text className="text-xs">Reason: {message.appointmentBooking.reason}</Text>
-                  <TouchableOpacity className="mt-2 bg-blue-500 px-3 py-1 rounded">
-                    <Text className="text-white text-xs text-center">Confirm Booking</Text>
+                <View className={`mt-2 pt-2 ${isDarkMode ? 'border-t border-gray-600' : 'border-t border-gray-200'}`}>
+                  <Text className={`text-xs font-bold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Appointment Details:</Text>
+                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Date: {message.appointmentBooking.date}</Text>
+                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Time: {message.appointmentBooking.time}</Text>
+                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Reason: {message.appointmentBooking.reason}</Text>
+                  <TouchableOpacity 
+                    style={{
+                      marginTop: 8,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      backgroundColor: '#14B8A6',
+                      alignItems: 'center'
+                    }}
+                    onPress={() => handleConfirmBooking(message.appointmentBooking)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>Confirm Booking</Text>
                   </TouchableOpacity>
                 </View>
               )}
               <Text
-                className={`text-xs mt-1 ${
-                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
+                style={{
+                  fontSize: 11,
+                  marginTop: 4,
+                  color: message.sender === 'user' ? '#D1FAE5' : (isDarkMode ? '#9CA3AF' : '#6B7280')
+                }}
               >
                 {new Date(message.timestamp).toLocaleTimeString([], { 
                   hour: '2-digit', 
@@ -230,44 +285,81 @@ const AIChatbot = () => {
             </View>
           </View>
         ))}
-        {isLoading && (
-          <View className="items-start mb-3">
-            <View className="bg-white border border-gray-200 rounded-lg p-3">
-              <ActivityIndicator size="small" color="#2563eb" />
+          {isLoading && (
+            <View className="items-start mb-3">
+              <View style={{
+                borderRadius: 16,
+                padding: 12,
+                backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+                borderWidth: 1,
+                borderColor: isDarkMode ? '#374151' : '#E5E7EB'
+              }}>
+                <ActivityIndicator size="small" color="#14B8A6" />
+              </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
 
-      {/* Input */}
-      <View className="p-4 bg-white border-t border-gray-200">
-        <View className="flex-row gap-2">
-          <TextInput
-            value={inputMessage}
-            onChangeText={setInputMessage}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
-            editable={!isLoading}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            onPress={() => handleSendMessage()}
-            disabled={isLoading || !inputMessage.trim()}
-            className={`px-4 py-3 rounded-lg ${
-              isLoading || !inputMessage.trim() 
-                ? 'bg-gray-300' 
-                : 'bg-blue-600'
-            }`}
-          >
-            <Text className="text-white font-semibold">Send</Text>
-          </TouchableOpacity>
+        {/* Input */}
+        <View 
+          className={isDarkMode ? 'bg-gray-900' : 'bg-white'}
+          style={{
+            padding: 16,
+            borderTopWidth: 1,
+            borderTopColor: isDarkMode ? '#374151' : '#E5E7EB'
+          }}
+        >
+          <View className="flex-row" style={{ gap: 8 }}>
+            <TextInput
+              value={inputMessage}
+              onChangeText={setInputMessage}
+              placeholder="Type your message..."
+              placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+              style={{
+                flex: 1,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: isDarkMode ? '#1F2937' : '#F9FAFB',
+                borderWidth: 1,
+                borderColor: isDarkMode ? '#374151' : '#D1D5DB',
+                color: isDarkMode ? '#FFFFFF' : '#111827',
+                fontSize: 15,
+                maxHeight: 100
+              }}
+              editable={!isLoading}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              onPress={() => handleSendMessage()}
+              disabled={isLoading || !inputMessage.trim()}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                backgroundColor: isLoading || !inputMessage.trim() ? '#D1D5DB' : '#14B8A6',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#14B8A6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isLoading || !inputMessage.trim() ? 0 : 0.3,
+                shadowRadius: 4,
+                elevation: isLoading || !inputMessage.trim() ? 0 : 3
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="send" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+          <Text style={{ fontSize: 11, marginTop: 8, textAlign: 'center', color: isDarkMode ? '#6B7280' : '#9CA3AF' }}>
+            <Text>Powered by </Text>
+            <Text style={{ fontWeight: '600', color: '#14B8A6' }}>Google Gemini AI</Text>
+            <Text> - Free & Private</Text>
+          </Text>
         </View>
-        <Text className="text-xs text-gray-500 mt-2 text-center">
-          Powered by Google Gemini AI - Free & Private
-        </Text>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
 

@@ -8,7 +8,7 @@ import { useChat } from '../../contexts/ChatContext';
 import NotificationBell from '../features/notifications/NotificationBell';
 import ChatButton from '../features/chat/ChatButton';
 
-const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, onSearch, userData }) => {
+const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = true, onMenuPress, onSearch, userData, onOpenChatbot }) => {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const { unreadCount } = useNotifications();
@@ -111,6 +111,27 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
                 activeOpacity={0.7}
               >
                 <Ionicons name="search-outline" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
+              </TouchableOpacity>
+            )}
+
+            {/* AI Chatbot button */}
+            {onOpenChatbot && (
+              <TouchableOpacity
+                onPress={onOpenChatbot}
+                className={`w-11 h-11 rounded-xl items-center justify-center`}
+                style={{
+                  backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? '#374151' : '#14B8A6',
+                  shadowColor: '#14B8A6',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: isDarkMode ? 0.2 : 0.15,
+                  shadowRadius: 4,
+                  elevation: 3
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="sparkles" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
               </TouchableOpacity>
             )}
 
