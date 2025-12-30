@@ -105,6 +105,25 @@ const PatientTreatments = () => {
     })
   }, [treatments])
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = displayTreatments.length
+    const active = displayTreatments.filter(t => t.treatmentStatus === 'In Progress').length
+    const completed = displayTreatments.filter(t => t.treatmentStatus === 'Completed').length
+    const totalCost = displayTreatments.reduce((sum, t) => sum + (t.totalAmount || 0), 0)
+    const totalPaid = displayTreatments.reduce((sum, t) => sum + (t.paidAmount || 0), 0)
+    const pendingPayments = totalCost - totalPaid
+    
+    return {
+      total,
+      active,
+      completed,
+      totalCost,
+      totalPaid,
+      pendingPayments
+    }
+  }, [displayTreatments])
+
   // Filter treatments
   const filteredTreatments = useMemo(() => {
     return displayTreatments.filter(treatment => {
@@ -158,89 +177,6 @@ const PatientTreatments = () => {
         title="Treatments"
         description="View your complete dental treatment timeline"
       />
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Treatments
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {loading ? '-' : stats.total}
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 flex items-center justify-center`}>
-              <FaStethoscope className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Active
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {loading ? '-' : stats.active}
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center`}>
-              <FaTooth className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Completed
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {loading ? '-' : stats.completed}
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center`}>
-              <FaTooth className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Paid
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {loading ? '-' : `$${stats.totalPaid.toFixed(0)}`}
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-700 flex items-center justify-center`}>
-              <FaDollarSign className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Pending
-              </p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {loading ? '-' : `$${stats.pendingPayments.toFixed(0)}`}
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center`}>
-              <FaDollarSign className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </Card>
-      </div>
 
       {/* Filters and Controls */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
