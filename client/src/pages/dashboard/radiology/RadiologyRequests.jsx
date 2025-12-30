@@ -26,7 +26,6 @@ import { formatDate as formatDateHelper, getStatusColor } from '../../../utils/h
 import { 
   Card, 
   Button, 
-  StatsOverview, 
   DataTable,
   EmptyState, 
   StatusBadge,
@@ -301,34 +300,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         title="Imaging Requests"
         description="Manage and process radiology imaging requests"
       />
-
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        { 
-          label: 'Total Requests', 
-          value: stats.total, 
-          icon: FaXRay, 
-          gradient: 'from-blue-600 to-cyan-600' 
-        },
-        { 
-          label: 'Requested', 
-          value: stats.requested, 
-          icon: MdPendingActions, 
-          gradient: 'from-yellow-600 to-orange-600' 
-        },
-        { 
-          label: 'In Progress', 
-          value: stats.inProgress, 
-          icon: FaClock, 
-          gradient: 'from-blue-600 to-indigo-600' 
-        },
-        { 
-          label: 'Completed', 
-          value: stats.completed, 
-          icon: FaCheckCircle, 
-          gradient: 'from-green-600 to-teal-600' 
-        }
-      ]} />
 
       {/* Filters and View Mode */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>

@@ -198,16 +198,6 @@ const DentistRadiology = () => {
     })
   }, [transformedRequests, searchTerm, selectedStatus, selectedImagingType])
 
-  // Calculate stats - use useMemo for performance
-  const stats = useMemo(() => {
-    const total = transformedRequests.length
-    const requested = transformedRequests.filter(r => r.status === 'Requested').length
-    const inProgress = transformedRequests.filter(r => r.status === 'In Progress').length
-    const completed = transformedRequests.filter(r => r.status === 'Completed').length
-    
-    return { total, requested, inProgress, completed }
-  }, [transformedRequests])
-
   const handleNewRequest = async () => {
     setSelectedRequest(null)
     setIsRequestModalOpen(true)

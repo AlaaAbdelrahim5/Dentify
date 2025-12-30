@@ -19,7 +19,6 @@ import {
   Button, 
   FilterBar, 
   DataTable, 
-  StatsOverview,
   RequestCard,
   LoadingSpinner,
   EmptyState
@@ -229,34 +228,6 @@ const PatientXRayResults = () => {
           </p>
         </div>
       </div>
-
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        { 
-          label: 'Total Requests', 
-          value: isLoading ? '-' : stats.total, 
-          icon: FaXRay, 
-          gradient: 'from-blue-600 to-cyan-600' 
-        },
-        { 
-          label: 'Requested', 
-          value: isLoading ? '-' : stats.requested, 
-          icon: MdPendingActions, 
-          gradient: 'from-yellow-600 to-orange-600' 
-        },
-        { 
-          label: 'In Progress', 
-          value: isLoading ? '-' : stats.inProgress, 
-          icon: FaClock, 
-          gradient: 'from-blue-600 to-indigo-600' 
-        },
-        { 
-          label: 'Completed', 
-          value: isLoading ? '-' : stats.completed, 
-          icon: FaCheckCircle, 
-          gradient: 'from-green-600 to-teal-600' 
-        }
-      ]} />
 
       {/* Filters and View Mode */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
