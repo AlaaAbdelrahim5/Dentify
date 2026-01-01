@@ -110,8 +110,7 @@ const ChatWindow = ({ conversation, otherUser }) => {
         {isLoadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <LoadingSpinner size="lg" />
-              <p className="text-gray-500 dark:text-gray-400 mt-4 font-medium">Loading messages...</p>
+              <LoadingSpinner size="lg" message="Loading messages..." />
             </div>
           </div>
         ) : messages.length === 0 ? (

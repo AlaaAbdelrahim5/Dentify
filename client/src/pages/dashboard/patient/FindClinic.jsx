@@ -8,7 +8,8 @@ import {
   FaEye,
   FaCalendarPlus,
   FaMap,
-  FaList
+  FaList,
+  FaTh
 } from 'react-icons/fa'
 import { 
   PageHeader, 
@@ -153,12 +154,12 @@ const FindClinic = () => {
     const filtered = clinics.filter(clinic => {
       const clinicName = clinic.clinicName?.toLowerCase() || ''
       const city = clinic.city?.toLowerCase() || ''
-      const address = clinic.address?.toLowerCase() || ''
+      const location = (clinic.location || clinic.address)?.toLowerCase() || ''
 
       const matchesSearch = searchQuery === '' || 
         clinicName.includes(searchQuery.toLowerCase()) ||
         city.includes(searchQuery.toLowerCase()) ||
-        address.includes(searchQuery.toLowerCase())
+        location.includes(searchQuery.toLowerCase())
 
       const matchesCity = selectedCity === 'all' || clinic.city === selectedCity
 
@@ -237,7 +238,7 @@ const FindClinic = () => {
             {clinic.city || 'N/A'}
           </div>
           <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {clinic.address || 'N/A'}
+            {clinic.location || clinic.address || 'N/A'}
           </div>
           {clinic.distance !== undefined && clinic.distance !== Infinity && (
             <div className="mt-1">
@@ -379,7 +380,7 @@ const FindClinic = () => {
               onClick={() => setViewMode('grid')}
               title="Grid View"
             >
-              <FaBuilding className="w-4 h-4" />
+              <FaTh className="w-4 h-4" />
             </Button>
             <Button
               variant={viewMode === 'map' ? 'primary' : 'outline'}

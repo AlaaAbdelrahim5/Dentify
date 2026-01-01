@@ -48,10 +48,7 @@ const DataTable = ({
     <Card className="overflow-hidden">
       {loading && (
         <div className="flex flex-col items-center justify-center py-16">
-          <LoadingSpinner size="lg" />
-          <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Loading data...
-          </p>
+          <LoadingSpinner size="lg" message="Loading data..." />
         </div>
       )}
       

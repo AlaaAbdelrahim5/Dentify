@@ -23,7 +23,7 @@ const ClinicCard = ({
   // Extract clinic information
   const clinicName = clinic.clinicName || 'Unnamed Clinic'
   const city = clinic.city || 'N/A'
-  const address = clinic.address || 'N/A'
+  const address = clinic.location || clinic.address || 'N/A'
   const email = clinic.user?.email || clinic.email || 'N/A'
   const phone = clinic.user?.phone || clinic.phone || 'N/A'
   const registrationNumber = clinic.registrationNumber || 'N/A'
@@ -239,34 +239,18 @@ const ClinicCard = ({
       {/* Actions */}
       {showActions && (
         <Card.Footer className="pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={(e) => {
-                e.stopPropagation()
-                onViewDetails?.(clinic)
-              }}
-            >
-              <FaEye className="w-3 h-3 mr-1" />
-              Details
-            </Button>
-            {onBookAppointment && (
-              <Button
-                variant="primary"
-                size="sm"
-                className="flex-1"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onBookAppointment?.(clinic)
-                }}
-              >
-                <FaCalendarPlus className="w-3 h-3 mr-1" />
-                Book
-              </Button>
-            )}
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewDetails?.(clinic)
+            }}
+          >
+            <FaEye className="w-3 h-3 mr-1" />
+            Details
+          </Button>
         </Card.Footer>
       )}
     </Card>

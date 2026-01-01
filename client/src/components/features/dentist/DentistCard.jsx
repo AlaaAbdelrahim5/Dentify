@@ -8,7 +8,8 @@ import {
   FaEnvelope,
   FaStethoscope,
   FaClock,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaEye
 } from 'react-icons/fa'
 import { Card, Button, StatusBadge } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -206,188 +207,186 @@ const DoctorCard = ({
 
   // Grid layout (default)
   return (
-    <Card className={`h-full transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
-      isDarkMode ? 'hover:bg-gray-750' : ''
-    }`}>
-      <Card.Content className="p-6">
-        {/* Doctor Avatar with enhanced styling */}
-        <div className="flex justify-center mb-4">
-          {(doctor.user?.profileImage || doctor.profileImage) && !imageError ? (
-            <div className="relative">
-              <img
-                src={getImageUrl(doctor.user?.profileImage || doctor.profileImage)}
-                alt={fullName}
-                onError={() => setImageError(true)}
-                className="w-24 h-24 rounded-full object-cover shadow-xl ring-4 ring-offset-2 ring-teal-500/20"
-              />
-              {isActive && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg" />
-              )}
-            </div>
+    <Card 
+      hover 
+      className="group cursor-pointer h-full flex flex-col"
+      onClick={() => onViewProfile(doctor)}
+    >
+      <Card.Header className="pb-3">
+        <div className="flex items-start justify-between mb-3">
+          <div className={`
+            w-12 h-12 rounded-lg flex items-center justify-center
+            ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
+            group-hover:scale-110 transition-transform duration-300
+          `}>
+            <FaUserMd className="w-6 h-6 text-teal-600" />
+          </div>
+          
+          {isActive ? (
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              isDarkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-50 text-green-700'
+            }`}>
+              Available
+            </span>
           ) : (
-            <div className="relative">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-linear-to-br ${getAvatarColor()} shadow-xl ring-4 ring-offset-2 ${
-                isDarkMode ? 'ring-gray-700' : 'ring-gray-200'
-              }`}>
-                <span className="text-white text-3xl font-bold">
-                  {getAvatarPlaceholder()}
-                </span>
-              </div>
-              {isActive && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg" />
-              )}
-            </div>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600'
+            }`}>
+              Unavailable
+            </span>
           )}
         </div>
 
-        {/* Doctor Name & Status */}
-        <div className="text-center mb-4">
-          <h3 className={`text-lg font-bold mb-2 transition-colors ${
-            isDarkMode ? 'text-white group-hover:text-teal-400' : 'text-gray-900 group-hover:text-teal-600'
-          }`}>
-            {fullName}
-          </h3>
-          
-          <div className="flex items-center justify-center mb-3">
-            <div className={`p-2 rounded-lg mr-2 ${
-              isDarkMode ? 'bg-teal-600/20' : 'bg-teal-50'
-            }`}>
-              <FaStethoscope className={`${
-                isDarkMode ? 'text-teal-400' : 'text-teal-600'
-              }`} />
-            </div>
-            <span className={`text-sm font-semibold ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              {specialty}
-            </span>
-          </div>
+        <h3 className={`text-lg font-bold mb-1 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          {fullName}
+        </h3>
 
-          <div className="flex justify-center">
-            {isActive ? (
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center ${
-                isDarkMode 
-                  ? 'bg-green-600/20 text-green-400 border border-green-600/50' 
-                  : 'bg-green-100 text-green-700 border border-green-200'
-              }`}>
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                Available
-              </span>
-            ) : (
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-gray-400' 
-                  : 'bg-gray-200 text-gray-600'
-              }`}>
-                Unavailable
-              </span>
-            )}
-          </div>
+        <div className="flex items-center gap-2 text-xs">
+          <FaStethoscope className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+            {specialty}
+          </span>
         </div>
+      </Card.Header>
 
-        {/* Rating with enhanced design */}
+      <Card.Content className="space-y-3 grow">
+        {/* Rating */}
         {totalReviews > 0 && (
-          <div className={`flex items-center justify-center mb-4 p-3 rounded-xl ${
-            isDarkMode ? 'bg-yellow-600/10' : 'bg-yellow-50'
-          }`}>
-            <div className="flex items-center mr-2">
-              {[...Array(5)].map((_, i) => (
-                <FaStar
-                  key={i}
-                  className={`w-4 h-4 transition-all duration-200 ${
-                    i < Math.floor(rating)
-                      ? 'text-yellow-400 drop-shadow-lg'
-                      : isDarkMode ? 'text-gray-600' : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className={`text-sm font-bold ${
-              isDarkMode ? 'text-yellow-400' : 'text-yellow-700'
-            }`}>
-              {rating.toFixed(1)}
-            </span>
-            <span className={`text-xs ml-1 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              ({totalReviews})
-            </span>
-          </div>
-        )}
-
-        {/* Experience */}
-        {yearsOfExperience > 0 && (
-          <div className="flex items-center justify-center mb-4">
-            <FaClock className={`mr-2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`} />
-            <span className={`text-sm ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {yearsOfExperience} years of experience
-            </span>
-          </div>
-        )}
-
-        {/* Clinic Info */}
-        {clinic.name && (
-          <div className={`mb-4 p-3 rounded-lg ${
-            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-          }`}>
-            <div className="flex items-center justify-center mb-1">
-              <FaBuilding className={`mr-2 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`} />
+          <div className={`
+            p-3 rounded-lg 
+            ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}
+          `}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < Math.floor(rating)
+                        ? 'text-yellow-400'
+                        : isDarkMode ? 'text-gray-600' : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
               <span className={`text-sm font-medium ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                {clinic.name}
+                {rating.toFixed(1)} ({totalReviews})
               </span>
             </div>
-            {clinic.city && (
-              <div className="flex items-center justify-center">
-                <FaMapMarkerAlt className={`mr-2 ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`} />
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {clinic.city}
-                </span>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Action Buttons with enhanced styling */}
-        <div className="space-y-3 mt-6">
-          <button
-            onClick={() => onViewProfile(doctor)}
-            className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-              isDarkMode
-                ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-600'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-            }`}
-          >
-            👁️ View Profile
-          </button>
-          {isActive && (
-            <button
-              onClick={() => onBookAppointment(doctor)}
-              className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
-                isDarkMode
-                  ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-500 hover:to-cyan-500'
-                  : 'bg-linear-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600'
-              }`}
-            >
-              <div className="flex items-center justify-center">
-                <FaCalendarAlt className="mr-2" />
-                Book Appointment
-              </div>
-            </button>
+        {/* Clinic & Location Info */}
+        {(clinic.name || clinic.city) && (
+          <div className={`
+            p-3 rounded-lg 
+            ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}
+          `}>
+            <div className="space-y-2">
+              {clinic.name && (
+                <div className="flex items-start gap-2">
+                  <FaBuilding className={`w-4 h-4 mt-0.5 ${
+                    isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                  }`} />
+                  <span className={`text-sm font-medium ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {clinic.name}
+                  </span>
+                </div>
+              )}
+              {clinic.city && (
+                <div className="flex items-start gap-2">
+                  <FaMapMarkerAlt className={`w-4 h-4 mt-0.5 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`} />
+                  <span className={`text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {clinic.city}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Contact & Experience */}
+        <div className="space-y-2">
+          {(doctor.user?.email || doctor.email) && (
+            <div className="flex items-center gap-2">
+              <FaEnvelope className={`w-3 h-3 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <span className={`text-xs truncate ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {doctor.user?.email || doctor.email}
+              </span>
+            </div>
+          )}
+          {(doctor.user?.phone || doctor.phone) && (
+            <div className="flex items-center gap-2">
+              <FaPhone className={`w-3 h-3 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <span className={`text-xs ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {doctor.user?.phone || doctor.phone}
+              </span>
+            </div>
+          )}
+          {yearsOfExperience > 0 && (
+            <div className="flex items-center gap-2">
+              <FaClock className={`w-3 h-3 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <span className={`text-xs ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {yearsOfExperience} years exp.
+              </span>
+            </div>
           )}
         </div>
       </Card.Content>
+
+      {/* Actions */}
+      <Card.Footer className="pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewProfile(doctor)
+            }}
+          >
+            <FaEye className="w-3 h-3 mr-1" />
+            Profile
+          </Button>
+          {isActive && (
+            <Button
+              variant="primary"
+              size="sm"
+              className="flex-1"
+              onClick={(e) => {
+                e.stopPropagation()
+                onBookAppointment(doctor)
+              }}
+            >
+              <FaCalendarAlt className="w-3 h-3 mr-1" />
+              Book
+            </Button>
+          )}
+        </div>
+      </Card.Footer>
     </Card>
   )
 }

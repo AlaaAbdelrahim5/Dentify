@@ -3,9 +3,10 @@ import {
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaBirthdayCake
+  FaBirthdayCake,
+  FaEye
 } from 'react-icons/fa'
-import { Card } from '../../common'
+import { Card, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { calculateAge, capitalizeFirstLetter, getStatusDisplay } from '../../../utils/helpers'
 
@@ -100,6 +101,22 @@ const PatientCard = ({ patient, onClick }) => {
           </span>
         </div>
       </Card.Content>
+
+      {/* Actions */}
+      <Card.Footer className="pt-4 border-t border-gray-200 dark:border-gray-700">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick(patient)
+          }}
+        >
+          <FaEye className="w-3 h-3 mr-1" />
+          View Details
+        </Button>
+      </Card.Footer>
     </Card>
   )
 }
