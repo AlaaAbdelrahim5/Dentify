@@ -17,7 +17,7 @@ import {
   FaTrash
 } from 'react-icons/fa'
 import { FaTiktok } from 'react-icons/fa'
-import { Button, Input, Select, BaseModal } from '../../common'
+import { Button, Input, Select, BaseModal, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { PALESTINIAN_CITIES, DENTAL_SPECIALIZATIONS, DAYS_OF_WEEK } from '../../../utils/constants'
 import { validateEmail, validatePhone, validateAge, validatePassword } from '../../../utils/validation'
@@ -28,7 +28,8 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    countryCode: '+970',
+    phoneNumber: '',
     password: '',
     licenseNumber: '',
     specialization: [],
@@ -49,11 +50,29 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
 
   useEffect(() => {
     if (dentist) {
+      // Parse phone number into country code and number
+      const fullPhone = dentist.userId?.phone || '';
+      let parsedCountryCode = '+970';
+      let parsedPhoneNumber = '';
+      
+      if (fullPhone) {
+        // Try to extract country code (starts with + and has 1-4 digits)
+        const countryCodeMatch = fullPhone.match(/^(\+\d{1,4})/);
+        if (countryCodeMatch) {
+          parsedCountryCode = countryCodeMatch[1];
+          parsedPhoneNumber = fullPhone.slice(countryCodeMatch[1].length).replace(/\D/g, '');
+        } else {
+          // If no country code found, assume it's just the number
+          parsedPhoneNumber = fullPhone.replace(/\D/g, '');
+        }
+      }
+
       setFormData({
         firstName: dentist.firstName || '',
         lastName: dentist.lastName || '',
         email: dentist.userId?.email || '',
-        phone: dentist.userId?.phone || '',
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
         password: '', // Don't populate password for existing users
         licenseNumber: dentist.licenseNumber || '',
         specialization: dentist.specialization || [],
@@ -74,7 +93,8 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
+        countryCode: '+970',
+        phoneNumber: '',
         password: '',
         licenseNumber: '',
         specialization: [],
@@ -101,7 +121,8 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
     if (!formData.email.trim()) newErrors.email = 'Email is required'
-    if (!formData.phone.trim()) newErrors.phone = 'Phone is required'
+    if (!formData.phoneNumber) newErrors.phone = 'Phone number is required'
+    else if (formData.phoneNumber.length < 7) newErrors.phone = 'Phone number must be at least 7 digits'
     if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required'
     if (!formData.birthDate) newErrors.birthDate = 'Birth date is required'
     if (!formData.gender) newErrors.gender = 'Gender is required'
@@ -117,12 +138,6 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     const emailError = validateEmail(formData.email)
     if (emailError) {
       newErrors.email = emailError
-    }
-
-    // Phone validation
-    const phoneError = validatePhone(formData.phone)
-    if (phoneError) {
-      newErrors.phone = phoneError
     }
 
     // Age validation (minimum 22 years for dentists)
@@ -184,7 +199,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
         socialLinks: formData.socialLinks,
         // User data for creating or updating the user account
         email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        phone: `${formData.countryCode}${formData.phoneNumber}`,
         ...(formData.password && { password: formData.password }),
         role: 'Dentist'
       }
@@ -218,6 +233,37 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
+
+  const handleCountryCodeChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      countryCode: e.target.value,
+    }));
+
+    // Clear phone error when country code changes
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: '',
+      }));
+    }
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    setFormData((prev) => ({
+      ...prev,
+      phoneNumber: value,
+    }));
+
+    // Clear phone error when user starts typing
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: '',
+      }));
+    }
+  };
 
   const handleSpecializationChange = (specialization) => {
     setFormData(prev => ({
@@ -426,28 +472,16 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Phone Number *
-                    </label>
-                    <div className="relative">
-                      <FaPhone className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                      }`} />
-                      <Input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
-                        placeholder="+970-XX-XXXXXXX"
-                      />
-                    </div>
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                    )}
-                  </div>
+                  <PhoneInput
+                    label="Phone Number *"
+                    countryCode={formData.countryCode}
+                    phoneNumber={formData.phoneNumber}
+                    onCountryChange={handleCountryCodeChange}
+                    onPhoneChange={handlePhoneNumberChange}
+                    placeholder="Enter phone number"
+                    error={errors.phone}
+                    icon={FaPhone}
+                  />
 
                   {!dentist && (
                     <div className="md:col-span-2">

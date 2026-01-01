@@ -11,7 +11,7 @@ import {
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
-import { Button, Input, Select, LoadingSpinner, BaseModal } from "../../common";
+import { Button, Input, Select, LoadingSpinner, BaseModal, PhoneInput } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validatePassword } from "../../../utils/validation";
@@ -22,7 +22,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     // User fields
     email: "",
     password: "",
-    phone: "",
+    countryCode: "+970",
+    phoneNumber: "",
     // Clinic fields
     clinicName: "",
     registrationNumber: "",
@@ -93,10 +94,28 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           });
         }
 
+        // Parse phone number into country code and number
+        const fullPhone = clinic.phone?.full || clinic.user?.phone || clinic.phone || "";
+        let parsedCountryCode = "+970";
+        let parsedPhoneNumber = "";
+        
+        if (fullPhone) {
+          // Try to extract country code (starts with + and has 1-4 digits)
+          const countryCodeMatch = fullPhone.match(/^(\+\d{1,4})/);
+          if (countryCodeMatch) {
+            parsedCountryCode = countryCodeMatch[1];
+            parsedPhoneNumber = fullPhone.slice(countryCodeMatch[1].length).replace(/\D/g, "");
+          } else {
+            // If no country code found, assume it's just the number
+            parsedPhoneNumber = fullPhone.replace(/\D/g, "");
+          }
+        }
+
         setFormData({
           // User fields - get from transformed data structure
           email: clinic.email || clinic.user?.email || "",
-          phone: clinic.phone?.full || clinic.user?.phone || clinic.phone || "",
+          countryCode: parsedCountryCode,
+          phoneNumber: parsedPhoneNumber,
           password: "", // Password field should be empty when editing
           // Clinic fields - get from transformed data structure
           clinicName: clinic.name || clinic.clinicName || "",
@@ -113,7 +132,8 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         setFormData({
           // User fields
           email: "",
-          phone: "",
+          countryCode: "+970",
+          phoneNumber: "",
           password: "",
           // Clinic fields
           clinicName: "",
@@ -160,6 +180,37 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
+      }));
+    }
+  };
+
+  const handleCountryCodeChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      countryCode: e.target.value,
+    }));
+
+    // Clear phone error when country code changes
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: "",
+      }));
+    }
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+    setFormData((prev) => ({
+      ...prev,
+      phoneNumber: value,
+    }));
+
+    // Clear phone error when user starts typing
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: "",
       }));
     }
   };
@@ -264,8 +315,10 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       }
     }
 
-    if (!formData.phone.trim()) {
+    if (!formData.phoneNumber) {
       newErrors.phone = "Phone number is required";
+    } else if (formData.phoneNumber.length < 7) {
+      newErrors.phone = "Phone number must be at least 7 digits";
     }
 
     if (!formData.email.trim()) {
@@ -343,7 +396,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       const requestData = {
         // User data
         email: formData.email,
-        phone: formData.phone,
+        phone: `${formData.countryCode}${formData.phoneNumber}`,
         ...(formData.password && { password: formData.password }),
         // Clinic data
         clinicName: formData.clinicName,
@@ -563,26 +616,20 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                   Contact Information
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Phone Number *
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      placeholder="+970123456789"
-                      error={errors.phone}
-                    />
-                  </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <PhoneInput
+                    label="Phone Number *"
+                    countryCode={formData.countryCode}
+                    phoneNumber={formData.phoneNumber}
+                    onCountryChange={handleCountryCodeChange}
+                    onPhoneChange={handlePhoneNumberChange}
+                    placeholder="Enter phone number"
+                    error={errors.phone}
+                    icon={FaPhone}
+                  />
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label
                       className={`block text-sm font-medium mb-2 ${

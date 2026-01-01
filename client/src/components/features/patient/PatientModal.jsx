@@ -9,7 +9,7 @@ import {
   FaVenusMars,
   FaLock
 } from 'react-icons/fa'
-import { Button, BaseModal, Input, Select } from '../../common'
+import { Button, BaseModal, Input, Select, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { CITY_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants'
 import { validateEmail } from '../../../utils/validation'
@@ -32,7 +32,8 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
     lastName: '',
     dateOfBirth: '',
     gender: '',
-    phone: '',
+    countryCode: '+970',
+    phoneNumber: '',
     email: '',
     password: '',
     city: ''
@@ -52,12 +53,28 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
         }
       }
 
+      // Parse phone number into country code and number
+      const fullPhone = patientData.phone || '';
+      let parsedCountryCode = '+970';
+      let parsedPhoneNumber = '';
+      
+      if (fullPhone) {
+        const countryCodeMatch = fullPhone.match(/^(\+\d{1,4})/);
+        if (countryCodeMatch) {
+          parsedCountryCode = countryCodeMatch[1];
+          parsedPhoneNumber = fullPhone.slice(countryCodeMatch[1].length).replace(/\D/g, '');
+        } else {
+          parsedPhoneNumber = fullPhone.replace(/\D/g, '');
+        }
+      }
+
       setFormData({
         firstName: patientData.firstName || '',
         lastName: patientData.lastName || '',
         dateOfBirth: formattedDate,
         gender: patientData.gender || '',
-        phone: patientData.phone || '',
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
         email: patientData.email || '',
         password: '', // Password should be empty when editing
         city: patientData.city || patientData.address || ''
@@ -68,7 +85,8 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
         lastName: '',
         dateOfBirth: '',
         gender: '',
-        phone: '',
+        countryCode: '+970',
+        phoneNumber: '',
         email: '',
         password: '',
         city: ''
@@ -92,6 +110,35 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
       }))
     }
   }
+
+  const handleCountryCodeChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      countryCode: e.target.value,
+    }));
+
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: '',
+      }));
+    }
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setFormData((prev) => ({
+      ...prev,
+      phoneNumber: value,
+    }));
+
+    if (errors.phone) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: '',
+      }));
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {}
@@ -118,8 +165,10 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
 
     // Password required for new patients only
     if (!isEditMode) {
-      if (!formData.phone.trim()) {
+      if (!formData.phoneNumber) {
         newErrors.phone = 'Phone number is required'
+      } else if (formData.phoneNumber.length < 7) {
+        newErrors.phone = 'Phone number must be at least 7 digits'
       }
 
       if (!formData.password || formData.password.length < 6) {
@@ -140,10 +189,15 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
     e.preventDefault()
     
     if (validateForm()) {
+      const submitData = { ...formData };
+      if (!isEditMode) {
+        submitData.phone = `${formData.countryCode}${formData.phoneNumber}`;
+      }
+      
       if (isEditMode) {
-        onSave({ ...patientData, ...formData })
+        onSave({ ...patientData, ...submitData })
       } else {
-        onSave(formData)
+        onSave(submitData)
       }
       handleClose()
     }
@@ -156,7 +210,8 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
         lastName: '',
         dateOfBirth: '',
         gender: '',
-        phone: '',
+        countryCode: '+970',
+        phoneNumber: '',
         email: '',
         password: '',
         city: ''
@@ -254,14 +309,14 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
+                    <PhoneInput
                       label="Phone Number *"
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      error={errors.phone}
+                      countryCode={formData.countryCode}
+                      phoneNumber={formData.phoneNumber}
+                      onCountryChange={handleCountryCodeChange}
+                      onPhoneChange={handlePhoneNumberChange}
                       placeholder="Enter phone number"
+                      error={errors.phone}
                       icon={FaPhone}
                     />
 
