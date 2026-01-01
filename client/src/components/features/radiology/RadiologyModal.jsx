@@ -11,7 +11,7 @@ import {
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
-import { Button, Input, LoadingSpinner, BaseModal, PhoneInput } from "../../common";
+import { Button, Input, LoadingSpinner, BaseModal, PhoneInput, LocationPicker } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validateRequired } from "../../../utils/validation";
@@ -596,54 +596,16 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                   </div>
                 </div>
 
-                {/* Coordinates Field */}
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Coordinates (Optional)
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      value={formData.coordinates}
-                      onChange={(e) =>
-                        handleInputChange("coordinates", e.target.value)
-                      }
-                      placeholder="31.9522,35.2332"
-                      error={errors.coordinates}
-                      disabled={gettingLocation || loading}
-                      className="flex-1"
-                    />
-                    <button
-                      type="button"
-                      onClick={getCurrentLocation}
-                      disabled={gettingLocation || loading}
-                      className={`px-4 py-2 rounded-lg font-medium text-white transition-all flex items-center gap-2 ${
-                        gettingLocation || loading
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-teal-600 hover:bg-teal-700'
-                      }`}
-                      title="Get current location from your device"
-                    >
-                      {gettingLocation ? (
-                        <>
-                          <LoadingSpinner size="sm" />
-                          <span className="hidden sm:inline">Getting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaLocationArrow className="w-4 h-4" />
-                          <span className="hidden sm:inline">Get Location</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Enter latitude,longitude format or use 'Get Location' button to auto-detect
-                  </p>
+                {/* Location Map Picker */}
+                <div className="mt-6">
+                  <LocationPicker
+                    label="Pin Location on Map (Optional)"
+                    value={formData.coordinates}
+                    onChange={(value) => handleInputChange("coordinates", value)}
+                    error={errors.coordinates}
+                    height={350}
+                    showMyLocationButton={true}
+                  />
                 </div>
               </div>
 

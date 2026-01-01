@@ -29,6 +29,9 @@ export { default as StatCard } from './stats/StatCard'
 export { default as StatsOverview } from './stats/StatsOverview'
 export { default as WelcomeCard } from './stats/WelcomeCard'
 
+// Maps
+export { default as LocationPicker } from './maps/LocationPicker'
+
 // Maps & Location
 export { default as LocationMap } from './maps/LocationMap'
 export { default as MultiLocationMap } from './maps/MultiLocationMap'
