@@ -274,20 +274,12 @@ const SecretariesManagement = () => {
                   alt={`${secretary.firstName} ${secretary.lastName}`}
                   onError={(e) => {
                     e.target.style.display = 'none';
-                    e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                    e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
                   }}
                 />
               ) : null}
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${secretary.userId?.profileImage ? 'hidden' : ''} ${
-                secretary.gender?.toLowerCase() === 'female'
-                  ? 'bg-pink-100 text-pink-600'
-                  : 'bg-blue-100 text-blue-600'
-              }`}>
-                {secretary.gender?.toLowerCase() === 'female' ? (
-                  <FaVenus className="w-5 h-5" />
-                ) : (
-                  <FaMars className="w-5 h-5" />
-                )}
+              <div className={`w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center fallback-avatar ${secretary.userId?.profileImage ? 'hidden' : ''}`}>
+                <FaUserTie className="w-5 h-5 text-white" />
               </div>
             </div>
             <div className="ml-4">

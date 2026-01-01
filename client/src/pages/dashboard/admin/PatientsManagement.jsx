@@ -113,19 +113,19 @@ const PatientsManagement = () => {
       label: 'Total Patients',
       value: stats?.totalPatients || 0,
       icon: FaUsers,
-      color: 'blue'
+      gradient: 'from-teal-600 to-cyan-600'
     },
     {
       label: 'Active Patients',
       value: stats?.activePatients || 0,
       icon: FaCheckCircle,
-      color: 'green'
+      gradient: 'from-green-600 to-green-700'
     },
     {
       label: 'Inactive Patients',
       value: stats?.inactivePatients || 0,
       icon: FaTimesCircle,
-      color: 'red'
+      gradient: 'from-red-600 to-red-700'
     }
   ]
 
@@ -186,16 +186,12 @@ const PatientsManagement = () => {
                 alt={`${patient.firstName} ${patient.lastName}`}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                  e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
                 }}
               />
             ) : null}
-            <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${patient.user?.profileImage ? 'hidden' : ''} ${
-                isDarkMode 
-                  ? 'bg-linear-to-br from-teal-600 to-cyan-600' 
-                  : 'bg-linear-to-br from-teal-500 to-cyan-500'
-              }`}>
-              <FaUser className="text-white text-lg" />
+            <div className={`w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center fallback-avatar ${patient.user?.profileImage ? 'hidden' : ''}`}>
+              <FaUser className="w-5 h-5 text-white" />
             </div>
           </div>
           <div className="ml-4">

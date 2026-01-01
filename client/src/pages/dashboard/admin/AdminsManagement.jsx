@@ -91,7 +91,7 @@ const AdminsManagement = () => {
     {
       label: 'Total Admins',
       value: loading ? '-' : stats.total,
-      icon: FaUsers,
+      icon: FaUserShield,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
@@ -138,16 +138,12 @@ const AdminsManagement = () => {
                 alt={admin.fullName}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.querySelector('.fallback-avatar').style.display = 'flex';
+                  e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
                 }}
               />
             ) : null}
-            <div className={`h-10 w-10 rounded-full flex items-center justify-center fallback-avatar ${admin.userId?.profileImage ? 'hidden' : ''} ${
-                isDarkMode 
-                  ? 'bg-linear-to-br from-blue-600 to-indigo-600' 
-                  : 'bg-linear-to-br from-blue-500 to-indigo-500'
-              }`}>
-              <FaUserShield className="text-white text-lg" />
+            <div className={`w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center fallback-avatar ${admin.userId?.profileImage ? 'hidden' : ''}`}>
+              <FaUserShield className="w-5 h-5 text-white" />
             </div>
           </div>
           <div className="ml-3">
