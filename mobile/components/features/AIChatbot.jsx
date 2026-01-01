@@ -161,7 +161,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
                   justifyContent: 'center'
                 }}
               >
-                <Ionicons name="sparkles" size={22} color="#14B8A6" />
+                <Ionicons name="sparkles-outline" size={22} color="#14B8A6" />
               </View>
               <View>
                 <Text className={`font-bold text-2xl ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: -0.8 }}>Dentify AI</Text>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FaTimes, FaBars, FaSignOutAlt, FaUser, FaCog, FaHome, FaChevronDown, FaEnvelope } from 'react-icons/fa'
 import { MdDashboard, MdNotifications } from 'react-icons/md'
-import { HiSparkles } from 'react-icons/hi'
+import { HiOutlineSparkles } from 'react-icons/hi'
 import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
 import { Button } from '../common'
@@ -189,7 +189,7 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                           ? 'text-gray-400 group-hover:text-purple-400'
                           : 'text-gray-600 group-hover:text-purple-600'
                       }`}>
-                        <HiSparkles className="w-6 h-6" />
+                        <HiOutlineSparkles className="w-6 h-6" />
                       </div>
                     </button>
                   )}
