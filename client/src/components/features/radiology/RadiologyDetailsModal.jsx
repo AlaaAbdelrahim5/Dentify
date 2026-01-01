@@ -21,54 +21,38 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
   const cityLabel = center.city
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} size="5xl" showCloseButton={false} noPadding={true}>
-      {/* Header with gradient */}
-      <div className="relative bg-gradient-to-r from-teal-600 to-cyan-600 p-6">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-white"
-        >
-          <FaTimes className="w-5 h-5" />
-        </button>
-        
-        {/* Profile section */}
-        <div className="flex items-center gap-4">
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Radiology Center Details" size="2xl">
+      <div className="space-y-6">
+        {/* Profile Section */}
+        <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
-              <FaXRay className="w-12 h-12 text-teal-600" />
-            </div>
-            <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
-              center.user?.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
-            }`}>
-              {center.user?.status === 'ACTIVE' ? (
-                <FaCheck className="w-3 h-3 text-white" />
-              ) : (
-                <FaTimes className="w-3 h-3 text-white" />
-              )}
+            <div className={`w-20 h-20 rounded-full ${
+              isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+            } flex items-center justify-center`}>
+              <FaXRay className="w-10 h-10 text-teal-500" />
             </div>
           </div>
-          
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-white mb-1">
+            <h3 className={`text-xl font-bold mb-1 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
               {center.centerName || center.registrationNumber}
-            </h2>
-            <p className="text-teal-100 text-sm mb-2">
+            </h3>
+            <p className={`text-sm mb-2 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               Radiology Center
             </p>
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
               center.user?.status === 'ACTIVE'
-                ? 'bg-green-900/20 text-green-300 border-green-700'
-                : 'bg-red-900/20 text-red-300 border-red-700'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
             }`}>
               {center.user?.status === 'ACTIVE' ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
               {center.user?.status === 'ACTIVE' ? 'Active' : 'Inactive'}
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-8 space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Basic Information */}
         <div>
           <h3 className={`text-lg font-semibold mb-6 ${

@@ -198,9 +198,6 @@ const PatientsManagement = () => {
             <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
               {patient.firstName} {patient.lastName}
             </div>
-            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              ID: {patient.userId}
-            </div>
           </div>
         </div>
       </td>
