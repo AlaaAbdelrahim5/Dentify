@@ -13,13 +13,17 @@ import {
   FaSave,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal, BaseModal, StatusBadge } from '../../../components'
+import { Card, Button, Input, PageHeader, Toast, StatsOverview, ViewItemModal, BaseModal, StatusBadge, FilterBar } from '../../../components'
+import { useDebounce } from '../../../hooks'
 
 const DentistInventory = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('items') // items, usage, alerts
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [filtering, setFiltering] = useState(false)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [isRecordUsageModalOpen, setIsRecordUsageModalOpen] = useState(false)
   const [isViewItemModalOpen, setIsViewItemModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
@@ -143,15 +147,22 @@ const DentistInventory = () => {
   // Filter items
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSearch = item.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                          item.category.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
+      const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus
       
-      return matchesSearch && matchesCategory
+      return matchesSearch && matchesCategory && matchesStatus
     })
-  }, [inventoryItems, searchTerm, selectedCategory])
+  }, [inventoryItems, debouncedSearchTerm, selectedCategory, selectedStatus])
 
   const categories = ['all', ...new Set(inventoryItems.map(item => item.category))]
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedCategory('all')
+    setSelectedStatus('all')
+  }
 
   const handleRecordUsage = () => {
     // Mock usage recording - will be replaced with API call
@@ -243,41 +254,37 @@ const DentistInventory = () => {
       {activeTab === 'items' && (
         <div className="space-y-6">
           {/* Filters */}
-          <Card>
-            <Card.Content className="p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    placeholder="Search items by name or category..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    icon={FaSearch}
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat === 'all' ? 'All Categories' : cat}
-                      </option>
-                    ))}
-                  </select>
-                  <Button variant="outline" size="sm">
-                    <FaDownload className="mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </div>
-            </Card.Content>
+          <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              debouncedSearchTerm={debouncedSearchTerm}
+              searchPlaceholder="Search items by name or category..."
+              filters={[
+                {
+                  value: selectedCategory,
+                  onChange: (e) => setSelectedCategory(e.target.value),
+                  options: categories.map(cat => ({
+                    value: cat,
+                    label: cat === 'all' ? 'All Categories' : cat
+                  })),
+                  placeholder: 'Category'
+                },
+                {
+                  value: selectedStatus,
+                  onChange: (e) => setSelectedStatus(e.target.value),
+                  options: [
+                    { value: 'all', label: 'All Status' },
+                    { value: 'adequate', label: 'Adequate' },
+                    { value: 'low', label: 'Low Stock' },
+                    { value: 'critical', label: 'Critical' }
+                  ],
+                  placeholder: 'Stock Status'
+                }
+              ]}
+              onClearFilters={handleClearFilters}
+              filtering={filtering}
+            />
           </Card>
 
           {/* Items Grid */}

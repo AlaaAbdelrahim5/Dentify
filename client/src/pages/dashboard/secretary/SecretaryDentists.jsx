@@ -9,9 +9,10 @@ import {
   FaStethoscope,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal, DentistCard, StatusBadge } from '../../../components'
+import { Card, Button, Input, LoadingState, ErrorState, EmptyState, DentistDetailsModal, DentistCard, StatusBadge, FilterBar } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
+import { useDebounce } from '../../../hooks'
 
 const SecretaryDentists = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()
@@ -19,6 +20,8 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [filtering, setFiltering] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
 
@@ -51,10 +54,14 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
     const email = dentist.user?.email?.toLowerCase() || ''
     const phone = dentist.user?.phone || ''
     
-    return fullName.includes(searchTerm.toLowerCase()) ||
-           email.includes(searchTerm.toLowerCase()) ||
-           phone.includes(searchTerm)
+    return fullName.includes(debouncedSearchTerm.toLowerCase()) ||
+           email.includes(debouncedSearchTerm.toLowerCase()) ||
+           phone.includes(debouncedSearchTerm)
   })
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+  }
 
   return (
     <div className="space-y-6">
@@ -77,18 +84,15 @@ const SecretaryDentists = ({ userData, onTabChange }) => {
 
       {/* Search */}
       <Card className="p-4">
-        <div className="relative">
-          <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`} />
-          <Input
-            type="text"
-            placeholder="Search dentists by name, email, or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search dentists by name, email, or phone..."
+          filters={[]}
+          onClearFilters={handleClearFilters}
+          filtering={filtering}
+        />
       </Card>
 
       {/* Dentists List */}

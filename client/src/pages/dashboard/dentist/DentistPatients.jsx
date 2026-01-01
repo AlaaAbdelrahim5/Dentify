@@ -12,14 +12,17 @@ import {
   FaDollarSign,
   FaExclamationCircle
 } from 'react-icons/fa'
-import { Card, Input, Button, PageHeader, StatsOverview, PatientDetailsModal, PatientCard, LoadingState, EmptyState, ErrorState } from '../../../components'
+import { Card, Input, Button, PageHeader, StatsOverview, PatientDetailsModal, PatientCard, LoadingState, EmptyState, ErrorState, FilterBar } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { patientsAPI, treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { safeJsonParse, ensureArray } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
 
 const DentistPatients = () => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const [filtering, setFiltering] = useState(false)
   const [currentPage, setCurrentPage] = useState('list') // 'list' or 'view'
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [patients, setPatients] = useState([])
@@ -123,12 +126,16 @@ const DentistPatients = () => {
   // Filter patients - memoized for performance
   const displayPatients = useMemo(() => {
     return transformedPatients.filter(patient => {
-      const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           patient.phone.includes(searchTerm)
+      const matchesSearch = patient.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           patient.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           patient.phone.includes(debouncedSearchTerm)
       return matchesSearch
     })
-  }, [transformedPatients, searchTerm])
+  }, [transformedPatients, debouncedSearchTerm])
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+  }
 
   // Check if we need to open a specific patient (from appointments page)
   useEffect(() => {
@@ -278,15 +285,15 @@ const DentistPatients = () => {
 
       {/* Search Bar */}
       <Card className={`p-4 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex-1">
-          <Input
-            type="text"
-            placeholder="Search patients by name, email, or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            icon={FaSearch}
-          />
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search patients by name, email, or phone..."
+          filters={[]}
+          onClearFilters={handleClearFilters}
+          filtering={filtering}
+        />
       </Card>
 
       {/* Patients Display */}

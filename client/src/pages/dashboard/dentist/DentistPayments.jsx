@@ -16,10 +16,12 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, PaymentModal, generatePaymentReceipt, Toast, LoadingState, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI, patientsAPI } from '../../../services/api'
+import { useDebounce } from '../../../hooks'
 
 const DentistPayments = () => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedPatient, setSelectedPatient] = useState('all')
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('all')
   const [selectedDateRange, setSelectedDateRange] = useState('all') // all, today, week, month
@@ -487,8 +489,21 @@ const DentistPayments = () => {
         <FilterBar
           searchTerm={searchTerm}
           onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
           searchPlaceholder="Search by patient name or treatment..."
           filters={[
+            {
+              value: selectedPatient,
+              onChange: (e) => setSelectedPatient(e.target.value),
+              options: [
+                { value: 'all', label: 'All Patients' },
+                ...mockPatients.map(p => ({
+                  value: p.id.toString(),
+                  label: p.name
+                }))
+              ],
+              placeholder: 'Filter by patient'
+            },
             {
               value: selectedDateRange,
               onChange: (e) => setSelectedDateRange(e.target.value),

@@ -22,15 +22,19 @@ import {
   Toast,
   AddInvoiceModal,
   AddExpenseModal,
-  ConfirmationModal
+  ConfirmationModal,
+  FilterBar
 } from '../../../components'
+import { useDebounce } from '../../../hooks'
 
 const ClinicExpenses = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('invoices') // invoices, expenses
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [filtering, setFiltering] = useState(false)
   const [toast, setToast] = useState(null)
   
   // Modals state
@@ -198,6 +202,12 @@ const ClinicExpenses = () => {
 
   const expenseCategories = ['all', 'Utilities', 'Rent', 'Maintenance', 'Salaries', 'Marketing', 'Equipment', 'Insurance', 'Other']
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedCategory('all')
+    setSelectedStatus('all')
+  }
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       paid: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Paid' },
@@ -300,35 +310,11 @@ const ClinicExpenses = () => {
         <div className="space-y-6">
           <Card>
             <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Purchase Invoices
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  <div className="relative flex-1 md:flex-initial md:w-64">
-                    <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <Input
-                      type="text"
-                      placeholder="Search invoices..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Purchase Invoices
+                  </h3>
                   <Button 
                     variant="primary"
                     className="bg-linear-to-r from-blue-600 to-cyan-600"
@@ -338,6 +324,28 @@ const ClinicExpenses = () => {
                     Add Invoice
                   </Button>
                 </div>
+                <FilterBar
+                  searchTerm={searchTerm}
+                  onSearchChange={(e) => setSearchTerm(e.target.value)}
+                  debouncedSearchTerm={debouncedSearchTerm}
+                  searchPlaceholder="Search invoices by number, supplier..."
+                  filters={[
+                    {
+                      type: 'select',
+                      value: selectedStatus,
+                      onChange: (e) => setSelectedStatus(e.target.value),
+                      options: [
+                        { value: 'all', label: 'All Status' },
+                        { value: 'paid', label: 'Paid' },
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'overdue', label: 'Overdue' }
+                      ],
+                      placeholder: 'Filter by status'
+                    }
+                  ]}
+                  onClearFilters={handleClearFilters}
+                  filtering={filtering}
+                />
               </div>
             </Card.Header>
           </Card>
@@ -428,36 +436,11 @@ const ClinicExpenses = () => {
         <div className="space-y-6">
           <Card>
             <Card.Header className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  General Expenses
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  <div className="relative flex-1 md:flex-initial md:w-64">
-                    <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <Input
-                      type="text"
-                      placeholder="Search expenses..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {expenseCategories.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat === 'all' ? 'All Categories' : cat}
-                      </option>
-                    ))}
-                  </select>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    General Expenses
+                  </h3>
                   <Button 
                     variant="primary"
                     className="bg-linear-to-r from-red-600 to-pink-600"
@@ -467,6 +450,26 @@ const ClinicExpenses = () => {
                     Add Expense
                   </Button>
                 </div>
+                <FilterBar
+                  searchTerm={searchTerm}
+                  onSearchChange={(e) => setSearchTerm(e.target.value)}
+                  debouncedSearchTerm={debouncedSearchTerm}
+                  searchPlaceholder="Search expenses by description or category..."
+                  filters={[
+                    {
+                      type: 'select',
+                      value: selectedCategory,
+                      onChange: (e) => setSelectedCategory(e.target.value),
+                      options: expenseCategories.map(cat => ({
+                        value: cat,
+                        label: cat === 'all' ? 'All Categories' : cat
+                      })),
+                      placeholder: 'Filter by category'
+                    }
+                  ]}
+                  onClearFilters={handleClearFilters}
+                  filtering={filtering}
+                />
               </div>
             </Card.Header>
           </Card>

@@ -9,7 +9,9 @@ import {
   FaEye,
   FaBuilding,
   FaEnvelope,
-  FaPhone
+  FaPhone,
+  FaList,
+  FaTh
 } from 'react-icons/fa'
 import { 
   PageHeader, 
@@ -22,7 +24,8 @@ import {
   Toast,
   ClinicDetailsModal,
   DentistDetailsModal,
-  DentistCard
+  DentistCard,
+  Card
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
@@ -327,51 +330,41 @@ const FindDoctor = () => {
         description="Search and browse qualified dentists"
       />
 
-      {/* Filters */}
-      <FilterBar
-        searchTerm={searchQuery}
-        onSearchChange={(e) => setSearchQuery(e.target.value)}
-        searchPlaceholder="Search by dentist name, clinic, or specialty..."
-        filtering={filtering}
-        filters={filters}
-        onClearFilters={handleClearFilters}
-      />
-
-      {/* View Toggle */}
-      <div className="flex justify-end">
-        <div className={`inline-flex rounded-lg border ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-colors ${
-              viewMode === 'table'
-                ? isDarkMode
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-teal-50 text-teal-700'
-                : isDarkMode
-                ? 'text-gray-400 hover:text-white'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Table View
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-colors ${
-              viewMode === 'grid'
-                ? isDarkMode
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-teal-50 text-teal-700'
-                : isDarkMode
-                ? 'text-gray-400 hover:text-white'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Grid View
-          </button>
+      {/* Filters and View Toggle */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex-1 w-full md:w-auto">
+            <FilterBar
+              searchTerm={searchQuery}
+              onSearchChange={(e) => setSearchQuery(e.target.value)}
+              searchPlaceholder="Search by dentist name, clinic, or specialty..."
+              filtering={filtering}
+              filters={filters}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'table' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              title="Table View"
+            >
+              <FaList className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+            >
+              <FaTh className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {/* Dentists Display */}
       {viewMode === 'grid' ? (

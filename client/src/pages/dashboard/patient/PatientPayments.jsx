@@ -15,10 +15,12 @@ import {
 } from 'react-icons/fa'
 import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, generatePaymentReceipt, EmptyState } from '../../../components'
 import { paymentsAPI, treatmentsAPI } from '../../../services/api'
+import { useDebounce } from '../../../hooks'
 
 const PatientPayments = () => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('all')
   const [selectedDateRange, setSelectedDateRange] = useState('all') // all, today, week, month
   const [selectedTreatment, setSelectedTreatment] = useState('all')
@@ -253,6 +255,7 @@ const PatientPayments = () => {
         <FilterBar
           searchTerm={searchTerm}
           onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
           searchPlaceholder="Search by dentist name or treatment..."
           filtering={filtering}
           filters={[

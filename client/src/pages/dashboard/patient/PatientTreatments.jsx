@@ -11,7 +11,8 @@ import {
   FaUserMd,
   FaExclamationTriangle
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, PageHeader, TreatmentTeethStatus, TreatmentPlanCard } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, PageHeader, TreatmentTeethStatus, TreatmentPlanCard, FilterBar } from '../../../components'
+import { useDebounce } from '../../../hooks'
 import { treatmentsAPI } from '../../../services/api'
 import { getStatusColor, safeJsonParse, ensureArray, sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
 
@@ -19,7 +20,7 @@ const PatientTreatments = () => {
   const { isDarkMode } = useTheme()
   const [activeView, setActiveView] = useState('all') // active, completed, all
   const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or list
   
@@ -41,15 +42,6 @@ const PatientTreatments = () => {
   useEffect(() => {
     fetchTreatments()
   }, [])
-
-  // Debounce search term to avoid excessive filtering
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
 
   const fetchTreatments = async (isFiltering = false) => {
     try {
@@ -142,6 +134,11 @@ const PatientTreatments = () => {
     })
   }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedStatus('all')
+  }
+
   // Error state
   if (error) {
     return (
@@ -180,38 +177,27 @@ const PatientTreatments = () => {
 
       {/* Filters and Controls */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Input
-              type="text"
-              placeholder="Search treatments, dentist, or tooth numbers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={FaSearch}
-            />
-            {filtering && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <LoadingSpinner size="sm" />
-              </div>
-            )}
-          </div>
-          <div className="flex gap-4">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Status</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search treatments, dentist, or tooth numbers..."
+          filters={[
+            {
+              value: selectedStatus,
+              onChange: (e) => setSelectedStatus(e.target.value),
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'In Progress', label: 'In Progress' },
+                { value: 'Completed', label: 'Completed' },
+                { value: 'Cancelled', label: 'Cancelled' }
+              ],
+              placeholder: 'Treatment Status'
+            }
+          ]}
+          onClearFilters={handleClearFilters}
+          filtering={filtering}
+        />
       </Card>
 
       {/* Treatments Grid/List */}

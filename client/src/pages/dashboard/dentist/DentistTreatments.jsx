@@ -20,7 +20,8 @@ import {
   FaSave,
   FaPrescriptionBottle
 } from 'react-icons/fa'
-import { Card, Button, Input, PageHeader, LoadingSpinner, EmptyState, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast } from '../../../components'
+import { Card, Button, Input, PageHeader, LoadingSpinner, EmptyState, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast, FilterBar } from '../../../components'
+import { useDebounce } from '../../../hooks'
 import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { calculateRemainingBalance, safeJsonParse, ensureArray, sumField, countWhere, normalizeStatus } from '../../../utils/helpers'
 
@@ -52,6 +53,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
   const [payments, setPayments] = useState([])
   const [prescriptions, setPrescriptions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
   const [error, setError] = useState(null)
   const [toast, setToast] = useState(null)
 
@@ -235,6 +237,11 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       return matchesSearch && matchesView && matchesStatus
     })
   }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedStatus('In Progress')
+  }
 
   // Fetch payments and prescriptions for a specific treatment
   const fetchTreatmentPayments = async (treatmentId) => {
@@ -660,33 +667,27 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
       {/* Filters and Search */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder="Search treatments, patients, or tooth numbers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              icon={FaSearch}
-            />
-          </div>
-          <div className="flex gap-4">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className={`px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            >
-              <option value="all">All Status</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search treatments, patients, or tooth numbers..."
+          filters={[
+            {
+              value: selectedStatus,
+              onChange: (e) => setSelectedStatus(e.target.value),
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'In Progress', label: 'In Progress' },
+                { value: 'Completed', label: 'Completed' },
+                { value: 'Cancelled', label: 'Cancelled' }
+              ],
+              placeholder: 'Treatment Status'
+            }
+          ]}
+          onClearFilters={handleClearFilters}
+          filtering={filtering}
+        />
       </Card>
 
       {/* Treatments Grid/List - Show loading state here */}

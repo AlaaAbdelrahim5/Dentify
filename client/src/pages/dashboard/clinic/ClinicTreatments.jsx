@@ -14,16 +14,18 @@ import {
   FaArrowLeft,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal, FilterBar } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
 
 const ClinicTreatments = ({ userData, onTabChange }) => {
   const { isDarkMode } = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [filtering, setFiltering] = useState(false)
   
   // Page view state: 'list', 'view'
   const [currentPage, setCurrentPage] = useState('list')
@@ -42,15 +44,6 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
   useEffect(() => {
     fetchAllData()
   }, [])
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
 
   const fetchAllData = async () => {
     try {
@@ -130,6 +123,11 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
       return matchesSearch && matchesStatus
     })
   }, [displayTreatments, debouncedSearchTerm, selectedStatus])
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedStatus('all')
+  }
 
   // Fetch payments for a specific treatment
   const fetchTreatmentPayments = async (treatmentId) => {
@@ -229,33 +227,27 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
 
           {/* Search and Filters */}
           <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  placeholder="Search treatments, patients, or dentists..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  icon={FaSearch}
-                />
-              </div>
-              <div className="flex gap-4">
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className={`px-3 py-2 border rounded-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                >
-                  <option value="all">All Status</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              debouncedSearchTerm={debouncedSearchTerm}
+              searchPlaceholder="Search treatments, patients, or dentists..."
+              filters={[
+                {
+                  value: selectedStatus,
+                  onChange: (e) => setSelectedStatus(e.target.value),
+                  options: [
+                    { value: 'all', label: 'All Status' },
+                    { value: 'In Progress', label: 'In Progress' },
+                    { value: 'Completed', label: 'Completed' },
+                    { value: 'Cancelled', label: 'Cancelled' }
+                  ],
+                  placeholder: 'Treatment Status'
+                }
+              ]}
+              onClearFilters={handleClearFilters}
+              filtering={filtering}
+            />
           </Card>
 
           {/* Treatments Display */}

@@ -33,16 +33,21 @@ import {
   CreatePurchaseOrderModal,
   ReorderItemModal,
   ViewItemModal,
-  ConfirmationModal
+  ConfirmationModal,
+  FilterBar
 } from '../../../components'
 import { getTodayISO } from '../../../utils/helpers'
+import { useDebounce } from '../../../hooks'
 
 const ClinicInventory = () => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('items') // items, suppliers, orders, usage, alerts
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
   const [supplierFilter, setSupplierFilter] = useState('all')
+  const [filtering, setFiltering] = useState(false)
   const [toast, setToast] = useState(null)
   
   // Modals state
@@ -397,6 +402,13 @@ const ClinicInventory = () => {
     setIsItemModalOpen(true)
   }
 
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedCategory('all')
+    setSelectedStatus('all')
+    setSupplierFilter('all')
+  }
+
   return (
     <div className="space-y-6">
       {toast && (
@@ -477,57 +489,36 @@ const ClinicInventory = () => {
       {activeTab === 'items' && (
         <div className="space-y-6">
           {/* Filters */}
-          <Card>
-            <Card.Content className="p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    placeholder="Search items by name or category..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    icon={FaSearch}
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>
-                        {cat === 'all' ? 'All Categories' : cat}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={supplierFilter}
-                    onChange={(e) => setSupplierFilter(e.target.value)}
-                    className={`px-4 py-2 border rounded-lg ${
-                      isDarkMode
-                        ? 'bg-gray-700 border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {suppliersList.map(sup => (
-                      <option key={sup} value={sup}>
-                        {sup === 'all' ? 'All Suppliers' : sup}
-                      </option>
-                    ))}
-                  </select>
-                  <Button variant="outline" size="sm">
-                    <FaDownload className="mr-2" />
-                    Export
-                  </Button>
-                </div>
-              </div>
-            </Card.Content>
-          </Card>
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={(e) => setSearchTerm(e.target.value)}
+            debouncedSearchTerm={debouncedSearchTerm}
+            searchPlaceholder="Search items by name or category..."
+            filters={[
+              {
+                type: 'select',
+                value: selectedCategory,
+                onChange: (e) => setSelectedCategory(e.target.value),
+                options: categories.map(cat => ({
+                  value: cat,
+                  label: cat === 'all' ? 'All Categories' : cat
+                })),
+                placeholder: 'Filter by category'
+              },
+              {
+                type: 'select',
+                value: supplierFilter,
+                onChange: (e) => setSupplierFilter(e.target.value),
+                options: suppliersList.map(sup => ({
+                  value: sup,
+                  label: sup === 'all' ? 'All Suppliers' : sup
+                })),
+                placeholder: 'Filter by supplier'
+              }
+            ]}
+            onClearFilters={handleClearFilters}
+            filtering={filtering}
+          />
 
           {/* Items Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
