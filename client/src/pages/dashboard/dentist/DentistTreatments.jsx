@@ -666,13 +666,12 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       />
 
       {/* Filters and Search */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search treatments, patients, or tooth numbers..."
-          filters={[
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        debouncedSearchTerm={debouncedSearchTerm}
+        searchPlaceholder="Search treatments, patients, or tooth numbers..."
+        filters={[
             {
               value: selectedStatus,
               onChange: (e) => setSelectedStatus(e.target.value),
@@ -685,16 +684,17 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
               placeholder: 'Treatment Status'
             }
           ]}
-          onClearFilters={handleClearFilters}
-          filtering={filtering}
-        />
-      </Card>
+        onClearFilters={handleClearFilters}
+        filtering={filtering}
+      />
 
       {/* Treatments Grid/List - Show loading state here */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <LoadingSpinner size="lg" text="Loading treatments..." />
-        </div>
+        <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        </Card>
       ) : error ? (
         <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="text-center">

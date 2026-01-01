@@ -485,13 +485,12 @@ const DentistPayments = () => {
       )}
 
       {/* Filters */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search by patient name or treatment..."
-          filters={[
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        debouncedSearchTerm={debouncedSearchTerm}
+        searchPlaceholder="Search by patient name or treatment..."
+        filters={[
             {
               value: selectedPatient,
               onChange: (e) => setSelectedPatient(e.target.value),
@@ -526,15 +525,11 @@ const DentistPayments = () => {
               placeholder: 'Payment Method'
             }
           ]}
-          onClearFilters={handleClearFilters}
-        />
-      </Card>
+        onClearFilters={handleClearFilters}
+      />
 
       {/* Payments Table */}
-      <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        {loading ? (
-          <LoadingState message="Loading payments..." size="lg" />
-        ) : filteredPayments.length === 0 ? (
+      {filteredPayments.length === 0 ? (
           <EmptyState
             icon={FaMoneyBillWave}
             title={mockPayments.length === 0 ? 'No payments recorded yet' : 'No payments match your filters'}
@@ -553,13 +548,12 @@ const DentistPayments = () => {
             ) : null}
           />
         ) : (
-          <DataTable
-            columns={columns}
-            data={filteredPayments}
-            emptyMessage="No payments found"
-          />
-        )}
-      </Card>
+        <DataTable
+          columns={columns}
+          data={filteredPayments}
+          emptyMessage="No payments found"
+        />
+      )}
 
       {/* Payment Modal */}
       <PaymentModal

@@ -368,14 +368,13 @@ const DentistRadiology = () => {
 
 
       {/* Filters and View Mode */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex-1 w-full">
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={(e) => setSearchTerm(e.target.value)}
-              searchPlaceholder="Search by patient, imaging type, or radiology center..."
-              filters={[
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="flex-1 w-full">
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={(e) => setSearchTerm(e.target.value)}
+            searchPlaceholder="Search by patient, imaging type, or radiology center..."
+            filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -428,44 +427,48 @@ const DentistRadiology = () => {
               onClick={() => setViewMode('grid')}
               title="Grid View"
             >
-              <FaTh className="w-4 h-4" />
-            </Button>
-          </div>
+          <FaTh className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+
+    {/* Requests - Table or Grid View */}
+    {loading ? (
+      <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="flex items-center justify-center">
+          <LoadingSpinner size="lg" />
         </div>
       </Card>
-
-      {/* Requests - Table or Grid View */}
-      {loading ? (
-        <Card className={`p-8 text-center ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <LoadingSpinner size="lg" text="Loading radiology requests..." />
-        </Card>
-      ) : filteredRequests.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={FaXRay}
-            title={transformedRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
-            description={transformedRequests.length === 0 
-              ? 'Create your first radiology request to get started'
-              : 'Try adjusting your search or filter criteria'}
-            action={transformedRequests.length === 0 ? (
-              <Button 
-                variant="primary" 
-                onClick={handleNewRequest}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                <FaPlus className="w-4 h-4 mr-2" />
-                Create First Request
-              </Button>
-            ) : null}
-          />
-        </Card>
-      ) : (
-        <>
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map((request) => (
+    ) : error ? (
+      <Card>
+        <ErrorState
+          message={error}
+          onRetry={fetchRequests}
+        />
+      </Card>
+    ) : filteredRequests.length === 0 ? (
+      <Card>
+        <EmptyState
+          icon={FaXRay}
+          title={mockRadiologyRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
+          description={mockRadiologyRequests.length === 0 
+            ? 'Create your first radiology request to get started'
+            : 'Try adjusting your search or filter criteria'}
+          action={mockRadiologyRequests.length === 0 ? (
+            <Button 
+              variant="primary" 
+              onClick={handleNewRequest}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <FaPlus className="w-4 h-4 mr-2" />
+              Create First Request
+            </Button>
+          ) : null}
+        />
+      </Card>
+    ) : viewMode === 'grid' ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredRequests.map((request) => (
                 <RequestCard
                   key={request.id}
                   request={request}
@@ -474,11 +477,11 @@ const DentistRadiology = () => {
                   onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
                   onEdit={request.status === 'Requested' ? handleEditRequest : null}
                   onDelete={request.status === 'Requested' ? handleDeleteRequest : null}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            />
+          ))}
+        </div>
+      ) : (
+        <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <DataTable
                 columns={[
                   {
@@ -597,12 +600,10 @@ const DentistRadiology = () => {
                     )
                   }
                 ]}
-                data={filteredRequests}
-                emptyMessage="No radiology requests found"
-              />
-            </Card>
-          )}
-        </>
+            data={filteredRequests}
+            emptyMessage="No radiology requests found"
+          />
+        </Card>
       )}
 
       {/* Modals */}

@@ -230,15 +230,14 @@ const PatientXRayResults = () => {
       </div>
 
       {/* Filters and View Mode */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex-1 w-full">
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={(e) => setSearchTerm(e.target.value)}
-              searchPlaceholder="Search by dentist, radiology center, or imaging type..."
-              filtering={filtering}
-              filters={[
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="flex-1 w-full">
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={(e) => setSearchTerm(e.target.value)}
+            searchPlaceholder="Search by dentist, radiology center, or imaging type..."
+            filtering={filtering}
+            filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -291,42 +290,46 @@ const PatientXRayResults = () => {
               onClick={() => setViewMode('grid')}
               title="Grid View"
             >
-              <FaTh className="w-4 h-4" />
-            </Button>
-          </div>
+            <FaTh className="w-4 h-4" />
+          </Button>
         </div>
-      </Card>
+      </div>
 
       {/* Requests - Table or Grid View */}
-      {isLoading || filtering ? (
-        <Card className="p-8 text-center">
-          <LoadingSpinner size="lg" text={isLoading ? "Loading X-ray requests..." : "Filtering results..."} />
+      {isLoading ? (
+        <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        </Card>
+      ) : error ? (
+        <Card>
+          <ErrorState
+            message={error}
+            onRetry={loadRequests}
+          />
         </Card>
       ) : filteredRequests.length === 0 ? (
         <Card>
           <EmptyState
             icon={FaXRay}
-            title={requests.length === 0 ? 'No X-ray requests yet' : 'No requests match your filters'}
-            description={requests.length === 0 
-              ? 'Your dentist will request X-rays when needed for your treatment'
-              : 'Try adjusting your search or filter criteria'}
+            title="No X-Ray results found"
+            description="No results match your current filters"
           />
         </Card>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              request={request}
+              variant="patient"
+              onViewImages={request.reportFile ? handleViewImages : null}
+              onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
+            />
+          ))}
+        </div>
       ) : (
-        <>
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRequests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  variant="patient"
-                  onViewImages={request.reportFile ? handleViewImages : null}
-                  onDownload={request.reportFile ? (req) => handleDownloadReport(req.reportFile) : null}
-                />
-              ))}
-            </div>
-          ) : (
             <Card className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
               <DataTable
                 loading={isLoading || filtering}
@@ -448,12 +451,10 @@ const PatientXRayResults = () => {
                     )
                   }
                 ]}
-                data={filteredRequests}
-                emptyMessage="No X-ray requests found"
-              />
-            </Card>
-          )}
-        </>
+            data={filteredRequests}
+            emptyMessage="No X-ray requests found"
+          />
+        </Card>
       )}
 
       {isImageViewerOpen && selectedRequest && selectedRequest.reportFile && (

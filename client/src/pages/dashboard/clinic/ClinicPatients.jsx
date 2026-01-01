@@ -250,17 +250,15 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       ]} />
 
       {/* Search Bar */}
-      <Card className={`p-4 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search patients by name, email, or phone..."
-          filters={[]}
-          onClearFilters={handleClearFilters}
-          filtering={filtering}
-        />
-      </Card>
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        debouncedSearchTerm={debouncedSearchTerm}
+        searchPlaceholder="Search patients by name, email, or phone..."
+        filters={[]}
+        onClearFilters={handleClearFilters}
+        filtering={filtering}
+      />
 
       {/* Patients Display */}
       {loading ? (

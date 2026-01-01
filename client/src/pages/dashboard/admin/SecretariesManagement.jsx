@@ -397,9 +397,6 @@ const SecretariesManagement = () => {
         description="Manage all clinic secretaries across the platform"
       />
 
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
-
       {/* Filters */}
       <FilterBar {...filterProps} />
 

@@ -226,13 +226,12 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
           />
 
           {/* Search and Filters */}
-          <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={(e) => setSearchTerm(e.target.value)}
-              debouncedSearchTerm={debouncedSearchTerm}
-              searchPlaceholder="Search treatments, patients, or dentists..."
-              filters={[
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={(e) => setSearchTerm(e.target.value)}
+            debouncedSearchTerm={debouncedSearchTerm}
+            searchPlaceholder="Search treatments, patients, or dentists..."
+            filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -245,16 +244,15 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
                   placeholder: 'Treatment Status'
                 }
               ]}
-              onClearFilters={handleClearFilters}
-              filtering={filtering}
-            />
-          </Card>
+            onClearFilters={handleClearFilters}
+            filtering={filtering}
+          />
 
           {/* Treatments Display */}
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" text="Loading treatments..." />
-            </div>
+            <Card>
+              <LoadingState message="Loading treatments..." size="lg" />
+            </Card>
           ) : error ? (
             <Card>
               <ErrorState

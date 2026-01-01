@@ -232,9 +232,6 @@ const AdminsManagement = () => {
         }}
       />
 
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
-
       {/* Search and Filters */}
       <FilterBar {...filterProps} />
 

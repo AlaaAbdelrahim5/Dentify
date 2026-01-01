@@ -397,21 +397,6 @@ const DentistsManagement = () => {
           <FaCertificate className="w-3 h-3 text-teal-500" />
           {dentist.licenseNumber}
         </div>
-        <div className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          <div className="flex items-center gap-1">
-            <FaGraduationCap className="w-3 h-3" />
-            {dentist.specialization && dentist.specialization.length > 0 ? (
-              <>
-                {dentist.specialization.slice(0, 2).join(', ')}
-                {dentist.specialization.length > 2 && (
-                  <span className="text-xs">+{dentist.specialization.length - 2}</span>
-                )}
-              </>
-            ) : (
-              'No specialization'
-            )}
-          </div>
-        </div>
       </td>
       <td className="px-6 py-4">
         <div className={`text-sm flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -527,9 +512,6 @@ const DentistsManagement = () => {
           </div>
         </div>
       )}
-
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
 
       {/* Search and Filters */}
       <FilterBar {...filterProps} />

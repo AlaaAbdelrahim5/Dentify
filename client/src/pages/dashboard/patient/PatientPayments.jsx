@@ -251,14 +251,13 @@ const PatientPayments = () => {
       />
 
       {/* Filters */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search by dentist name or treatment..."
-          filtering={filtering}
-          filters={[
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        debouncedSearchTerm={debouncedSearchTerm}
+        searchPlaceholder="Search by dentist name or treatment..."
+        filtering={filtering}
+        filters={[
             {
               value: selectedDateRange,
               onChange: (e) => setSelectedDateRange(e.target.value),
@@ -293,27 +292,23 @@ const PatientPayments = () => {
               placeholder: 'Treatment'
             }
           ]}
-          onClearFilters={handleClearFilters}
-        />
-      </Card>
+        onClearFilters={handleClearFilters}
+      />
 
-      {/* Payments Table */}
-      <Card>
-        {!loading && !filtering && filteredPayments.length === 0 ? (
-          <EmptyState
-            icon={FaMoneyBillWave}
+      {filteredPayments.length === 0 ? (
+        <EmptyState
+          icon={FaMoneyBillWave}
             title="No payments found"
             description="No payments match your current filters"
           />
         ) : (
-          <DataTable
-            columns={columns}
-            data={filteredPayments}
-            loading={loading || filtering}
-            emptyMessage="No payments found"
-          />
-        )}
-      </Card>
+        <DataTable
+          columns={columns}
+          data={filteredPayments}
+          loading={loading || filtering}
+          emptyMessage="No payments found"
+        />
+      )}
     </div>
   )
 }

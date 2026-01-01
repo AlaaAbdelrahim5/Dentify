@@ -493,8 +493,6 @@ const SecretariesManagement = () => {
         }}
       />
 
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
 
       {/* Search and Filters */}
       <FilterBar {...filterProps} />

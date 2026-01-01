@@ -304,9 +304,6 @@ const PatientsManagement = () => {
         }}
       />
 
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
-
       {/* Filters */}
       <FilterBar {...filterProps} />
 

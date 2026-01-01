@@ -391,45 +391,40 @@ const ClinicsManagement = () => {
         }}
       />
 
-      {/* Statistics Overview */}
-      <StatsOverview stats={statsConfig} />
-
       {/* Search and Filters with View Toggle */}
-      <Card className="p-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 w-full md:w-auto">
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={handleSearch}
-              debouncedSearchTerm={debouncedSearchTerm}
-              filters={filters}
-              onClearFilters={clearFilters}
-              filtering={filtering}
-              searchPlaceholder="Search for clinic..."
-            />
-          </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              title="List View"
-            >
-              <FaList className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('map')}
-              title="Map View"
-            >
-              <FaMap className="w-4 h-4" />
-            </Button>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex-1 w-full md:w-auto">
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={handleSearch}
+            debouncedSearchTerm={debouncedSearchTerm}
+            filters={filters}
+            onClearFilters={clearFilters}
+            filtering={filtering}
+            searchPlaceholder="Search for clinic..."
+          />
         </div>
-      </Card>
+        
+        {/* View Mode Toggle */}
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'list' ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+            title="List View"
+          >
+            <FaList className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'map' ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('map')}
+            title="Map View"
+          >
+            <FaMap className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* List View */}
       {viewMode === 'list' && (
@@ -447,7 +442,7 @@ const ClinicsManagement = () => {
 
       {/* Map View */}
       {viewMode === 'map' && (
-        <Card className="p-4">
+        <div>
           {filtering ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner />
@@ -483,17 +478,15 @@ const ClinicsManagement = () => {
               />
             </>
           )}
-        </Card>
+        </div>
       )}
 
       {/* Pagination */}
-      <Card>
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      </Card>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Add Clinic Modal */}
       <ClinicModal

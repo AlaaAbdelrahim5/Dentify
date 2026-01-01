@@ -340,9 +340,6 @@ const DentistsManagement = () => {
         description="Review and approve dentist registrations"
       />
 
-      {/* Statistics */}
-      <StatsOverview stats={statsConfig} />
-
       {/* Filters */}
       <FilterBar {...filterProps} />
 

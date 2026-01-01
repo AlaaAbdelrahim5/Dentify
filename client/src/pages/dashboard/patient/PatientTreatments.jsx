@@ -176,13 +176,12 @@ const PatientTreatments = () => {
       />
 
       {/* Filters and Controls */}
-      <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search treatments, dentist, or tooth numbers..."
-          filters={[
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        debouncedSearchTerm={debouncedSearchTerm}
+        searchPlaceholder="Search treatments, dentist, or tooth numbers..."
+        filters={[
             {
               value: selectedStatus,
               onChange: (e) => setSelectedStatus(e.target.value),
@@ -195,14 +194,12 @@ const PatientTreatments = () => {
               placeholder: 'Treatment Status'
             }
           ]}
-          onClearFilters={handleClearFilters}
-          filtering={filtering}
-        />
-      </Card>
+        onClearFilters={handleClearFilters}
+        filtering={filtering}
+      />
 
-      {/* Treatments Grid/List */}
-      {!loading && !filtering && filteredTreatments.length === 0 ? (
-        <Card className="p-8">
+      {filteredTreatments.length === 0 ? (
+        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
           <div className="text-center py-12">
             <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
               isDarkMode 
