@@ -23,7 +23,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hi! I'm your Dentify AI Assistant. I can help you with:\n\n• Booking appointments\n• Answering dental questions\n• Treatment information\n• Post-care instructions\n\nHow can I help you today?",
+      text: "Hi! I'm your Dentify AI Assistant. How can I assist you today?",
       sender: 'bot',
       timestamp: new Date()
     }
