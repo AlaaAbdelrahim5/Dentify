@@ -13,7 +13,7 @@ import {
   FaIdCard,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 
@@ -32,7 +32,8 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     location: '',
     supportedTypes: [],
     email: '',
-    profileImage: ''
+    profileImage: '',
+    coordinates: ''
   })
   const [newType, setNewType] = useState('')
   const [workingHours, setWorkingHours] = useState({
@@ -60,7 +61,8 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         city: userData.city || '',
         location: userData.location || '',
         supportedTypes: userData.supportedTypes || [],
-        email: user?.email || ''
+        email: user?.email || '',
+        coordinates: userData.coordinates || ''
       })
       
       // Load working hours if they exist
@@ -406,6 +408,15 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 disabled={!isEditing}
                 placeholder="Full address"
                 icon={FaMapMarkerAlt}
+              />
+            </div>
+
+            {/* Map Location Picker */}
+            <div className="md:col-span-2">
+              <LocationPicker
+                value={formData.coordinates}
+                onChange={(coords) => setFormData({ ...formData, coordinates: coords })}
+                disabled={!isEditing}
               />
             </div>
 

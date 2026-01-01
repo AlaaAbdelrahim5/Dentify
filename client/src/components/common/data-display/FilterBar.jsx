@@ -87,12 +87,8 @@ const FilterBar = ({
         className="flex items-center gap-2"
         disabled={filtering}
       >
-        {filtering ? (
-          <LoadingSpinner className="w-4 h-4" />
-        ) : (
-          <FaFilter className="w-4 h-4" />
-        )}
-        {filtering ? 'Filtering...' : 'Clear Filters'}
+        <FaFilter className="w-4 h-4" />
+        Clear Filters
       </Button>
     </div>
   )

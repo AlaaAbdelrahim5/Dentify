@@ -15,7 +15,7 @@ import {
   FaGlobe,
   FaIdCard
 } from 'react-icons/fa'
-import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth, LocationPicker } from '../../../components'
 import { AvailableTreatmentsManager } from '../../../components/features'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
@@ -37,7 +37,8 @@ const ClinicSettings = () => {
     city: '',
     website: '',
     description: '',
-    profileImage: ''
+    profileImage: '',
+    coordinates: ''
   })
 
   const [workingHours, setWorkingHours] = useState({
@@ -81,7 +82,8 @@ const ClinicSettings = () => {
         city: clinic.city || '',
         website: clinic.website || '',
         description: clinic.description || '',
-        profileImage: clinic.user?.profileImage || clinic.profileImage || ''
+        profileImage: clinic.user?.profileImage || clinic.profileImage || '',
+        coordinates: clinic.coordinates || ''
       })
       
       // Load working hours if they exist
@@ -144,21 +146,12 @@ const ClinicSettings = () => {
         location: clinicInfo.address,
         city: clinicInfo.city,
         website: clinicInfo.website,
-        description: clinicInfo.description
+        description: clinicInfo.description,
+        coordinates: clinicInfo.coordinates,
+        phone: clinicInfo.phone
       }
       
-      // Handle phone update separately if it changed (it's in User table)
-      const phoneUpdatePromises = []
-      if (clinicInfo.phone) {
-        phoneUpdatePromises.push(
-          api.put('/users/me', { phone: clinicInfo.phone })
-        )
-      }
-      
-      await Promise.all([
-        api.put(`/clinics/me`, updateData),
-        ...phoneUpdatePromises
-      ])
+      await api.put(`/clinics/me`, updateData)
       
       setIsEditing(false)
       alert('Clinic information updated successfully!')
@@ -325,6 +318,14 @@ const ClinicSettings = () => {
               icon={FaMapMarkerAlt}
               value={clinicInfo.address}
               onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <LocationPicker
+              value={clinicInfo.coordinates}
+              onChange={(coords) => setClinicInfo({ ...clinicInfo, coordinates: coords })}
               disabled={!isEditing}
             />
           </div>

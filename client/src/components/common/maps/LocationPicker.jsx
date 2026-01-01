@@ -13,11 +13,13 @@ L.Icon.Default.mergeOptions({
 });
 
 // Component to handle map clicks
-const LocationMarker = ({ position, setPosition }) => {
+const LocationMarker = ({ position, setPosition, disabled }) => {
   const map = useMapEvents({
     click(e) {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
+      if (!disabled) {
+        setPosition(e.latlng);
+        map.flyTo(e.latlng, map.getZoom());
+      }
     },
   });
 
@@ -35,6 +37,7 @@ const LocationMarker = ({ position, setPosition }) => {
  * @param {string} props.error - Error message to display
  * @param {number} props.height - Height of the map in pixels (default: 400)
  * @param {boolean} props.showMyLocationButton - Show "Use My Location" button (default: true)
+ * @param {boolean} props.disabled - Make the map read-only (default: false)
  */
 const LocationPicker = ({ 
   value = '', 
@@ -42,7 +45,8 @@ const LocationPicker = ({
   label = 'Select Location on Map',
   error = '',
   height = 400,
-  showMyLocationButton = true
+  showMyLocationButton = true,
+  disabled = false
 }) => {
   const { isDarkMode } = useTheme();
   const [position, setPosition] = useState(null);
@@ -163,13 +167,16 @@ const LocationPicker = ({
         type="text"
         value={value}
         onChange={handleManualInput}
+        disabled={disabled}
         placeholder="Click on map or enter: latitude,longitude (e.g., 31.9522,35.2332)"
         className={`w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200
           focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
           isDarkMode 
             ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400'
             : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
-        } ${error ? 'border-red-300 focus:ring-red-500' : ''}`}
+        } ${error ? 'border-red-300 focus:ring-red-500' : ''} ${
+          disabled ? 'opacity-60 cursor-not-allowed' : ''
+        }`}
       />
 
       {error && (
@@ -179,7 +186,7 @@ const LocationPicker = ({
       )}
 
       {/* Use My Location Button */}
-      {showMyLocationButton && (
+      {showMyLocationButton && !disabled && (
         <button
           type="button"
           onClick={handleGetCurrentLocation}
@@ -212,7 +219,7 @@ const LocationPicker = ({
       <div 
         className={`rounded-lg overflow-hidden border ${
           isDarkMode ? 'border-gray-600' : 'border-gray-300'
-        }`}
+        } ${disabled ? 'opacity-80' : ''}`}
         style={{ height: `${height}px` }}
       >
         <MapContainer
@@ -220,21 +227,34 @@ const LocationPicker = ({
           zoom={13}
           style={{ height: '100%', width: '100%' }}
           ref={mapRef}
+          scrollWheelZoom={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker position={position} setPosition={setPosition} />
+          <LocationMarker position={position} setPosition={setPosition} disabled={disabled} />
         </MapContainer>
       </div>
 
       <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        Click anywhere on the map to set the location, or enter coordinates manually above.
-        {position && (
-          <span className="block mt-1 font-medium text-teal-600">
-            Selected: {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
-          </span>
+        {disabled ? (
+          position ? (
+            <span className="block font-medium text-teal-600">
+              Current Location: {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
+            </span>
+          ) : (
+            'No location set'
+          )
+        ) : (
+          <>
+            Click anywhere on the map to set the location, or enter coordinates manually above.
+            {position && (
+              <span className="block mt-1 font-medium text-teal-600">
+                Selected: {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
+              </span>
+            )}
+          </>
         )}
       </p>
     </div>

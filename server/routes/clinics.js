@@ -19,16 +19,25 @@ router.get('/me', authenticate, authorize('Clinic'), createGetProfileHandler('cl
 // Update current clinic profile
 router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
   try {
-    const { clinicName, registrationNumber, city, location, website, description, workingHours, availableTreatments } = req.body;
+    const { clinicName, registrationNumber, city, location, coordinates, website, description, workingHours, availableTreatments, phone } = req.body;
 
     const updateData = {};
     if (clinicName !== undefined) updateData.clinicName = clinicName;
     if (city !== undefined) updateData.city = city;
     if (location !== undefined) updateData.location = location;
+    if (coordinates !== undefined) updateData.coordinates = coordinates;
     if (website !== undefined) updateData.website = website;
     if (description !== undefined) updateData.description = description;
     if (workingHours !== undefined) updateData.workingHours = workingHours;
     if (availableTreatments !== undefined) updateData.availableTreatments = availableTreatments;
+
+    // Update phone in user table if provided
+    if (phone !== undefined) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { phone }
+      });
+    }
 
     const clinic = await prisma.clinic.update({
       where: { userId: req.user.id },
@@ -50,6 +59,7 @@ router.put('/me', authenticate, authorize('Clinic'), async (req, res) => {
       data: clinic
     });
   } catch (error) {
+    console.error('Error updating clinic profile:', error);
     errorResponse(res, 'Failed to update clinic profile');
   }
 });
