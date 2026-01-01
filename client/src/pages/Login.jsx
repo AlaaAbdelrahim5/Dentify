@@ -130,6 +130,9 @@ const Login = () => {
           rememberMe
         );
 
+        // Dispatch login event for App component to update auth state
+        window.dispatchEvent(new Event('login'));
+
         // Navigate to appropriate dashboard based on user role
         const dashboardRoute = authUtils.getDashboardRoute();
         navigate(dashboardRoute, { replace: true });
@@ -206,6 +209,9 @@ const Login = () => {
         }, 
         rememberMe
       );
+
+      // Dispatch login event for App component to update auth state
+      window.dispatchEvent(new Event('login'));
 
       // Navigate to appropriate dashboard
       const dashboardRoute = authUtils.getDashboardRoute();

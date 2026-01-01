@@ -18,9 +18,17 @@ const AIChatbot = ({ isOpen, onClose }) => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const { isDarkMode } = useTheme();
+
+  // Handle open/close animation
+  useEffect(() => {
+    if (isOpen) {
+      setIsAnimating(true);
+    }
+  }, [isOpen]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -116,14 +124,25 @@ const AIChatbot = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleClose = () => {
+    setIsAnimating(false);
+    setTimeout(() => {
+      onClose();
+    }, 200); // Wait for animation to complete
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed bottom-4 right-4 w-96 h-[600px] rounded-lg shadow-2xl flex flex-col z-50 transition-colors duration-300 ${
-      isDarkMode 
-        ? 'bg-gray-800 border border-gray-700' 
-        : 'bg-white border border-gray-200'
-    }`}>
+    <div 
+      className={`fixed bottom-4 right-4 w-96 h-[600px] rounded-lg shadow-2xl flex flex-col z-50 transition-all duration-300 ${
+        isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
+      } ${
+        isDarkMode 
+          ? 'bg-gray-800 border border-gray-700' 
+          : 'bg-white border border-gray-200'
+      }`}
+    >
       {/* Header */}
       <div className={`p-4 rounded-t-lg flex items-center justify-between transition-colors duration-300 ${
         isDarkMode 
@@ -148,7 +167,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
             🗑️
           </button>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-blue-600 rounded-full transition-colors text-xl"
           >
             ✕

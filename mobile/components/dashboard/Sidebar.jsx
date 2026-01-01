@@ -120,6 +120,10 @@ const Sidebar = ({ visible, onClose, userData, role, activeTab, onTabChange }) =
     if (onTabChange) {
       onTabChange(tabId);
     }
+    // Close sidebar after navigation
+    if (onClose) {
+      onClose();
+    }
   };
 
   const isActive = (tabId) => {

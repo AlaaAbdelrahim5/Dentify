@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -29,6 +29,14 @@ export default function DentistDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
+  const handleOpenChatbot = useCallback(() => {
+    setIsChatbotOpen(true);
+  }, []);
+
+  const handleCloseChatbot = useCallback(() => {
+    setIsChatbotOpen(false);
+  }, []);
 
   useEffect(() => {
     initializeDashboard();
@@ -130,7 +138,7 @@ export default function DentistDashboard() {
         title={getPageTitle()}
         userData={userData}
         onMenuPress={() => setSidebarVisible(true)}
-        onOpenChatbot={() => setIsChatbotOpen(true)}
+        onOpenChatbot={handleOpenChatbot}
       />
 
       <View className="flex-1">
@@ -163,7 +171,7 @@ export default function DentistDashboard() {
 
       <AIChatbot 
         isOpen={isChatbotOpen}
-        onClose={() => setIsChatbotOpen(false)}
+        onClose={handleCloseChatbot}
       />
     </SafeAreaView>
   );

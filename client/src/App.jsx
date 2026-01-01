@@ -25,6 +25,11 @@ const AuthRouter = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const location = useLocation()
 
+  // Handle chatbot opening with callback to ensure state update
+  const handleOpenChatbot = () => {
+    setIsChatOpen(true)
+  }
+
   // Function to check auth state
   const checkAuthState = async () => {
     try {
@@ -55,7 +60,15 @@ const AuthRouter = () => {
     initializeApp()
   }, [])
 
-  // Listen for logout events (storage changes)
+  // Re-check auth state when navigating to dashboard routes after login
+  useEffect(() => {
+    const isDashboardRoute = location.pathname.includes('/dashboard')
+    if (isDashboardRoute && !isInitializing) {
+      checkAuthState()
+    }
+  }, [location.pathname])
+
+  // Listen for login and logout events
   useEffect(() => {
     const handleStorageChange = (e) => {
       // Check if logout flag was set
@@ -68,17 +81,24 @@ const AuthRouter = () => {
     // Listen for storage changes (works across tabs and after logout)
     window.addEventListener('storage', handleStorageChange)
 
-    // Also create a custom event listener for same-tab logout
+    // Custom event listener for same-tab logout
     const handleLogout = () => {
       setIsAuthenticated(false)
       setUser(null)
     }
 
+    // Custom event listener for successful login
+    const handleLogin = async () => {
+      await checkAuthState()
+    }
+
     window.addEventListener('logout', handleLogout)
+    window.addEventListener('login', handleLogin)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('logout', handleLogout)
+      window.removeEventListener('login', handleLogin)
     }
   }, [])
 
@@ -108,19 +128,19 @@ const AuthRouter = () => {
         : 'bg-gradient-to-br from-teal-50 to-blue-50'
     }`}>
       <Routes>
-        <Route path="/" element={<Home onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/" element={<Home onOpenChatbot={handleOpenChatbot} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/patient/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/admin/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/clinic/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/dentist/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/secretary/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/radiology/dashboard" element={<Dashboard onOpenChatbot={() => setIsChatOpen(true)} />} />
-        <Route path="/notifications" element={<NotificationsPage onOpenChatbot={() => setIsChatOpen(true)} />} />
+        <Route path="/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/patient/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/admin/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/clinic/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/dentist/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/secretary/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/radiology/dashboard" element={<Dashboard onOpenChatbot={handleOpenChatbot} />} />
+        <Route path="/notifications" element={<NotificationsPage onOpenChatbot={handleOpenChatbot} />} />
         {/* <Route path="/admin/setup" element={<AdminSetup />} /> */}
         <Route path="*" element={<NotFound />} />
       </Routes>

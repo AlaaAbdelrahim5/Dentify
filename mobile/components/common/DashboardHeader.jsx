@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,6 +43,12 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
       onSearch();
     }
   };
+
+  const handleChatbotPress = useCallback(() => {
+    if (onOpenChatbot) {
+      onOpenChatbot();
+    }
+  }, [onOpenChatbot]);
 
   const isPatient = userData?.role?.toUpperCase() === 'PATIENT';
 
@@ -117,7 +123,7 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
             {/* AI Chatbot button */}
             {onOpenChatbot && (
               <TouchableOpacity
-                onPress={onOpenChatbot}
+                onPress={handleChatbotPress}
                 className={`w-11 h-11 rounded-xl items-center justify-center`}
                 style={{
                   backgroundColor: isDarkMode ? '#1F2937' : '#F0FDFA',
@@ -130,6 +136,7 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle, showNotifications = tr
                   elevation: 3
                 }}
                 activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="sparkles-outline" size={24} color={isDarkMode ? '#10B981' : '#14B8A6'} />
               </TouchableOpacity>

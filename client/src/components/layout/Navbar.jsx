@@ -172,7 +172,11 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                   {/* AI Chatbot Button */}
                   {onOpenChatbot && (
                     <button
-                      onClick={onOpenChatbot}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onOpenChatbot();
+                      }}
                       className={`relative p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group ${
                         isDarkMode 
                           ? 'hover:bg-linear-to-br from-purple-500/20 to-pink-500/20 hover:shadow-lg hover:shadow-purple-500/20' 
