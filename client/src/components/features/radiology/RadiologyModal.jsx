@@ -5,15 +5,13 @@ import {
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
-  FaGlobe,
-  FaClock,
   FaSave,
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
 import { Button, Input, LoadingSpinner, BaseModal, PhoneInput, LocationPicker } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
+import { CITY_OPTIONS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validateRequired } from "../../../utils/validation";
 
 const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
@@ -29,86 +27,17 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
     registrationNumber: "",
     city: "",
     location: "",
-    website: "",
-    description: "",
-    supportedTypes: [],
     coordinates: "",
-    workingHours: DEFAULT_WORKING_HOURS,
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
 
-  const availableServices = [
-    "Panoramic X-Ray",
-    "CBCT (Cone Beam CT)",
-    "Intraoral X-Ray",
-    "Cephalometric X-Ray",
-    "TMJ X-Ray",
-    "3D Imaging",
-    "Digital X-Ray",
-    "Bitewing X-Ray",
-    "Periapical X-Ray"
-  ];
-
-
-
-  const dayNames = {
-    sunday: "Sunday",
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
-  };
-
   // Reset form when modal opens/closes or center changes
   useEffect(() => {
     if (isOpen) {
       if (center) {
-        // Editing existing center - convert working hours array to object format
-        const workingHoursObj = {};
-        const dayMap = {
-          'Sunday': 'sunday',
-          'Monday': 'monday',
-          'Tuesday': 'tuesday',
-          'Wednesday': 'wednesday',
-          'Thursday': 'thursday',
-          'Friday': 'friday',
-          'Saturday': 'saturday'
-        };
-        
-        // Initialize all days as closed
-        Object.values(dayMap).forEach(day => {
-          workingHoursObj[day] = { isOpen: false, start: "09:00", end: "17:00" };
-        });
-        
-        // Handle workingHours - it could be array, object, or null
-        const workingHours = center.workingHours;
-        
-        if (workingHours && Array.isArray(workingHours)) {
-          // Fill in actual working hours from array format
-          workingHours.forEach(({ day, startTime, endTime }) => {
-            const dayKey = dayMap[day];
-            if (dayKey) {
-              workingHoursObj[dayKey] = {
-                isOpen: true,
-                start: startTime,
-                end: endTime
-              };
-            }
-          });
-        } else if (workingHours && typeof workingHours === 'object' && !Array.isArray(workingHours)) {
-          // If it's already in object format, use it directly
-          Object.keys(workingHours).forEach(day => {
-            if (workingHours[day]) {
-              workingHoursObj[day] = workingHours[day];
-            }
-          });
-        }
-
         // Parse phone number into country code and number
         const fullPhone = center.user?.phone || center.phone || '';
         let parsedCountryCode = '+970';
@@ -135,11 +64,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           registrationNumber: center.registrationNumber || "",
           city: center.city || "",
           location: center.location || "",
-          website: center.website || "",
-          description: center.description || "",
-          supportedTypes: center.supportedTypes || [],
           coordinates: center.coordinates || "",
-          workingHours: workingHoursObj,
         });
       } else {
         // Adding new center - reset to defaults
@@ -154,19 +79,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
           registrationNumber: "",
           city: "",
           location: "",
-          website: "",
-          description: "",
-          supportedTypes: [],
           coordinates: "",
-          workingHours: {
-            sunday: { isOpen: true, start: "09:00", end: "17:00" },
-            monday: { isOpen: true, start: "09:00", end: "17:00" },
-            tuesday: { isOpen: true, start: "09:00", end: "17:00" },
-            wednesday: { isOpen: true, start: "09:00", end: "17:00" },
-            thursday: { isOpen: true, start: "09:00", end: "17:00" },
-            friday: { isOpen: false, start: "09:00", end: "17:00" },
-            saturday: { isOpen: true, start: "09:00", end: "17:00" },
-          },
         });
       }
       setErrors({});
@@ -226,28 +139,6 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         phone: '',
       }));
     }
-  };
-
-  const handleWorkingHoursChange = (day, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      workingHours: {
-        ...prev.workingHours,
-        [day]: {
-          ...prev.workingHours[day],
-          [field]: value,
-        },
-      },
-    }));
-  };
-
-  const handleServiceToggle = (serviceValue) => {
-    setFormData((prev) => ({
-      ...prev,
-      supportedTypes: prev.supportedTypes.includes(serviceValue)
-        ? prev.supportedTypes.filter((s) => s !== serviceValue)
-        : [...prev.supportedTypes, serviceValue],
-    }));
   };
 
   const getCurrentLocation = () => {
@@ -331,11 +222,6 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
       newErrors.password = "Password must be at least 6 characters";
     }
 
-    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
-      newErrors.website =
-        "Please enter a valid website URL (include http:// or https://)";
-    }
-
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = "Registration number is required";
     }
@@ -379,29 +265,6 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
 
       const method = center ? "PUT" : "POST";
 
-      // Convert working hours object back to array format for the API
-      const workingHoursArray = [];
-      const dayMap = {
-        'sunday': 'Sunday',
-        'monday': 'Monday',
-        'tuesday': 'Tuesday',
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday'
-      };
-
-      Object.keys(formData.workingHours).forEach(day => {
-        const hours = formData.workingHours[day];
-        if (hours.isOpen) {
-          workingHoursArray.push({
-            day: dayMap[day],
-            startTime: hours.start,
-            endTime: hours.end
-          });
-        }
-      });
-
       // Prepare data in the format expected by the API
       const requestData = {
         // User data
@@ -413,10 +276,6 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         registrationNumber: formData.registrationNumber,
         city: formData.city,
         location: formData.location,
-        website: formData.website,
-        description: formData.description,
-        supportedTypes: formData.supportedTypes,
-        workingHours: workingHoursArray,
         ...(formData.coordinates && formData.coordinates.trim() && { coordinates: formData.coordinates.trim() })
       };
 
@@ -487,32 +346,27 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
               )}
 
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Center Name *
-                  </label>
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? "text-white" : "text-gray-800"
+                }`}>
+                  <FaXRay className="text-teal-600" />
+                  Center Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    label="Center Name *"
                     type="text"
                     value={formData.centerName}
                     onChange={(e) => handleInputChange("centerName", e.target.value)}
                     placeholder="Enter center name"
                     error={errors.centerName}
+                    icon={FaXRay}
                   />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Registration Number
-                  </label>
+
                   <Input
+                    label="Registration Number *"
                     type="text"
                     value={formData.registrationNumber}
                     onChange={(e) =>
@@ -525,18 +379,15 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
               </div>
 
               {/* Address Information */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
-                  <h3
-                    className={`text-lg font-semibold ${
-                      isDarkMode ? "text-white" : "text-gray-800"
-                    }`}
-                  >
-                    Address Information
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? "text-white" : "text-gray-800"
+                }`}>
+                  <FaMapMarkerAlt className="text-teal-600" />
+                  Address Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label
                       className={`block text-sm font-medium mb-2 ${
@@ -576,24 +427,17 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Location *
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      placeholder="Enter location details"
-                      error={errors.location}
-                    />
-                  </div>
+                  <Input
+                    label="Location *"
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    placeholder="Enter location details"
+                    error={errors.location}
+                    icon={FaMapMarkerAlt}
+                  />
                 </div>
 
                 {/* Location Map Picker */}
@@ -610,18 +454,27 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
               </div>
 
               {/* Contact Information */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <FaPhone className="w-5 h-5 text-teal-600" />
-                  <h3
-                    className={`text-lg font-semibold ${
-                      isDarkMode ? "text-white" : "text-gray-800"
-                    }`}
-                  >
-                    Contact Information
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 gap-6">
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? "text-white" : "text-gray-800"
+                }`}>
+                  <FaPhone className="text-teal-600" />
+                  Contact Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Email *"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      handleInputChange("email", e.target.value)
+                    }
+                    placeholder="center@example.com"
+                    error={errors.email}
+                    icon={FaEnvelope}
+                  />
+
                   <PhoneInput
                     label="Phone Number *"
                     countryCode={formData.countryCode}
@@ -633,244 +486,31 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                     icon={FaPhone}
                   />
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Email
-                    </label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      placeholder="center@example.com"
-                      error={errors.email}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Password {!center && "*"}
-                    </label>
-                    <Input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      placeholder={
-                        center
-                          ? "Password cannot be edited"
-                          : "Enter password"
-                      }
-                      error={errors.password}
-                      disabled={center ? true : false}
-                    />
-                    {center && (
-                      <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Password cannot be changed from this form
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mt-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Website
-                    </label>
-                    <Input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) =>
-                        handleInputChange("website", e.target.value)
-                      }
-                      placeholder="https://example.com"
-                      error={errors.website}
-                    />
-                  </div>
-                </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  placeholder="Brief description of the radiology center..."
-                  rows={3}
-                  maxLength={500}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
-                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
-                  }`}
-                />
-                <p
-                  className={`mt-1 text-sm ${
-                    isDarkMode ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {formData.description.length}/500 characters
-                </p>
-              </div>
-
-              {/* Services Offered */}
-              <div>
-                <h3
-                  className={`text-lg font-semibold mb-4 ${
-                    isDarkMode ? "text-white" : "text-gray-800"
-                  }`}
-                >
-                  Services Offered
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {availableServices.map((service) => (
-                    <label
-                      key={service}
-                      className={`flex items-center space-x-2 cursor-pointer p-2 rounded transition-colors ${
-                        isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.supportedTypes.includes(service)}
-                        onChange={() => handleServiceToggle(service)}
-                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                      />
-                      <span
-                        className={`text-sm ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        {service}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-
-
-              {/* Working Hours */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <FaClock className="w-5 h-5 text-teal-600" />
-                  <h3
-                    className={`text-lg font-semibold ${
+              {/* Account Security */}
+              {!center && (
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                       isDarkMode ? "text-white" : "text-gray-800"
-                    }`}
-                  >
-                    Working Hours
+                    }`}>
+                    <FaLock className="text-teal-600" />
+                    Account Security
                   </h3>
+                  
+                  <Input
+                    label="Password *"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                    placeholder="Enter password"
+                    error={errors.password}
+                    icon={FaLock}
+                  />
                 </div>
-                <div className="space-y-3">
-                  {Object.keys(dayNames).map((day) => (
-                    <div
-                      key={day}
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-50"
-                      }`}
-                    >
-                      <div className="w-24">
-                        <span
-                          className={`font-medium ${
-                            isDarkMode ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          {dayNames[day]}
-                        </span>
-                      </div>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.workingHours[day].isOpen}
-                          onChange={(e) =>
-                            handleWorkingHoursChange(
-                              day,
-                              "isOpen",
-                              e.target.checked
-                            )
-                          }
-                          className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 mr-2"
-                        />
-                        <span
-                          className={`text-sm ${
-                            isDarkMode ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          Open
-                        </span>
-                      </label>
-                      {formData.workingHours[day].isOpen && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="time"
-                            value={formData.workingHours[day].start}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(
-                                day,
-                                "start",
-                                e.target.value
-                              )
-                            }
-                            className={`px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                              isDarkMode
-                                ? "border-gray-600 bg-gray-800 text-white"
-                                : "border-gray-300 bg-white text-gray-900"
-                            }`}
-                          />
-                          <span
-                            className={`${
-                              isDarkMode ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            to
-                          </span>
-                          <input
-                            type="time"
-                            value={formData.workingHours[day].end}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(
-                                day,
-                                "end",
-                                e.target.value
-                              )
-                            }
-                            className={`px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                              isDarkMode
-                                ? "border-gray-600 bg-gray-800 text-white"
-                                : "border-gray-300 bg-white text-gray-900"
-                            }`}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
 
               {/* Action Buttons */}
               <div

@@ -14,7 +14,7 @@ function transformSecretary(secretary) {
       id: secretary.user.id,
       email: secretary.user.email,
       phone: secretary.user.phone,
-      status: secretary.user.status === 'ACTIVE' ? 'active' : 'inactive',
+      status: secretary.user.status,
       profileImage: secretary.user.profileImage
     },
     createdAt: secretary.user.createdAt,

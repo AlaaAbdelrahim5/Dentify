@@ -7,6 +7,10 @@ const { createUserWithProfile, updateUserWithProfile } = require('../services/us
 const { hashPassword } = require('../helpers/hash');
 const { transformSecretary } = require('../utils/responseTransformers');
 const { standardUserSelect } = require('../utils/queryHelpers');
+const { createStatsHandler } = require('../factories/routeHandlers');
+
+// Get secretaries statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('secretary', 'Secretary'));
 
 // Get current secretary's info (for Secretary role)
 router.get('/me', authenticate, authorize('Secretary'), async (req, res) => {
@@ -175,7 +179,7 @@ router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
       password: userId.password,
       phone: userId.phone,
       role: 'Secretary',
-      status: 'ACTIVE'
+      status: 'PENDING'
     };
 
     const profileData = {
@@ -454,6 +458,106 @@ router.patch('/:id/toggle-status', authenticate, authorize('Clinic'), async (req
     );
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to toggle secretary status', 500);
+  }
+});
+
+// Approve secretary (Admin only)
+router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if secretary exists
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId: parseInt(id) },
+      include: { user: true }
+    });
+
+    if (!secretary) {
+      return notFoundResponse(res, 'Secretary');
+    }
+
+    // Update user status to ACTIVE
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: 'ACTIVE' }
+    });
+
+    return successResponse(res, null, 'Secretary approved successfully');
+  } catch (error) {
+    return errorResponse(res, 'Failed to approve secretary');
+  }
+});
+
+// Toggle secretary status (Admin and Clinic can toggle between ACTIVE and DEACTIVATED)
+router.patch('/:id/toggle-status', authenticate, authorize('Admin', 'Clinic'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if secretary exists
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId: parseInt(id) },
+      include: { user: true }
+    });
+
+    if (!secretary) {
+      return notFoundResponse(res, 'Secretary');
+    }
+
+    // If Clinic is making the request, verify they own this secretary
+    if (req.user.role === 'Clinic' && secretary.clinicId !== req.user.id) {
+      return errorResponse(res, 'You can only toggle status for your own secretaries', 403);
+    }
+
+    // Can only toggle if status is ACTIVE or DEACTIVATED (not PENDING or DELETED)
+    if (secretary.user.status === 'PENDING') {
+      return errorResponse(res, 'Cannot toggle status for pending secretaries. Please approve first.', 400);
+    }
+
+    if (secretary.user.status === 'DELETED') {
+      return errorResponse(res, 'Cannot toggle status for deleted secretaries', 400);
+    }
+
+    // Toggle between ACTIVE and DEACTIVATED
+    const newStatus = secretary.user.status === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    return successResponse(res, { status: newStatus }, `Secretary ${newStatus.toLowerCase()} successfully`);
+  } catch (error) {
+    return errorResponse(res, 'Failed to toggle secretary status');
+  }
+});
+
+// Reject secretary (Admin only)
+router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    // Check if secretary exists
+    const secretary = await prisma.secretary.findUnique({
+      where: { userId: parseInt(id) },
+      include: { user: true }
+    });
+
+    if (!secretary) {
+      return notFoundResponse(res, 'Secretary');
+    }
+
+    // Update user status to REJECTED
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: 'REJECTED' }
+    });
+
+    // TODO: Send rejection email with reason
+    
+    return successResponse(res, { reason }, 'Secretary rejected successfully');
+  } catch (error) {
+    return errorResponse(res, 'Failed to reject secretary');
   }
 });
 

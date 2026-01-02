@@ -15,7 +15,8 @@ import {
   FaEye,
   FaTimes,
   FaCheck,
-  FaFilter
+  FaFilter,
+  FaClock
 } from 'react-icons/fa'
 import { 
   Card, 
@@ -59,8 +60,8 @@ const SecretariesManagement = () => {
   const [error, setError] = useState(null)
   const [stats, setStats] = useState({
     total: 0,
-    active: 0,
-    inactive: 0
+    pending: 0,
+    active: 0
   })
 
   // Fetch secretaries from API
@@ -83,12 +84,14 @@ const SecretariesManagement = () => {
         
         // Calculate stats from all data
         const total = secretariesData.length
+        const pending = secretariesData.filter(s => 
+          s.userId?.status?.toUpperCase() === 'PENDING'
+        ).length
         const active = secretariesData.filter(s => 
           s.userId?.status?.toLowerCase() === 'active'
         ).length
-        const inactive = total - active
         
-        setStats({ total, active, inactive })
+        setStats({ total, pending, active })
       } else {
         setError(response?.message || 'Failed to fetch secretaries')
       }
@@ -269,9 +272,7 @@ const SecretariesManagement = () => {
           userId: {
             email: secretaryData.userId.email,
             phone: secretaryData.userId.phone,
-            password: secretaryData.userId.password,
-            role: 'Secretary',
-            status: 'active'
+            password: secretaryData.userId.password
           }
         }
         
@@ -281,7 +282,9 @@ const SecretariesManagement = () => {
           // Add the new secretary to the list
           setSecretaries(prev => [response.data, ...prev])
           setShowAddModal(false)
-          // No need to refresh - client-side filtering will update automatically
+          alert('Secretary request sent successfully. Status: PENDING - Awaiting admin approval.')
+          // Refresh to update stats
+          fetchSecretaries()
         } else {
           setError(response.message || 'Failed to create secretary')
         }
@@ -302,16 +305,16 @@ const SecretariesManagement = () => {
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
+      label: 'Pending Approval',
+      value: stats.pending,
+      icon: FaClock,
+      gradient: 'from-yellow-600 to-orange-600'
+    },
+    {
       label: 'Active Secretaries',
       value: stats.active,
       icon: FaCheckCircle,
       gradient: 'from-green-600 to-green-700'
-    },
-    {
-      label: 'Inactive Secretaries',
-      value: stats.inactive,
-      icon: FaTimesCircle,
-      gradient: 'from-red-600 to-red-700'
     }
   ]
 
@@ -359,7 +362,11 @@ const SecretariesManagement = () => {
   ]
 
   const renderRow = (secretary) => {
-    const isActive = secretary.userId?.status?.toLowerCase() === 'active'
+    const status = secretary.userId?.status?.toUpperCase()
+    const isPending = status === 'PENDING'
+    const isActive = status === 'ACTIVE'
+    const isRejected = status === 'REJECTED'
+    const isDeactivated = status === 'DEACTIVATED'
     
     return (
       <tr key={secretary._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
@@ -411,9 +418,13 @@ const SecretariesManagement = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <StatusBadge 
-            isActive={isActive}
-            activeIcon={FaCheckCircle}
-            inactiveIcon={FaTimesCircle}
+            status={
+              isPending ? 'pending' :
+              isActive ? 'active' :
+              isRejected ? 'rejected' :
+              isDeactivated ? 'inactive' : 
+              'inactive'
+            }
           />
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -426,20 +437,26 @@ const SecretariesManagement = () => {
                   setShowDetailsModal(true)
                 },
                 title: 'View Details',
-                variant: 'default'
+                variant: 'default',
+                key: 'view'
               },
-              {
-                icon: FaEdit,
-                onClick: () => handleEditSecretary(secretary),
-                title: 'Edit',
-                variant: 'default'
-              },
-              {
-                icon: isActive ? FaTimesCircle : FaCheckCircle,
-                onClick: () => handleToggleSecretaryStatus(secretary),
-                title: isActive ? 'Deactivate' : 'Activate',
-                variant: isActive ? 'warning' : 'success'
-              }
+              // Only show edit and toggle for ACTIVE and DEACTIVATED secretaries (not PENDING or REJECTED)
+              ...(isActive || isDeactivated ? [
+                {
+                  icon: FaEdit,
+                  onClick: () => handleEditSecretary(secretary),
+                  title: 'Edit',
+                  variant: 'default',
+                  key: 'edit'
+                },
+                {
+                  icon: isActive ? FaTimesCircle : FaCheckCircle,
+                  onClick: () => handleToggleSecretaryStatus(secretary),
+                  title: isActive ? 'Deactivate' : 'Activate',
+                  variant: isActive ? 'warning' : 'success',
+                  key: 'toggle'
+                }
+              ] : [])
             ]}
           />
         </td>
@@ -478,7 +495,7 @@ const SecretariesManagement = () => {
         title="Secretaries Management"
         description="Manage your clinic secretaries and their information"
         action={{
-          label: 'Add New Secretary',
+          label: 'Request New Secretary',
           onClick: handleAddSecretary,
           icon: FaPlus,
           gradient: 'from-teal-600 to-cyan-600'

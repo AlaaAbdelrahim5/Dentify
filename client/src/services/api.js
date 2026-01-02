@@ -224,6 +224,9 @@ export const dentistsAPI = {
 
 // Secretaries API functions
 export const secretariesAPI = {
+  // Get secretaries statistics
+  getStats: () => ApiService.get('/secretaries/stats'),
+  
   // Get all secretaries for the clinic
   getAll: (clinicId = null) => {
     const params = clinicId ? `?clinicId=${clinicId}` : '';
@@ -244,6 +247,12 @@ export const secretariesAPI = {
   
   // Delete secretary
   delete: (id) => ApiService.delete(`/secretaries/${id}`),
+  
+  // Approve secretary (Admin only)
+  approve: (id) => ApiService.post(`/secretaries/${id}/approve`),
+  
+  // Reject secretary (Admin only)
+  reject: (id, reason) => ApiService.post(`/secretaries/${id}/reject`, { reason }),
   
   // Toggle secretary status (activate/deactivate)
   toggleStatus: (id) => ApiService.patch(`/secretaries/${id}/toggle-status`),

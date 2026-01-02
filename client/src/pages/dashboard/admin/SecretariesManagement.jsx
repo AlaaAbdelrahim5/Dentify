@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { 
   FaUserTie, 
   FaMapMarkerAlt,
@@ -8,233 +8,154 @@ import {
   FaTimesCircle,
   FaEye,
   FaBan,
-  FaVenus,
-  FaMars
+  FaCheck,
+  FaTimes,
+  FaClock
 } from 'react-icons/fa'
 import { 
   Card,
   PageHeader,
-  StatsOverview,
   FilterBar,
   DataTable,
+  Pagination,
   StatusBadge,
   ActionButtons,
   ConfirmationModal,
   SecretaryDetailsModal,
-  LoadingSpinner
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
 import { CITY_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
 import { formatDate as formatDateHelper, calculateAge, getImageUrl } from '../../../utils/helpers'
-import { useDebounce } from '../../../hooks'
+import { useManagementPage } from '../../../hooks'
 
 const SecretariesManagement = () => {
   const { isDarkMode } = useTheme()
   
-  // State management
-  const [secretaries, setSecretaries] = useState([])
-  const [filteredSecretaries, setFilteredSecretaries] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [filtering, setFiltering] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+  // Additional filters not handled by base hook
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterGender, setFilterGender] = useState('')
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [selectedSecretary, setSelectedSecretary] = useState(null)
-  const [confirmAction, setConfirmAction] = useState(null)
-  const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const [error, setError] = useState(null)
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0
+
+  // Use unified management hook
+  const {
+    data: secretaries,
+    loading,
+    filtering,
+    error,
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    currentPage,
+    totalPages,
+    goToPage,
+    stats,
+    showDetailsModal,
+    selectedItem: selectedSecretary,
+    handleViewDetails,
+    closeAllModals,
+    showConfirmModal,
+    confirmAction,
+    isProcessing,
+    executeOperation,
+    cancelOperation,
+    confirmApprove,
+    confirmReject,
+    toast,
+    refresh
+  } = useManagementPage({
+    fetchFn: async (params) => {
+      const extraParams = {
+        ...params,
+        includeAll: 'true',
+        ...(filterCity && { city: filterCity }),
+        ...(filterStatus && { status: filterStatus }),
+        ...(filterGender && { gender: filterGender })
+      }
+      const queryString = new URLSearchParams(extraParams).toString()
+      const response = await secretariesAPI.getAll(queryString)
+      return {
+        success: response.success,
+        data: response.data || [],
+        totalPages: response.pagination?.pages || 1
+      }
+    },
+    fetchStatsFn: async () => await secretariesAPI.getStats(),
+    api: {
+      approve: (secretary) => secretariesAPI.approve(secretary.userId),
+      reject: (secretary) => secretariesAPI.reject(secretary.userId, 'Rejected by admin'),
+      toggleStatus: (secretary) => secretariesAPI.toggleStatus(secretary.userId)
+    },
+    initialStats: { total: '-', pending: '-', active: '-' },
+    initialFilters: {}
   })
 
-  // Fetch secretaries from API
-  const fetchSecretaries = async (isFiltering = false) => {
-    try {
-      if (isFiltering) {
-        setFiltering(true)
-      } else {
-        setLoading(true)
-      }
-      setError(null)
-      
-      const response = await secretariesAPI.getAll()
-      
-      if (response && response.success) {
-        const secretariesData = response.data || []
-        
-        // Store ALL secretaries
-        setSecretaries(secretariesData)
-        
-        // Calculate stats from all data
-        const total = secretariesData.length
-        const active = secretariesData.filter(s => 
-          s.userId?.status?.toLowerCase() === 'active'
-        ).length
-        const inactive = total - active
-        
-        setStats({ total, active, inactive })
-      } else {
-        setError(response?.message || 'Failed to fetch secretaries')
-      }
-    } catch (error) {
-      console.error('Error fetching secretaries:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to load secretaries'
-      setError(errorMessage)
-    } finally {
-      if (isFiltering) {
-        setFiltering(false)
-      } else {
-        setLoading(false)
-      }
-    }
-  }
-
-  useEffect(() => {
-    fetchSecretaries()
-    setIsFirstLoad(false)
-  }, [])
-
-  // Client-side filtering
-  useEffect(() => {
-    if (!isFirstLoad) {
-      setFiltering(true)
-    }
-    
-    let filtered = secretaries
-
-    // Search filter
-    if (debouncedSearchTerm) {
-      filtered = filtered.filter(secretary => {
-        const fullName = `${secretary.firstName} ${secretary.lastName}`.toLowerCase()
-        const email = secretary.userId?.email?.toLowerCase() || ''
-        const city = secretary.address?.city?.toLowerCase() || secretary.city?.toLowerCase() || ''
-        const clinicName = secretary.clinic?.clinicName?.toLowerCase() || ''
-        const searchLower = debouncedSearchTerm.toLowerCase()
-        
-        return fullName.includes(searchLower) ||
-               email.includes(searchLower) ||
-               city.includes(searchLower) ||
-               clinicName.includes(searchLower)
-      })
-    }
-
-    // Gender filter
-    if (filterGender) {
-      filtered = filtered.filter(secretary => 
-        secretary.gender?.toLowerCase() === filterGender.toLowerCase()
-      )
-    }
-
-    // Status filter
-    if (filterStatus) {
-      const isActive = filterStatus === 'ACTIVE'
-      filtered = filtered.filter(secretary => {
-        const status = secretary.userId?.status?.toUpperCase() === 'ACTIVE'
-        return status === isActive
-      })
-    }
-
-    // City filter
-    if (filterCity) {
-      filtered = filtered.filter(secretary => {
-        const city = (secretary.address?.city || secretary.city || '').toLowerCase()
-        return city === filterCity.toLowerCase()
-      })
-    }
-
-    setFilteredSecretaries(filtered)
-    if (!isFirstLoad) {
-      setFiltering(false)
-    }
-  }, [secretaries, debouncedSearchTerm, filterGender, filterStatus, filterCity, isFirstLoad])
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value)
-  }
-
-  const handleToggleSecretaryStatus = async (secretary) => {
-    const status = secretary.userId?.status
-    const action = status === 'ACTIVE' || status === 'active' ? 'deactivate' : 'activate'
-    
-    setSelectedSecretary(secretary)
-    setConfirmAction(action)
-    setShowConfirmModal(true)
-  }
-
-  const executeToggleStatus = async () => {
-    const secretary = selectedSecretary
-    const action = confirmAction
-
-    try {
-      const response = await secretariesAPI.toggleStatus(secretary._id)
-
-      if (response.success) {
-        setShowConfirmModal(false)
-        // Refresh to get updated data
-        fetchSecretaries(true)
-      } else {
-        setError(`Failed to ${action} secretary: ` + (response.error || response.message || 'Unknown error'))
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing secretary:`, error)
-      setError(`Network error. Please try again. Details: ${error.message}`)
-    }
+  // Custom action handler for toggle status
+  const handleToggleStatus = (secretary) => {
+    const action = secretary.userId?.status === 'ACTIVE' ? 'deactivate' : 'activate'
+    executeOperation(
+      async () => await secretariesAPI.toggleStatus(secretary.userId),
+      { action, item: secretary }
+    )
   }
 
   // Stats configuration
   const statsConfig = useMemo(() => [
     {
       label: 'Total Secretaries',
-      value: stats.total,
+      value: loading ? '-' : stats.total,
       icon: FaUserTie,
       gradient: 'from-teal-600 to-cyan-600'
     },
     {
-      label: 'Active Secretaries',
-      value: stats.active,
-      icon: FaCheckCircle,
-      gradient: 'from-green-600 to-green-700'
+      label: 'Pending Approval',
+      value: loading ? '-' : stats.pending,
+      icon: FaClock,
+      gradient: 'from-yellow-600 to-orange-600'
     },
     {
-      label: 'Inactive Secretaries',
-      value: stats.inactive,
-      icon: FaTimesCircle,
-      gradient: 'from-red-600 to-red-700'
+      label: 'Active Secretaries',
+      value: loading ? '-' : stats.active,
+      icon: FaCheckCircle,
+      gradient: 'from-green-600 to-green-700'
     }
-  ], [stats])
+  ], [stats, loading])
 
   // Filter configuration
   const filterProps = useMemo(() => ({
     searchTerm,
-    onSearchChange: handleSearch,
+    onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
     filters: [
       {
-        placeholder: 'All Cities',
+        label: 'City',
         value: filterCity,
-        onChange: (e) => setFilterCity(e.target.value),
+        onChange: (e) => {
+          setFilterCity(e.target.value)
+          refresh()
+        },
         options: CITY_OPTIONS
       },
       {
-        placeholder: 'All Genders',
+        label: 'Gender',
         value: filterGender,
-        onChange: (e) => setFilterGender(e.target.value),
+        onChange: (e) => {
+          setFilterGender(e.target.value)
+          refresh()
+        },
         options: [
           { value: 'male', label: 'Male' },
           { value: 'female', label: 'Female' }
         ]
       },
       {
-        placeholder: 'All Status',
+        label: 'Status',
         value: filterStatus,
-        onChange: (e) => setFilterStatus(e.target.value),
+        onChange: (e) => {
+          setFilterStatus(e.target.value)
+          refresh()
+        },
         options: STATUS_OPTIONS
       }
     ],
@@ -243,10 +164,11 @@ const SecretariesManagement = () => {
       setFilterCity('')
       setFilterGender('')
       setFilterStatus('')
+      refresh()
     },
     filtering,
     searchPlaceholder: 'Search secretaries by name, email, or clinic...'
-  }), [searchTerm, debouncedSearchTerm, filterCity, filterGender, filterStatus, filtering])
+  }), [searchTerm, debouncedSearchTerm, filterCity, filterGender, filterStatus, filtering, setSearchTerm, refresh])
 
   // Columns configuration
   const columns = [
@@ -258,9 +180,13 @@ const SecretariesManagement = () => {
     { key: 'actions', label: 'Actions' }
   ]
 
-  // Render table row
+  // Render table row - use useMemo to prevent recreation on every render
   const renderRow = useMemo(() => (secretary) => {
-    const isActive = secretary.userId?.status?.toUpperCase() === 'ACTIVE'
+    const status = secretary.userId?.status?.toUpperCase()
+    const isPending = status === 'PENDING'
+    const isActive = status === 'ACTIVE'
+    const isRejected = status === 'REJECTED'
+    const isDeactivated = status === 'DEACTIVATED'
     
     return (
       <tr key={secretary._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
@@ -324,9 +250,13 @@ const SecretariesManagement = () => {
         {/* Status */}
         <td className="px-6 py-4 whitespace-nowrap">
           <StatusBadge 
-            isActive={isActive}
-            activeIcon={FaCheckCircle}
-            inactiveIcon={FaTimesCircle}
+            status={
+              isPending ? 'pending' :
+              isActive ? 'active' :
+              isRejected ? 'rejected' :
+              isDeactivated ? 'inactive' : 
+              'inactive'
+            } 
           />
         </td>
 
@@ -336,50 +266,83 @@ const SecretariesManagement = () => {
             actions={[
               {
                 icon: FaEye,
-                onClick: () => {
-                  setSelectedSecretary(secretary)
-                  setShowDetailsModal(true)
-                },
+                onClick: () => handleViewDetails(secretary),
                 title: 'View Details',
                 variant: 'default',
                 key: 'view'
               },
-              {
-                icon: isActive ? FaBan : FaCheckCircle,
-                onClick: () => handleToggleSecretaryStatus(secretary),
-                title: isActive ? 'Deactivate' : 'Activate',
-                variant: isActive ? 'warning' : 'success',
-                key: 'toggle'
-              }
+              // Show approve/reject for PENDING secretaries
+              ...(isPending ? [
+                {
+                  icon: FaCheck,
+                  onClick: () => confirmApprove(secretary),
+                  title: 'Approve',
+                  variant: 'success',
+                  key: 'approve'
+                },
+                {
+                  icon: FaTimes,
+                  onClick: () => confirmReject(secretary),
+                  title: 'Reject',
+                  variant: 'danger',
+                  key: 'reject'
+                }
+              ] : []),
+              // Show approve for REJECTED secretaries
+              ...(isRejected ? [
+                {
+                  icon: FaCheck,
+                  onClick: () => confirmApprove(secretary),
+                  title: 'Approve',
+                  variant: 'success',
+                  key: 'approve'
+                }
+              ] : []),
+              // Show activate/deactivate for ACTIVE/DEACTIVATED secretaries
+              ...(isActive ? [
+                {
+                  icon: FaBan,
+                  onClick: () => handleToggleStatus(secretary),
+                  title: 'Deactivate',
+                  variant: 'warning',
+                  key: 'deactivate'
+                }
+              ] : []),
+              ...(isDeactivated ? [
+                {
+                  icon: FaCheckCircle,
+                  onClick: () => handleToggleStatus(secretary),
+                  title: 'Activate',
+                  variant: 'success',
+                  key: 'activate'
+                }
+              ] : [])
             ]}
           />
         </td>
       </tr>
     )
-  }, [isDarkMode])
+  }, [isDarkMode, handleViewDetails, confirmApprove, confirmReject, handleToggleStatus])
 
   const tableProps = {
     columns,
-    data: filteredSecretaries,
+    data: secretaries,
     renderRow,
-    loading: filtering,
-    emptyMessage: searchTerm || filterGender || filterStatus || filterCity ? 'Try adjusting your search criteria' : 'No secretaries yet',
+    loading: loading || filtering,
+    emptyMessage: searchTerm ? 'Try adjusting your search criteria' : 'No secretaries yet',
     emptyIcon: FaUserTie,
-    hasFilters: !!(searchTerm || filterGender || filterStatus || filterCity)
+    hasFilters: !!searchTerm || !!filterCity || !!filterStatus || !!filterGender
   }
 
   const confirmProps = {
     isOpen: showConfirmModal,
-    onClose: () => {
-      setShowConfirmModal(false)
-      setSelectedSecretary(null)
-      setConfirmAction(null)
-    },
-    onConfirm: executeToggleStatus,
+    onClose: cancelOperation,
+    onConfirm: executeOperation,
     item: selectedSecretary,
     action: confirmAction,
     itemName: selectedSecretary ? `${selectedSecretary.firstName} ${selectedSecretary.lastName}` : '',
-    itemType: 'secretary'
+    itemType: 'secretary',
+    isProcessing
   }
 
   return (
@@ -387,7 +350,7 @@ const SecretariesManagement = () => {
       {/* Page Header */}
       <PageHeader
         title="Secretaries Management"
-        description="Manage all clinic secretaries across the platform"
+        description="Review and manage secretary registrations"
       />
 
       {/* Filters */}
@@ -396,26 +359,33 @@ const SecretariesManagement = () => {
       </Card>
 
       {/* Data Table */}
-      {loading ? (
-        <Card className="p-6">
-          <LoadingSpinner />
-        </Card>
-      ) : (
-        <DataTable {...tableProps} />
-      )}
+      <DataTable {...tableProps} />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+      />
 
       {/* Secretary Details Modal */}
       <SecretaryDetailsModal
         isOpen={showDetailsModal}
         secretary={selectedSecretary}
-        onClose={() => {
-          setShowDetailsModal(false)
-          setSelectedSecretary(null)
-        }}
+        onClose={closeAllModals}
       />
 
       {/* Confirmation Modal */}
       <ConfirmationModal {...confirmProps} />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => {}}
+        />
+      )}
     </div>
   )
 }

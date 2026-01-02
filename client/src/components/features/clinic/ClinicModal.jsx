@@ -5,15 +5,13 @@ import {
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
-  FaGlobe,
-  FaClock,
   FaSave,
   FaLock,
   FaLocationArrow,
 } from "react-icons/fa";
 import { Button, Input, Select, LoadingSpinner, BaseModal, PhoneInput, LocationPicker } from "../../common";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { CITY_OPTIONS, DEFAULT_WORKING_HOURS } from "../../../utils/constants";
+import { CITY_OPTIONS } from "../../../utils/constants";
 import { validateEmail, validatePhone, validatePassword } from "../../../utils/validation";
 
 const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
@@ -30,70 +28,16 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
     city: "",
     location: "",
     coordinates: "",
-    website: "",
-    description: "",
-    workingHours: DEFAULT_WORKING_HOURS,
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
 
-  const dayNames = {
-    sunday: "Sunday",
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
-  };
-
   // Reset form when modal opens/closes or clinic changes
   useEffect(() => {
     if (isOpen) {
       if (clinic) {
-        // Editing existing clinic - convert working hours array to object format
-        const workingHoursObj = {};
-        const dayMap = {
-          'Sunday': 'sunday',
-          'Monday': 'monday',
-          'Tuesday': 'tuesday',
-          'Wednesday': 'wednesday',
-          'Thursday': 'thursday',
-          'Friday': 'friday',
-          'Saturday': 'saturday'
-        };
-        
-        // Initialize all days as closed
-        Object.values(dayMap).forEach(day => {
-          workingHoursObj[day] = { isOpen: false, start: "09:00", end: "17:00" };
-        });
-        
-        // Handle workingHours - it could be array, object, or null
-        const workingHours = clinic.workingHours;
-        
-        if (workingHours && Array.isArray(workingHours)) {
-          // Fill in actual working hours from array format
-          workingHours.forEach(({ day, startTime, endTime }) => {
-            const dayKey = dayMap[day];
-            if (dayKey) {
-              workingHoursObj[dayKey] = {
-                isOpen: true,
-                start: startTime,
-                end: endTime
-              };
-            }
-          });
-        } else if (workingHours && typeof workingHours === 'object' && !Array.isArray(workingHours)) {
-          // If it's already in object format, use it directly
-          Object.keys(workingHours).forEach(day => {
-            if (workingHours[day]) {
-              workingHoursObj[day] = workingHours[day];
-            }
-          });
-        }
-
         // Parse phone number into country code and number
         const fullPhone = clinic.phone?.full || clinic.user?.phone || clinic.phone || "";
         let parsedCountryCode = "+970";
@@ -123,9 +67,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           city: clinic.address?.city || clinic.city || "",
           location: clinic.address?.fullAddress || clinic.location || "",
           coordinates: clinic.coordinates || "",
-          website: clinic.website || "",
-          description: clinic.description || "",
-          workingHours: workingHoursObj,
         });
       } else {
         // Adding new clinic - reset to defaults
@@ -141,17 +82,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
           city: "",
           location: "",
           coordinates: "",
-          website: "",
-          description: "",
-          workingHours: {
-            sunday: { isOpen: true, start: "09:00", end: "17:00" },
-            monday: { isOpen: true, start: "09:00", end: "17:00" },
-            tuesday: { isOpen: true, start: "09:00", end: "17:00" },
-            wednesday: { isOpen: true, start: "09:00", end: "17:00" },
-            thursday: { isOpen: true, start: "09:00", end: "17:00" },
-            friday: { isOpen: false, start: "09:00", end: "17:00" },
-            saturday: { isOpen: true, start: "09:00", end: "17:00" },
-          },
         });
       }
       setErrors({});
@@ -213,19 +143,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         phone: "",
       }));
     }
-  };
-
-  const handleWorkingHoursChange = (day, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      workingHours: {
-        ...prev.workingHours,
-        [day]: {
-          ...prev.workingHours[day],
-          [field]: value,
-        },
-      },
-    }));
   };
 
   const getCurrentLocation = () => {
@@ -336,11 +253,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
       newErrors.password = "Password must be at least 6 characters";
     }
 
-    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
-      newErrors.website =
-        "Please enter a valid website URL (include http:// or https://)";
-    }
-
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = "Registration number is required";
     }
@@ -369,29 +281,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
 
       const method = clinic ? "PUT" : "POST";
 
-      // Convert working hours object back to array format for the API
-      const workingHoursArray = [];
-      const dayMap = {
-        'sunday': 'Sunday',
-        'monday': 'Monday',
-        'tuesday': 'Tuesday',
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday'
-      };
-
-      Object.keys(formData.workingHours).forEach(day => {
-        const hours = formData.workingHours[day];
-        if (hours.isOpen) {
-          workingHoursArray.push({
-            day: dayMap[day],
-            startTime: hours.start,
-            endTime: hours.end
-          });
-        }
-      });
-
       // Prepare data in the format expected by the API
       const requestData = {
         // User data
@@ -404,9 +293,6 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         city: formData.city,
         location: formData.location,
         ...(formData.coordinates && formData.coordinates.trim() && { coordinates: formData.coordinates.trim() }),
-        website: formData.website,
-        description: formData.description,
-        workingHours: workingHoursArray
       };
 
       const response = await fetch(url, {
@@ -470,33 +356,27 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               )}
 
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Clinic Name *
-                  </label>
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? "text-white" : "text-gray-800"
+                }`}>
+                  <FaHospital className="text-teal-600" />
+                  Clinic Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    label="Clinic Name *"
                     type="text"
                     value={formData.clinicName}
                     onChange={(e) => handleInputChange("clinicName", e.target.value)}
                     placeholder="Enter clinic name"
                     error={errors.clinicName}
+                    icon={FaHospital}
                   />
-                </div>
 
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Registration Number
-                  </label>
                   <Input
+                    label="Registration Number *"
                     type="text"
                     value={formData.registrationNumber}
                     onChange={(e) =>
@@ -509,13 +389,11 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               </div>
 
               {/* Address */}
-              <div className="space-y-4">
-                <h3
-                  className={`text-lg font-medium flex items-center gap-2 ${
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? "text-white" : "text-gray-800"
-                  }`}
-                >
-                  <FaMapMarkerAlt className="w-5 h-5 text-teal-600" />
+                  }`}>
+                  <FaMapMarkerAlt className="text-teal-600" />
                   Address Information
                 </h3>
 
@@ -530,24 +408,17 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                     icon={FaMapMarkerAlt}
                   />
 
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Location *
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      placeholder="Enter location details"
-                      error={errors.location}
-                    />
-                  </div>
+                  <Input
+                    label="Location *"
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    placeholder="Enter location details"
+                    error={errors.location}
+                    icon={FaMapMarkerAlt}
+                  />
                 </div>
 
                 {/* Location Map Picker */}
@@ -564,17 +435,27 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
               </div>
 
               {/* Contact Information */}
-              <div className="space-y-4">
-                <h3
-                  className={`text-lg font-medium flex items-center gap-2 ${
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? "text-white" : "text-gray-800"
-                  }`}
-                >
-                  <FaPhone className="w-5 h-5 text-teal-600" />
+                  }`}>
+                  <FaPhone className="text-teal-600" />
                   Contact Information
                 </h3>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Email *"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      handleInputChange("email", e.target.value)
+                    }
+                    placeholder="clinic@example.com"
+                    error={errors.email}
+                    icon={FaEnvelope}
+                  />
+
                   <PhoneInput
                     label="Phone Number *"
                     countryCode={formData.countryCode}
@@ -586,211 +467,31 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                     icon={FaPhone}
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Email
-                    </label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      placeholder="clinic@example.com"
-                      error={errors.email}
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Password {!clinic && "*"}
-                    </label>
-                    <Input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      placeholder={
-                        clinic
-                          ? "Password cannot be edited"
-                          : "Enter password"
-                      }
-                      error={errors.password}
-                      disabled={clinic ? true : false}
-                    />
-                    {clinic && (
-                      <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Password cannot be changed from this form
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
-                  <div>
-                    <label
-                      className={`block text-sm font-medium mb-2 ${
-                        isDarkMode ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Website
-                    </label>
-                    <Input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) =>
-                        handleInputChange("website", e.target.value)
-                      }
-                      placeholder="https://www.clinic.com"
-                      error={errors.website}
-                    />
-                  </div>
-                </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  placeholder="Brief description of the clinic"
-                  rows={3}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
-                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
-                  }`}
-                  maxLength={500}
-                />
-                <p
-                  className={`mt-1 text-xs ${
-                    isDarkMode ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {formData.description.length}/500 characters
-                </p>
-              </div>
-
-              {/* Working Hours */}
-              <div>
-                <h3
-                  className={`text-lg font-medium flex items-center gap-2 mb-4 ${
-                    isDarkMode ? "text-white" : "text-gray-800"
-                  }`}
-                >
-                  <FaClock className="w-5 h-5 text-teal-600" />
-                  Working Hours
-                </h3>
-
-                <div className="space-y-3">
-                  {Object.keys(dayNames).map((day) => (
-                    <div
-                      key={day}
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
-                        isDarkMode ? "bg-gray-700" : "bg-gray-50"
-                      }`}
-                    >
-                      <div className="w-24">
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.workingHours[day].isOpen}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(
-                                day,
-                                "isOpen",
-                                e.target.checked
-                              )
-                            }
-                            className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                          />
-                          <span
-                            className={`text-sm font-medium ${
-                              isDarkMode ? "text-gray-300" : "text-gray-700"
-                            }`}
-                          >
-                            {dayNames[day]}
-                          </span>
-                        </label>
-                      </div>
-
-                      {formData.workingHours[day].isOpen && (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="time"
-                            value={formData.workingHours[day].start}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(
-                                day,
-                                "start",
-                                e.target.value
-                              )
-                            }
-                            className={`px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                              isDarkMode
-                                ? "border-gray-600 bg-gray-800 text-white"
-                                : "border-gray-300 bg-white text-gray-900"
-                            }`}
-                          />
-                          <span
-                            className={`${
-                              isDarkMode ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            to
-                          </span>
-                          <input
-                            type="time"
-                            value={formData.workingHours[day].end}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(
-                                day,
-                                "end",
-                                e.target.value
-                              )
-                            }
-                            className={`px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                              isDarkMode
-                                ? "border-gray-600 bg-gray-800 text-white"
-                                : "border-gray-300 bg-white text-gray-900"
-                            }`}
-                          />
-                        </div>
-                      )}
-
-                      {!formData.workingHours[day].isOpen && (
-                        <span
-                          className={`text-sm italic ${
-                            isDarkMode ? "text-gray-400" : "text-gray-500"
-                          }`}
-                        >
-                          Closed
-                        </span>
-                      )}
-                    </div>
-                  ))}
+              {/* Account Security */}
+              {!clinic && (
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}>
+                    <FaLock className="text-teal-600" />
+                    Account Security
+                  </h3>
+                  
+                  <Input
+                    label="Password *"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                    placeholder="Enter password"
+                    error={errors.password}
+                    icon={FaLock}
+                  />
                 </div>
-              </div>
+              )}
 
               {/* Action Buttons */}
               <div

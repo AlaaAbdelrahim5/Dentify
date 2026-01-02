@@ -16,7 +16,6 @@ import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/help
 import { validateEmail } from '../../../utils/validation'
 import { useManagementPage } from '../../../hooks'
 import { 
-  Card,
   Button, 
   Input, 
   PageHeader,
