@@ -5,8 +5,6 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
-  FaCheck,
-  FaExclamationTriangle,
 } from "react-icons/fa";
 import { Logo, Button, Input, Card, LoadingSpinner, Alert } from "../components";
 import { authAPI } from "../services/api";

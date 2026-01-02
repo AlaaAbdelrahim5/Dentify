@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FaUserShield, FaSave } from 'react-icons/fa'
-import { Button, Input, BaseModal } from '../../common'
+import { Button, Input, BaseModal, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { validateEmail } from '../../../utils/validation'
 import { adminAPI } from '../../../services/api'
@@ -10,7 +10,8 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    phone: '',
+    countryCode: '+970',
+    phoneNumber: '',
     firstName: '',
     lastName: '',
     gender: ''
@@ -22,7 +23,8 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
     setFormData({
       email: '',
       password: '',
-      phone: '',
+      countryCode: '+970',
+      phoneNumber: '',
       firstName: '',
       lastName: '',
       gender: ''
@@ -76,8 +78,10 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
       newErrors.password = 'Password must be at least 6 characters'
     }
 
-    if (!formData.phone.trim()) {
+    if (!formData.phoneNumber) {
       newErrors.phone = 'Phone number is required'
+    } else if (formData.phoneNumber.length < 7) {
+      newErrors.phone = 'Phone number must be at least 7 digits'
     }
 
     if (!formData.gender) {
@@ -98,7 +102,10 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
     setLoading(true)
 
     try {
-      const response = await adminAPI.createAdmin(formData)
+      const response = await adminAPI.createAdmin({
+        ...formData,
+        phone: `${formData.countryCode}${formData.phoneNumber}`
+      })
 
       if (response.success) {
         onSave()
@@ -202,13 +209,14 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
             error={errors.email}
           />
 
-          <Input
+          <PhoneInput
             label="Phone Number *"
-            type="text"
-            value={formData.phone}
-            onChange={(e) => handleInputChange("phone", e.target.value)}
-            placeholder="+970123456789"
+            countryCode={formData.countryCode}
+            phoneNumber={formData.phoneNumber}
+            onCountryCodeChange={(value) => handleInputChange("countryCode", value)}
+            onPhoneNumberChange={(value) => handleInputChange("phoneNumber", value)}
             error={errors.phone}
+            isDarkMode={isDarkMode}
           />
         </div>
 

@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { FaTooth, FaHome, FaArrowLeft } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
+import { FaTooth, FaArrowLeft } from 'react-icons/fa'
 import { Button, Card } from '../components'
 import { useTheme } from '../contexts/ThemeContext'
 

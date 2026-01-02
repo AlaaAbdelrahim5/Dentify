@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react'
 import { 
   FaUser,
-  FaCamera,
   FaSave,
-  FaEdit,
   FaLock,
-  FaBell,
+  FaPhone,
   FaEnvelope,
-  FaUserShield
+  FaEdit
 } from 'react-icons/fa'
-import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth, PhoneInput } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { getImageUrl } from '../../../utils/helpers'
+import { COUNTRY_CODES } from '../../../utils/constants'
 
 const AdminSettings = () => {
   const { isDarkMode } = useTheme()
@@ -28,8 +27,12 @@ const AdminSettings = () => {
     firstName: '',
     lastName: '',
     email: '',
+    countryCode: '+970',
+    phoneNumber: '',
     gender: '',
-    profileImage: ''
+    profileImage: '',
+    createdAt: '',
+    status: ''
   })
 
   const [security, setSecurity] = useState({
@@ -63,12 +66,45 @@ const AdminSettings = () => {
       const data = await response.json()
       const admin = data.data || data
 
+      // Parse phone number
+      const fullPhone = admin.user?.phone || admin.phone || ''
+      let parsedCountryCode = '+970'
+      let parsedPhoneNumber = ''
+      
+      if (fullPhone) {
+        // Try to match a known country code
+        let matched = false
+        for (const country of COUNTRY_CODES) {
+          if (fullPhone.startsWith(country.value)) {
+            parsedCountryCode = country.value
+            parsedPhoneNumber = fullPhone.substring(country.value.length)
+            matched = true
+            break
+          }
+        }
+        
+        // If no known country code matched, try generic regex
+        if (!matched) {
+          const countryCodeMatch = fullPhone.match(/^(\+\d{1,3})/)
+          if (countryCodeMatch) {
+            parsedCountryCode = countryCodeMatch[1]
+            parsedPhoneNumber = fullPhone.substring(countryCodeMatch[1].length)
+          } else {
+            parsedPhoneNumber = fullPhone.replace(/\D/g, '')
+          }
+        }
+      }
+
       setProfile({
         firstName: admin.firstName || '',
         lastName: admin.lastName || '',
         email: admin.user?.email || admin.email || '',
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
         gender: admin.gender || '',
-        profileImage: admin.user?.profileImage || admin.profileImage || ''
+        profileImage: admin.user?.profileImage || admin.profileImage || '',
+        createdAt: admin.user?.createdAt || admin.createdAt || '',
+        status: admin.user?.status || admin.status || ''
       })
     } catch (err) {
       console.error('Error fetching admin profile:', err)
@@ -101,6 +137,7 @@ const AdminSettings = () => {
       const updateData = {
         firstName: profile.firstName,
         lastName: profile.lastName,
+        phone: `${profile.countryCode}${profile.phoneNumber}`,
         gender: profile.gender
       }
 
@@ -194,6 +231,16 @@ const AdminSettings = () => {
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
             System Administrator
           </p>
+          {profile.createdAt && (
+            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Member since: {new Date(profile.createdAt).toLocaleDateString()}
+            </p>
+          )}
+          {profile.status && (
+            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Status: <span className={`font-medium ${profile.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}`}>{profile.status}</span>
+            </p>
+          )}
         </div>
       </Card>
 
@@ -263,6 +310,17 @@ const AdminSettings = () => {
               Email cannot be changed
             </p>
           </div>
+
+          <PhoneInput
+            label="Phone"
+            countryCode={profile.countryCode}
+            phoneNumber={profile.phoneNumber}
+            onCountryChange={(e) => handleProfileUpdate('countryCode', e.target.value)}
+            onPhoneChange={(e) => handleProfileUpdate('phoneNumber', e.target.value.replace(/\D/g, ''))}
+            placeholder="Enter phone number"
+            icon={FaPhone}
+            className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
+          />
 
           <div>
             <Select

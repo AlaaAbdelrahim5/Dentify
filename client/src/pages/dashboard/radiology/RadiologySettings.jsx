@@ -4,7 +4,6 @@ import {
   FaSave, 
   FaGlobe, 
   FaMapMarkerAlt, 
-  FaCamera,
   FaEdit,
   FaLock,
   FaEnvelope,
@@ -13,14 +12,16 @@ import {
   FaIdCard,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker, PhoneInput } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
+import { PALESTINIAN_CITIES, COUNTRY_CODES } from '../../../utils/constants'
 
 const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -30,10 +31,15 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
     website: '',
     city: '',
     location: '',
+    description: '',
     supportedTypes: [],
     email: '',
+    countryCode: '+970',
+    phoneNumber: '',
     profileImage: '',
-    coordinates: ''
+    coordinates: '',
+    createdAt: '',
+    status: ''
   })
   const [newType, setNewType] = useState('')
   const [workingHours, setWorkingHours] = useState({
@@ -53,16 +59,52 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
 
   useEffect(() => {
     if (userData) {
+      setLoading(true)
       const user = authUtils.getCurrentUser()
+      
+      // Parse phone number
+      const fullPhone = userData.user?.phone || userData.phone || ''
+      let parsedCountryCode = '+970'
+      let parsedPhoneNumber = ''
+      
+      if (fullPhone) {
+        // Try to match a known country code
+        let matched = false
+        for (const country of COUNTRY_CODES) {
+          if (fullPhone.startsWith(country.value)) {
+            parsedCountryCode = country.value
+            parsedPhoneNumber = fullPhone.substring(country.value.length)
+            matched = true
+            break
+          }
+        }
+        
+        // If no known country code matched, try generic regex
+        if (!matched) {
+          const countryCodeMatch = fullPhone.match(/^(\+\d{1,3})/)
+          if (countryCodeMatch) {
+            parsedCountryCode = countryCodeMatch[1]
+            parsedPhoneNumber = fullPhone.substring(countryCodeMatch[1].length)
+          } else {
+            parsedPhoneNumber = fullPhone.replace(/\D/g, '')
+          }
+        }
+      }
+      
       setFormData({
         centerName: userData.centerName || '',
         registrationNumber: userData.registrationNumber || '',
         website: userData.website || '',
         city: userData.city || '',
         location: userData.location || '',
+        description: userData.description || '',
         supportedTypes: userData.supportedTypes || [],
         email: user?.email || '',
-        coordinates: userData.coordinates || ''
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
+        coordinates: userData.coordinates || '',
+        createdAt: userData.user?.createdAt || userData.createdAt || '',
+        status: userData.user?.status || userData.status || ''
       })
       
       // Load working hours if they exist
@@ -72,6 +114,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           : userData.workingHours
         setWorkingHours(hoursObject)
       }
+      setLoading(false)
     }
   }, [userData])
 
@@ -153,7 +196,10 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          phone: `${formData.countryCode}${formData.phoneNumber}`
+        })
       })
 
       if (response.ok) {
@@ -375,6 +421,18 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
               </p>
             </div>
 
+            {/* Phone */}
+            <PhoneInput
+              label="Phone"
+              countryCode={formData.countryCode}
+              phoneNumber={formData.phoneNumber}
+              onCountryChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+              onPhoneChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
+              placeholder="Enter phone number"
+              icon={FaPhone}
+              className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
+            />
+
             {/* City */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
@@ -382,15 +440,23 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
               }`}>
                 City <span className="text-red-500">*</span>
               </label>
-              <Input
-                type="text"
+              <select
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
                 disabled={!isEditing}
                 required
-                icon={FaMapMarkerAlt}
-              />
+                className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } ${!isEditing ? 'opacity-60' : ''}`}
+              >
+                <option value="">Select city</option>
+                {PALESTINIAN_CITIES.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
             </div>
 
             {/* Location */}
@@ -435,6 +501,28 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 disabled={!isEditing}
                 placeholder="https://example.com"
                 icon={FaGlobe}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder="Brief description of the radiology center..."
+                rows={3}
+                className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } ${!isEditing ? 'opacity-60' : ''}`}
               />
             </div>
           </div>
@@ -764,7 +852,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       </Card>
 
       {/* Tab Content */}
-      {saving ? (
+      {loading ? (
         <div className="flex items-center justify-center py-12">
           <LoadingSpinner size="lg" />
         </div>

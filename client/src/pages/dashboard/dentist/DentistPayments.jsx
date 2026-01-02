@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaMoneyBillWave,
@@ -28,7 +28,6 @@ const DentistPayments = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [selectedTreatment, setSelectedTreatment] = useState(null)
   const [viewPatientId, setViewPatientId] = useState(null)
-  const printRef = useRef()
 
   // Data states
   const [payments, setPayments] = useState([])

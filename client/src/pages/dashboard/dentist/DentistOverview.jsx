@@ -17,9 +17,7 @@ const DentistOverview = ({ userData, onTabChange, appointments = [], onAppointme
       <AppointmentSchedule
         appointments={appointments}
         onAddAppointment={onAddAppointment || (() => onTabChange?.('appointments'))}
-        onAppointmentClick={onAppointmentClick || ((appointment) => {
-          
-        })}
+        onAppointmentClick={onAppointmentClick}
         dentistData={userData}
       />
     </div>

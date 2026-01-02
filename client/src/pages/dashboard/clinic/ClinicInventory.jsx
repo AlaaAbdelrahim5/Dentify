@@ -16,7 +16,6 @@ import {
   FaShoppingCart,
   FaClipboardList,
   FaSave,
-  FaTimes,
   FaCheck
 } from 'react-icons/fa'
 import { 

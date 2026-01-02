@@ -9,17 +9,15 @@ import {
   FaEdit,
   FaUser,
   FaLock,
-  FaBell,
-  FaKey,
-  FaPalette,
   FaGlobe,
   FaIdCard
 } from 'react-icons/fa'
-import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth, LocationPicker } from '../../../components'
+import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth, LocationPicker, LoadingSpinner, PhoneInput } from '../../../components'
 import { AvailableTreatmentsManager } from '../../../components/features'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import api from '../../../services/api'
+import { PALESTINIAN_CITIES, COUNTRY_CODES } from '../../../utils/constants'
 
 const ClinicSettings = () => {
   const { isDarkMode } = useTheme()
@@ -32,13 +30,16 @@ const ClinicSettings = () => {
     name: '',
     registrationNumber: '',
     email: '',
-    phone: '',
+    countryCode: '+970',
+    phoneNumber: '',
     address: '',
     city: '',
     website: '',
     description: '',
     profileImage: '',
-    coordinates: ''
+    coordinates: '',
+    createdAt: '',
+    status: ''
   })
 
   const [workingHours, setWorkingHours] = useState({
@@ -72,18 +73,50 @@ const ClinicSettings = () => {
       
       const clinic = response.data.data || response.data // Handle both formats
       
+      // Parse phone number
+      const fullPhone = clinic.user?.phone || clinic.phone || ''
+      let parsedCountryCode = '+970'
+      let parsedPhoneNumber = ''
+      
+      if (fullPhone) {
+        // Try to match a known country code
+        let matched = false
+        for (const country of COUNTRY_CODES) {
+          if (fullPhone.startsWith(country.value)) {
+            parsedCountryCode = country.value
+            parsedPhoneNumber = fullPhone.substring(country.value.length)
+            matched = true
+            break
+          }
+        }
+        
+        // If no known country code matched, try generic regex
+        if (!matched) {
+          const countryCodeMatch = fullPhone.match(/^(\+\d{1,3})/)
+          if (countryCodeMatch) {
+            parsedCountryCode = countryCodeMatch[1]
+            parsedPhoneNumber = fullPhone.substring(countryCodeMatch[1].length)
+          } else {
+            parsedPhoneNumber = fullPhone.replace(/\D/g, '')
+          }
+        }
+      }
+      
       // Set actual values from database
       setClinicInfo({
         name: clinic.clinicName || '',
         registrationNumber: clinic.registrationNumber || '',
         email: clinic.user?.email || clinic.email || '',
-        phone: clinic.user?.phone || clinic.phone || '',
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
         address: clinic.location || clinic.address || '',
         city: clinic.city || '',
         website: clinic.website || '',
         description: clinic.description || '',
         profileImage: clinic.user?.profileImage || clinic.profileImage || '',
-        coordinates: clinic.coordinates || ''
+        coordinates: clinic.coordinates || '',
+        createdAt: clinic.user?.createdAt || clinic.createdAt || '',
+        status: clinic.user?.status || clinic.status || ''
       })
       
       // Load working hours if they exist
@@ -148,7 +181,7 @@ const ClinicSettings = () => {
         website: clinicInfo.website,
         description: clinicInfo.description,
         coordinates: clinicInfo.coordinates,
-        phone: clinicInfo.phone
+        phone: `${clinicInfo.countryCode}${clinicInfo.phoneNumber}`
       }
       
       await api.put(`/clinics/me`, updateData)
@@ -278,15 +311,16 @@ const ClinicSettings = () => {
             </p>
           </div>
           
-          <div>
-            <Input
-              label="Phone"
-              icon={FaPhone}
-              value={clinicInfo.phone}
-              onChange={(e) => setClinicInfo({ ...clinicInfo, phone: e.target.value })}
-              disabled={!isEditing}
-            />
-          </div>
+          <PhoneInput
+            label="Phone"
+            countryCode={clinicInfo.countryCode}
+            phoneNumber={clinicInfo.phoneNumber}
+            onCountryChange={(e) => setClinicInfo({ ...clinicInfo, countryCode: e.target.value })}
+            onPhoneChange={(e) => setClinicInfo({ ...clinicInfo, phoneNumber: e.target.value.replace(/\D/g, '') })}
+            placeholder="Enter phone number"
+            icon={FaPhone}
+            className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
+          />
           
           <div>
             <Input
@@ -331,12 +365,26 @@ const ClinicSettings = () => {
           </div>
           
           <div>
-            <Input
-              label="City"
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              City
+            </label>
+            <select
               value={clinicInfo.city}
               onChange={(e) => setClinicInfo({ ...clinicInfo, city: e.target.value })}
               disabled={!isEditing}
-            />
+              className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } ${!isEditing ? 'opacity-60' : ''}`}
+            >
+              <option value="">Select city</option>
+              {PALESTINIAN_CITIES.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -531,6 +579,9 @@ const ClinicSettings = () => {
           </Button>
         </div>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorAuth />
     </div>
   )
 
@@ -593,7 +644,13 @@ const ClinicSettings = () => {
       </Card>
 
       {/* Tab Content */}
-      {renderContent()}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : (
+        renderContent()
+      )}
     </div>
   )
 }

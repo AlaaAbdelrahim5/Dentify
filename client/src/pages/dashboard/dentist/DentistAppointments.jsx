@@ -11,8 +11,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaHourglassHalf,
-  FaClock,
-  FaList
+  FaClock
 } from 'react-icons/fa'
 import { 
   Button, 

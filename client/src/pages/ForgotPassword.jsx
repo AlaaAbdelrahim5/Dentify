@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaLock, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaCheck } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { Logo, Button, Input, Card, LoadingSpinner, Alert } from '../components';
 import { validateEmail } from '../utils/validation';

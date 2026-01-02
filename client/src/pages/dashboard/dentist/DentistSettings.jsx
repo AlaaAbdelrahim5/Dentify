@@ -1,27 +1,24 @@
 import { useState, useEffect } from 'react'
 import { 
   FaUser,
-  FaCamera,
   FaSave,
-  FaEdit,
   FaLock,
-  FaBell,
-  FaGlobe,
-  FaStethoscope,
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
+  FaClock,
+  FaEdit,
   FaFacebook,
   FaInstagram,
   FaWhatsapp,
-  FaTiktok,
-  FaClock
+  FaTiktok
 } from 'react-icons/fa'
-import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth } from '../../../components'
+import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth, PhoneInput } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
 import { toISODateString, ensureArray } from '../../../utils/helpers'
+import { PALESTINIAN_CITIES, COUNTRY_CODES, DENTAL_SPECIALIZATIONS } from '../../../utils/constants'
 import DentistSchedule from './DentistSchedule'
 
 const DentistSettings = () => {
@@ -38,15 +35,15 @@ const DentistSettings = () => {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    countryCode: '+970',
+    phoneNumber: '',
     licenseNumber: '',
     specialization: [],
     birthDate: '',
     gender: '',
+    city: '',
+    appointmentDuration: 30,
     profileImage: '',
-    address: {
-      city: ''
-    },
     clinic: {
       name: '',
       address: ''
@@ -57,7 +54,9 @@ const DentistSettings = () => {
       instagram: '',
       whatsapp: '',
       tiktok: ''
-    }
+    },
+    createdAt: '',
+    status: ''
   })
 
   // Fetch dentist profile on mount
@@ -76,21 +75,50 @@ const DentistSettings = () => {
         throw new Error('Dentist profile not found')
       }
 
+      // Parse phone number
+      const fullPhone = dentist.user?.phone || dentist.phone || ''
+      let parsedCountryCode = '+970'
+      let parsedPhoneNumber = ''
+      
+      if (fullPhone) {
+        // Try to match a known country code
+        let matched = false
+        for (const country of COUNTRY_CODES) {
+          if (fullPhone.startsWith(country.value)) {
+            parsedCountryCode = country.value
+            parsedPhoneNumber = fullPhone.substring(country.value.length)
+            matched = true
+            break
+          }
+        }
+        
+        // If no known country code matched, try generic regex
+        if (!matched) {
+          const countryCodeMatch = fullPhone.match(/^(\+\d{1,3})/)
+          if (countryCodeMatch) {
+            parsedCountryCode = countryCodeMatch[1]
+            parsedPhoneNumber = fullPhone.substring(countryCodeMatch[1].length)
+          } else {
+            parsedPhoneNumber = fullPhone.replace(/\D/g, '')
+          }
+        }
+      }
+
       // Map the data to profile state
       // Note: email and phone come from user object
       setProfile({
         firstName: dentist.firstName || '',
         lastName: dentist.lastName || '',
         email: dentist.user?.email || dentist.email || '',
-        phone: dentist.user?.phone || dentist.phone || '',
+        countryCode: parsedCountryCode,
+        phoneNumber: parsedPhoneNumber,
         licenseNumber: dentist.licenseNumber || '',
         specialization: ensureArray(dentist.specialization),
         birthDate: dentist.birthDate ? toISODateString(dentist.birthDate) : '',
         gender: dentist.gender || '',
+        city: dentist.city || '',
+        appointmentDuration: dentist.appointmentDuration || 30,
         profileImage: dentist.user?.profileImage || dentist.profileImage || '',
-        address: {
-          city: dentist.city || ''
-        },
         clinic: {
           name: dentist.clinic?.clinicName || '',
           address: dentist.clinic?.location || ''
@@ -99,14 +127,16 @@ const DentistSettings = () => {
         socialLinks: typeof dentist.socialLinks === 'object' && dentist.socialLinks !== null ? {
           facebook: dentist.socialLinks.facebook || '',
           instagram: dentist.socialLinks.instagram || '',
-          whatsapp: dentist.socialLinks.whatsapp || dentist.user?.phone || dentist.phone || '',
+          whatsapp: dentist.socialLinks.whatsapp || '',
           tiktok: dentist.socialLinks.tiktok || ''
         } : {
           facebook: '',
           instagram: '',
-          whatsapp: dentist.user?.phone || dentist.phone || '',
+          whatsapp: '',
           tiktok: ''
-        }
+        },
+        createdAt: dentist.user?.createdAt || dentist.createdAt || '',
+        status: dentist.user?.status || dentist.status || ''
       })
     } catch (err) {
       console.error('Error fetching dentist profile:', err)
@@ -122,18 +152,31 @@ const DentistSettings = () => {
     confirmPassword: ''
   })
 
-  const specializations = [
-    'General Dentistry',
-    'Orthodontics',
-    'Endodontics',
-    'Periodontics',
-    'Oral Surgery',
-    'Prosthodontics',
-    'Pediatric Dentistry',
-    'Oral Pathology',
-    'Cosmetic Dentistry',
-    'Implantology'
-  ]
+  // Helper function to normalize specialization names for matching
+  const normalizeSpecialization = (spec) => {
+    return spec.trim().toLowerCase()
+      .replace(/ist$/, '') // Remove 'ist' ending (e.g., Orthodontist -> Orthodont)
+      .replace(/ics$/, '') // Remove 'ics' ending (e.g., Orthodontics -> Orthodont)
+      .replace(/ry$/, '') // Remove 'ry' ending (e.g., Dentistry -> Dentist, Surgery -> Surg)
+      .replace(/y$/, '') // Remove trailing 'y' (e.g., Implantology -> Implantolog)
+  }
+
+  // Helper function to check if a specialization is selected
+  const isSpecializationSelected = (spec) => {
+    const normalizedSpec = normalizeSpecialization(spec)
+    return profile.specialization.some(s => 
+      normalizeSpecialization(s) === normalizedSpec
+    )
+  }
+
+  // Use unique specializations from constants, removing duplicates
+  const specializations = [...new Set(DENTAL_SPECIALIZATIONS.map(spec => {
+    // Prefer the '-ics' or '-y' ending versions for display
+    const normalized = normalizeSpecialization(spec)
+    return DENTAL_SPECIALIZATIONS.find(s => 
+      normalizeSpecialization(s) === normalized && (s.endsWith('ics') || s.endsWith('y'))
+    ) || spec
+  }))]
 
   const handleProfileUpdate = (field, value) => {
     setProfile(prev => ({
@@ -170,12 +213,13 @@ const DentistSettings = () => {
       const updateData = {
         firstName: profile.firstName,
         lastName: profile.lastName,
-        phone: profile.phone,
+        phone: `${profile.countryCode}${profile.phoneNumber}`,
         licenseNumber: profile.licenseNumber,
         specialization: profile.specialization,
         birthDate: profile.birthDate,
         gender: profile.gender,
-        city: profile.address.city,
+        city: profile.city,
+        appointmentDuration: profile.appointmentDuration,
         socialLinks: profile.socialLinks
       }
 
@@ -261,6 +305,16 @@ const DentistSettings = () => {
           }`}>
             License: {profile.licenseNumber}
           </p>
+          {profile.createdAt && (
+            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Member since: {new Date(profile.createdAt).toLocaleDateString()}
+            </p>
+          )}
+          {profile.status && (
+            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Status: <span className={`font-medium ${profile.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}`}>{profile.status}</span>
+            </p>
+          )}
         </div>
       </Card>
 
@@ -332,20 +386,16 @@ const DentistSettings = () => {
             </p>
           </div>
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Phone
-            </label>
-            <Input
-              type="tel"
-              value={profile.phone}
-              onChange={(e) => handleProfileUpdate('phone', e.target.value)}
-              disabled={!isEditing}
-              icon={FaPhone}
-            />
-          </div>
+          <PhoneInput
+            label="Phone"
+            countryCode={profile.countryCode}
+            phoneNumber={profile.phoneNumber}
+            onCountryChange={(e) => handleProfileUpdate('countryCode', e.target.value)}
+            onPhoneChange={(e) => handleProfileUpdate('phoneNumber', e.target.value.replace(/\D/g, ''))}
+            placeholder="Enter phone number"
+            icon={FaPhone}
+            className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
+          />
 
           <div>
             <label className={`block text-sm font-medium mb-2 ${
@@ -400,12 +450,38 @@ const DentistSettings = () => {
             }`}>
               City
             </label>
-            <Input
-              type="text"
-              value={profile.address.city}
-              onChange={(e) => handleNestedUpdate('address', 'city', e.target.value)}
+            <select
+              value={profile.city}
+              onChange={(e) => handleProfileUpdate('city', e.target.value)}
               disabled={!isEditing}
-              icon={FaMapMarkerAlt}
+              className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } ${!isEditing ? 'opacity-60' : ''}`}
+            >
+              <option value="">Select city</option>
+              {PALESTINIAN_CITIES.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Appointment Duration (minutes)
+            </label>
+            <Input
+              type="number"
+              value={profile.appointmentDuration}
+              onChange={(e) => handleProfileUpdate('appointmentDuration', parseInt(e.target.value) || 30)}
+              disabled={!isEditing}
+              placeholder="30"
+              min="15"
+              max="120"
+              className={!isEditing ? 'opacity-60' : ''}
             />
           </div>
         </div>
@@ -422,7 +498,7 @@ const DentistSettings = () => {
               <label key={spec} className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={profile.specialization.includes(spec)}
+                  checked={isSpecializationSelected(spec)}
                   onChange={() => handleSpecializationChange(spec)}
                   disabled={!isEditing}
                   className="w-4 h-4 text-teal-600 rounded"

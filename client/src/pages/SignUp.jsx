@@ -8,7 +8,6 @@ import {
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaCheck,
-  FaExclamationTriangle,
   FaVenusMars,
 } from "react-icons/fa";
 import {

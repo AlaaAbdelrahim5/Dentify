@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaLock, FaEye, FaEyeSlash, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaLock, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { Logo, Button, Input, Card, LoadingSpinner, Alert } from '../components';
 import { authAPI } from '../services/api';

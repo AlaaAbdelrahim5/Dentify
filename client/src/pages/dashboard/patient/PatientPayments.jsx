@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../../contexts/ThemeContext'
 import {
   FaMoneyBillWave,
@@ -24,7 +24,6 @@ const PatientPayments = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('all')
   const [selectedDateRange, setSelectedDateRange] = useState('all') // all, today, week, month
   const [selectedTreatment, setSelectedTreatment] = useState('all')
-  const printRef = useRef()
 
   // Data states
   const [payments, setPayments] = useState([])

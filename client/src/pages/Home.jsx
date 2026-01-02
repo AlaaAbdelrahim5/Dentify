@@ -7,7 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { authUtils } from '../utils/auth'
 
 const Home = () => {
-  const { isDarkMode, theme } = useTheme()  
+  const { isDarkMode } = useTheme()  
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
 

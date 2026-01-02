@@ -2,8 +2,8 @@ import {
   FaFileImage,
   FaCheckCircle,
   FaChartBar,
-  FaHospital,
-  FaXRay
+  FaXRay,
+  FaHospital
 } from 'react-icons/fa'
 import { MdPendingActions } from 'react-icons/md'
 import { Card, StatsOverview, WelcomeCard } from '../../../components'

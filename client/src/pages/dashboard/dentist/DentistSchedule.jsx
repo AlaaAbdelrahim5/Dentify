@@ -6,7 +6,6 @@ import {
   FaEdit,
   FaTrash,
   FaSave,
-  FaTimes,
   FaCheck
 } from 'react-icons/fa'
 import { Card, Button, Input, Toast, LoadingSpinner } from '../../../components'
