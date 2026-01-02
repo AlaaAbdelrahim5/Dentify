@@ -15,6 +15,7 @@ import {
   FaBan
 } from 'react-icons/fa'
 import { 
+  Card,
   PageHeader,
   StatsOverview,
   FilterBar,
@@ -341,7 +342,9 @@ const DentistsManagement = () => {
       />
 
       {/* Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Data Table */}
       <DataTable {...tableProps} />

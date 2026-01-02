@@ -492,11 +492,12 @@ const ClinicPayments = () => {
       )}
 
       {/* Filters */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        searchPlaceholder="Search by patient, dentist, or treatment..."
-        filters={[
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          searchPlaceholder="Search by patient, dentist, or treatment..."
+          filters={[
             {
               value: selectedDateRange,
               onChange: (e) => setSelectedDateRange(e.target.value),
@@ -521,9 +522,14 @@ const ClinicPayments = () => {
           ]}
         onClearFilters={handleClearFilters}
       />
+      </Card>
 
       {/* Payments Table */}
-      {filteredPayments.length === 0 ? (
+      {loading ? (
+        <Card>
+          <LoadingState message="Loading payments..." />
+        </Card>
+      ) : filteredPayments.length === 0 ? (
           <EmptyState
             icon={FaMoneyBillWave}
             title={mockPayments.length === 0 ? 'No payments recorded yet' : 'No payments match your filters'}

@@ -14,7 +14,7 @@ import {
   FaArrowLeft,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal, FilterBar } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, LoadingState, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal, FilterBar } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
@@ -226,12 +226,13 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
           />
 
           {/* Search and Filters */}
-          <FilterBar
-            searchTerm={searchTerm}
-            onSearchChange={(e) => setSearchTerm(e.target.value)}
-            debouncedSearchTerm={debouncedSearchTerm}
-            searchPlaceholder="Search treatments, patients, or dentists..."
-            filters={[
+          <Card className="p-4">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              debouncedSearchTerm={debouncedSearchTerm}
+              searchPlaceholder="Search treatments, patients, or dentists..."
+              filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -247,6 +248,7 @@ const ClinicTreatments = ({ userData, onTabChange }) => {
             onClearFilters={handleClearFilters}
             filtering={filtering}
           />
+          </Card>
 
           {/* Treatments Display */}
           {loading ? (

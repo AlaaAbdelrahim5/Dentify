@@ -368,13 +368,14 @@ const DentistRadiology = () => {
 
 
       {/* Filters and View Mode */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div className="flex-1 w-full">
-          <FilterBar
-            searchTerm={searchTerm}
-            onSearchChange={(e) => setSearchTerm(e.target.value)}
-            searchPlaceholder="Search by patient, imaging type, or radiology center..."
-            filters={[
+      <Card className="p-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div className="flex-1 w-full">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              searchPlaceholder="Search by patient, imaging type, or radiology center..."
+              filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -427,13 +428,14 @@ const DentistRadiology = () => {
               onClick={() => setViewMode('grid')}
               title="Grid View"
             >
-          <FaTh className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
+              <FaTh className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
 
-    {/* Requests - Table or Grid View */}
-    {loading ? (
+      {/* Requests - Table or Grid View */}
+      {loading ? (
       <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div className="flex items-center justify-center">
           <LoadingSpinner size="lg" />

@@ -14,6 +14,7 @@ import {
   FaUsers
 } from 'react-icons/fa'
 import { 
+  Card,
   Button, 
   PageHeader,
   StatsOverview,
@@ -302,7 +303,9 @@ const PatientsManagement = () => {
       />
 
       {/* Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Data Table */}
       <DataTable

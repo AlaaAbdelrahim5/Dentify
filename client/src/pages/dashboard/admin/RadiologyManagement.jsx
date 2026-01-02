@@ -376,28 +376,29 @@ const RadiologyManagement = () => {
       />
 
       {/* Search and Filters with View Toggle */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="flex-1 w-full md:w-auto">
-          <FilterBar
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            debouncedSearchTerm={debouncedSearchTerm}
-            filters={filters}
-            onClearFilters={clearFilters}
-            filtering={filtering}
-            searchPlaceholder="Search for center..."
-          />
-        </div>
-        
-        {/* View Mode Toggle */}
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'list' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-            title="List View"
-          >
-            <FaList className="w-4 h-4" />
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex-1 w-full md:w-auto">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={handleSearch}
+              debouncedSearchTerm={debouncedSearchTerm}
+              filters={filters}
+              onClearFilters={clearFilters}
+              filtering={filtering}
+              searchPlaceholder="Search for center..."
+            />
+          </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              title="List View"
+            >
+              <FaList className="w-4 h-4" />
           </Button>
           <Button
             variant={viewMode === 'map' ? 'primary' : 'outline'}
@@ -409,6 +410,7 @@ const RadiologyManagement = () => {
           </Button>
         </div>
       </div>
+      </Card>
 
       {/* List View */}
       {viewMode === 'list' && (

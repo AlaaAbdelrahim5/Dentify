@@ -324,12 +324,13 @@ const ClinicExpenses = () => {
                     Add Invoice
                   </Button>
                 </div>
-                <FilterBar
-                  searchTerm={searchTerm}
-                  onSearchChange={(e) => setSearchTerm(e.target.value)}
-                  debouncedSearchTerm={debouncedSearchTerm}
-                  searchPlaceholder="Search invoices by number, supplier..."
-                  filters={[
+                <Card className="p-4">
+                  <FilterBar
+                    searchTerm={searchTerm}
+                    onSearchChange={(e) => setSearchTerm(e.target.value)}
+                    debouncedSearchTerm={debouncedSearchTerm}
+                    searchPlaceholder="Search invoices by number, supplier..."
+                    filters={[
                     {
                       type: 'select',
                       value: selectedStatus,
@@ -346,6 +347,7 @@ const ClinicExpenses = () => {
                   onClearFilters={handleClearFilters}
                   filtering={filtering}
                 />
+                </Card>
               </div>
             </Card.Header>
           </Card>

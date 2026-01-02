@@ -221,44 +221,18 @@ const ClinicPatients = ({ userData, onTabChange }) => {
         description="View and manage patient records"
       />
 
-      {/* Stats Overview */}
-      <StatsOverview stats={[
-        {
-          label: 'Total Patients',
-          value: loading ? '-' : stats.totalPatients,
-          icon: FaUsers,
-          gradient: 'from-blue-600 to-blue-700'
-        },
-        {
-          label: 'Active Treatments',
-          value: loading ? '-' : stats.activeTreatments,
-          icon: FaTooth,
-          gradient: 'from-green-600 to-green-700'
-        },
-        {
-          label: 'Total Revenue',
-          value: loading ? '-' : `$${stats.totalRevenue.toFixed(2)}`,
-          icon: FaDollarSign,
-          gradient: 'from-teal-600 to-teal-700'
-        },
-        {
-          label: 'Pending Payments',
-          value: loading ? '-' : `$${stats.pendingPayments.toFixed(2)}`,
-          icon: FaExclamationCircle,
-          gradient: 'from-orange-600 to-orange-700'
-        }
-      ]} />
-
       {/* Search Bar */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        debouncedSearchTerm={debouncedSearchTerm}
-        searchPlaceholder="Search patients by name, email, or phone..."
-        filters={[]}
-        onClearFilters={handleClearFilters}
-        filtering={filtering}
-      />
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search patients by name, email, or phone..."
+          filters={[]}
+          onClearFilters={handleClearFilters}
+          filtering={filtering}
+        />
+      </Card>
 
       {/* Patients Display */}
       {loading ? (

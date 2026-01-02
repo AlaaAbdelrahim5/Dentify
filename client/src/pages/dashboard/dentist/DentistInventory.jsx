@@ -254,12 +254,13 @@ const DentistInventory = () => {
       {activeTab === 'items' && (
         <div className="space-y-6">
           {/* Filters */}
-          <FilterBar
-            searchTerm={searchTerm}
-            onSearchChange={(e) => setSearchTerm(e.target.value)}
-            debouncedSearchTerm={debouncedSearchTerm}
-            searchPlaceholder="Search items by name or category..."
-            filters={[
+          <Card className="p-4">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              debouncedSearchTerm={debouncedSearchTerm}
+              searchPlaceholder="Search items by name or category..."
+              filters={[
                 {
                   value: selectedCategory,
                   onChange: (e) => setSelectedCategory(e.target.value),
@@ -284,10 +285,11 @@ const DentistInventory = () => {
             onClearFilters={handleClearFilters}
             filtering={filtering}
           />
+          </Card>
 
           {/* Items Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredInventoryItems.map((item) => (
+            {filteredItems.map((item) => (
               <Card key={item.id} className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
                 <Card.Content className="p-6">
                   <div className="flex items-start justify-between mb-4">

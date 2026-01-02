@@ -16,6 +16,7 @@ import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/help
 import { validateEmail } from '../../../utils/validation'
 import { useManagementPage } from '../../../hooks'
 import { 
+  Card,
   Button, 
   Input, 
   PageHeader,
@@ -233,7 +234,9 @@ const AdminsManagement = () => {
       />
 
       {/* Search and Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Admins Table */}
       <DataTable {...tableProps} />

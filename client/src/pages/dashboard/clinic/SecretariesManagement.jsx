@@ -471,14 +471,6 @@ const SecretariesManagement = () => {
     itemType: 'Secretary'
   }
 
-  if (loading && filteredSecretaries.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -493,12 +485,19 @@ const SecretariesManagement = () => {
         }}
       />
 
-
       {/* Search and Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Secretaries Table */}
-      <DataTable {...tableProps} />
+      {loading ? (
+        <Card className="p-6">
+          <LoadingSpinner />
+        </Card>
+      ) : (
+        <DataTable {...tableProps} />
+      )}
 
       {/* Add Secretary Modal */}
       <SecretaryModal

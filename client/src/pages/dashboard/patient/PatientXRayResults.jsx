@@ -230,14 +230,15 @@ const PatientXRayResults = () => {
       </div>
 
       {/* Filters and View Mode */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div className="flex-1 w-full">
-          <FilterBar
-            searchTerm={searchTerm}
-            onSearchChange={(e) => setSearchTerm(e.target.value)}
-            searchPlaceholder="Search by dentist, radiology center, or imaging type..."
-            filtering={filtering}
-            filters={[
+      <Card className="p-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div className="flex-1 w-full">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              searchPlaceholder="Search by dentist, radiology center, or imaging type..."
+              filtering={filtering}
+              filters={[
                 {
                   value: selectedStatus,
                   onChange: (e) => setSelectedStatus(e.target.value),
@@ -294,6 +295,7 @@ const PatientXRayResults = () => {
           </Button>
         </div>
       </div>
+      </Card>
 
       {/* Requests - Table or Grid View */}
       {isLoading ? (

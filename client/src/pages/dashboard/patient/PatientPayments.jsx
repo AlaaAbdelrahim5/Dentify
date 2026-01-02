@@ -13,7 +13,7 @@ import {
   FaUserMd,
   FaTooth
 } from 'react-icons/fa'
-import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, generatePaymentReceipt, EmptyState } from '../../../components'
+import { Card, Button, Input, DataTable, Select, FilterBar, PageHeader, generatePaymentReceipt, EmptyState, LoadingState } from '../../../components'
 import { paymentsAPI, treatmentsAPI } from '../../../services/api'
 import { useDebounce } from '../../../hooks'
 
@@ -251,13 +251,14 @@ const PatientPayments = () => {
       />
 
       {/* Filters */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        debouncedSearchTerm={debouncedSearchTerm}
-        searchPlaceholder="Search by dentist name or treatment..."
-        filtering={filtering}
-        filters={[
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search by dentist name or treatment..."
+          filtering={filtering}
+          filters={[
             {
               value: selectedDateRange,
               onChange: (e) => setSelectedDateRange(e.target.value),
@@ -294,8 +295,13 @@ const PatientPayments = () => {
           ]}
         onClearFilters={handleClearFilters}
       />
+      </Card>
 
-      {filteredPayments.length === 0 ? (
+      {loading ? (
+        <Card>
+          <LoadingState message="Loading payment history..." />
+        </Card>
+      ) : filteredPayments.length === 0 ? (
         <EmptyState
           icon={FaMoneyBillWave}
             title="No payments found"

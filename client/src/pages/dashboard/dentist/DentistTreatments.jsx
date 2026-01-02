@@ -666,12 +666,13 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
       />
 
       {/* Filters and Search */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        debouncedSearchTerm={debouncedSearchTerm}
-        searchPlaceholder="Search treatments, patients, or tooth numbers..."
-        filters={[
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search treatments, patients, or tooth numbers..."
+          filters={[
             {
               value: selectedStatus,
               onChange: (e) => setSelectedStatus(e.target.value),
@@ -687,6 +688,7 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
         onClearFilters={handleClearFilters}
         filtering={filtering}
       />
+      </Card>
 
       {/* Treatments Grid/List - Show loading state here */}
       {loading ? (

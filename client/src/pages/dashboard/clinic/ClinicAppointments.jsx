@@ -534,13 +534,15 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       </div>
 
       {/* Filters */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        searchPlaceholder="Search patients, dentists or treatments..."
-        filters={filters}
-        onClearFilters={handleClearFilters}
-      />
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          searchPlaceholder="Search patients, dentists or treatments..."
+          filters={filters}
+          onClearFilters={handleClearFilters}
+        />
+      </Card>
 
       {/* Appointments Table */}
       {loading ? (

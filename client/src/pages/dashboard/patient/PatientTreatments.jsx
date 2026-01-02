@@ -176,12 +176,13 @@ const PatientTreatments = () => {
       />
 
       {/* Filters and Controls */}
-      <FilterBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => setSearchTerm(e.target.value)}
-        debouncedSearchTerm={debouncedSearchTerm}
-        searchPlaceholder="Search treatments, dentist, or tooth numbers..."
-        filters={[
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search treatments, dentist, or tooth numbers..."
+          filters={[
             {
               value: selectedStatus,
               onChange: (e) => setSelectedStatus(e.target.value),
@@ -197,8 +198,16 @@ const PatientTreatments = () => {
         onClearFilters={handleClearFilters}
         filtering={filtering}
       />
+      </Card>
 
-      {filteredTreatments.length === 0 ? (
+      {/* Treatment Cards */}
+      {loading ? (
+        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        </Card>
+      ) : filteredTreatments.length === 0 ? (
         <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
           <div className="text-center py-12">
             <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
@@ -224,19 +233,13 @@ const PatientTreatments = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(loading || filtering) && filteredTreatments.length === 0 ? (
-            <div className="col-span-full flex items-center justify-center py-12">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : (
-            filteredTreatments.map(treatment => (
-              <TreatmentPlanCard 
-                key={treatment.id} 
-                treatment={treatment}
-                onClick={() => {}}
-              />
-            ))
-          )}
+          {filteredTreatments.map(treatment => (
+            <TreatmentPlanCard 
+              key={treatment.id} 
+              treatment={treatment}
+              onClick={() => {}}
+            />
+          ))}
         </div>
       )}
     </div>

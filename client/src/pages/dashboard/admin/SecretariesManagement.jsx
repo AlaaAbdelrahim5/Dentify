@@ -12,6 +12,7 @@ import {
   FaMars
 } from 'react-icons/fa'
 import { 
+  Card,
   PageHeader,
   StatsOverview,
   FilterBar,
@@ -381,14 +382,6 @@ const SecretariesManagement = () => {
     itemType: 'secretary'
   }
 
-  if (loading && filteredSecretaries.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -398,10 +391,18 @@ const SecretariesManagement = () => {
       />
 
       {/* Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Data Table */}
-      <DataTable {...tableProps} />
+      {loading ? (
+        <Card className="p-6">
+          <LoadingSpinner />
+        </Card>
+      ) : (
+        <DataTable {...tableProps} />
+      )}
 
       {/* Secretary Details Modal */}
       <SecretaryDetailsModal

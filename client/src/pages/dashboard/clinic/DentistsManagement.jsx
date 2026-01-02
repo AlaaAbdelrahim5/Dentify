@@ -514,13 +514,17 @@ const DentistsManagement = () => {
       )}
 
       {/* Search and Filters */}
-      <FilterBar {...filterProps} />
+      <Card className="p-4">
+        <FilterBar {...filterProps} />
+      </Card>
 
       {/* Dentists Table */}
       {loading && isFirstLoad ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
+        <Card className="p-8">
+          <div className="flex items-center justify-center py-8">
+            <LoadingSpinner size="lg" />
+          </div>
+        </Card>
       ) : (
         <DataTable {...tableProps} />
       )}
