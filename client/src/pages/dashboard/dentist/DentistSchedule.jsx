@@ -102,6 +102,15 @@ const DentistSchedule = () => {
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+  const formatTo12Hour = (time) => {
+    if (!time) return ''
+    const [hours, minutes] = time.split(':')
+    const hour = parseInt(hours)
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = hour % 12 || 12
+    return `${displayHour}:${minutes} ${ampm}`
+  }
+
   const handleDayToggle = (day) => {
     setSchedule(prev => ({
       ...prev,
@@ -251,9 +260,7 @@ const DentistSchedule = () => {
 
       {/* Schedule Overview */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="large" />
-        </div>
+        <LoadingSpinner size="lg" />
       ) : (
         <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -306,6 +313,46 @@ const DentistSchedule = () => {
         </Card>
       </div>
 
+      {/* Appointment Settings */}
+      <Card className={`p-6 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <h2 className={`text-xl font-semibold mb-6 ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          Appointment Settings
+        </h2>
+
+        <div className="max-w-md">
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Default Appointment Duration (minutes)
+            </label>
+            <input
+              type="number"
+              min="15"
+              max="120"
+              step="15"
+              value={defaultDuration || ''}
+              onChange={(e) => setDefaultDuration(e.target.value ? parseInt(e.target.value) : null)}
+              placeholder="Enter duration in minutes"
+              className={`w-full px-3 py-2 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+            <p className={`mt-2 text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Standard duration for each appointment (in 15-minute increments)
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {/* Weekly Schedule */}
       <Card className={`p-6 ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -336,11 +383,27 @@ const DentistSchedule = () => {
                       {day}
                     </span>
                   </label>
-                  {schedule[day].isWorking && (
+                  {schedule[day].isWorking && schedule[day].startTime && schedule[day].endTime && (
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-sm ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        {formatTo12Hour(schedule[day].startTime)} - {formatTo12Hour(schedule[day].endTime)}
+                      </span>
+                      {schedule[day].breaks && schedule[day].breaks.length > 0 && (
+                        <span className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          Breaks: {schedule[day].breaks.map(b => `${formatTo12Hour(b.start)}-${formatTo12Hour(b.end)}`).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {schedule[day].isWorking && (!schedule[day].startTime || !schedule[day].endTime) && (
                     <span className={`text-sm ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
                     }`}>
-                      {formatTime(schedule[day].startTime)} - {formatTime(schedule[day].endTime)}
+                      No times set
                     </span>
                   )}
                 </div>
@@ -490,46 +553,6 @@ const DentistSchedule = () => {
               )}
             </div>
           ))}
-        </div>
-      </Card>
-
-      {/* Appointment Settings */}
-      <Card className={`p-6 ${
-        isDarkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
-        <h2 className={`text-xl font-semibold mb-6 ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>
-          Appointment Settings
-        </h2>
-
-        <div className="max-w-md">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Default Appointment Duration (minutes)
-            </label>
-            <input
-              type="number"
-              min="15"
-              max="120"
-              step="15"
-              value={defaultDuration || ''}
-              onChange={(e) => setDefaultDuration(e.target.value ? parseInt(e.target.value) : null)}
-              placeholder="Enter duration in minutes"
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
-            />
-            <p className={`mt-2 text-xs ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              Standard duration for each appointment (in 15-minute increments)
-            </p>
-          </div>
         </div>
       </Card>
       </>

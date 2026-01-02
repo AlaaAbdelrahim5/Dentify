@@ -295,6 +295,7 @@ const DentistSettings = () => {
             setProfile(prev => ({ ...prev, profileImage: imageUrl }))
           }}
           userName={`${profile.firstName} ${profile.lastName}`}
+          onToast={setToast}
         />
         <div className="mt-4">
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
@@ -338,46 +339,35 @@ const DentistSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              First Name
-            </label>
-            <Input
-              type="text"
-              value={profile.firstName}
-              onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
+          {/* First Name */}
+          <Input
+            label="First Name"
+            type="text"
+            value={profile.firstName}
+            onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Last Name
-            </label>
-            <Input
-              type="text"
-              value={profile.lastName}
-              onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
+          {/* Last Name */}
+          <Input
+            label="Last Name"
+            type="text"
+            value={profile.lastName}
+            onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
+          {/* Email */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Email
-            </label>
             <Input
+              label="Email"
               type="email"
               value={profile.email}
-              onChange={(e) => handleProfileUpdate('email', e.target.value)}
               disabled={true}
               icon={FaEnvelope}
+              className="opacity-60"
             />
             <p className={`text-xs mt-1 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -397,51 +387,44 @@ const DentistSettings = () => {
             className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
           />
 
+          {/* Gender */}
+          <Select
+            label="Gender"
+            value={profile.gender}
+            onChange={(e) => handleProfileUpdate('gender', e.target.value)}
+            disabled={!isEditing}
+            options={[
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' }
+            ]}
+            placeholder="Select Gender"
+            className={!isEditing ? 'opacity-60' : ''}
+          />
+
+          {/* Date of Birth */}
+          <Input
+            label="Date of Birth"
+            type="date"
+            value={profile.birthDate}
+            onChange={(e) => handleProfileUpdate('birthDate', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
+
+          {/* License Number */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              License Number
-            </label>
             <Input
+              label="License Number"
               type="text"
               value={profile.licenseNumber}
-              onChange={(e) => handleProfileUpdate('licenseNumber', e.target.value)}
-              disabled={!isEditing}
+              disabled={true}
+              className="opacity-60"
             />
-          </div>
-
-          <div>
-            <Select
-              label="Gender"
-              value={profile.gender}
-              onChange={(e) => handleProfileUpdate('gender', e.target.value)}
-              disabled={!isEditing}
-              options={[
-                { value: 'Male', label: 'Male' },
-                { value: 'Female', label: 'Female' }
-              ]}
-              placeholder="Select Gender"
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            <p className={`text-xs mt-1 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              Date of Birth
-            </label>
-            <input
-              type="date"
-              value={profile.birthDate}
-              onChange={(e) => handleProfileUpdate('birthDate', e.target.value)}
-              disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            />
+              License number cannot be changed
+            </p>
           </div>
 
           <div>
@@ -466,27 +449,10 @@ const DentistSettings = () => {
               ))}
             </select>
           </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Appointment Duration (minutes)
-            </label>
-            <Input
-              type="number"
-              value={profile.appointmentDuration}
-              onChange={(e) => handleProfileUpdate('appointmentDuration', parseInt(e.target.value) || 30)}
-              disabled={!isEditing}
-              placeholder="30"
-              min="15"
-              max="120"
-              className={!isEditing ? 'opacity-60' : ''}
-            />
-          </div>
         </div>
 
-        <div className="mt-6">
+        {/* Specializations Section */}
+        <div className="mt-8">
           <h3 className={`text-lg font-semibold mb-4 ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
@@ -513,105 +479,87 @@ const DentistSettings = () => {
           </div>
         </div>
 
-        <div className="mt-6">
+        {/* Social Media Links Section */}
+        <div className="mt-8">
           <h3 className={`text-lg font-semibold mb-4 ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
             Social Media Links
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Facebook
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.facebook}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'facebook', e.target.value)}
-                disabled={!isEditing}
-                icon={FaFacebook}
-                placeholder="https://facebook.com/..."
-              />
-            </div>
+            <Input
+              label="Facebook"
+              type="url"
+              value={profile.socialLinks.facebook}
+              onChange={(e) => handleNestedUpdate('socialLinks', 'facebook', e.target.value)}
+              disabled={!isEditing}
+              icon={FaFacebook}
+              placeholder="https://facebook.com/..."
+              className={!isEditing ? 'opacity-60' : ''}
+            />
 
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Instagram
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.instagram}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'instagram', e.target.value)}
-                disabled={!isEditing}
-                icon={FaInstagram}
-                placeholder="https://instagram.com/..."
-              />
-            </div>
+            <Input
+              label="Instagram"
+              type="url"
+              value={profile.socialLinks.instagram}
+              onChange={(e) => handleNestedUpdate('socialLinks', 'instagram', e.target.value)}
+              disabled={!isEditing}
+              icon={FaInstagram}
+              placeholder="https://instagram.com/..."
+              className={!isEditing ? 'opacity-60' : ''}
+            />
 
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                WhatsApp
-              </label>
-              <Input
-                type="tel"
-                value={profile.socialLinks.whatsapp}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'whatsapp', e.target.value)}
-                disabled={!isEditing}
-                icon={FaWhatsapp}
-                placeholder="+1234567890"
-              />
-            </div>
+            <Input
+              label="WhatsApp"
+              type="tel"
+              value={profile.socialLinks.whatsapp}
+              onChange={(e) => handleNestedUpdate('socialLinks', 'whatsapp', e.target.value)}
+              disabled={!isEditing}
+              icon={FaWhatsapp}
+              placeholder="+1234567890"
+              className={!isEditing ? 'opacity-60' : ''}
+            />
 
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                TikTok
-              </label>
-              <Input
-                type="url"
-                value={profile.socialLinks.tiktok}
-                onChange={(e) => handleNestedUpdate('socialLinks', 'tiktok', e.target.value)}
-                disabled={!isEditing}
-                icon={FaTiktok}
-                placeholder="https://tiktok.com/@..."
-              />
-            </div>
+            <Input
+              label="TikTok"
+              type="url"
+              value={profile.socialLinks.tiktok}
+              onChange={(e) => handleNestedUpdate('socialLinks', 'tiktok', e.target.value)}
+              disabled={!isEditing}
+              icon={FaTiktok}
+              placeholder="https://tiktok.com/@..."
+              className={!isEditing ? 'opacity-60' : ''}
+            />
           </div>
-
-          {isEditing && (
-            <div className="mt-8 flex gap-4">
-              <Button 
-                variant="primary"
-                onClick={handleSaveProfile}
-                disabled={saving}
-              >
-                <FaSave className="w-4 h-4 mr-2" />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(false)}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
         </div>
+
+        {/* Save/Cancel Buttons */}
+        {isEditing && (
+          <div className="mt-8 flex gap-4">
+            <Button 
+              variant="primary"
+              onClick={handleSaveProfile}
+              disabled={saving}
+            >
+              <FaSave className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   )
 
   const renderSecurityTab = () => (
     <div className="space-y-6">
-      {/* Change Password */}
+      {/* Change Password Card */}
       <Card className={`p-6 ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
@@ -622,56 +570,38 @@ const DentistSettings = () => {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={security.currentPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                currentPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Current Password"
+            type="password"
+            value={security.currentPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              currentPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={security.newPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                newPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="New Password"
+            type="password"
+            value={security.newPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              newPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={security.confirmPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                confirmPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={security.confirmPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              confirmPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
           <Button 
             variant="primary"
@@ -729,15 +659,20 @@ const DentistSettings = () => {
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
-              <Button
+              <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                variant={activeTab === tab.id ? 'primary' : 'ghost'}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-teal-600 text-white'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-              </Button>
+              </button>
             )
           })}
         </div>

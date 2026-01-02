@@ -12,7 +12,7 @@ import {
   FaIdCard,
   FaClock
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker, PhoneInput } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker, PhoneInput, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { PALESTINIAN_CITIES, COUNTRY_CODES } from '../../../utils/constants'
@@ -25,6 +25,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [toast, setToast] = useState(null)
   const [formData, setFormData] = useState({
     centerName: '',
     registrationNumber: '',
@@ -270,12 +271,12 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
 
   const handleChangePassword = async () => {
     if (security.newPassword !== security.confirmPassword) {
-      alert('New passwords do not match!')
+      setToast({ message: 'New passwords do not match!', type: 'error' })
       return
     }
 
     if (security.newPassword.length < 6) {
-      alert('Password must be at least 6 characters long!')
+      setToast({ message: 'Password must be at least 6 characters long!', type: 'error' })
       return
     }
 
@@ -300,7 +301,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         throw new Error(errorData.error || 'Failed to change password')
       }
 
-      alert('Password changed successfully!')
+      setToast({ message: 'Password changed successfully!', type: 'success' })
       setSecurity({
         currentPassword: '',
         newPassword: '',
@@ -308,7 +309,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       })
     } catch (err) {
       console.error('Error changing password:', err)
-      alert(err.message || 'Failed to change password. Please try again.')
+      setToast({ message: err.message || 'Failed to change password. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -330,6 +331,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
             setFormData(prev => ({ ...prev, profileImage: imageUrl }))
           }}
           userName={formData.centerName}
+          onToast={setToast}
         />
         <div className="mt-4">
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
@@ -377,6 +379,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 disabled={!isEditing}
                 required
                 icon={FaHospital}
+                className={!isEditing ? 'opacity-60' : ''}
               />
             </div>
 
@@ -393,6 +396,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 value={formData.registrationNumber}
                 disabled={true}
                 icon={FaIdCard}
+                className="opacity-60"
               />
               <p className={`text-xs mt-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -413,6 +417,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 value={formData.email}
                 disabled={true}
                 icon={FaEnvelope}
+                className="opacity-60"
               />
               <p className={`text-xs mt-1 ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -474,6 +479,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 disabled={!isEditing}
                 placeholder="Full address"
                 icon={FaMapMarkerAlt}
+                className={!isEditing ? 'opacity-60' : ''}
               />
             </div>
 
@@ -483,11 +489,12 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 value={formData.coordinates}
                 onChange={(coords) => setFormData({ ...formData, coordinates: coords })}
                 disabled={!isEditing}
+                className={!isEditing ? 'opacity-60' : ''}
               />
             </div>
 
             {/* Website */}
-            <div className="md:col-span-2">
+            <div>
               <label className={`block text-sm font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
@@ -501,6 +508,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 disabled={!isEditing}
                 placeholder="https://example.com"
                 icon={FaGlobe}
+                className={!isEditing ? 'opacity-60' : ''}
               />
             </div>
 
@@ -722,56 +730,38 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={security.currentPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                currentPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Current Password"
+            type="password"
+            value={security.currentPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              currentPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={security.newPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                newPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="New Password"
+            type="password"
+            value={security.newPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              newPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={security.confirmPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                confirmPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={security.confirmPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              confirmPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
           <Button 
             variant="primary"
@@ -862,6 +852,15 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           {activeTab === 'hours' && renderWorkingHoursTab()}
           {activeTab === 'security' && renderSecurityTab()}
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

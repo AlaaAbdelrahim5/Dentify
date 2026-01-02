@@ -12,7 +12,7 @@ import {
   FaGlobe,
   FaIdCard
 } from 'react-icons/fa'
-import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth, LocationPicker, LoadingSpinner, PhoneInput } from '../../../components'
+import { Card, Button, Input, ProfileImageUpload, TwoFactorAuth, LocationPicker, LoadingSpinner, PhoneInput, Toast } from '../../../components'
 import { AvailableTreatmentsManager } from '../../../components/features'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
@@ -25,6 +25,7 @@ const ClinicSettings = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
+  const [toast, setToast] = useState(null)
   
   const [clinicInfo, setClinicInfo] = useState({
     name: '',
@@ -187,10 +188,10 @@ const ClinicSettings = () => {
       await api.put(`/clinics/me`, updateData)
       
       setIsEditing(false)
-      alert('Clinic information updated successfully!')
+      setToast({ message: 'Clinic information updated successfully!', type: 'success' })
     } catch (error) {
       console.error('Error updating clinic info:', error)
-      alert('Error updating clinic information')
+      setToast({ message: 'Error updating clinic information', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -209,10 +210,10 @@ const ClinicSettings = () => {
       }))
       
       await api.put(`/clinics/me`, { workingHours: workingHoursArray })
-      alert('Working hours updated successfully!')
+      setToast({ message: 'Working hours updated successfully!', type: 'success' })
     } catch (error) {
       console.error('Error updating working hours:', error)
-      alert('Error updating working hours')
+      setToast({ message: 'Error updating working hours', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -220,12 +221,12 @@ const ClinicSettings = () => {
 
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match')
+      setToast({ message: 'New passwords do not match!', type: 'error' })
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      alert('Password must be at least 6 characters long!')
+      setToast({ message: 'Password must be at least 6 characters long!', type: 'error' })
       return
     }
 
@@ -236,10 +237,10 @@ const ClinicSettings = () => {
         newPassword: passwordData.newPassword
       })
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      alert('Password changed successfully!')
+      setToast({ message: 'Password changed successfully!', type: 'success' })
     } catch (error) {
       console.error('Error changing password:', error)
-      alert(error.response?.data?.error || 'Error changing password')
+      setToast({ message: error.response?.data?.error || 'Error changing password', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -264,6 +265,7 @@ const ClinicSettings = () => {
             setClinicInfo(prev => ({ ...prev, profileImage: imageUrl }))
           }}
           userName={clinicInfo.name}
+          onToast={setToast}
         />
       </Card>
 
@@ -293,7 +295,23 @@ const ClinicSettings = () => {
               value={clinicInfo.name}
               onChange={(e) => setClinicInfo({ ...clinicInfo, name: e.target.value })}
               disabled={!isEditing}
+              className={!isEditing ? 'opacity-60' : ''}
             />
+          </div>
+          
+          <div>
+            <Input
+              label="Registration Number"
+              icon={FaIdCard}
+              value={clinicInfo.registrationNumber}
+              disabled={true}
+              className="opacity-60"
+            />
+            <p className={`text-xs mt-1 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Registration number cannot be changed
+            </p>
           </div>
           
           <div>
@@ -303,6 +321,7 @@ const ClinicSettings = () => {
               icon={FaEnvelope}
               value={clinicInfo.email}
               disabled={true}
+              className="opacity-60"
             />
             <p className={`text-xs mt-1 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -321,48 +340,6 @@ const ClinicSettings = () => {
             icon={FaPhone}
             className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
           />
-          
-          <div>
-            <Input
-              label="Registration Number"
-              icon={FaIdCard}
-              value={clinicInfo.registrationNumber}
-              disabled={true}
-            />
-            <p className={`text-xs mt-1 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              Registration number cannot be changed
-            </p>
-          </div>
-          
-          <div>
-            <Input
-              label="Website"
-              icon={FaGlobe}
-              value={clinicInfo.website}
-              onChange={(e) => setClinicInfo({ ...clinicInfo, website: e.target.value })}
-              disabled={!isEditing}
-            />
-          </div>
-          
-          <div>
-            <Input
-              label="Address"
-              icon={FaMapMarkerAlt}
-              value={clinicInfo.address}
-              onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
-              disabled={!isEditing}
-            />
-          </div>
-          
-          <div className="md:col-span-2">
-            <LocationPicker
-              value={clinicInfo.coordinates}
-              onChange={(coords) => setClinicInfo({ ...clinicInfo, coordinates: coords })}
-              disabled={!isEditing}
-            />
-          </div>
           
           <div>
             <label className={`block text-sm font-medium mb-2 ${
@@ -385,6 +362,37 @@ const ClinicSettings = () => {
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>
+          </div>
+          
+          <div>
+            <Input
+              label="Address"
+              icon={FaMapMarkerAlt}
+              value={clinicInfo.address}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
+              disabled={!isEditing}
+              className={!isEditing ? 'opacity-60' : ''}
+            />
+          </div>
+          
+          <div className="md:col-span-2">
+            <LocationPicker
+              value={clinicInfo.coordinates}
+              onChange={(coords) => setClinicInfo({ ...clinicInfo, coordinates: coords })}
+              disabled={!isEditing}
+              className={!isEditing ? 'opacity-60' : ''}
+            />
+          </div>
+          
+          <div>
+            <Input
+              label="Website"
+              icon={FaGlobe}
+              value={clinicInfo.website}
+              onChange={(e) => setClinicInfo({ ...clinicInfo, website: e.target.value })}
+              disabled={!isEditing}
+              className={!isEditing ? 'opacity-60' : ''}
+            />
           </div>
         </div>
 
@@ -519,56 +527,38 @@ const ClinicSettings = () => {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData(prev => ({
-                ...prev,
-                currentPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Current Password"
+            type="password"
+            value={passwordData.currentPassword}
+            onChange={(e) => setPasswordData(prev => ({
+              ...prev,
+              currentPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={passwordData.newPassword}
-              onChange={(e) => setPasswordData(prev => ({
-                ...prev,
-                newPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="New Password"
+            type="password"
+            value={passwordData.newPassword}
+            onChange={(e) => setPasswordData(prev => ({
+              ...prev,
+              newPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData(prev => ({
-                ...prev,
-                confirmPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={passwordData.confirmPassword}
+            onChange={(e) => setPasswordData(prev => ({
+              ...prev,
+              confirmPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
           <Button 
             variant="primary"
@@ -650,6 +640,15 @@ const ClinicSettings = () => {
         </div>
       ) : (
         renderContent()
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

@@ -10,7 +10,7 @@ import {
   FaBirthdayCake,
   FaVenusMars
 } from 'react-icons/fa'
-import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, PhoneInput } from '../../../components'
+import { Card, Button, Input, Select, LoadingSpinner, ProfileImageUpload, Toast, TwoFactorAuth, PhoneInput } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 import { toISODateString } from '../../../utils/helpers'
@@ -23,6 +23,7 @@ const SecretarySettings = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Secretary profile data
   const [profile, setProfile] = useState({
@@ -178,12 +179,12 @@ const SecretarySettings = () => {
       }
 
       setIsEditing(false)
-      alert('Profile updated successfully!')
+      setToast({ message: 'Profile updated successfully!', type: 'success' })
       await fetchSecretaryProfile()
     } catch (err) {
       console.error('Error saving profile:', err)
       setError(err.message || 'Failed to save profile. Please try again.')
-      alert(err.message || 'Failed to save profile. Please try again.')
+      setToast({ message: err.message || 'Failed to save profile. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -191,12 +192,12 @@ const SecretarySettings = () => {
 
   const handleChangePassword = async () => {
     if (security.newPassword !== security.confirmPassword) {
-      alert('New passwords do not match!')
+      setToast({ message: 'New passwords do not match!', type: 'error' })
       return
     }
 
     if (security.newPassword.length < 6) {
-      alert('Password must be at least 6 characters long!')
+      setToast({ message: 'Password must be at least 6 characters long!', type: 'error' })
       return
     }
 
@@ -221,7 +222,7 @@ const SecretarySettings = () => {
         throw new Error(errorData.error || 'Failed to change password')
       }
 
-      alert('Password changed successfully!')
+      setToast({ message: 'Password changed successfully!', type: 'success' })
       setSecurity({
         currentPassword: '',
         newPassword: '',
@@ -229,7 +230,7 @@ const SecretarySettings = () => {
       })
     } catch (err) {
       console.error('Error changing password:', err)
-      alert(err.message || 'Failed to change password. Please try again.')
+      setToast({ message: err.message || 'Failed to change password. Please try again.', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -245,6 +246,7 @@ const SecretarySettings = () => {
             setProfile(prev => ({ ...prev, profileImage: imageUrl }))
           }}
           userName={`${profile.firstName} ${profile.lastName}`}
+          onToast={setToast}
         />
         <div className="mt-4">
           <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
@@ -284,46 +286,32 @@ const SecretarySettings = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              First Name
-            </label>
-            <Input
-              type="text"
-              value={profile.firstName}
-              onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
+          <Input
+            label="First Name"
+            type="text"
+            value={profile.firstName}
+            onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
+
+          <Input
+            label="Last Name"
+            type="text"
+            value={profile.lastName}
+            onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Last Name
-            </label>
             <Input
-              type="text"
-              value={profile.lastName}
-              onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Email
-            </label>
-            <Input
+              label="Email"
               type="email"
               value={profile.email}
-              onChange={(e) => handleProfileUpdate('email', e.target.value)}
               disabled={true}
               icon={FaEnvelope}
+              className="opacity-60"
             />
             <p className={`text-xs mt-1 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -343,61 +331,39 @@ const SecretarySettings = () => {
             className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
           />
 
-          <div>
-            <Select
-              label="Gender"
-              value={profile.gender}
-              onChange={(e) => handleProfileUpdate('gender', e.target.value)}
-              disabled={!isEditing}
-              options={[
-                { value: 'Male', label: 'Male' },
-                { value: 'Female', label: 'Female' }
-              ]}
-              placeholder="Select Gender"
-            />
-          </div>
+          <Select
+            label="Gender"
+            value={profile.gender}
+            onChange={(e) => handleProfileUpdate('gender', e.target.value)}
+            disabled={!isEditing}
+            options={[
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' }
+            ]}
+            placeholder="Select Gender"
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Date of Birth
-            </label>
-            <input
-              type="date"
-              value={profile.birthDate}
-              onChange={(e) => handleProfileUpdate('birthDate', e.target.value)}
-              disabled={!isEditing}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-              } ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            />
-          </div>
+          <Input
+            label="Date of Birth"
+            type="date"
+            value={profile.birthDate}
+            onChange={(e) => handleProfileUpdate('birthDate', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              City
-            </label>
-            <select
-              value={profile.city}
-              onChange={(e) => handleProfileUpdate('city', e.target.value)}
-              disabled={!isEditing}
-              className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-              } ${!isEditing ? 'opacity-60' : ''}`}
-            >
-              <option value="">Select city</option>
-              {PALESTINIAN_CITIES.map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="City"
+            value={profile.city}
+            onChange={(e) => handleProfileUpdate('city', e.target.value)}
+            disabled={!isEditing}
+            options={[
+              { value: '', label: 'Select city' },
+              ...PALESTINIAN_CITIES.map(city => ({ value: city, label: city }))
+            ]}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
         </div>
 
         {isEditing && (
@@ -430,45 +396,30 @@ const SecretarySettings = () => {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Clinic Name
-            </label>
-            <Input
-              type="text"
-              value={profile.clinic.name}
-              disabled={true}
-            />
-          </div>
+          <Input
+            label="Clinic Name"
+            type="text"
+            value={profile.clinic.name}
+            disabled={true}
+            className="opacity-60"
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Registration Number
-            </label>
-            <Input
-              type="text"
-              value={profile.clinic.registrationNumber}
-              disabled={true}
-            />
-          </div>
+          <Input
+            label="Registration Number"
+            type="text"
+            value={profile.clinic.registrationNumber}
+            disabled={true}
+            className="opacity-60"
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Clinic City
-            </label>
-            <Input
-              type="text"
-              value={profile.clinic.city}
-              disabled={true}
-              icon={FaMapMarkerAlt}
-            />
-          </div>
+          <Input
+            label="Clinic City"
+            type="text"
+            value={profile.clinic.city}
+            disabled={true}
+            icon={FaMapMarkerAlt}
+            className="opacity-60"
+          />
         </div>
       </Card>
     </div>
@@ -485,56 +436,38 @@ const SecretarySettings = () => {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={security.currentPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                currentPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Current Password"
+            type="password"
+            value={security.currentPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              currentPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={security.newPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                newPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="New Password"
+            type="password"
+            value={security.newPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              newPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={security.confirmPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                confirmPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={security.confirmPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              confirmPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
           <Button 
             variant="primary" 
@@ -619,6 +552,15 @@ const SecretarySettings = () => {
           {activeTab === 'profile' && renderProfileTab()}
           {activeTab === 'security' && renderSecurityTab()}
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

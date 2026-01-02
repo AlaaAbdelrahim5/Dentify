@@ -264,45 +264,32 @@ const AdminSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              First Name
-            </label>
-            <Input
-              type="text"
-              value={profile.firstName}
-              onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
+          <Input
+            label="First Name"
+            type="text"
+            value={profile.firstName}
+            onChange={(e) => handleProfileUpdate('firstName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
+
+          <Input
+            label="Last Name"
+            type="text"
+            value={profile.lastName}
+            onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
+            disabled={!isEditing}
+            className={!isEditing ? 'opacity-60' : ''}
+          />
 
           <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Last Name
-            </label>
             <Input
-              type="text"
-              value={profile.lastName}
-              onChange={(e) => handleProfileUpdate('lastName', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Email
-            </label>
-            <Input
+              label="Email"
               type="email"
               value={profile.email}
               disabled={true}
               icon={FaEnvelope}
+              className="opacity-60"
             />
             <p className={`text-xs mt-1 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -322,19 +309,18 @@ const AdminSettings = () => {
             className={!isEditing ? 'opacity-60 pointer-events-none' : ''}
           />
 
-          <div>
-            <Select
-              label="Gender"
-              value={profile.gender}
-              onChange={(e) => handleProfileUpdate('gender', e.target.value)}
-              disabled={!isEditing}
-              options={[
-                { value: 'Male', label: 'Male' },
-                { value: 'Female', label: 'Female' }
-              ]}
-              placeholder="Select Gender"
-            />
-          </div>
+          <Select
+            label="Gender"
+            value={profile.gender}
+            onChange={(e) => handleProfileUpdate('gender', e.target.value)}
+            disabled={!isEditing}
+            options={[
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' }
+            ]}
+            placeholder="Select Gender"
+            className={!isEditing ? 'opacity-60' : ''}
+          />
         </div>
 
         {isEditing && (
@@ -373,56 +359,38 @@ const AdminSettings = () => {
         </h3>
 
         <div className="space-y-4">
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={security.currentPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                currentPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Current Password"
+            type="password"
+            value={security.currentPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              currentPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={security.newPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                newPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="New Password"
+            type="password"
+            value={security.newPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              newPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={security.confirmPassword}
-              onChange={(e) => setSecurity(prev => ({
-                ...prev,
-                confirmPassword: e.target.value
-              }))}
-              icon={FaLock}
-            />
-          </div>
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={security.confirmPassword}
+            onChange={(e) => setSecurity(prev => ({
+              ...prev,
+              confirmPassword: e.target.value
+            }))}
+            icon={FaLock}
+          />
 
           <Button 
             variant="primary" 
