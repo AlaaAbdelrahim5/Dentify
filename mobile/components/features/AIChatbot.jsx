@@ -15,7 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   sendChatMessage, 
-  clearChatHistory 
+  clearChatHistory,
+  bookAppointmentViaChatbot
 } from '../../services/chatbotService';
 
 const AIChatbot = ({ isOpen, onClose }) => {
@@ -80,14 +81,43 @@ const AIChatbot = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleConfirmBooking = (appointmentDetails) => {
-    const confirmMessage = {
-      id: messages.length + 1,
-      text: `Great! I'll help you book this appointment:\n\nDate: ${appointmentDetails.date}\nTime: ${appointmentDetails.time}\nReason: ${appointmentDetails.reason}\n\nPlease go to the Appointments page in your dashboard to complete the booking process.`,
-      sender: 'bot',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, confirmMessage]);
+  const handleConfirmBooking = async (appointmentDetails) => {
+    if (!appointmentDetails || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      // Call the booking API
+      const response = await bookAppointmentViaChatbot({
+        dentistId: appointmentDetails.dentistId,
+        date: appointmentDetails.date,
+        startTime: appointmentDetails.startTime,
+        endTime: appointmentDetails.endTime,
+        reason: appointmentDetails.reason || 'Consultation'
+      });
+
+      // Show success message
+      const successMessage = {
+        id: messages.length + 1,
+        text: response.data.message || '✓ Your consultation has been booked successfully! You\'ll receive a notification once the dentist confirms your appointment.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, successMessage]);
+    } catch (error) {
+      // Show error message
+      const errorMsg = error.response?.data?.error || 'Failed to book appointment. Please try again.';
+      const errorMessage = {
+        id: messages.length + 1,
+        text: `I'm sorry, there was an issue booking your appointment: ${errorMsg}`,
+        sender: 'bot',
+        timestamp: new Date(),
+        isError: true
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClearHistory = () => {
@@ -252,8 +282,8 @@ const AIChatbot = ({ isOpen, onClose }) => {
                 <View className={`mt-2 pt-2 ${isDarkMode ? 'border-t border-gray-600' : 'border-t border-gray-200'}`}>
                   <Text className={`text-xs font-bold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Appointment Details:</Text>
                   <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Date: {message.appointmentBooking.date}</Text>
-                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Time: {message.appointmentBooking.time}</Text>
-                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Reason: {message.appointmentBooking.reason}</Text>
+                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Time: {message.appointmentBooking.time || (message.appointmentBooking.startTime ? new Date(message.appointmentBooking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Not specified')}</Text>
+                  <Text className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Reason: {message.appointmentBooking.reason || 'Consultation'}</Text>
                   <TouchableOpacity 
                     style={{
                       marginTop: 8,

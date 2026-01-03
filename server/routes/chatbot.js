@@ -21,6 +21,12 @@ router.get('/postcare/:treatment', chatbotController.getPostCare);
 // Clear chat history
 router.delete('/history', chatbotController.clearHistory);
 
+// Get available dentists for booking
+router.get('/available-dentists', chatbotController.getAvailableDentists);
+
+// Get available time slots for a dentist
+router.get('/available-slots', chatbotController.getAvailableSlots);
+
 // Book appointment via chatbot
 router.post('/book-appointment', chatbotController.bookAppointment);
 

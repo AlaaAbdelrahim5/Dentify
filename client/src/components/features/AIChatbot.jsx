@@ -5,7 +5,8 @@ import {
   sendChatMessage, 
   getTreatmentInfo, 
   getPostCareInstructions,
-  clearChatHistory 
+  clearChatHistory,
+  bookAppointmentViaChatbot
 } from '../../services/chatbotService';
 
 const AIChatbot = ({ isOpen, onClose }) => {
@@ -87,15 +88,43 @@ const AIChatbot = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleConfirmBooking = (appointmentDetails) => {
-    // Show confirmation message
-    const confirmMessage = {
-      id: messages.length + 1,
-      text: `Great! I'll help you book this appointment:\n\nDate: ${appointmentDetails.date}\nTime: ${appointmentDetails.time}\nReason: ${appointmentDetails.reason}\n\nPlease go to the Appointments page in your dashboard to complete the booking process.`,
-      sender: 'bot',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, confirmMessage]);
+  const handleConfirmBooking = async (appointmentDetails) => {
+    if (!appointmentDetails || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      // Call the booking API
+      const response = await bookAppointmentViaChatbot({
+        dentistId: appointmentDetails.dentistId,
+        date: appointmentDetails.date,
+        startTime: appointmentDetails.startTime,
+        endTime: appointmentDetails.endTime,
+        reason: appointmentDetails.reason || 'Consultation'
+      });
+
+      // Show success message
+      const successMessage = {
+        id: messages.length + 1,
+        text: response.data.message || '✓ Your consultation has been booked successfully! You\'ll receive a notification once the dentist confirms your appointment.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, successMessage]);
+    } catch (error) {
+      // Show error message
+      const errorMsg = error.response?.data?.error || 'Failed to book appointment. Please try again.';
+      const errorMessage = {
+        id: messages.length + 1,
+        text: `I'm sorry, there was an issue booking your appointment: ${errorMsg}`,
+        sender: 'bot',
+        timestamp: new Date(),
+        isError: true
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -230,8 +259,8 @@ const AIChatbot = ({ isOpen, onClose }) => {
                 <div className="mt-2 pt-2 border-t border-gray-200">
                   <p className="text-xs font-semibold mb-1">Appointment Details:</p>
                   <p className="text-xs">Date: {message.appointmentBooking.date}</p>
-                  <p className="text-xs">Time: {message.appointmentBooking.time}</p>
-                  <p className="text-xs">Reason: {message.appointmentBooking.reason}</p>
+                  <p className="text-xs">Time: {message.appointmentBooking.time || (message.appointmentBooking.startTime ? new Date(message.appointmentBooking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Not specified')}</p>
+                  <p className="text-xs">Reason: {message.appointmentBooking.reason || 'Consultation'}</p>
                   <button 
                     onClick={() => handleConfirmBooking(message.appointmentBooking)}
                     className="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
