@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const ragService = require('./ragService');
 
 // Initialize Gemini AI with API key from environment
 // Get your free API key from: https://makersuite.google.com/app/apikey
@@ -8,6 +9,7 @@ class GeminiService {
   constructor() {
     this.model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     this.conversationHistory = new Map(); // Store conversation history per user
+    this.ragService = ragService;
   }
 
   /**
@@ -49,24 +51,68 @@ Important guidelines:
 
 ## APPOINTMENT BOOKING PROCESS FOR PATIENTS ##
 
-**STRICT WORKFLOW - FOLLOW EXACTLY:**
+**INTELLIGENT BOOKING WORKFLOW:**
 
-**Step 1: Detect Booking Intent**
-When a patient says they want to book an appointment, schedule a visit, or see a dentist.
+**Step 1: Analyze Booking Intent & Extract Information**
+When a patient wants to book an appointment, FIRST extract all information they've already provided:
 
-**SPECIAL CASE - First Available Slot with Specific Dentist:**
-If patient explicitly mentions BOTH a specific dentist name AND "first available slot" (or similar phrases like "earliest available", "next available", "soonest available"), output this JSON immediately:
+**Date Parsing - Be Smart:**
+- "tomorrow" → Add 1 day to TODAY'S DATE (January 4, 2026)
+- "today" → Use TODAY'S DATE
+- "next Monday/Tuesday/etc." → Calculate next occurrence of that day
+- "January 5" or "Jan 5" → Use that date in current year
+- "in 3 days" → Add 3 days to current date
+- ALWAYS output date as YYYY-MM-DD format
+
+**Time Parsing - Handle Natural Language:**
+- "morning" / "in the morning" → Find slots between 8:00-12:00
+- "afternoon" / "in the afternoon" → Find slots between 12:00-17:00  
+- "evening" → Find slots between 17:00-20:00
+- "2 PM" / "2pm" / "14:00" → Use exact time (convert PM: add 12 except for 12 PM)
+- If time preference given (morning/afternoon/evening), use "find_first_available" with that preference
+
+**Dentist Preference:**
+- Extract any dentist name mentioned (e.g., "Dr. Ala'a Abdelrahim", "Dr. Smith")
+- Note: If dentist name + time preference given → use find_first_available with dentist filter
+
+**SCENARIO A - First Available with Optional Filters:**
+If patient wants "first available", "earliest", "soonest", "ASAP", "as soon as possible", "next available" OR gives only a time preference (morning/afternoon/evening):
+
+**CRITICAL: When patient says "tomorrow" + time preference, YOU MUST include the date field!**
+
+Examples:
+- "tomorrow afternoon" → date: "2026-01-05", timePreference: "afternoon"
+- "tomorrow morning" → date: "2026-01-05", timePreference: "morning"
+- "next Monday afternoon" → date: (calculate next Monday), timePreference: "afternoon"
+- "afternoon" (without date) → timePreference: "afternoon" (omit date to search from today)
 
 \`\`\`json
 {
   "type": "find_first_available",
-  "dentistName": "Dr. Ala'a Abdelrahim"
+  "dentistName": "Dr. Name" (if specified, otherwise omit),
+  "timePreference": "afternoon" (if specified: morning/afternoon/evening),
+  "date": "2026-01-05" (REQUIRED if date mentioned like "tomorrow", otherwise omit)
 }
 \`\`\`
 
-Replace the dentistName with the exact name mentioned by the patient. Then say: "Let me find the first available slot for [dentist name]..."
+Then say: "Let me find the [first available / earliest afternoon] slot [for Dr. Name / with any dentist] [on DATE]..."
 
-DO NOT ask for date or time in this case - the system will automatically find it.
+**SCENARIO B - Specific Date & Time Given:**
+If patient provides a specific time (like "2 PM", "14:00"):
+
+\`\`\`json
+{
+  "type": "check_availability",
+  "date": "2026-01-15",
+  "time": "14:00"
+}
+\`\`\`
+
+**SCENARIO C - Missing Information:**
+ONLY if patient hasn't provided enough information, ask specifically for what's missing:
+- Missing date: "When would you like to schedule your appointment?"
+- Missing time/preference: "What time works best for you? (or morning/afternoon/evening)"
+- Do NOT ask questions if information was already provided in their message!
 
 **Step 2A: When First Available Slot is Found**
 (Only after find_first_available request)
@@ -90,33 +136,7 @@ After the JSON, say: "Perfect! I've found the first available slot for [dentist 
 
 DO NOT recalculate times - use the EXACT values provided in the context.
 
-**Step 2: Ask for Date and Time ONLY**
-(Only if NOT requesting first available slot)
-Respond: "I'd be happy to help you book a consultation! When would you like to visit? Please provide the date and time."
-
-IMPORTANT: Do NOT ask for reason/treatment - all bookings are "Consultation" by default.
-Do NOT ask for dentist preference yet.
-
-**Step 3: When Date and Time Provided**
-CRITICAL TIME PARSING RULES:
-- Convert "11 am" or "11am" to "11:00" (NOT "13:00" or "23:00")
-- Convert "1 pm" or "1pm" to "13:00" (add 12 to PM times except for 12 PM)
-- Convert "12 pm" or "12pm" to "12:00" (noon stays as 12:00)
-- Convert "12 am" or "12am" to "00:00" (midnight)
-- For 24-hour format like "14:00", keep as is
-- NEVER add 12 hours to AM times
-
-Output ONLY this JSON (nothing else):
-
-\`\`\`json
-{
-  "type": "check_availability",
-  "date": "2026-01-15",
-  "time": "14:00"
-}
-\`\`\`
-
-**Step 4: When You Receive Available Dentists List**
+**Step 2B: When Available Dentists List is Received**
 You will receive a message like: "Available dentists for [date] at [time]: 1. Dr. X (ID: 123) - ... (Duration: 30 minutes)"
 
 DO NOT output any JSON at this point!
@@ -132,7 +152,14 @@ Simply present the dentists nicely and ask patient to select:
 
 Please select which dentist you'd like to see by telling me the doctor's name or number."
 
-**Step 5: When Patient Selects Dentist**
+**Step 3: When Patient Selects Dentist**
+
+2. Dr. [Name] - [Specializations]
+   Clinic: [Clinic Name], [City]
+
+Please select which dentist you'd like to see by telling me the doctor's name or number."
+
+**Step 3: When Patient Selects Dentist**
 Look for the dentist name or number in the patient's response.
 Match it to one from the available list (check the context for availableDentists or AVAILABLE DENTISTS FOR BOOKING).
 
@@ -235,8 +262,20 @@ For non-booking questions, provide helpful conversational responses without JSON
     try {
       const history = this.getConversationHistory(userId);
       
+      // Get RAG context for appointment booking queries
+      let ragContext = '';
+      if (this.isBookingRelated(userMessage)) {
+        ragContext = await this.ragService.getBookingContext(userMessage);
+        console.log('📚 RAG Context Retrieved for booking query');
+      }
+      
       // Build the full prompt with context
       let fullPrompt = this.buildSystemPrompt() + "\n\n";
+      
+      // Add RAG context if available
+      if (ragContext) {
+        fullPrompt += ragContext;
+      }
       
       // Add user context if available
       if (context.userName) {
@@ -492,6 +531,21 @@ Be clear, specific, and reassuring.`;
         timestamp: new Date()
       };
     }
+  }
+
+  /**
+   * Check if message is related to appointment booking
+   */
+  isBookingRelated(message) {
+    const bookingKeywords = [
+      'book', 'appointment', 'schedule', 'visit', 'dentist', 
+      'available', 'slot', 'time', 'date', 'tomorrow', 'today',
+      'next', 'first', 'earliest', 'reschedule', 'change', 'cancel',
+      'when can i', 'when is', 'available times', 'free slots'
+    ];
+    
+    const lowerMessage = message.toLowerCase();
+    return bookingKeywords.some(keyword => lowerMessage.includes(keyword));
   }
 }
 
