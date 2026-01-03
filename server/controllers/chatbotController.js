@@ -192,8 +192,199 @@ exports.chat = async (req, res) => {
     if (response.appointmentBooking) {
       const booking = response.appointmentBooking;
       
+      // Handle "first available slot" request with specific dentist
+      if (booking.type === 'find_first_available' && booking.dentistName) {
+        // Find the dentist by name (case-insensitive partial match)
+        const dentistNameLower = booking.dentistName.toLowerCase().replace('dr. ', '').replace('dr ', '');
+        const matchedDentist = dentists.find(d => {
+          const fullName = `${d.firstName} ${d.lastName}`.toLowerCase();
+          return fullName.includes(dentistNameLower) || dentistNameLower.includes(fullName);
+        });
+
+        if (!matchedDentist) {
+          const errorMessage = `I couldn't find a dentist named "${booking.dentistName}" in our system. Please check the name or browse our available dentists.`;
+          const followUpResponse = await geminiService.chat(userId, errorMessage, context);
+          
+          return res.json({
+            success: true,
+            data: followUpResponse
+          });
+        }
+
+        // Find the first available slot for this dentist
+        // Start from today and check up to 30 days in the future
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        let firstAvailableSlot = null;
+        
+        const now = new Date(); // Get current time once at the start
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let daysAhead = 0; daysAhead < 30 && !firstAvailableSlot; daysAhead++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() + daysAhead);
+          const dayOfWeek = dayNames[checkDate.getDay()];
+          
+          // Check if dentist works on this day
+          if (matchedDentist.workingHours && Array.isArray(matchedDentist.workingHours)) {
+            const daySchedule = matchedDentist.workingHours.find(day => day.day === dayOfWeek);
+            
+            if (daySchedule && daySchedule.start && daySchedule.end) {
+              // Get all appointments for this dentist on this day
+              const startOfDay = new Date(checkDate);
+              startOfDay.setHours(0, 0, 0, 0);
+              const endOfDay = new Date(checkDate);
+              endOfDay.setHours(23, 59, 59, 999);
+              
+              const existingAppointments = await prisma.appointment.findMany({
+                where: {
+                  dentistId: matchedDentist.userId,
+                  appointmentDate: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                  },
+                  status: { not: 'CANCELLED' }
+                },
+                orderBy: { startTime: 'asc' }
+              });
+              
+              // Generate time slots for the day
+              const [startHour, startMinute] = daySchedule.start.split(':').map(Number);
+              const [endHour, endMinute] = daySchedule.end.split(':').map(Number);
+              const duration = matchedDentist.appointmentDuration || 30;
+              
+              let currentTime = new Date(checkDate);
+              currentTime.setHours(startHour, startMinute, 0, 0);
+              
+              const endTime = new Date(checkDate);
+              endTime.setHours(endHour, endMinute, 0, 0);
+              
+              while (currentTime < endTime) {
+                const slotEnd = new Date(currentTime);
+                slotEnd.setMinutes(slotEnd.getMinutes() + duration);
+                
+                // Check if slot is in the future (must be at least current time + slot duration)
+                if (currentTime > now && slotEnd > now) {
+                  // Check if slot is not during break
+                  let isDuringBreak = false;
+                  if (daySchedule.breaks && Array.isArray(daySchedule.breaks)) {
+                    for (const breakTime of daySchedule.breaks) {
+                      const [breakStartHour, breakStartMinute] = breakTime.start.split(':').map(Number);
+                      const [breakEndHour, breakEndMinute] = breakTime.end.split(':').map(Number);
+                      const breakStart = new Date(checkDate);
+                      breakStart.setHours(breakStartHour, breakStartMinute, 0, 0);
+                      const breakEnd = new Date(checkDate);
+                      breakEnd.setHours(breakEndHour, breakEndMinute, 0, 0);
+                      
+                      if (currentTime < breakEnd && slotEnd > breakStart) {
+                        isDuringBreak = true;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  if (!isDuringBreak) {
+                    // Check if slot doesn't conflict with existing appointments
+                    const hasConflict = existingAppointments.some(apt => {
+                      return currentTime < apt.endTime && slotEnd > apt.startTime;
+                    });
+                    
+                    if (!hasConflict) {
+                      const startTimeISO = currentTime.toISOString();
+                      const endTimeISO = slotEnd.toISOString();
+                      // Extract date from the startTime ISO string to ensure consistency
+                      const dateFromStartTime = startTimeISO.split('T')[0];
+                      
+                      firstAvailableSlot = {
+                        date: dateFromStartTime,
+                        time: `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`,
+                        startTime: startTimeISO,
+                        endTime: endTimeISO,
+                        dentist: matchedDentist,
+                        dayOfWeek
+                      };
+                      break;
+                    }
+                  }
+                }
+                
+                // Move to next slot
+                currentTime.setMinutes(currentTime.getMinutes() + duration);
+              }
+            }
+          }
+        }
+        
+        if (firstAvailableSlot) {
+          // Format time for display
+          const timeHour = parseInt(firstAvailableSlot.time.split(':')[0]);
+          const timeMinute = firstAvailableSlot.time.split(':')[1];
+          const displayTime = timeHour > 12 
+            ? `${timeHour - 12}:${timeMinute} PM` 
+            : timeHour === 12 
+            ? `12:${timeMinute} PM` 
+            : `${timeHour}:${timeMinute} AM`;
+          
+          const displayDate = new Date(firstAvailableSlot.date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          
+          // Build a message for the AI to generate a nice response with booking JSON
+          const foundSlotMessage = `The first available slot for ${booking.dentistName} is on ${displayDate} at ${displayTime}. Generate the appointment booking JSON with these details: dentistId=${firstAvailableSlot.dentist.userId}, date=${firstAvailableSlot.date}, startTime=${firstAvailableSlot.startTime}, endTime=${firstAvailableSlot.endTime}, time=${displayTime}`;
+          
+          const updatedContext = {
+            ...context,
+            firstAvailableSlot: {
+              dentist: {
+                userId: firstAvailableSlot.dentist.userId,
+                name: `Dr. ${firstAvailableSlot.dentist.firstName} ${firstAvailableSlot.dentist.lastName}`,
+                appointmentDuration: firstAvailableSlot.dentist.appointmentDuration
+              },
+              date: firstAvailableSlot.date,
+              time: firstAvailableSlot.time,
+              displayTime,
+              displayDate,
+              startTime: firstAvailableSlot.startTime,
+              endTime: firstAvailableSlot.endTime
+            }
+          };
+          
+          const followUpResponse = await geminiService.chat(userId, foundSlotMessage, updatedContext);
+          
+          // Remove the JSON block from the message shown to user
+          let cleanMessage = followUpResponse.message;
+          // Remove ```json...``` blocks
+          cleanMessage = cleanMessage.replace(/```json[\s\S]*?```/g, '');
+          // Remove standalone JSON objects
+          cleanMessage = cleanMessage.replace(/\{[\s\S]*?"type"\s*:\s*"appointment_booking"[\s\S]*?\}/g, '');
+          // Remove extra whitespace and ellipsis
+          cleanMessage = cleanMessage.replace(/\.\.\.+/g, '').trim();
+          
+          followUpResponse.message = cleanMessage;
+          followUpResponse.readyToBook = true;
+          
+          return res.json({
+            success: true,
+            data: {
+              ...followUpResponse,
+              firstAvailableSlot: updatedContext.firstAvailableSlot
+            }
+          });
+        } else {
+          const noSlotsMessage = `Unfortunately, ${booking.dentistName} has no available appointments in the next 30 days. Would you like to see other available dentists?`;
+          const followUpResponse = await geminiService.chat(userId, noSlotsMessage, context);
+          
+          return res.json({
+            success: true,
+            data: followUpResponse
+          });
+        }
+      }
       // Check if it's an availability check request
-      if (booking.type === 'check_availability' && booking.date && booking.time) {
+      else if (booking.type === 'check_availability' && booking.date && booking.time) {
         // Find dentists available at the specified time
         const requestedDate = new Date(booking.date);
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

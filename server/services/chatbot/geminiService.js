@@ -54,7 +54,44 @@ Important guidelines:
 **Step 1: Detect Booking Intent**
 When a patient says they want to book an appointment, schedule a visit, or see a dentist.
 
+**SPECIAL CASE - First Available Slot with Specific Dentist:**
+If patient explicitly mentions BOTH a specific dentist name AND "first available slot" (or similar phrases like "earliest available", "next available", "soonest available"), output this JSON immediately:
+
+\`\`\`json
+{
+  "type": "find_first_available",
+  "dentistName": "Dr. Ala'a Abdelrahim"
+}
+\`\`\`
+
+Replace the dentistName with the exact name mentioned by the patient. Then say: "Let me find the first available slot for [dentist name]..."
+
+DO NOT ask for date or time in this case - the system will automatically find it.
+
+**Step 2A: When First Available Slot is Found**
+(Only after find_first_available request)
+You will receive a message with the **FIRST AVAILABLE SLOT FOUND** details.
+
+Use those EXACT values to create the booking JSON immediately:
+
+\`\`\`json
+{
+  "type": "appointment_booking",
+  "dentistId": [use userId from FIRST AVAILABLE SLOT],
+  "date": [use date from FIRST AVAILABLE SLOT in YYYY-MM-DD format],
+  "startTime": [use startTime from FIRST AVAILABLE SLOT],
+  "endTime": [use endTime from FIRST AVAILABLE SLOT],
+  "reason": "Consultation",
+  "time": [use displayTime from FIRST AVAILABLE SLOT]
+}
+\`\`\`
+
+After the JSON, say: "Perfect! I've found the first available slot for [dentist name] on [displayDate] at [displayTime]. Please click the 'Confirm Booking' button to complete your appointment."
+
+DO NOT recalculate times - use the EXACT values provided in the context.
+
 **Step 2: Ask for Date and Time ONLY**
+(Only if NOT requesting first available slot)
 Respond: "I'd be happy to help you book a consultation! When would you like to visit? Please provide the date and time."
 
 IMPORTANT: Do NOT ask for reason/treatment - all bookings are "Consultation" by default.
@@ -259,6 +296,18 @@ For non-booking questions, provide helpful conversational responses without JSON
       
       fullPrompt += `\nIMPORTANT: Use the above real data from our system when answering questions about clinics, dentists, treatments, or appointments. Provide specific names, locations, and details from our database.\n`;
       
+      // Add first available slot information if present
+      if (context.firstAvailableSlot) {
+        fullPrompt += `\n**FIRST AVAILABLE SLOT FOUND:**\n`;
+        fullPrompt += `Dentist: ${context.firstAvailableSlot.dentist.name} (ID: ${context.firstAvailableSlot.dentist.userId})\n`;
+        fullPrompt += `Date: ${context.firstAvailableSlot.displayDate} (${context.firstAvailableSlot.date})\n`;
+        fullPrompt += `Time: ${context.firstAvailableSlot.displayTime} (${context.firstAvailableSlot.time})\n`;
+        fullPrompt += `Start Time: ${context.firstAvailableSlot.startTime}\n`;
+        fullPrompt += `End Time: ${context.firstAvailableSlot.endTime}\n`;
+        fullPrompt += `Duration: ${context.firstAvailableSlot.dentist.appointmentDuration} minutes\n`;
+        fullPrompt += `\nGenerate the appointment_booking JSON with these EXACT values. Do NOT recalculate the times.\n`;
+      }
+      
       // Add available dentists for booking if present
       if (context.availableDentists && context.availableDentists.length > 0) {
         fullPrompt += `\n**AVAILABLE DENTISTS FOR BOOKING:**\n`;
@@ -327,16 +376,16 @@ For non-booking questions, provide helpful conversational responses without JSON
       // Check if message contains JSON for appointment booking or availability check
       // Match JSON block that may be in code blocks or plain text
       const jsonMatch = message.match(/```json\s*\n?([\s\S]*?)```/) || 
-                        message.match(/\{[\s\S]*?"type"\s*:\s*"(appointment_booking|check_availability)"[\s\S]*?\}/);
+                        message.match(/\{[\s\S]*?"type"\s*:\s*"(appointment_booking|check_availability|find_first_available)"[\s\S]*?\}/);
       
       if (jsonMatch) {
         // Extract JSON string (either from code block or direct match)
         const jsonString = jsonMatch[1] || jsonMatch[0];
         const data = JSON.parse(jsonString.trim());
         
-        if (data.type === 'appointment_booking' || data.type === 'check_availability') {
+        if (data.type === 'appointment_booking' || data.type === 'check_availability' || data.type === 'find_first_available') {
           // Return the data directly if it's already properly formatted
-          if (data.dentistId || data.date || data.time) {
+          if (data.dentistId || data.dentistName || data.date || data.time) {
             return data;
           }
           // Otherwise return nested data object for backward compatibility
