@@ -165,6 +165,24 @@ const PatientSettings = () => {
 
       setIsEditing(false)
       setToast({ message: 'Profile updated successfully!', type: 'success' })
+      
+      // Update the stored user data in authUtils
+      const updatedCurrentUser = authUtils.getCurrentUser()
+      if (updatedCurrentUser && updatedCurrentUser.patient) {
+        const updatedUser = {
+          ...updatedCurrentUser,
+          patient: {
+            ...updatedCurrentUser.patient,
+            firstName: profile.firstName,
+            lastName: profile.lastName
+          }
+        }
+        authUtils.updateUser(updatedUser)
+      }
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('profileUpdated'))
+      
       await fetchPatientProfile()
     } catch (err) {
       console.error('Error saving profile:', err)

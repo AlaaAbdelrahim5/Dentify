@@ -189,6 +189,22 @@ const ClinicSettings = () => {
       
       setIsEditing(false)
       setToast({ message: 'Clinic information updated successfully!', type: 'success' })
+      
+      // Update the stored user data in authUtils
+      const currentStoredUser = authUtils.getCurrentUser()
+      if (currentStoredUser && currentStoredUser.clinic) {
+        const updatedUser = {
+          ...currentStoredUser,
+          clinic: {
+            ...currentStoredUser.clinic,
+            clinicName: clinicInfo.name
+          }
+        }
+        authUtils.updateUser(updatedUser)
+      }
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('profileUpdated'))
     } catch (error) {
       console.error('Error updating clinic info:', error)
       setToast({ message: 'Error updating clinic information', type: 'error' })
@@ -372,6 +388,7 @@ const ClinicSettings = () => {
               onChange={(e) => setClinicInfo({ ...clinicInfo, address: e.target.value })}
               disabled={!isEditing}
               className={!isEditing ? 'opacity-60' : ''}
+              autoComplete="off"
             />
           </div>
           

@@ -226,6 +226,24 @@ const DentistSettings = () => {
       await dentistsAPI.updateMyProfile(updateData)
       setIsEditing(false)
       setToast({ message: 'Profile updated successfully!', type: 'success' })
+      
+      // Update the stored user data in authUtils
+      const currentUser = authUtils.getCurrentUser()
+      if (currentUser && currentUser.dentist) {
+        const updatedUser = {
+          ...currentUser,
+          dentist: {
+            ...currentUser.dentist,
+            firstName: profile.firstName,
+            lastName: profile.lastName
+          }
+        }
+        authUtils.updateUser(updatedUser)
+      }
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('profileUpdated'))
+      
       // Refresh profile data
       await fetchDentistProfile()
     } catch (err) {

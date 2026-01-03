@@ -36,16 +36,18 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
     
     checkAuth()
 
-    // Listen for profile image updates
-    const handleProfileImageUpdate = () => {
+    // Listen for profile updates (including image and other profile data)
+    const handleProfileUpdate = () => {
       const user = authUtils.getCurrentUser()
       setCurrentUser(user)
     }
 
-    window.addEventListener('profileImageUpdated', handleProfileImageUpdate)
+    window.addEventListener('profileImageUpdated', handleProfileUpdate)
+    window.addEventListener('profileUpdated', handleProfileUpdate)
 
     return () => {
-      window.removeEventListener('profileImageUpdated', handleProfileImageUpdate)
+      window.removeEventListener('profileImageUpdated', handleProfileUpdate)
+      window.removeEventListener('profileUpdated', handleProfileUpdate)
     }
   }, [])
 

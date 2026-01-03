@@ -157,6 +157,24 @@ const AdminSettings = () => {
 
       setIsEditing(false)
       setToast({ message: 'Profile updated successfully!', type: 'success' })
+      
+      // Update the stored user data in authUtils
+      const updatedCurrentUser = authUtils.getCurrentUser()
+      if (updatedCurrentUser && updatedCurrentUser.admin) {
+        const updatedUser = {
+          ...updatedCurrentUser,
+          admin: {
+            ...updatedCurrentUser.admin,
+            firstName: profile.firstName,
+            lastName: profile.lastName
+          }
+        }
+        authUtils.updateUser(updatedUser)
+      }
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('profileUpdated'))
+      
       await fetchAdminProfile()
     } catch (err) {
       console.error('Error saving profile:', err)

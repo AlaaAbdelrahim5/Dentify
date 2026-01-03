@@ -169,6 +169,7 @@ const LocationPicker = ({
         onChange={handleManualInput}
         disabled={disabled}
         placeholder="Click on map or enter: latitude,longitude (e.g., 31.9522,35.2332)"
+        autoComplete="off"
         className={`w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200
           focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
           isDarkMode 

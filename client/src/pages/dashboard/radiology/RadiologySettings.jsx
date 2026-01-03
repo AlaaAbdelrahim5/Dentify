@@ -206,6 +206,23 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
       if (response.ok) {
         setSuccess('Settings updated successfully')
         setIsEditing(false)
+        
+        // Update the stored user data in authUtils
+        const currentStoredUser = authUtils.getCurrentUser()
+        if (currentStoredUser && currentStoredUser.radiology) {
+          const updatedUser = {
+            ...currentStoredUser,
+            radiology: {
+              ...currentStoredUser.radiology,
+              centerName: formData.centerName
+            }
+          }
+          authUtils.updateUser(updatedUser)
+        }
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new Event('profileUpdated'))
+        
         if (refreshData) {
           await refreshData()
         }
@@ -480,6 +497,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
                 placeholder="Full address"
                 icon={FaMapMarkerAlt}
                 className={!isEditing ? 'opacity-60' : ''}
+                autoComplete="off"
               />
             </div>
 
