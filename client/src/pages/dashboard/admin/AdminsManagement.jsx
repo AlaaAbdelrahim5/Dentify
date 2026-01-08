@@ -29,6 +29,7 @@ import {
   Toast,
   AddAdminModal,
   AdminDetailsModal,
+  Card,
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { adminAPI } from '../../../services/api'

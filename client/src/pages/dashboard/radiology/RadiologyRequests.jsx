@@ -466,15 +466,17 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                     accessor: 'id',
                     render: (value, row) => (
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => row.reportFile ? handleViewImages(row) : handleViewDetails(row)}
-                          title={row.reportFile ? "View Images" : "View Details"}
-                          className={row.reportFile ? "text-teal-600" : "text-blue-600"}
-                        >
-                          <FaEye className="w-4 h-4" />
-                        </Button>
+                        {!isReportFileUrl(row.reportFile) && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => row.reportFile ? handleViewImages(row) : handleViewDetails(row)}
+                            title={row.reportFile ? "View Images" : "View Details"}
+                            className={row.reportFile ? "text-teal-600" : "text-blue-600"}
+                          >
+                            <FaEye className="w-4 h-4" />
+                          </Button>
+                        )}
                         {row.status !== 'COMPLETED' && row.status !== 'CANCELLED' && (
                           <Button 
                             variant="outline" 

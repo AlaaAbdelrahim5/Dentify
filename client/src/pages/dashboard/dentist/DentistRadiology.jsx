@@ -550,31 +550,31 @@ const DentistRadiology = () => {
                     accessor: 'id',
                     render: (value, row) => (
                       <div className="flex gap-2">
+                        {row.reportFile && !isReportFileUrl(row.reportFile) && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewImages(row)}
+                            title="View Images"
+                            className="text-teal-600"
+                          >
+                            <FaEye className="w-4 h-4" />
+                          </Button>
+                        )}
                         {row.reportFile && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewImages(row)}
-                              title="View Images"
-                              className="text-teal-600"
-                            >
-                              <FaEye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleDownloadReport(row.reportFile)}
-                              title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
-                              className="text-purple-600"
-                            >
-                              {isReportFileUrl(row.reportFile) ? (
-                                <FaLink className="w-4 h-4" />
-                              ) : (
-                                <FaDownload className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownloadReport(row.reportFile)}
+                            title={isReportFileUrl(row.reportFile) ? "View Report" : "Download Report"}
+                            className="text-purple-600"
+                          >
+                            {isReportFileUrl(row.reportFile) ? (
+                              <FaLink className="w-4 h-4" />
+                            ) : (
+                              <FaDownload className="w-4 h-4" />
+                            )}
+                          </Button>
                         )}
                         {!row.reportFile && row.status !== 'Requested' && (
                           <Button 

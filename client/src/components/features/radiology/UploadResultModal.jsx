@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { FaFileUpload, FaTimes, FaCalendarAlt, FaImage, FaFilePdf, FaFileAlt, FaCloudUploadAlt, FaLink, FaCheckCircle } from 'react-icons/fa'
-import { Button, Input, LoadingSpinner } from '../../common'
+import { Button, Input, LoadingSpinner, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
 

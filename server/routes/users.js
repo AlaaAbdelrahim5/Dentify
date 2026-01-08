@@ -157,4 +157,30 @@ router.delete('/:id', authenticate, authorize('Admin'), async (req, res) => {
   }
 });
 
+// Save FCM token
+router.post('/fcm-token', authenticate, async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const userId = req.user.id;
+
+    if (!fcmToken) {
+      return res.status(400).json({ error: 'FCM token is required' });
+    }
+
+    // Save FCM token to Firebase (if using Firebase for notifications)
+    const admin = require('firebase-admin');
+    const db = admin.firestore();
+    
+    await db.collection('users').doc(userId.toString()).set({
+      fcmToken,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    res.json({ message: 'FCM token saved successfully' });
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    res.status(500).json({ error: 'Failed to save FCM token' });
+  }
+});
+
 module.exports = router;
