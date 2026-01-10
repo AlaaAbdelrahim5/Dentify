@@ -14,6 +14,7 @@ import {
   getDocs,
   limit
 } from 'firebase/firestore';
+import { authUtils } from '../../utils/auth';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
@@ -132,12 +133,17 @@ export const markAllNotificationsAsRead = async (userId) => {
 // Send notification (call this from your backend)
 export const sendNotification = async (notificationData) => {
   try {
+    const accessToken = authUtils.getAccessToken();
+    if (!accessToken) {
+      throw new Error('No access token available');
+    }
+    
     // This should be called from your backend with Firebase Admin SDK
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify(notificationData)
     });

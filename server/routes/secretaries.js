@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../config/database');
-const { successResponse, errorResponse, notFoundResponse } = require('../helpers/response');
+const { paginatedResponse, successResponse, errorResponse, notFoundResponse, calculatePagination } = require('../helpers/response');
 const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
 const { hashPassword } = require('../helpers/hash');
 const { transformSecretary } = require('../utils/responseTransformers');
-const { standardUserSelect } = require('../utils/queryHelpers');
+const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
 const { createStatsHandler } = require('../factories/routeHandlers');
 
 // Get secretaries statistics - using reusable handler
@@ -75,7 +75,49 @@ router.get('/clinic', authenticate, authorize('Clinic'), async (req, res) => {
 // Get all secretaries (Admin only)
 router.get('/', authenticate, authorize('Admin'), async (req, res) => {
   try {
+    const { 
+      page = '1', 
+      limit = '10', 
+      search = '', 
+      city = '', 
+      status = '',
+      gender = '',
+      includeAll = 'false'
+    } = req.query;
+    
+    // Build where clause
+    const searchFields = ['firstName', 'lastName', 'user.email'];
+    const customFilters = {};
+    
+    // Add gender filter if provided
+    if (gender) {
+      customFilters.gender = gender;
+    }
+    
+    // Add default active filter if includeAll is false
+    if (includeAll !== 'true' && !status) {
+      customFilters.user = { status: 'ACTIVE' };
+    }
+    
+    const finalWhere = buildWhereClause({ 
+      search, 
+      searchFields, 
+      city, 
+      status, 
+      customFilters 
+    });
+
+    // Get total count
+    const total = await prisma.secretary.count({ where: finalWhere });
+    
+    // Calculate pagination
+    const pagination = calculatePagination(page, limit, total);
+
+    // Fetch secretaries
     const secretaries = await prisma.secretary.findMany({
+      where: finalWhere,
+      skip: pagination.skip,
+      take: pagination.limit,
       include: {
         user: {
           select: standardUserSelect
@@ -99,7 +141,7 @@ router.get('/', authenticate, authorize('Admin'), async (req, res) => {
 
     const transformedSecretaries = secretaries.map(transformSecretary);
 
-    return successResponse(res, transformedSecretaries, 'Secretaries fetched successfully');
+    return paginatedResponse(res, transformedSecretaries, pagination, 'Secretaries fetched successfully');
   } catch (error) {
     return errorResponse(res, 'Failed to fetch secretaries', 500);
   }
@@ -389,75 +431,6 @@ router.delete('/:id', authenticate, authorize('Clinic'), async (req, res) => {
     return successResponse(res, null, 'Secretary deleted successfully');
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to delete secretary', 500);
-  }
-});
-
-// Toggle secretary status (activate/deactivate)
-router.patch('/:id/toggle-status', authenticate, authorize('Clinic'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const clinicId = req.user.id;
-
-    // Find secretary and verify ownership
-    const existingSecretary = await prisma.secretary.findUnique({
-      where: { userId: parseInt(id) },
-      include: {
-        user: true
-      }
-    });
-
-    if (!existingSecretary) {
-      return notFoundResponse(res, 'Secretary');
-    }
-
-    // Check if secretary belongs to this clinic
-    if (existingSecretary.clinicId !== clinicId) {
-      return errorResponse(res, 'Unauthorized to modify this secretary', 403);
-    }
-
-    // Toggle status
-    const currentStatus = existingSecretary.user.status;
-    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
-
-    // Update user status
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: {
-        status: newStatus
-      },
-      include: {
-        secretary: true
-      }
-    });
-
-    // Transform response
-    const transformedSecretary = {
-      _id: updatedUser.id,
-      firstName: updatedUser.secretary.firstName,
-      lastName: updatedUser.secretary.lastName,
-      birthDate: updatedUser.secretary.birthDate,
-      gender: updatedUser.secretary.gender,
-      address: {
-        city: updatedUser.secretary.city
-      },
-      userId: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        status: updatedUser.status === 'ACTIVE' ? 'active' : 'inactive',
-        profileImage: updatedUser.profileImage
-      },
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt
-    };
-
-    return successResponse(
-      res, 
-      transformedSecretary, 
-      `Secretary ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`
-    );
-  } catch (error) {
-    return errorResponse(res, error.message || 'Failed to toggle secretary status', 500);
   }
 });
 

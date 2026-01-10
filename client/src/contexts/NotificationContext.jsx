@@ -130,11 +130,17 @@ export const NotificationProvider = ({ children }) => {
 
   const saveFcmTokenToBackend = async (token) => {
     try {
+      const accessToken = authUtils.getAccessToken();
+      if (!accessToken) {
+        console.log('No access token available, skipping FCM token save');
+        return;
+      }
+      
       await fetch(`${import.meta.env.VITE_API_URL}/api/users/fcm-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({ fcmToken: token })
       });

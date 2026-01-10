@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { 
   FaUserTie, 
   FaMapMarkerAlt,
@@ -7,7 +7,6 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaEye,
-  FaBan,
   FaCheck,
   FaTimes,
   FaClock
@@ -37,6 +36,13 @@ const SecretariesManagement = () => {
   const [filterCity, setFilterCity] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterGender, setFilterGender] = useState('')
+  
+  // Create a stable filters object
+  const externalFilters = useMemo(() => ({
+    ...(filterCity && { city: filterCity }),
+    ...(filterStatus && { status: filterStatus }),
+    ...(filterGender && { gender: filterGender })
+  }), [filterCity, filterStatus, filterGender])
 
   // Use unified management hook
   const {
@@ -53,6 +59,7 @@ const SecretariesManagement = () => {
     stats,
     showDetailsModal,
     selectedItem: selectedSecretary,
+    selectedCrudItem,
     handleViewDetails,
     closeAllModals,
     showConfirmModal,
@@ -62,6 +69,7 @@ const SecretariesManagement = () => {
     cancelOperation,
     confirmApprove,
     confirmReject,
+    confirmToggleStatus,
     toast,
     refresh,
     hideToast
@@ -70,36 +78,35 @@ const SecretariesManagement = () => {
       const extraParams = {
         ...params,
         includeAll: 'true',
-        ...(filterCity && { city: filterCity }),
-        ...(filterStatus && { status: filterStatus }),
-        ...(filterGender && { gender: filterGender })
+        ...externalFilters
       }
       const queryString = new URLSearchParams(extraParams).toString()
       const response = await secretariesAPI.getAll(queryString)
+      // Add _id field for consistency with useCRUD hook
+      const transformedData = (response.data || []).map(secretary => ({
+        ...secretary,
+        _id: secretary.userId?.id || secretary.userId
+      }))
       return {
         success: response.success,
-        data: response.data || [],
+        data: transformedData,
         totalPages: response.pagination?.pages || 1
       }
     },
     fetchStatsFn: async () => await secretariesAPI.getStats(),
     api: {
-      approve: (secretary) => secretariesAPI.approve(secretary.userId),
-      reject: (secretary) => secretariesAPI.reject(secretary.userId, 'Rejected by admin'),
-      toggleStatus: (secretary) => secretariesAPI.toggleStatus(secretary.userId)
+      approve: secretariesAPI.approve,
+      reject: secretariesAPI.reject,
+      toggleStatus: secretariesAPI.toggleStatus
     },
     initialStats: { total: '-', pending: '-', active: '-' },
     initialFilters: {}
   })
 
-  // Custom action handler for toggle status
-  const handleToggleStatus = (secretary) => {
-    const action = secretary.userId?.status === 'ACTIVE' ? 'deactivate' : 'activate'
-    executeOperation(
-      async () => await secretariesAPI.toggleStatus(secretary.userId),
-      { action, item: secretary }
-    )
-  }
+  // Trigger refresh when external filters change
+  useEffect(() => {
+    refresh()
+  }, [filterCity, filterStatus, filterGender])
 
   // Stats configuration
   const statsConfig = useMemo(() => [
@@ -134,7 +141,6 @@ const SecretariesManagement = () => {
         value: filterCity,
         onChange: (e) => {
           setFilterCity(e.target.value)
-          refresh()
         },
         options: CITY_OPTIONS
       },
@@ -143,7 +149,6 @@ const SecretariesManagement = () => {
         value: filterGender,
         onChange: (e) => {
           setFilterGender(e.target.value)
-          refresh()
         },
         options: [
           { value: 'male', label: 'Male' },
@@ -155,7 +160,6 @@ const SecretariesManagement = () => {
         value: filterStatus,
         onChange: (e) => {
           setFilterStatus(e.target.value)
-          refresh()
         },
         options: STATUS_OPTIONS
       }
@@ -165,7 +169,7 @@ const SecretariesManagement = () => {
       setFilterCity('')
       setFilterGender('')
       setFilterStatus('')
-      refresh()
+      // Refresh will be triggered by useEffect when state changes
     },
     filtering,
     searchPlaceholder: 'Search secretaries by name, email, or clinic...'
@@ -302,8 +306,8 @@ const SecretariesManagement = () => {
               // Show activate/deactivate for ACTIVE/DEACTIVATED secretaries
               ...(isActive ? [
                 {
-                  icon: FaBan,
-                  onClick: () => handleToggleStatus(secretary),
+                  icon: FaTimesCircle,
+                  onClick: () => confirmToggleStatus(secretary),
                   title: 'Deactivate',
                   variant: 'warning',
                   key: 'deactivate'
@@ -312,7 +316,7 @@ const SecretariesManagement = () => {
               ...(isDeactivated ? [
                 {
                   icon: FaCheckCircle,
-                  onClick: () => handleToggleStatus(secretary),
+                  onClick: () => confirmToggleStatus(secretary),
                   title: 'Activate',
                   variant: 'success',
                   key: 'activate'
@@ -323,7 +327,7 @@ const SecretariesManagement = () => {
         </td>
       </tr>
     )
-  }, [isDarkMode, handleViewDetails, confirmApprove, confirmReject, handleToggleStatus])
+  }, [isDarkMode, handleViewDetails, confirmApprove, confirmReject, confirmToggleStatus])
 
   const tableProps = {
     columns,
@@ -339,9 +343,9 @@ const SecretariesManagement = () => {
     isOpen: showConfirmModal,
     onClose: cancelOperation,
     onConfirm: executeOperation,
-    item: selectedSecretary,
+    item: selectedCrudItem,
     action: confirmAction,
-    itemName: selectedSecretary ? `${selectedSecretary.firstName} ${selectedSecretary.lastName}` : '',
+    itemName: selectedCrudItem ? `${selectedCrudItem.firstName} ${selectedCrudItem.lastName}` : '',
     itemType: 'secretary',
     isProcessing
   }
