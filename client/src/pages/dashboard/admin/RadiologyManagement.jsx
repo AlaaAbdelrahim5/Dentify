@@ -40,6 +40,7 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { radiologyAPI } from '../../../services/api'
 import { CITY_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
 import { useDebounce } from '../../../hooks'
+import { getImageUrl } from '../../../utils/helpers'
 
 const RadiologyManagement = () => {
   const { isDarkMode } = useTheme()
@@ -317,8 +318,21 @@ const RadiologyManagement = () => {
       <tr key={center.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-              <FaXRay className="w-5 h-5 text-white" />
+            <div className="shrink-0 h-10 w-10">
+              {center.user?.profileImage ? (
+                <img
+                  className="h-10 w-10 rounded-full object-cover"
+                  src={getImageUrl(center.user.profileImage)}
+                  alt={center.centerName}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center fallback-avatar ${center.user?.profileImage ? 'hidden' : ''}`}>
+                <FaXRay className="w-5 h-5 text-white" />
+              </div>
             </div>
             <div className="ml-3">
               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

@@ -6,6 +6,15 @@ const { paginatedResponse, successResponse, errorResponse, notFoundResponse, cal
 const { createUserWithProfile, updateUserWithProfile } = require('../services/user/userService');
 const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
 const { standardUserSelect, buildPagination, buildWhereClause } = require('../utils/queryHelpers');
+const { hashPassword } = require('../helpers/hash');
+
+// Helper function to check if user exists
+const checkUserExists = async (email) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { email }
+  });
+  return !!existingUser;
+};
 
 // Get radiology centers statistics - using reusable handler
 router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('radiologyCenter', 'RadiologyCenter', true));

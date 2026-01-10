@@ -479,8 +479,8 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                     label="Phone Number *"
                     countryCode={formData.countryCode}
                     phoneNumber={formData.phoneNumber}
-                    onCountryChange={(e) => handleCountryCodeChange(e.target.value)}
-                    onPhoneChange={(e) => handlePhoneNumberChange(e.target.value)}
+                    onCountryChange={handleCountryCodeChange}
+                    onPhoneChange={handlePhoneNumberChange}
                     placeholder="Enter phone number"
                     error={errors.phone}
                     icon={FaPhone}
