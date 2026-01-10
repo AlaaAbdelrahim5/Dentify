@@ -113,7 +113,7 @@ const ClinicDetailsModal = ({
       title="Clinic Details"
       size="2xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto p-6">
         {/* Profile Section */}
         <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">

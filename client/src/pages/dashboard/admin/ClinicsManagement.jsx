@@ -39,6 +39,7 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI } from '../../../services/api'
 import { CITY_OPTIONS } from '../../../utils/constants'
 import { useDebounce } from '../../../hooks'
+import { getImageUrl } from '../../../utils/helpers'
 
 const ClinicsManagement = () => {
   const { isDarkMode } = useTheme()
@@ -332,8 +333,21 @@ const ClinicsManagement = () => {
       <tr key={clinic.userId} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-              <FaHospital className="w-5 h-5 text-white" />
+            <div className="shrink-0 h-10 w-10">
+              {clinic.user?.profileImage ? (
+                <img
+                  className="h-10 w-10 rounded-full object-cover"
+                  src={getImageUrl(clinic.user.profileImage)}
+                  alt={clinic.clinicName}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center fallback-avatar ${clinic.user?.profileImage ? 'hidden' : ''}`}>
+                <FaHospital className="w-5 h-5 text-white" />
+              </div>
             </div>
             <div className="ml-3">
               <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

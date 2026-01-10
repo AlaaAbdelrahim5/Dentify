@@ -347,7 +347,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
               {/* General Error */}
               {errors.general && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
