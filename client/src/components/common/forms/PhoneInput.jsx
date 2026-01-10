@@ -12,6 +12,7 @@ const PhoneInput = forwardRef(({
   icon: Icon,
   className = '',
   placeholder = 'Enter phone number',
+  isDarkMode: _isDarkMode, // Extract to prevent passing to DOM
   ...props 
 }, ref) => {
   const { isDarkMode } = useTheme()

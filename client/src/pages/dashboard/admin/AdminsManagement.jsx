@@ -52,6 +52,7 @@ const AdminsManagement = () => {
     showDetailsModal,
     showAddModal,
     selectedItem: selectedAdmin,
+    selectedCrudItem,
     handleViewDetails,
     handleAdd,
     closeAllModals,
@@ -63,7 +64,9 @@ const AdminsManagement = () => {
     cancelOperation,
     confirmToggleStatus,
     toast,
-    refresh
+    refresh,
+    showSuccess,
+    showError
   } = useManagementPage({
     fetchFn: async (params) => {
       const response = await adminAPI.getAllAdmins(params)
@@ -80,12 +83,28 @@ const AdminsManagement = () => {
     api: {
       toggleStatus: adminAPI.toggleStatus
     },
+    onSuccess: ({ action, item }) => {
+      const actionText = action === 'activate' ? 'activated' : 'deactivated'
+      showSuccess(`Admin ${actionText} successfully`)
+    },
+    onError: ({ action, error }) => {
+      console.error('Toggle status error:', error)
+      showError(error || `Failed to ${action} admin`)
+    },
     initialStats: {
       total: '-',
       active: '-',
       inactive: '-'
     }
   })
+
+  // Debug: Log confirmToggleStatus function on mount
+  console.log('AdminsManagement rendered')
+  console.log('confirmToggleStatus function:', confirmToggleStatus)
+  console.log('showConfirmModal state:', showConfirmModal)
+  console.log('selectedAdmin (for details modal):', selectedAdmin)
+  console.log('selectedCrudItem (for confirmation):', selectedCrudItem)
+  console.log('confirmAction:', confirmAction)
 
   // Component configurations
   const statsConfig = useMemo(() => [
@@ -182,13 +201,19 @@ const AdminsManagement = () => {
           actions={[
             {
               icon: FaEye,
-              onClick: () => handleViewDetails(admin),
+              onClick: () => {
+                console.log('View Details clicked for:', admin.fullName)
+                handleViewDetails(admin)
+              },
               title: 'View Details',
               variant: 'default'
             },
             {
               icon: admin.userId?.status === 'active' ? FaTimesCircle : FaCheckCircle,
-              onClick: () => confirmToggleStatus(admin),
+              onClick: () => {
+                console.log('Toggle Status clicked for:', admin.fullName, 'Current status:', admin.userId?.status)
+                confirmToggleStatus(admin)
+              },
               title: admin.userId?.status === 'active' ? 'Deactivate' : 'Activate',
               variant: admin.userId?.status === 'active' ? 'warning' : 'success'
             }
@@ -212,9 +237,9 @@ const AdminsManagement = () => {
     isOpen: showConfirmModal,
     onClose: cancelOperation,
     onConfirm: executeOperation,
-    item: selectedAdmin,
+    item: selectedCrudItem,
     action: confirmAction,
-    itemName: selectedAdmin?.fullName,
+    itemName: selectedCrudItem?.fullName,
     itemType: 'Admin',
     isProcessing
   }

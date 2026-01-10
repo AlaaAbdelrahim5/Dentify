@@ -21,7 +21,9 @@ export const useManagementPage = ({
   fetchStatsFn,
   api,
   initialStats = {},
-  initialFilters = {}
+  initialFilters = {},
+  onSuccess = null,
+  onError = null
 }) => {
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -48,13 +50,24 @@ export const useManagementPage = ({
 
   // CRUD operations
   const crudState = useCRUD(api, 
-    ({ action, item }) => {
+    ({ action, item, response }) => {
       dataState.refresh()
       statsState.refreshStats()
-      toastState.showSuccess(`Item ${action}d successfully`)
+      
+      // Call custom success handler if provided
+      if (onSuccess) {
+        onSuccess({ action, item, response })
+      } else {
+        toastState.showSuccess(`Item ${action}d successfully`)
+      }
     },
-    ({ action, error }) => {
-      toastState.showError(error || `Failed to ${action} item`)
+    ({ action, error, item }) => {
+      // Call custom error handler if provided
+      if (onError) {
+        onError({ action, error, item })
+      } else {
+        toastState.showError(error || `Failed to ${action} item`)
+      }
     }
   )
 
@@ -140,6 +153,7 @@ export const useManagementPage = ({
     // CRUD
     showConfirmModal: crudState.showConfirmModal,
     confirmAction: crudState.confirmAction,
+    selectedCrudItem: crudState.selectedItem,
     isProcessing: crudState.isProcessing,
     executeOperation: crudState.executeOperation,
     cancelOperation: crudState.cancelOperation,
@@ -153,6 +167,7 @@ export const useManagementPage = ({
     showToast: toastState.showToast,
     showSuccess: toastState.showSuccess,
     showError: toastState.showError,
+    hideToast: toastState.hideToast,
     
     // Refresh
     refresh: dataState.refresh,

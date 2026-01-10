@@ -19,15 +19,21 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
    * Prepare confirmation modal for any action
    */
   const confirmOperation = useCallback((item, action) => {
+    console.log('=== confirmOperation called ===')
+    console.log('Item:', item)
+    console.log('Action:', action)
+    
     setSelectedItem(item)
     setConfirmAction(action)
     setShowConfirmModal(true)
+    
+    console.log('Modal should be shown now')
   }, [])
 
   /**
    * Execute the confirmed action
    */
-  const executeOperation = useCallback(async (customFn = null) => {
+  const executeOperation = useCallback(async (customFnOrEvent = null) => {
     if (!selectedItem || !confirmAction) return
 
     setIsProcessing(true)
@@ -35,6 +41,9 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
     try {
       let response
       const action = confirmAction
+      
+      // Check if customFnOrEvent is actually a function (not an event object)
+      const customFn = typeof customFnOrEvent === 'function' ? customFnOrEvent : null
 
       // If custom function provided, use it
       if (customFn) {
@@ -47,7 +56,10 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
             break
           case 'activate':
           case 'deactivate':
+            console.log('Toggle status - Item:', selectedItem)
+            console.log('Toggle status - ID:', selectedItem._id || selectedItem.id)
             response = await api.toggleStatus?.(selectedItem._id || selectedItem.id)
+            console.log('Toggle status - Response:', response)
             break
           case 'approve':
             response = await api.approve?.(selectedItem._id || selectedItem.id)
@@ -64,6 +76,7 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
       if (response?.success || response?.data) {
         onSuccess?.({ action, item: selectedItem, response })
       } else {
+        console.error('Toggle status failed - Response:', response)
         onError?.({ action, item: selectedItem, error: response?.message || 'Operation failed' })
       }
     } catch (error) {
@@ -91,8 +104,17 @@ export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
    */
   const confirmDelete = useCallback((item) => confirmOperation(item, 'delete'), [confirmOperation])
   const confirmToggleStatus = useCallback((item) => {
+    console.log('=== confirmToggleStatus called ===')
+    console.log('Item:', item)
+    console.log('Item user status:', item.user?.status)
+    console.log('Item userId status:', item.userId?.status)
+    
     const status = item.user?.status || item.userId?.status
+    console.log('Resolved status:', status)
+    
     const action = status === 'ACTIVE' || status === 'active' ? 'deactivate' : 'activate'
+    console.log('Action to perform:', action)
+    
     confirmOperation(item, action)
   }, [confirmOperation])
   const confirmApprove = useCallback((item) => confirmOperation(item, 'approve'), [confirmOperation])

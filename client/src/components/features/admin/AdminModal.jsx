@@ -229,10 +229,9 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
               label="Phone Number *"
               countryCode={formData.countryCode}
               phoneNumber={formData.phoneNumber}
-              onCountryCodeChange={(value) => handleInputChange("countryCode", value)}
-              onPhoneNumberChange={(value) => handleInputChange("phoneNumber", value)}
+              onCountryChange={(e) => handleInputChange("countryCode", e.target.value)}
+              onPhoneChange={(e) => handleInputChange("phoneNumber", e.target.value)}
               error={errors.phone}
-              isDarkMode={isDarkMode}
             />
           </div>
         </div>
