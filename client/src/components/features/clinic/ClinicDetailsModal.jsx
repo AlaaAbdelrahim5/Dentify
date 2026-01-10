@@ -18,8 +18,10 @@ import {
   FaCheck
 } from 'react-icons/fa'
 import { Card, Button, LoadingSpinner, BaseModal, LocationMap } from '../../common'
+import DentistDetailsModal from '../dentist/DentistDetailsModal'
+import SecretaryDetailsModal from '../secretary/SecretaryDetailsModal'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { dentistsAPI, clinicsAPI } from '../../../services/api'
+import { dentistsAPI, clinicsAPI, secretariesAPI } from '../../../services/api'
 
 const ClinicDetailsModal = ({ 
   isOpen, 
@@ -29,8 +31,13 @@ const ClinicDetailsModal = ({
 }) => {
   const { isDarkMode } = useTheme()
   const [dentists, setDentists] = useState([])
+  const [secretaries, setSecretaries] = useState([])
   const [isLoadingDentists, setIsLoadingDentists] = useState(false)
+  const [isLoadingSecretaries, setIsLoadingSecretaries] = useState(false)
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [selectedSecretary, setSelectedSecretary] = useState(null)
+  const [showDentistModal, setShowDentistModal] = useState(false)
+  const [showSecretaryModal, setShowSecretaryModal] = useState(false)
   const [availableTreatments, setAvailableTreatments] = useState([])
   const [showTreatments, setShowTreatments] = useState(false)
   const [isLoadingTreatments, setIsLoadingTreatments] = useState(false)
@@ -41,6 +48,7 @@ const ClinicDetailsModal = ({
   useEffect(() => {
     if (isOpen && clinic) {
       fetchDentists()
+      fetchSecretaries()
     }
   }, [isOpen, clinic?._id, clinic?.userId])
 
@@ -76,6 +84,38 @@ const ClinicDetailsModal = ({
     }
   }
 
+  const fetchSecretaries = async () => {
+    try {
+      setIsLoadingSecretaries(true)
+      const response = await secretariesAPI.getAll()
+      console.log('Secretaries API Response:', response)
+      const allSecretaries = response.data || response.secretaries || response || []
+      console.log('All Secretaries:', allSecretaries)
+      
+      const clinicPrimaryKey = clinic._id || clinic.userId || clinic.id || clinic.user?.id
+      console.log('Clinic Primary Key:', clinicPrimaryKey)
+      
+      if (!clinicPrimaryKey) {
+        setSecretaries([])
+        return
+      }
+      
+      const clinicSecretaries = allSecretaries.filter(s => {
+        const secretaryClinicId = s.clinicId
+        console.log('Secretary:', s.firstName, s.lastName, 'ClinicId:', secretaryClinicId, 'Match:', secretaryClinicId === clinicPrimaryKey)
+        return secretaryClinicId === clinicPrimaryKey
+      })
+      
+      console.log('Filtered Secretaries for clinic:', clinicSecretaries)
+      setSecretaries(clinicSecretaries)
+    } catch (err) {
+      console.error('Error fetching secretaries:', err)
+      setSecretaries([])
+    } finally {
+      setIsLoadingSecretaries(false)
+    }
+  }
+
   if (!clinic) return null
 
   const handleViewTreatments = async () => {
@@ -107,12 +147,13 @@ const ClinicDetailsModal = ({
   }
 
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Clinic Details"
-      size="2xl"
-    >
+    <>
+      <BaseModal
+        isOpen={isOpen && !showDentistModal && !showSecretaryModal}
+        onClose={onClose}
+        title="Clinic Details"
+        size="2xl"
+      >
       <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto p-6">
         {/* Profile Section */}
         <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
@@ -529,6 +570,19 @@ const ClinicDetailsModal = ({
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedDentist(dentist)
+                              setShowDentistModal(true)
+                            }}
+                            title="View Profile"
+                            className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/20 whitespace-nowrap"
+                          >
+                            <FaEye className="w-4 h-4 mr-2" />
+                            View Profile
+                          </Button>
                           {onBookAppointment && (
                             <Button
                               variant="outline"
@@ -548,8 +602,138 @@ const ClinicDetailsModal = ({
             </div>
           )}
         </div>
+
+        {/* Secretaries Section */}
+        <div>
+          <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            <FaUser className="text-teal-500" />
+            Secretaries at this Clinic
+            {!isLoadingSecretaries && (
+              <span className={`text-sm font-normal ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                ({secretaries.length} {secretaries.length === 1 ? 'secretary' : 'secretaries'})
+              </span>
+            )}
+          </h3>
+
+          {isLoadingSecretaries ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : secretaries.length === 0 ? (
+            <div className={`text-center py-12 rounded-lg ${
+              isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
+              <FaUser className={`mx-auto text-4xl mb-3 ${
+                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <p className={`${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                No secretaries found at this clinic
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {secretaries.map((secretary, index) => (
+                <div
+                  key={secretary.userId || secretary.id || secretary._id || index}
+                  className={`p-5 rounded-lg border transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
+                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-14 h-14 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+                        <FaUser className="text-white text-lg" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className={`font-semibold text-lg mb-2 ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          {secretary.firstName} {secretary.lastName}
+                        </h4>
+                        <div className="space-y-1.5">
+                          {secretary.user?.email && (
+                            <div className="flex items-center gap-2">
+                              <FaEnvelope className={`text-sm shrink-0 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm truncate ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                              }`}>
+                                {secretary.user.email}
+                              </span>
+                            </div>
+                          )}
+                          {secretary.user?.phone && (
+                            <div className="flex items-center gap-2">
+                              <FaPhone className={`text-sm shrink-0 ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                              }`} />
+                              <span className={`text-sm ${
+                                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                              }`}>
+                                {secretary.user.phone}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSecretary(secretary)
+                          setShowSecretaryModal(true)
+                        }}
+                        title="View Profile"
+                        className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/20 whitespace-nowrap"
+                      >
+                        <FaEye className="w-4 h-4 mr-2" />
+                        View Profile
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </BaseModal>
+      </BaseModal>
+
+      {/* Dentist Details Modal */}
+      {showDentistModal && (
+        <DentistDetailsModal
+          isOpen={showDentistModal}
+          dentistData={selectedDentist}
+          onClose={() => {
+            setShowDentistModal(false)
+            setSelectedDentist(null)
+          }}
+        />
+      )}
+
+      {/* Secretary Details Modal */}
+      {showSecretaryModal && (
+        <SecretaryDetailsModal
+          isOpen={showSecretaryModal}
+          secretary={selectedSecretary}
+          onClose={() => {
+            setShowSecretaryModal(false)
+            setSelectedSecretary(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 

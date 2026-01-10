@@ -10,6 +10,7 @@ function transformSecretary(secretary) {
     lastName: secretary.lastName,
     birthDate: secretary.birthDate,
     gender: secretary.gender,
+    clinicId: secretary.clinicId,
     userId: {
       id: secretary.user.id,
       email: secretary.user.email,
