@@ -63,7 +63,8 @@ const SecretariesManagement = () => {
     confirmApprove,
     confirmReject,
     toast,
-    refresh
+    refresh,
+    hideToast
   } = useManagementPage({
     fetchFn: async (params) => {
       const extraParams = {
@@ -383,7 +384,8 @@ const SecretariesManagement = () => {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => {}}
+          onClose={hideToast}
+          duration={3000}
         />
       )}
     </div>

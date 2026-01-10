@@ -35,13 +35,10 @@ const FilterBar = ({
 }) => {
   const { isDarkMode } = useTheme()
 
-  const gridCols = filters.length + 2 // +1 for search, +1 for clear button
-  const gridClass = `grid grid-cols-1 md:grid-cols-${Math.min(gridCols, 4)} gap-4`
-
   return (
-    <div className={gridClass}>
+    <div className="flex flex-wrap gap-4 items-center">
       {/* Search Input */}
-      <div className="relative">
+      <div className="relative flex-1 min-w-[200px]">
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
           type="text"
@@ -65,7 +62,7 @@ const FilterBar = ({
           value={filter.value}
           onChange={filter.onChange}
           disabled={filtering || filter.disabled}
-          className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 ${
+          className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50 min-w-[150px] ${
             isDarkMode 
               ? 'bg-gray-700 border-gray-600 text-gray-200' 
               : 'bg-white border-gray-300 text-gray-900'
@@ -84,7 +81,7 @@ const FilterBar = ({
       <Button
         onClick={onClearFilters}
         variant="outline"
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 whitespace-nowrap"
         disabled={filtering}
       >
         <FaFilter className="w-4 h-4" />

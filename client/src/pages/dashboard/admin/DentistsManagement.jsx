@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { 
   FaUserMd, 
   FaPlus, 
@@ -11,8 +11,7 @@ import {
   FaEye,
   FaCheck,
   FaTimes,
-  FaCertificate,
-  FaBan
+  FaCertificate
 } from 'react-icons/fa'
 import { 
   Card,
@@ -56,6 +55,7 @@ const DentistsManagement = () => {
     stats,
     showDetailsModal,
     selectedItem: selectedDentist,
+    selectedCrudItem,
     handleViewDetails,
     closeAllModals,
     showConfirmModal,
@@ -65,9 +65,11 @@ const DentistsManagement = () => {
     cancelOperation,
     confirmApprove,
     confirmReject,
+    confirmToggleStatus,
     toast,
     refresh,
-    updateFilters
+    updateFilters,
+    hideToast
   } = useManagementPage({
     fetchFn: async (params) => {
       const extraParams = {
@@ -79,30 +81,31 @@ const DentistsManagement = () => {
       }
       const queryString = new URLSearchParams(extraParams).toString()
       const response = await dentistsAPI.getAll(queryString)
+      // Add _id field for consistency with useCRUD hook
+      const transformedData = (response.data || []).map(dentist => ({
+        ...dentist,
+        _id: dentist.userId
+      }))
       return {
         success: response.success,
-        data: response.data || [],
+        data: transformedData,
         totalPages: response.pagination?.pages || 1
       }
     },
     fetchStatsFn: async () => await dentistsAPI.getStats(),
     api: {
       approve: dentistsAPI.approve,
-      reject: (dentist) => dentistsAPI.reject(dentist.userId, 'Rejected by admin'),
-      toggleStatus: (dentist) => dentistsAPI.toggleStatus(dentist.userId)
+      reject: dentistsAPI.reject,
+      toggleStatus: dentistsAPI.toggleStatus
     },
     initialStats: { total: '-', pending: '-', active: '-' },
     initialFilters: {}
   })
 
-  // Custom action handler for toggle status
-  const handleToggleStatus = (dentist) => {
-    const action = dentist.user?.status === 'ACTIVE' ? 'deactivate' : 'activate'
-    executeOperation(
-      async () => await dentistsAPI.toggleStatus(dentist.userId),
-      { action, item: dentist }
-    )
-  }
+  // Trigger refresh when filters change
+  useEffect(() => {
+    refresh()
+  }, [filterCity, filterStatus, filterSpecialization])
 
   // Stats configuration
   const statsConfig = useMemo(() => [
@@ -137,7 +140,6 @@ const DentistsManagement = () => {
         value: filterCity,
         onChange: (e) => {
           setFilterCity(e.target.value)
-          refresh()
         },
         options: CITY_OPTIONS
       },
@@ -146,7 +148,6 @@ const DentistsManagement = () => {
         value: filterStatus,
         onChange: (e) => {
           setFilterStatus(e.target.value)
-          refresh()
         },
         options: STATUS_OPTIONS
       },
@@ -155,7 +156,6 @@ const DentistsManagement = () => {
         value: filterSpecialization,
         onChange: (e) => {
           setFilterSpecialization(e.target.value)
-          refresh()
         },
         options: DENTAL_SPECIALIZATIONS_OPTIONS
       }
@@ -165,7 +165,6 @@ const DentistsManagement = () => {
       setFilterCity('')
       setFilterStatus('')
       setFilterSpecialization('')
-      refresh()
     },
     filtering,
     searchPlaceholder: 'Search dentists by name, email, or license...'
@@ -290,8 +289,8 @@ const DentistsManagement = () => {
             // Show activate/deactivate for ACTIVE/DEACTIVATED dentists
             ...(dentist.user?.status === 'ACTIVE' ? [
               {
-                icon: FaBan,
-                onClick: () => handleToggleStatus(dentist),
+                icon: FaTimesCircle,
+                onClick: () => confirmToggleStatus(dentist),
                 title: 'Deactivate',
                 variant: 'warning',
                 key: 'deactivate'
@@ -300,7 +299,7 @@ const DentistsManagement = () => {
             ...(dentist.user?.status === 'DEACTIVATED' ? [
               {
                 icon: FaCheckCircle,
-                onClick: () => handleToggleStatus(dentist),
+                onClick: () => confirmToggleStatus(dentist),
                 title: 'Activate',
                 variant: 'success',
                 key: 'activate'
@@ -310,7 +309,7 @@ const DentistsManagement = () => {
         />
       </td>
     </tr>
-  ), [isDarkMode, handleViewDetails, confirmApprove, confirmReject, handleToggleStatus])
+  ), [isDarkMode, handleViewDetails, confirmApprove, confirmReject, confirmToggleStatus])
 
   const tableProps = {
     columns,
@@ -326,9 +325,9 @@ const DentistsManagement = () => {
     isOpen: showConfirmModal,
     onClose: cancelOperation,
     onConfirm: executeOperation,
-    item: selectedDentist,
+    item: selectedCrudItem,
     action: confirmAction,
-    itemName: selectedDentist ? `Dr. ${selectedDentist.firstName} ${selectedDentist.lastName}` : '',
+    itemName: selectedCrudItem ? `Dr. ${selectedCrudItem.firstName} ${selectedCrudItem.lastName}` : '',
     itemType: 'dentist',
     isProcessing
   }
@@ -371,7 +370,8 @@ const DentistsManagement = () => {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => {}}
+          onClose={hideToast}
+          duration={3000}
         />
       )}
     </div>

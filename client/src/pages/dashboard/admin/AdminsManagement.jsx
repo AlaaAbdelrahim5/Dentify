@@ -66,7 +66,8 @@ const AdminsManagement = () => {
     toast,
     refresh,
     showSuccess,
-    showError
+    showError,
+    hideToast
   } = useManagementPage({
     fetchFn: async (params) => {
       const response = await adminAPI.getAllAdmins(params)
@@ -296,7 +297,8 @@ const AdminsManagement = () => {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => {}}
+          onClose={hideToast}
+          duration={3000}
         />
       )}
     </div>
