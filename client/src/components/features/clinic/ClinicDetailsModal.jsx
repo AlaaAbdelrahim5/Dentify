@@ -22,6 +22,7 @@ import DentistDetailsModal from '../dentist/DentistDetailsModal'
 import SecretaryDetailsModal from '../secretary/SecretaryDetailsModal'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, clinicsAPI, secretariesAPI } from '../../../services/api'
+import { getImageUrl } from '../../../utils/helpers'
 
 const ClinicDetailsModal = ({ 
   isOpen, 
@@ -88,12 +89,9 @@ const ClinicDetailsModal = ({
     try {
       setIsLoadingSecretaries(true)
       const response = await secretariesAPI.getAll()
-      console.log('Secretaries API Response:', response)
       const allSecretaries = response.data || response.secretaries || response || []
-      console.log('All Secretaries:', allSecretaries)
       
       const clinicPrimaryKey = clinic._id || clinic.userId || clinic.id || clinic.user?.id
-      console.log('Clinic Primary Key:', clinicPrimaryKey)
       
       if (!clinicPrimaryKey) {
         setSecretaries([])
@@ -102,11 +100,9 @@ const ClinicDetailsModal = ({
       
       const clinicSecretaries = allSecretaries.filter(s => {
         const secretaryClinicId = s.clinicId
-        console.log('Secretary:', s.firstName, s.lastName, 'ClinicId:', secretaryClinicId, 'Match:', secretaryClinicId === clinicPrimaryKey)
         return secretaryClinicId === clinicPrimaryKey
       })
       
-      console.log('Filtered Secretaries for clinic:', clinicSecretaries)
       setSecretaries(clinicSecretaries)
     } catch (err) {
       console.error('Error fetching secretaries:', err)
@@ -513,7 +509,7 @@ const ClinicDetailsModal = ({
             <div className="grid grid-cols-1 gap-4">
               {dentists.map((dentist, index) => (
                 <div
-                  key={dentist.userId || dentist.id || dentist._id || index}
+                  key={dentist._id || dentist.userId || `dentist-${index}`}
                   className={`p-5 rounded-lg border transition-all ${
                     isDarkMode
                       ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
@@ -522,8 +518,21 @@ const ClinicDetailsModal = ({
                 >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4 flex-1">
-                          <div className="w-14 h-14 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0">
-                            <FaUser className="text-white text-lg" />
+                          <div className="shrink-0 h-14 w-14">
+                            {dentist.user?.profileImage ? (
+                              <img
+                                className="h-14 w-14 rounded-full object-cover"
+                                src={getImageUrl(dentist.user.profileImage)}
+                                alt={`Dr. ${dentist.firstName} ${dentist.lastName}`}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center fallback-avatar ${dentist.user?.profileImage ? 'hidden' : ''}`}>
+                              <FaUserMd className="text-white text-lg" />
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className={`font-semibold text-lg mb-2 ${
@@ -640,7 +649,7 @@ const ClinicDetailsModal = ({
             <div className="grid grid-cols-1 gap-4">
               {secretaries.map((secretary, index) => (
                 <div
-                  key={secretary.userId || secretary.id || secretary._id || index}
+                  key={secretary._id || secretary.userId || `secretary-${index}`}
                   className={`p-5 rounded-lg border transition-all ${
                     isDarkMode
                       ? 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
@@ -649,8 +658,21 @@ const ClinicDetailsModal = ({
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="w-14 h-14 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
-                        <FaUser className="text-white text-lg" />
+                      <div className="shrink-0 h-14 w-14">
+                        {secretary.user?.profileImage || secretary.userId?.profileImage ? (
+                          <img
+                            className="h-14 w-14 rounded-full object-cover"
+                            src={getImageUrl(secretary.user?.profileImage || secretary.userId?.profileImage)}
+                            alt={`${secretary.firstName} ${secretary.lastName}`}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.querySelector('.fallback-avatar').classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center fallback-avatar ${secretary.user?.profileImage || secretary.userId?.profileImage ? 'hidden' : ''}`}>
+                          <FaUser className="text-white text-lg" />
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className={`font-semibold text-lg mb-2 ${

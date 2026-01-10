@@ -8,6 +8,7 @@ const Button = ({
   disabled = false,
   onClick,
   type = 'button',
+  leftIcon,
   ...props 
 }) => {
   const { isDarkMode } = useTheme()
