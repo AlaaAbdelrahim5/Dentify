@@ -21,7 +21,8 @@ import {
   DataTable, 
   RequestCard,
   LoadingSpinner,
-  EmptyState
+  EmptyState,
+  ErrorState
 } from '../../../components'
 import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -32,6 +33,7 @@ const PatientXRayResults = () => {
   const { isDarkMode } = useTheme()
   const [requests, setRequests] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [filtering, setFiltering] = useState(false)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -170,8 +172,10 @@ const PatientXRayResults = () => {
       }
       const response = await patientsAPI.getMyRadiologyRequests()
       setRequests(response.data || [])
+      setError(null)
     } catch (error) {
       console.error('Error fetching X-ray requests:', error)
+      setError('Failed to load X-ray results. Please try again.')
       setRequests([])
     } finally {
       if (isFiltering) {
