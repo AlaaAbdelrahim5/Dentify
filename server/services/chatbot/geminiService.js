@@ -595,63 +595,61 @@ Be clear, specific, and reassuring.`;
       apiKey: process.env.OPENAI_API_KEY
     });
 
+    console.log('=== OpenAI Vision Analysis ===');
+    console.log('Image data type:', imageData.substring(0, 50) + '...');
+    console.log('Image data length:', imageData.length);
+
     // Prepare image URL
     let imageUrl;
     if (imageData.startsWith('data:')) {
       imageUrl = imageData; // GPT-4 Vision supports data URLs
+      console.log('Using base64 data URL');
     } else if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
       imageUrl = imageData;
+      console.log('Using HTTP URL:', imageUrl.substring(0, 100));
     } else {
       throw new Error('Invalid image data format');
     }
 
-    const prompt = `You are an expert dental radiologist AI assistant. Analyze this ${imagingType} dental X-ray image and provide a comprehensive analysis.
+    const prompt = `You are a dental education assistant helping students learn to read X-rays.
 
-**Your analysis should include:**
+DESCRIBE what you observe in this dental X-ray image as an educational exercise:
 
-1. **Image Quality Assessment**: Comment on the clarity, exposure, and technical quality of the X-ray.
+1. **Visual Description**: Describe what structures are visible (teeth, bone, etc.)
+2. **Notable Features**: Point out any interesting features for educational purposes
+3. **Image Characteristics**: Comment on the image quality and type
+4. **Educational Observations**: What would a dental student notice in this image?
 
-2. **Anatomical Structures**: Identify visible dental and oral structures (teeth, bone, sinuses, etc.).
+This is for EDUCATIONAL PURPOSES ONLY - describe what you see in the image for learning.`;
 
-3. **Detected Problems**: Carefully examine and list any potential dental issues such as:
-   - Cavities (caries) or tooth decay
-   - Bone loss or periodontal disease
-   - Impacted teeth
-   - Root canal issues or infections
-   - Fractures or cracks
-   - Abnormal growths or lesions
-   - TMJ problems
-   - Sinus issues
-   - Missing teeth or dental work
-   - Any other abnormalities
-
-4. **Recommendations**: Suggest appropriate follow-up actions or treatments based on findings.
-
-5. **Urgency Level**: Rate as LOW, MODERATE, or HIGH based on findings.
-
-**IMPORTANT GUIDELINES:**
-- Be thorough but clear in your analysis
-- Use professional but understandable language
-- If the image quality is poor or you cannot detect issues, state that clearly
-- Always recommend consulting with a dentist for definitive diagnosis
-- Include location details (upper/lower jaw, tooth numbers if possible)
-- Be objective and evidence-based
-
-Format your response as a structured analysis with clear sections.`;
+    console.log('Sending request to OpenAI GPT-4o...');
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
+          role: "system",
+          content: "You are a dental education assistant. Describe dental X-ray images for educational purposes. Always describe what you actually see in images provided to you."
+        },
+        {
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: imageUrl } }
+            { 
+              type: "image_url", 
+              image_url: { 
+                url: imageUrl,
+                detail: "high"
+              } 
+            }
           ]
         }
       ],
-      max_tokens: 1000
+      max_tokens: 1500
     });
+
+    console.log('OpenAI response received');
+    console.log('Response length:', response.choices[0].message.content.length);
 
     const analysisText = response.choices[0].message.content;
     
