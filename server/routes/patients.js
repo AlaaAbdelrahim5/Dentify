@@ -4,7 +4,9 @@ const { authenticate, authorize } = require('../middleware/auth');
 const prisma = require('../config/database');
 const { updateUserWithProfile } = require('../services/user/userService');
 const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
-const { standardUserSelect } = require('../utils/queryHelpers');
+const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
+const { paginatedResponse, calculatePagination } = require('../helpers/response');
+const { hashPassword } = require('../helpers/hash');
 
 // Get patients statistics - using reusable handler
 router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('patient', 'Patient'));
@@ -104,6 +106,26 @@ router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (
 // Get all patients
 router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
   try {
+    const { page = 1, limit = 10, search, city, status, gender } = req.query;
+    
+    // Define search fields for patients
+    const searchFields = ['firstName', 'lastName', 'user.email', 'user.phone'];
+    
+    // Build custom filters for gender
+    const customFilters = {};
+    if (gender) {
+      customFilters.gender = gender;
+    }
+    
+    // Build filter where clause based on query parameters
+    const filterWhere = buildWhereClause({
+      search,
+      searchFields,
+      city,
+      status,
+      customFilters
+    });
+    
     // For Clinic or Secretary, filter patients by their clinic
     let whereClause = {};
     
@@ -152,11 +174,33 @@ router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin
       });
       
       const patientIds = treatments.map(t => t.patientId);
-      whereClause = { userId: { in: patientIds } };
+      
+      // Merge role-based filter with query filters
+      if (filterWhere.AND) {
+        whereClause = {
+          AND: [
+            { userId: { in: patientIds } },
+            ...filterWhere.AND
+          ]
+        };
+      } else {
+        whereClause = { userId: { in: patientIds } };
+      }
+    } else {
+      whereClause = filterWhere;
     }
     
+    // Get total count
+    const total = await prisma.patient.count({ where: whereClause });
+    
+    // Calculate pagination
+    const pagination = calculatePagination(page, limit, total);
+    
+    // Fetch patients
     const patients = await prisma.patient.findMany({
       where: whereClause,
+      skip: pagination.skip,
+      take: pagination.limit,
       include: {
         user: {
           select: {
@@ -170,9 +214,10 @@ router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin
         }
       }
     });
-    res.json({ patients });
+    
+    return paginatedResponse(res, patients, pagination, 'Patients fetched successfully');
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch patients' });
+    return res.status(500).json({ error: 'Failed to fetch patients' });
   }
 });
 

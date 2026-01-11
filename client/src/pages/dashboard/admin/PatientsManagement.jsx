@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { 
   FaUser,
   FaPlus,
@@ -10,7 +10,6 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaEye,
-  FaBan,
   FaUsers
 } from 'react-icons/fa'
 import { 
@@ -49,7 +48,7 @@ const PatientsManagement = () => {
     filtering,
     error,
     searchTerm,
-    updateSearch,
+    setSearchTerm,
     currentPage,
     totalPages,
     goToPage,
@@ -58,6 +57,7 @@ const PatientsManagement = () => {
     showAddModal,
     showEditModal,
     selectedItem,
+    selectedCrudItem,
     setSelectedItem,
     setShowDetailsModal,
     setShowEditModal,
@@ -65,48 +65,45 @@ const PatientsManagement = () => {
     handleAdd,
     handleEdit,
     closeAllModals,
-    confirmProps,
+    showConfirmModal,
+    confirmAction,
+    isProcessing,
     confirmToggleStatus,
+    executeOperation,
+    cancelOperation,
     toast,
     showToast,
     refresh,
     clearFilters
   } = useManagementPage({
-    fetchFn: async () => {
-      const response = await patientsAPI.getAll()
+    fetchFn: async (params) => {
+      const queryParams = new URLSearchParams({
+        ...params,
+        ...(filterCity && { city: filterCity }),
+        ...(filterStatus && { status: filterStatus }),
+        ...(filterGender && { gender: filterGender })
+      }).toString()
+      const response = await patientsAPI.getAll(`?${queryParams}`)
       return {
         success: true,
-        data: response.patients || [],
-        totalPages: 1
+        data: (response.data || []).map(patient => ({
+          ...patient,
+          _id: patient.userId
+        })),
+        totalPages: response.pagination?.pages || 1
       }
     },
     fetchStatsFn: async () => await patientsAPI.getStats(),
     api: {
-      toggleStatus: (patient) => patientsAPI.toggleStatus(patient.userId)
+      toggleStatus: patientsAPI.toggleStatus
     },
     initialStats: { total: '-', active: '-', inactive: '-' }
   })
 
-  // Use patient data transformer and filter hook
-  const { filteredPatients } = usePatientData(patients, searchTerm, {
-    city: filterCity,
-    status: filterStatus,
-    gender: filterGender
-  })
-
-  // Manual pagination for filtered data
-  const itemsPerPage = 10
-  const paginatedData = useMemo(() => {
-    if (!filteredPatients || filteredPatients.length === 0) return []
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredPatients.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredPatients, currentPage])
-
-  // Recalculate total pages when filtered data changes
-  const totalPagesCalculated = useMemo(() => {
-    if (!filteredPatients || filteredPatients.length === 0) return 1
-    return Math.ceil(filteredPatients.length / itemsPerPage)
-  }, [filteredPatients])
+  // Refresh when filters change
+  useEffect(() => {
+    refresh()
+  }, [filterCity, filterStatus, filterGender])
 
   // Stats configuration
   const statsConfig = [
@@ -132,8 +129,8 @@ const PatientsManagement = () => {
 
   // Filter props configuration
   const filterProps = {
-    searchValue: searchTerm,
-    onSearchChange: updateSearch,
+    searchTerm: searchTerm,
+    onSearchChange: (e) => setSearchTerm(e.target.value),
     placeholder: 'Search patients...',
     filters: [
       {
@@ -155,8 +152,8 @@ const PatientsManagement = () => {
         options: GENDER_OPTIONS
       }
     ],
-    onClearAll: () => {
-      clearFilters()
+    onClearFilters: () => {
+      setSearchTerm('')
       setFilterCity('')
       setFilterStatus('')
       setFilterGender('')
@@ -255,18 +252,11 @@ const PatientsManagement = () => {
               variant: 'default',
               key: 'view'
             },
-            {
-              icon: FaEdit,
-              onClick: () => handleEdit(patient),
-              title: 'Edit Patient',
-              variant: 'default',
-              key: 'edit'
-            },
             // Show deactivate for ACTIVE patients
             ...(patient.user?.status === 'ACTIVE' ? [
               {
-                icon: FaBan,
-                onClick: () => confirmToggleStatus(patient, 'deactivate'),
+                icon: FaTimesCircle,
+                onClick: () => confirmToggleStatus(patient),
                 title: 'Deactivate',
                 variant: 'warning',
                 key: 'deactivate'
@@ -276,7 +266,7 @@ const PatientsManagement = () => {
             ...(patient.user?.status === 'DEACTIVATED' ? [
               {
                 icon: FaCheckCircle,
-                onClick: () => confirmToggleStatus(patient, 'activate'),
+                onClick: () => confirmToggleStatus(patient),
                 title: 'Activate',
                 variant: 'success',
                 key: 'activate'
@@ -309,19 +299,19 @@ const PatientsManagement = () => {
 
       {/* Data Table */}
       <DataTable
-        data={paginatedData}
+        data={patients}
         columns={columns}
         renderRow={renderRow}
-        loading={loading}
+        loading={loading || filtering}
         emptyMessage="No patients found"
         emptyIcon={FaUsers}
       />
 
       {/* Pagination */}
-      {totalPagesCalculated > 1 && (
+      {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPagesCalculated}
+          totalPages={totalPages}
           onPageChange={goToPage}
         />
       )}
@@ -405,19 +395,21 @@ const PatientsManagement = () => {
             address: selectedItem.city,
             status: selectedItem.user?.status === 'ACTIVE' ? 'active' : 'inactive'
           }}
-          onEdit={(patient) => {
-            setSelectedItem(patient)
-            setShowEditModal(true)
-            setShowDetailsModal(false)
-          }}
-          treatments={[]}
-          appointments={[]}
-          payments={[]}
+          showOnlyInformation={true}
         />
       )}
 
       {/* Confirmation Modal */}
-      <ConfirmationModal {...confirmProps} />
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={cancelOperation}
+        onConfirm={executeOperation}
+        item={selectedCrudItem}
+        action={confirmAction}
+        itemName={selectedCrudItem ? `${selectedCrudItem.firstName} ${selectedCrudItem.lastName}` : ''}
+        itemType="patient"
+        isProcessing={isProcessing}
+      />
 
       {/* Toast Notification */}
       {toast && (

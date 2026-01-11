@@ -270,7 +270,10 @@ export const patientsAPI = {
   getStats: () => ApiService.get('/patients/stats'),
   
   // Get all patients
-  getAll: () => ApiService.get('/patients'),
+  getAll: (queryParams = '') => {
+    const query = typeof queryParams === 'string' ? queryParams : `?${new URLSearchParams(queryParams).toString()}`
+    return ApiService.get(`/patients${query}`)
+  },
   
   // Get patient by ID
   getById: (id) => ApiService.get(`/patients/${id}`),

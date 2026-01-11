@@ -144,7 +144,11 @@ export const useToast = () => {
   const [toast, setToast] = useState(null)
 
   const showToast = useCallback((message, type = 'info') => {
-    setToast({ message, type })
+    if (message === null || message === undefined) {
+      setToast(null)
+    } else {
+      setToast({ message, type })
+    }
   }, [])
 
   const showSuccess = useCallback((message) => showToast(message, 'success'), [showToast])

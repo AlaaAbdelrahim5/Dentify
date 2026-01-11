@@ -42,7 +42,8 @@ const PatientDetailsModal = ({
   asFullPage = false,
   treatments = [],
   appointments = [],
-  payments = []
+  payments = [],
+  showOnlyInformation = false
 }) => {
   const { isDarkMode} = useTheme()
   const [activeTab, setActiveTab] = useState('information')
@@ -62,12 +63,17 @@ const PatientDetailsModal = ({
     }
   }
 
-  const tabs = [
+  const allTabs = [
     { id: 'information', label: 'Information', icon: FaUser },
     { id: 'treatments', label: 'Treatments', icon: FaStethoscope },
     { id: 'teethHistory', label: 'Teeth History', icon: FaTooth },
     { id: 'appointments', label: 'Appointments', icon: FaCalendarAlt }
   ]
+
+  // Filter tabs based on showOnlyInformation prop
+  const tabs = showOnlyInformation 
+    ? allTabs.filter(tab => tab.id === 'information')
+    : allTabs
 
   const getStatusIcon = (status) => {
     switch (status?.toUpperCase()) {
@@ -619,7 +625,7 @@ const PatientDetailsModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Patient Details"
-      size="4xl"
+      size="2xl"
     >
       <div className="space-y-6">
         {/* Profile Section */}
@@ -668,36 +674,38 @@ const PatientDetailsModal = ({
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className={`flex border-b ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? isDarkMode
-                      ? 'text-teal-400 border-b-2 border-teal-400 bg-gray-750'
-                      : 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
-                    : isDarkMode
-                      ? 'text-gray-400 hover:text-gray-300'
-                      : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
+        {/* Show tabs only if showOnlyInformation is false */}
+        {!showOnlyInformation && tabs.length > 1 && (
+          <div className={`flex border-b ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? isDarkMode
+                        ? 'text-teal-400 border-b-2 border-teal-400 bg-gray-750'
+                        : 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
+                      : isDarkMode
+                        ? 'text-gray-400 hover:text-gray-300'
+                        : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
-        {/* Tab Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-400px)]">
-          {renderTabContent()}
+        {/* Content */}
+        <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
+          {showOnlyInformation ? renderInformation() : renderTabContent()}
         </div>
       </div>
     </BaseModal>

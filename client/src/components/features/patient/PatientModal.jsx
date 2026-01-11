@@ -229,6 +229,7 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
       size="4xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="overflow-y-auto max-h-[calc(90vh-250px)] pr-2">
               {/* Personal Information */}
               <div>
                 <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
@@ -344,6 +345,7 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
                   </div>
                 </div>
               )}
+        </div>
 
         {/* Actions */}
         <div className={`flex justify-end gap-3 pt-6 border-t ${
