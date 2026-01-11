@@ -801,4 +801,33 @@ router.delete('/:id', authenticate, authorize('Dentist', 'Admin'), async (req, r
   }
 });
 
+// AI Analysis endpoint - Analyze X-ray image
+router.post('/analyze-xray', authenticate, authorize('Dentist', 'RadiologyCenter', 'Patient'), async (req, res) => {
+  try {
+    const { imageData, imagingType } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Image data is required' 
+      });
+    }
+
+    // Import gemini service for AI analysis
+    const geminiService = require('../services/chatbot/geminiService');
+    
+    // Analyze the X-ray image
+    const analysis = await geminiService.analyzeXRayImage(imageData, imagingType);
+
+    res.json(analysis);
+  } catch (error) {
+    console.error('X-ray analysis error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to analyze X-ray image',
+      message: error.message 
+    });
+  }
+});
+
 module.exports = router;

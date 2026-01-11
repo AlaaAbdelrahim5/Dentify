@@ -565,6 +565,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           }}
           images={selectedRequest.reportFile}
           patientName={selectedRequest.patientName}
+          imagingType={selectedRequest.imagingType}
         />
       )}
     </div>

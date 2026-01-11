@@ -547,6 +547,309 @@ Be clear, specific, and reassuring.`;
     const lowerMessage = message.toLowerCase();
     return bookingKeywords.some(keyword => lowerMessage.includes(keyword));
   }
+
+  /**
+   * Analyze dental X-ray image using AI Vision
+   * @param {string} imageData - Base64 encoded image or image URL
+   * @param {string} imagingType - Type of X-ray (e.g., 'Panoramic X-Ray', 'CBCT', etc.)
+   * @returns {Promise<Object>} Analysis results with detected problems and recommendations
+   */
+  async analyzeXRayImage(imageData, imagingType = 'Dental X-Ray') {
+    try {
+      console.log('Analyzing X-ray image with AI Vision...');
+      
+      // Try OpenAI GPT-4 Vision first (more reliable)
+      if (process.env.OPENAI_API_KEY) {
+        return await this.analyzeWithOpenAI(imageData, imagingType);
+      }
+      
+      // Fallback to Gemini (if working)
+      try {
+        const visionModel = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+        return await this.analyzeWithGemini(visionModel, imageData, imagingType);
+      } catch (geminiError) {
+        console.warn('Gemini Vision failed, using intelligent mock analysis:', geminiError.message);
+        // Use intelligent mock analysis based on image type
+        return this.generateIntelligentMockAnalysis(imagingType);
+      }
+      
+    } catch (error) {
+      console.error('X-ray Analysis Error:', error);
+      
+      return {
+        success: false,
+        error: error.message || 'Failed to analyze X-ray image',
+        analysis: 'Unable to analyze the X-ray image at this time. Please ensure the image is clear and in a supported format (JPEG, PNG). For a definitive diagnosis, please consult with your dentist.',
+        imagingType,
+        analyzedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Analyze with OpenAI GPT-4 Vision
+   */
+  async analyzeWithOpenAI(imageData, imagingType) {
+    const OpenAI = require('openai');
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    // Prepare image URL
+    let imageUrl;
+    if (imageData.startsWith('data:')) {
+      imageUrl = imageData; // GPT-4 Vision supports data URLs
+    } else if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+      imageUrl = imageData;
+    } else {
+      throw new Error('Invalid image data format');
+    }
+
+    const prompt = `You are an expert dental radiologist AI assistant. Analyze this ${imagingType} dental X-ray image and provide a comprehensive analysis.
+
+**Your analysis should include:**
+
+1. **Image Quality Assessment**: Comment on the clarity, exposure, and technical quality of the X-ray.
+
+2. **Anatomical Structures**: Identify visible dental and oral structures (teeth, bone, sinuses, etc.).
+
+3. **Detected Problems**: Carefully examine and list any potential dental issues such as:
+   - Cavities (caries) or tooth decay
+   - Bone loss or periodontal disease
+   - Impacted teeth
+   - Root canal issues or infections
+   - Fractures or cracks
+   - Abnormal growths or lesions
+   - TMJ problems
+   - Sinus issues
+   - Missing teeth or dental work
+   - Any other abnormalities
+
+4. **Recommendations**: Suggest appropriate follow-up actions or treatments based on findings.
+
+5. **Urgency Level**: Rate as LOW, MODERATE, or HIGH based on findings.
+
+**IMPORTANT GUIDELINES:**
+- Be thorough but clear in your analysis
+- Use professional but understandable language
+- If the image quality is poor or you cannot detect issues, state that clearly
+- Always recommend consulting with a dentist for definitive diagnosis
+- Include location details (upper/lower jaw, tooth numbers if possible)
+- Be objective and evidence-based
+
+Format your response as a structured analysis with clear sections.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageUrl } }
+          ]
+        }
+      ],
+      max_tokens: 1000
+    });
+
+    const analysisText = response.choices[0].message.content;
+    
+    console.log('X-ray analysis completed successfully with OpenAI');
+    
+    return {
+      success: true,
+      analysis: analysisText,
+      imagingType,
+      analyzedAt: new Date().toISOString(),
+      provider: 'OpenAI GPT-4 Vision'
+    };
+  }
+
+  /**
+   * Analyze with Gemini Vision (fallback)
+   */
+  async analyzeWithGemini(visionModel, imageData, imagingType) {
+      // Prepare the image part
+      let imagePart;
+      
+      if (imageData.startsWith('data:')) {
+        // Base64 data URI
+        const base64Data = imageData.split(',')[1];
+        const mimeType = imageData.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+        
+        imagePart = {
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        };
+      } else if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+        // URL - we need to fetch and convert to base64
+        const response = await fetch(imageData);
+        const arrayBuffer = await response.arrayBuffer();
+        const base64Data = Buffer.from(arrayBuffer).toString('base64');
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        
+        imagePart = {
+          inlineData: {
+            data: base64Data,
+            mimeType: contentType
+          }
+        };
+      } else {
+        throw new Error('Invalid image data format');
+      }
+      
+      // Create detailed prompt for dental X-ray analysis
+      const prompt = `You are an expert dental radiologist AI assistant. Analyze this ${imagingType} dental X-ray image and provide a comprehensive analysis.
+
+**Your analysis should include:**
+
+1. **Image Quality Assessment**: Comment on the clarity, exposure, and technical quality of the X-ray.
+
+2. **Anatomical Structures**: Identify visible dental and oral structures (teeth, bone, sinuses, etc.).
+
+3. **Detected Problems**: Carefully examine and list any potential dental issues such as:
+   - Cavities (caries) or tooth decay
+   - Bone loss or periodontal disease
+   - Impacted teeth
+   - Root canal issues or infections
+   - Fractures or cracks
+   - Abnormal growths or lesions
+   - TMJ problems
+   - Sinus issues
+   - Missing teeth or dental work
+   - Any other abnormalities
+
+4. **Recommendations**: Suggest appropriate follow-up actions or treatments based on findings.
+
+5. **Urgency Level**: Rate as LOW, MODERATE, or HIGH based on findings.
+
+**IMPORTANT GUIDELINES:**
+- Be thorough but clear in your analysis
+- Use professional but understandable language
+- If the image quality is poor or you cannot detect issues, state that clearly
+- Always recommend consulting with a dentist for definitive diagnosis
+- Include location details (upper/lower jaw, tooth numbers if possible)
+- Be objective and evidence-based
+
+Format your response as a structured analysis with clear sections.`;
+
+      const result = await visionModel.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      const analysisText = response.text();
+      
+      console.log('X-ray analysis completed successfully with Gemini');
+      
+      return {
+        success: true,
+        analysis: analysisText,
+        imagingType,
+        analyzedAt: new Date().toISOString(),
+        provider: 'Google Gemini Vision'
+      };
+  }
+
+  /**
+   * Generate intelligent mock analysis when AI services are unavailable
+   */
+  generateIntelligentMockAnalysis(imagingType) {
+    const analyses = {
+      'Panoramic X-Ray': `## Image Quality Assessment
+This panoramic X-ray provides a comprehensive view of the entire oral cavity, showing both upper and lower jaws.
+
+## Anatomical Structures Identified
+- Full dental arch visible (upper and lower)
+- Maxillary and mandibular bones
+- TMJ (temporomandibular joints) bilaterally
+- Maxillary sinuses
+- Nasal cavity
+
+## Observations
+**Note**: This is a simulated analysis. For accurate diagnosis, please have a qualified dentist review the actual X-ray image.
+
+Common findings that dentists look for in panoramic X-rays:
+- Overall bone density and health
+- Tooth positioning and alignment
+- Presence of all teeth or any missing teeth
+- Wisdom teeth status (impacted or erupted)
+- Sinus health
+- TMJ condition
+
+## Recommendations
+✓ Schedule a comprehensive dental examination
+✓ Discuss any symptoms or concerns with your dentist
+✓ Regular check-ups every 6 months
+
+## Urgency Level: MODERATE
+Regular dental consultation recommended for proper evaluation.
+
+---
+**Medical Disclaimer**: This is a demonstration analysis. Always consult with a licensed dentist for actual diagnosis and treatment planning.`,
+
+      'X-Ray': `## Image Quality Assessment
+Standard dental X-ray image received for analysis.
+
+## General Observations
+**Note**: This is a simulated analysis. For accurate diagnosis, please have a qualified dentist review the actual X-ray image.
+
+Typical areas examined in dental X-rays:
+- Tooth structure and integrity
+- Root health
+- Bone levels around teeth
+- Presence of decay
+- Previous dental work condition
+
+## Recommendations
+✓ Professional dental examination required
+✓ Discuss findings with your dentist
+✓ Follow preventive care guidelines
+
+## Urgency Level: LOW to MODERATE
+Schedule regular dental check-up for proper evaluation.
+
+---
+**Medical Disclaimer**: This is a demonstration analysis. Always consult with a licensed dentist for actual diagnosis and treatment planning.`,
+
+      'CBCT': `## Image Quality Assessment
+CBCT (Cone Beam Computed Tomography) provides 3D imaging of dental structures.
+
+## Advanced Imaging Analysis
+**Note**: This is a simulated analysis. CBCT scans require specialist interpretation.
+
+CBCT scans are used to evaluate:
+- Bone structure and density in 3D
+- Implant planning
+- Root canal anatomy
+- Airway assessment
+- TMJ evaluation
+- Pathology detection
+
+## Recommendations
+✓ Consultation with oral surgeon or specialist
+✓ Detailed treatment planning based on 3D data
+✓ Follow-up as recommended by specialist
+
+## Urgency Level: MODERATE
+Specialist consultation recommended for proper 3D analysis.
+
+---
+**Medical Disclaimer**: This is a demonstration analysis. CBCT scans require specialist interpretation.`
+    };
+
+    const defaultAnalysis = analyses['X-Ray'];
+    const selectedAnalysis = analyses[imagingType] || defaultAnalysis;
+
+    return {
+      success: true,
+      analysis: selectedAnalysis,
+      imagingType,
+      analyzedAt: new Date().toISOString(),
+      provider: 'Demo Analysis (AI services unavailable)',
+      isDemo: true
+    };
+  }
 }
 
 // Singleton instance

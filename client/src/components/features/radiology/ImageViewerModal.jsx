@@ -25,13 +25,19 @@ import {
   FaRuler,
   FaDrawPolygon,
   FaArrowsAltV,
-  FaArrowsAltH
+  FaArrowsAltH,
+  FaBrain,
+  FaRobot,
+  FaCheckCircle,
+  FaExclamationTriangle
 } from 'react-icons/fa'
+import { HiSparkles } from 'react-icons/hi'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { Button } from '../../common'
 import * as dicomParser from 'dicom-parser'
+import { authUtils } from '../../../utils/auth'
 
-const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, patientName = '' }) => {
+const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, patientName = '', imagingType = 'X-Ray' }) => {
   const { isDarkMode } = useTheme()
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [scale, setScale] = useState(1)
@@ -55,6 +61,12 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
   const [isDicom, setIsDicom] = useState(false)
   const [dicomImage, setDicomImage] = useState(null)
   const [isLoadingDicom, setIsLoadingDicom] = useState(false)
+  
+  // AI Analysis states
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false)
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState(null)
   
   const containerRef = useRef(null)
   const imageRef = useRef(null)
@@ -494,6 +506,47 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
     }
   }
 
+  // AI Analysis function
+  const handleAnalyzeImage = async () => {
+    try {
+      setIsAnalyzing(true)
+      setAnalysisError(null)
+      
+      const token = authUtils.getAccessToken()
+      const currentImageData = parsedImages[currentIndex]
+      
+      if (!currentImageData) {
+        throw new Error('No image available to analyze')
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/radiology-requests/analyze-xray`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          imageData: currentImageData,
+          imagingType: imagingType
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setAiAnalysis(data)
+        setShowAIAnalysis(true)
+      } else {
+        throw new Error(data.error || 'Failed to analyze image')
+      }
+    } catch (error) {
+      console.error('AI Analysis error:', error)
+      setAnalysisError(error.message || 'Failed to analyze image')
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen()
@@ -575,6 +628,26 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
           </div>
           
           <div className="flex items-center gap-3">
+            {/* AI Analysis Button */}
+            <button
+              onClick={handleAnalyzeImage}
+              disabled={isAnalyzing}
+              className="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:from-purple-600 hover:via-pink-600 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-purple-500/50 transition-all duration-200 hover:scale-105 flex items-center gap-2 group font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Analyze with AI"
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <HiSparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span>AI Analysis</span>
+                </>
+              )}
+            </button>
+            
             {parsedImages.length > 1 && (
               <>
                 <button
@@ -1172,6 +1245,91 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
                   )}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Analysis Panel */}
+      {showAIAnalysis && (aiAnalysis || analysisError) && (
+        <div className="absolute right-4 top-24 bottom-24 z-40 w-96 max-w-full">
+          <div className="h-full bg-gradient-to-b from-slate-900/98 via-slate-800/98 to-slate-900/98 backdrop-blur-xl shadow-2xl border-l border-purple-500/30 flex flex-col rounded-3xl overflow-hidden">
+            {/* Panel Header */}
+            <div className="p-4 border-b border-purple-500/20 bg-gradient-to-b from-purple-900/50 to-slate-800/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-purple-500 rounded-xl blur-md opacity-60 animate-pulse" />
+                    <div className="relative bg-gradient-to-br from-purple-500 to-pink-600 p-2.5 rounded-xl">
+                      <HiSparkles className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">AI Analysis</h3>
+                    <p className="text-xs text-purple-300">Powered by Gemini AI</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIAnalysis(false)}
+                  className="bg-slate-700/50 hover:bg-slate-600/70 text-white p-2 rounded-lg transition-all duration-200 hover:scale-110"
+                  title="Close Analysis"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+              {analysisError ? (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <FaExclamationTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-red-400 font-semibold mb-1">Analysis Error</h4>
+                      <p className="text-red-300 text-sm">{analysisError}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : aiAnalysis ? (
+                <>
+                  {/* Success Indicator */}
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 flex items-center gap-3">
+                    <FaCheckCircle className="w-5 h-5 text-green-400" />
+                    <div>
+                      <p className="text-green-400 font-semibold text-sm">Analysis Complete</p>
+                      <p className="text-green-300 text-xs">{imagingType}</p>
+                    </div>
+                  </div>
+
+                  {/* Analysis Results */}
+                  <div className="bg-slate-700/30 border border-slate-600/50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaBrain className="w-4 h-4 text-purple-400" />
+                      <h4 className="text-white font-semibold">Analysis Results</h4>
+                    </div>
+                    <div className="text-sm text-slate-200 space-y-3 whitespace-pre-wrap leading-relaxed">
+                      {aiAnalysis.analysis}
+                    </div>
+                  </div>
+
+                  {/* Timestamp */}
+                  {aiAnalysis.analyzedAt && (
+                    <div className="text-xs text-slate-400 text-center pt-2 border-t border-slate-700/50">
+                      Analyzed: {new Date(aiAnalysis.analyzedAt).toLocaleString()}
+                    </div>
+                  )}
+
+                  {/* Disclaimer */}
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3">
+                    <p className="text-yellow-300 text-xs leading-relaxed">
+                      <strong className="text-yellow-400">Disclaimer:</strong> This AI analysis is for informational purposes only 
+                      and should not replace professional medical diagnosis. Always consult with a qualified dentist for 
+                      definitive diagnosis and treatment recommendations.
+                    </p>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         </div>

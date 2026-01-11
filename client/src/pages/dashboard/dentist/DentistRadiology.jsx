@@ -639,6 +639,7 @@ const DentistRadiology = () => {
           }}
           images={selectedRequest.reportFile}
           patientName={selectedRequest.patientName}
+          imagingType={selectedRequest.imagingType}
         />
       )}
 

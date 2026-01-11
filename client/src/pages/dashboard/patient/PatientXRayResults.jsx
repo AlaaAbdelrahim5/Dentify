@@ -468,6 +468,7 @@ const PatientXRayResults = () => {
           }}
           images={selectedRequest.reportFile}
           patientName={`${selectedRequest.patient?.firstName || ''} ${selectedRequest.patient?.lastName || ''}`.trim()}
+          imagingType={selectedRequest.imagingType}
         />
       )}
     </div>
