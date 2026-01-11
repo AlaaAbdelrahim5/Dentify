@@ -80,8 +80,7 @@ const SecretariesManagement = () => {
         includeAll: 'true',
         ...externalFilters
       }
-      const queryString = new URLSearchParams(extraParams).toString()
-      const response = await secretariesAPI.getAll(queryString)
+      const response = await secretariesAPI.getAll(null, extraParams)
       // Add _id field for consistency with useCRUD hook
       const transformedData = (response.data || []).map(secretary => ({
         ...secretary,

@@ -228,9 +228,19 @@ export const secretariesAPI = {
   getStats: () => ApiService.get('/secretaries/stats'),
   
   // Get all secretaries for the clinic
-  getAll: (clinicId = null) => {
-    const params = clinicId ? `?clinicId=${clinicId}` : '';
-    return ApiService.get(`/secretaries${params}`);
+  getAll: (clinicId = null, queryParams = {}) => {
+    const params = new URLSearchParams();
+    if (clinicId) params.append('clinicId', clinicId);
+    
+    // Add any additional query parameters
+    Object.keys(queryParams).forEach(key => {
+      if (queryParams[key] !== null && queryParams[key] !== undefined) {
+        params.append(key, queryParams[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    return ApiService.get(`/secretaries${queryString ? '?' + queryString : ''}`);
   },
   
   // Get all secretaries for the authenticated clinic
