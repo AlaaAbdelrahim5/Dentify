@@ -376,117 +376,125 @@ const RadiologyManagement = () => {
   }, [isDarkMode, handleEditCenter, handleToggleCenterStatus])
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Radiology Centers Management"
-        description="Manage and add registered radiology centers in the system"
-        action={{
-          label: 'Add New Center',
-          onClick: handleAddCenter,
-          icon: FaPlus,
-          gradient: 'from-teal-600 to-cyan-600'
-        }}
-      />
-
-      {/* Search and Filters with View Toggle */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 w-full md:w-auto">
-            <FilterBar
-              searchTerm={searchTerm}
-              onSearchChange={handleSearch}
-              debouncedSearchTerm={debouncedSearchTerm}
-              filters={filters}
-              onClearFilters={clearFilters}
-              filtering={filtering}
-              searchPlaceholder="Search for center..."
-            />
-          </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              title="List View"
-            >
-              <FaList className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'map' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('map')}
-            title="Map View"
-          >
-            <FaMap className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-      </Card>
-
-      {/* List View */}
-      {viewMode === 'list' && (
-        <DataTable
-          columns={columns}
-          data={centers}
-          renderRow={renderRow}
-          loading={filtering}
-          emptyMessage="No radiology centers yet"
-          emptyIcon={FaXRay}
-          emptyTitle="No radiology centers found"
-          hasFilters={!!(searchTerm || filterCity || filterStatus)}
+    <div className="flex flex-col h-[calc(100vh-80px)] overflow-x-hidden">
+      {/* Fixed Header Section */}
+      <div className="flex-none space-y-4">
+        {/* Page Header */}
+        <PageHeader
+          title="Radiology Centers Management"
+          description="Manage and add registered radiology centers in the system"
+          action={{
+            label: 'Add New Center',
+            onClick: handleAddCenter,
+            icon: FaPlus,
+            gradient: 'from-teal-600 to-cyan-600'
+          }}
         />
-      )}
 
-      {/* Map View */}
-      {viewMode === 'map' && (
-        <div>
-          {filtering ? (
-            <div className="flex justify-center items-center py-12">
-              <LoadingSpinner />
-            </div>
-          ) : (
-            <>
-              <div className="mb-4">
-                <h3 className={`text-lg font-semibold ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Radiology Center Locations
-                </h3>
-                <p className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {centers.length} {centers.length === 1 ? 'center' : 'centers'} found
-                </p>
-              </div>
-              <MultiLocationMap
-                locations={centers.map(center => ({
-                  id: center.userId,
-                  name: center.centerName,
-                  coordinates: center.coordinates,
-                  address: center.location || center.city,
-                  data: center
-                }))}
-                onMarkerClick={(location) => {
-                  setSelectedCenter(location.data)
-                  setShowDetailsModal(true)
-                }}
-                height={500}
-                isDarkMode={isDarkMode}
+        {/* Search and Filters with View Toggle */}
+        <Card className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex-1 w-full md:w-auto">
+              <FilterBar
+                searchTerm={searchTerm}
+                onSearchChange={handleSearch}
+                debouncedSearchTerm={debouncedSearchTerm}
+                filters={filters}
+                onClearFilters={clearFilters}
+                filtering={filtering}
+                searchPlaceholder="Search for center..."
               />
-            </>
-          )}
-        </div>
-      )}
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'list' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                title="List View"
+              >
+                <FaList className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('map')}
+                title="Map View"
+              >
+                <FaMap className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {/* Scrollable Content Section */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden my-4">
+        {/* List View */}
+        {viewMode === 'list' && (
+          <DataTable
+            columns={columns}
+            data={centers}
+            renderRow={renderRow}
+            loading={filtering}
+            emptyMessage="No radiology centers yet"
+            emptyIcon={FaXRay}
+            emptyTitle="No radiology centers found"
+            hasFilters={!!(searchTerm || filterCity || filterStatus)}
+          />
+        )}
+
+        {/* Map View */}
+        {viewMode === 'map' && (
+          <div>
+            {filtering ? (
+              <div className="flex justify-center items-center py-12">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <h3 className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Radiology Center Locations
+                  </h3>
+                  <p className={`text-sm ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {centers.length} {centers.length === 1 ? 'center' : 'centers'} found
+                  </p>
+                </div>
+                <MultiLocationMap
+                  locations={centers.map(center => ({
+                    id: center.userId,
+                    name: center.centerName,
+                    coordinates: center.coordinates,
+                    address: center.location || center.city,
+                    data: center
+                  }))}
+                  onMarkerClick={(location) => {
+                    setSelectedCenter(location.data)
+                    setShowDetailsModal(true)
+                  }}
+                  height={500}
+                  isDarkMode={isDarkMode}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Pagination Section */}
+      <div className="flex-none pb-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
 
       {/* Add Center Modal */}
       <RadiologyModal

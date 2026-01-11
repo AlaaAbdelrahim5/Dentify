@@ -150,9 +150,8 @@ const ClinicDetailsModal = ({
         title="Clinic Details"
         size="2xl"
       >
-      <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto p-6">
-        {/* Profile Section */}
-        <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+        {/* Fixed Profile Section */}
+        <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700 mb-6">
           <div className="relative">
             <div className={`w-20 h-20 rounded-full ${
               isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
@@ -184,6 +183,9 @@ const ClinicDetailsModal = ({
             </span>
           </div>
         </div>
+
+        {/* Scrollable Content */}
+        <div className="space-y-6 overflow-y-auto overflow-x-hidden max-h-[calc(90vh-280px)] pr-2">
         {/* Clinic Information */}
         <div>
           <h3 className={`text-lg font-semibold mb-6 ${
@@ -729,7 +731,7 @@ const ClinicDetailsModal = ({
             </div>
           )}
         </div>
-      </div>
+        </div>
       </BaseModal>
 
       {/* Dentist Details Modal */}

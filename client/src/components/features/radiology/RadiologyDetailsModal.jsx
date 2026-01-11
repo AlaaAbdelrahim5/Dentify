@@ -23,7 +23,7 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title="Radiology Center Details" size="2xl">
       <div className="space-y-6">
-        {/* Profile Section */}
+        {/* Fixed Profile Section */}
         <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
             <div className={`w-20 h-20 rounded-full ${
@@ -53,8 +53,11 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
             </span>
           </div>
         </div>
-        {/* Basic Information */}
-        <div>
+        
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto overflow-x-hidden max-h-[calc(90vh-280px)] pr-2 space-y-6">
+          {/* Basic Information */}
+          <div>
           <h3 className={`text-lg font-semibold mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
@@ -354,6 +357,7 @@ const RadiologyDetailsModal = ({ isOpen, center, onClose }) => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </BaseModal>
   )

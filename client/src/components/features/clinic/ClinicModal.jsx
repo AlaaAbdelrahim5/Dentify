@@ -347,7 +347,7 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* General Error */}
               {errors.general && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -355,145 +355,148 @@ const ClinicModal = ({ isOpen, onClose, clinic = null, onSave }) => {
                 </div>
               )}
 
-              {/* Basic Information */}
-              <div>
-                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                  isDarkMode ? "text-white" : "text-gray-800"
-                }`}>
-                  <FaHospital className="text-teal-600" />
-                  Clinic Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Clinic Name *"
-                    type="text"
-                    value={formData.clinicName}
-                    onChange={(e) => handleInputChange("clinicName", e.target.value)}
-                    placeholder="Enter clinic name"
-                    error={errors.clinicName}
-                    icon={FaHospital}
-                  />
-
-                  <Input
-                    label="Registration Number *"
-                    type="text"
-                    value={formData.registrationNumber}
-                    onChange={(e) =>
-                      handleInputChange("registrationNumber", e.target.value)
-                    }
-                    placeholder="Enter registration number"
-                    error={errors.registrationNumber}
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+              {/* Scrollable Content */}
+              <div className="overflow-y-auto overflow-x-hidden max-h-[calc(90vh-250px)] pr-2 space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                     isDarkMode ? "text-white" : "text-gray-800"
                   }`}>
-                  <FaMapMarkerAlt className="text-teal-600" />
-                  Address Information
-                </h3>
+                    <FaHospital className="text-teal-600" />
+                    Clinic Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Clinic Name *"
+                      type="text"
+                      value={formData.clinicName}
+                      onChange={(e) => handleInputChange("clinicName", e.target.value)}
+                      placeholder="Enter clinic name"
+                      error={errors.clinicName}
+                      icon={FaHospital}
+                    />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="City *"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    error={errors.city}
-                    options={CITY_OPTIONS}
-                    placeholder="Select City"
-                    icon={FaMapMarkerAlt}
-                  />
-
-                  <Input
-                    label="Location *"
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) =>
-                      handleInputChange("location", e.target.value)
-                    }
-                    placeholder="Enter location details"
-                    error={errors.location}
-                    icon={FaMapMarkerAlt}
-                  />
+                    <Input
+                      label="Registration Number *"
+                      type="text"
+                      value={formData.registrationNumber}
+                      onChange={(e) =>
+                        handleInputChange("registrationNumber", e.target.value)
+                      }
+                      placeholder="Enter registration number"
+                      error={errors.registrationNumber}
+                    />
+                  </div>
                 </div>
 
-                {/* Location Map Picker */}
-                <div className="mt-6">
-                  <LocationPicker
-                    label="Pin Location on Map (Optional)"
-                    value={formData.coordinates}
-                    onChange={(value) => handleInputChange("coordinates", value)}
-                    error={errors.coordinates}
-                    height={350}
-                    showMyLocationButton={true}
-                  />
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                    isDarkMode ? "text-white" : "text-gray-800"
-                  }`}>
-                  <FaPhone className="text-teal-600" />
-                  Contact Information
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Email *"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      handleInputChange("email", e.target.value)
-                    }
-                    placeholder="clinic@example.com"
-                    error={errors.email}
-                    icon={FaEnvelope}
-                  />
-
-                  <PhoneInput
-                    label="Phone Number *"
-                    countryCode={formData.countryCode}
-                    phoneNumber={formData.phoneNumber}
-                    onCountryChange={handleCountryCodeChange}
-                    onPhoneChange={handlePhoneNumberChange}
-                    placeholder="Enter phone number"
-                    error={errors.phone}
-                    icon={FaPhone}
-                  />
-                </div>
-              </div>
-
-              {/* Account Security */}
-              {!clinic && (
+                {/* Address */}
                 <div>
                   <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
                       isDarkMode ? "text-white" : "text-gray-800"
                     }`}>
-                    <FaLock className="text-teal-600" />
-                    Account Security
+                    <FaMapMarkerAlt className="text-teal-600" />
+                    Address Information
                   </h3>
-                  
-                  <Input
-                    label="Password *"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) =>
-                      handleInputChange("password", e.target.value)
-                    }
-                    placeholder="Enter password"
-                    error={errors.password}
-                    icon={FaLock}
-                  />
-                </div>
-              )}
 
-              {/* Action Buttons */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                      label="City *"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      error={errors.city}
+                      options={CITY_OPTIONS}
+                      placeholder="Select City"
+                      icon={FaMapMarkerAlt}
+                    />
+
+                    <Input
+                      label="Location *"
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) =>
+                        handleInputChange("location", e.target.value)
+                      }
+                      placeholder="Enter location details"
+                      error={errors.location}
+                      icon={FaMapMarkerAlt}
+                    />
+                  </div>
+
+                  {/* Location Map Picker */}
+                  <div className="mt-6">
+                    <LocationPicker
+                      label="Pin Location on Map (Optional)"
+                      value={formData.coordinates}
+                      onChange={(value) => handleInputChange("coordinates", value)}
+                      error={errors.coordinates}
+                      height={350}
+                      showMyLocationButton={true}
+                    />
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}>
+                    <FaPhone className="text-teal-600" />
+                    Contact Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Email *"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
+                      placeholder="clinic@example.com"
+                      error={errors.email}
+                      icon={FaEnvelope}
+                    />
+
+                    <PhoneInput
+                      label="Phone Number *"
+                      countryCode={formData.countryCode}
+                      phoneNumber={formData.phoneNumber}
+                      onCountryChange={handleCountryCodeChange}
+                      onPhoneChange={handlePhoneNumberChange}
+                      placeholder="Enter phone number"
+                      error={errors.phone}
+                      icon={FaPhone}
+                    />
+                  </div>
+                </div>
+
+                {/* Account Security */}
+                {!clinic && (
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                        isDarkMode ? "text-white" : "text-gray-800"
+                      }`}>
+                      <FaLock className="text-teal-600" />
+                      Account Security
+                    </h3>
+                    
+                    <Input
+                      label="Password *"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        handleInputChange("password", e.target.value)
+                      }
+                      placeholder="Enter password"
+                      error={errors.password}
+                      icon={FaLock}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Fixed Action Buttons */}
               <div
                 className={`flex justify-end gap-3 pt-6 border-t ${
                   isDarkMode ? "border-gray-700" : "border-gray-200"

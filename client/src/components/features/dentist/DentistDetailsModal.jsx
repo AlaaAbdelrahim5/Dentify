@@ -490,62 +490,60 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
       title="Dentist Details"
       size="2xl"
     >
-      <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-        {/* Profile Section */}
-        <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative">
-            {dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? (
-              <img
-                src={getImageUrl(dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage)}
-                alt={`Dr. ${dentistData.firstName} ${dentistData.lastName}`}
-                className="w-20 h-20 rounded-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextElementSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div className={`w-20 h-20 rounded-full ${
-              isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-            } flex items-center justify-center ${dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? 'hidden' : ''}`}>
-              <FaUser className="w-10 h-10 text-teal-500" />
-            </div>
-          </div>
-          <div className="flex-1">
-            <h3 className={`text-xl font-bold mb-1 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Dr. {dentistData.firstName} {dentistData.lastName}
-            </h3>
-            <p className={`text-sm mb-2 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Dentist
-            </p>
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-              dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                : dentistData.user?.status === 'PENDING' || dentistData.userId?.status === 'PENDING'
-                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-            }`}>
-              <StatusIcon className="w-3 h-3" />
-              {statusInfo.label}
-            </span>
+      {/* Fixed Profile Section */}
+      <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div className="relative">
+          {dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? (
+            <img
+              src={getImageUrl(dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage)}
+              alt={`Dr. ${dentistData.firstName} ${dentistData.lastName}`}
+              className="w-20 h-20 rounded-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div className={`w-20 h-20 rounded-full ${
+            isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+          } flex items-center justify-center ${dentistData.user?.profileImage || dentistData.userId?.profileImage || dentistData.profileImage ? 'hidden' : ''}`}>
+            <FaUser className="w-10 h-10 text-teal-500" />
           </div>
         </div>
+        <div className="flex-1">
+          <h3 className={`text-xl font-bold mb-1 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Dr. {dentistData.firstName} {dentistData.lastName}
+          </h3>
+          <p className={`text-sm mb-2 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            Dentist
+          </p>
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+            dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+              : dentistData.user?.status === 'PENDING' || dentistData.userId?.status === 'PENDING'
+              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+          }`}>
+            <StatusIcon className="w-3 h-3" />
+            {statusInfo.label}
+          </span>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="space-y-6">
-          {/* Personal & Contact Information */}
-          {renderOverview()}
-          
-          {/* Working Schedule */}
-          {renderSchedule()}
-          
-          {/* Social Links */}
-          {renderSocialLinks()}
-        </div>
+      {/* Scrollable Content */}
+      <div className="space-y-6 overflow-y-auto overflow-x-hidden max-h-[calc(90vh-280px)] pr-2">
+        {/* Personal & Contact Information */}
+        {renderOverview()}
+        
+        {/* Working Schedule */}
+        {renderSchedule()}
+        
+        {/* Social Links */}
+        {renderSocialLinks()}
       </div>
     </BaseModal>
   )

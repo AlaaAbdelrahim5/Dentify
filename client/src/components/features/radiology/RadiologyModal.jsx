@@ -332,6 +332,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
       }
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="overflow-y-auto overflow-x-hidden max-h-[calc(90vh-250px)] pr-2 space-y-6">
               {/* General Error */}
               {errors.general && (
                 <div
@@ -511,6 +512,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                   />
                 </div>
               )}
+        </div>
 
               {/* Action Buttons */}
               <div

@@ -135,8 +135,9 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
       size="2xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* General Error */}
-        {errors.general && (
+        <div className="overflow-y-auto overflow-x-hidden max-h-[calc(90vh-250px)] pr-2">
+          {/* General Error */}
+          {errors.general && (
           <div className={`p-4 rounded-lg border ${
             isDarkMode 
               ? 'bg-red-900/20 border-red-800 text-red-400' 
@@ -253,6 +254,7 @@ export const AddAdminModal = ({ isOpen, onClose, onSave }) => {
             placeholder="Enter password"
             error={errors.password}
           />
+        </div>
         </div>
 
         {/* Action Buttons */}
