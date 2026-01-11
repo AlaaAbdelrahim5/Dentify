@@ -12,6 +12,7 @@ import DentistsManagement from './admin/DentistsManagement'
 import PatientsManagement from './admin/PatientsManagement'
 import AdminsManagement from './admin/AdminsManagement'
 import AdminSecretariesManagement from './admin/SecretariesManagement'
+import AdminAnalytics from './admin/AdminAnalytics'
 import AdminSettings from './admin/AdminSettings'
 
 // Import clinic components
@@ -112,7 +113,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
           patients: { component: PatientsManagement, label: 'Patients' },
           radiology: { component: RadiologyManagement, label: 'Radiology' },
           admins: { component: AdminsManagement, label: 'Admins' },
-          analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
+          analytics: { component: AdminAnalytics, label: 'Analytics', icon: FaChartBar },
           settings: { component: AdminSettings, label: 'Settings' }
         }
       },
