@@ -45,6 +45,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
   const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false)
   const [isSessionCostModalOpen, setIsSessionCostModalOpen] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     fetchAppointments()
@@ -210,9 +211,10 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
     try {
       await appointmentsAPI.update(appointmentId, { status: 'CONFIRMED' })
       await fetchAppointments()
+      setToast({ type: 'success', message: 'Appointment confirmed successfully!' })
     } catch (err) {
       console.error('Error confirming appointment:', err)
-      alert('Failed to confirm appointment. Please try again.')
+      setToast({ type: 'error', message: 'Failed to confirm appointment. Please try again.' })
     }
   }
 
@@ -227,9 +229,11 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       await fetchAppointments()
       setIsCancelModalOpen(false)
       setSelectedAppointment(null)
+      setToast({ type: 'success', message: 'Appointment cancelled successfully!' })
     } catch (err) {
       console.error('Error cancelling appointment:', err)
-      alert('Failed to cancel appointment. Please try again.')
+      setToast({ type: 'error', message: 'Failed to cancel appointment. Please try again.' })
+      setIsCancelModalOpen(false)
     }
   }
 
@@ -247,6 +251,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       await appointmentsAPI.create(appointmentData)
       await fetchAppointments()
       setIsNewAppointmentModalOpen(false)
+      setToast({ type: 'success', message: 'Appointment created successfully!' })
     } catch (err) {
       console.error('Error creating appointment:', err)
       throw err // Re-throw so modal can handle the error
@@ -256,7 +261,7 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
   const handleCompleteAppointment = (appointment) => {
     // Check if appointment is linked to a treatment
     if (!appointment.rawData?.treatmentId) {
-      alert('This appointment is not linked to a treatment. Session cost can only be added for treatment-related appointments.')
+      setToast({ type: 'error', message: 'This appointment is not linked to any treatment. Cannot mark as completed.' })
       return
     }
     setSelectedAppointment(appointment)
@@ -269,9 +274,11 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       await fetchAppointments()
       setIsSessionCostModalOpen(false)
       setSelectedAppointment(null)
+      setToast({ type: 'success', message: 'Appointment completed successfully!' })
     } catch (err) {
       console.error('Error completing appointment:', err)
       const errorMessage = err.response?.data?.error || err.message || 'Failed to complete appointment. Please try again.'
+      setToast({ type: 'error', message: errorMessage })
       throw new Error(errorMessage)
     }
   }
@@ -616,6 +623,15 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
           treatment: selectedAppointment.treatment
         } : null}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
