@@ -50,7 +50,7 @@ const TreatmentDetailsModal = ({
       
       // Fetch appointments based on user role
       let response
-      if (currentUser?.role === 'Secretary') {
+      if (currentUser?.role === 'Secretary' || currentUser?.role === 'Clinic') {
         response = await appointmentsAPI.getClinicAppointments()
       } else {
         response = await appointmentsAPI.getDentistAppointments()

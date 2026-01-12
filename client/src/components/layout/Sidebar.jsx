@@ -128,12 +128,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
       //   icon: FaBoxes,
       //   description: 'Manage clinic inventory and supplies'
       // },
-      { 
-        id: 'expenses', 
-        label: 'Expenses & Invoices', 
-        icon: FaFileInvoiceDollar,
-        description: 'Manage invoices and clinic expenses'
-      },
+      // { 
+      //   id: 'expenses', 
+      //   label: 'Expenses & Invoices', 
+      //   icon: FaFileInvoiceDollar,
+      //   description: 'Manage invoices and clinic expenses'
+      // },
       { 
         id: 'analytics', 
         label: 'Analytics', 

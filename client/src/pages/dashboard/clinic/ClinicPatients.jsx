@@ -50,31 +50,59 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       setLoading(true)
       setError(null)
       
-      // Get all patients for clinic
-      const patientsRes = await patientsAPI.getAll()
-      const apiPatients = patientsRes.patients || []
-      
-      // Transform patients to expected format
-      const transformedPatients = apiPatients.map(patient => ({
-        id: patient.userId,
-        name: `${patient.firstName} ${patient.lastName}`,
-        firstName: patient.firstName,
-        lastName: patient.lastName,
-        email: patient.user?.email || 'N/A',
-        phone: patient.user?.phone || 'N/A',
-        dateOfBirth: patient.birthDate,
-        city: patient.city,
-        gender: patient.gender,
-        status: patient.user?.status === 'ACTIVE' ? 'active' : 'inactive',
-        avatar: patient.user?.profileImage,
-        birthDate: patient.birthDate
-      }))
-      
-      setPatients(transformedPatients)
-      
-      // Get clinic-specific treatments to calculate stats
+      // Get clinic-specific treatments first
       const treatmentsRes = await treatmentsAPI.getClinicTreatments()
       const treatments = treatmentsRes.treatments || []
+      
+      // Get clinic appointments
+      const appointmentsRes = await appointmentsAPI.getClinicAppointments()
+      const appointments = appointmentsRes.appointments || []
+      
+      // Extract unique patients from treatments and appointments
+      const patientMap = new Map()
+      
+      // Add patients from treatments
+      treatments.forEach(treatment => {
+        if (treatment.patient && !patientMap.has(treatment.patient.userId)) {
+          patientMap.set(treatment.patient.userId, {
+            id: treatment.patient.userId,
+            name: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
+            firstName: treatment.patient.firstName,
+            lastName: treatment.patient.lastName,
+            email: treatment.patient.user?.email || 'N/A',
+            phone: treatment.patient.user?.phone || 'N/A',
+            dateOfBirth: treatment.patient.birthDate,
+            city: treatment.patient.city,
+            gender: treatment.patient.gender,
+            status: treatment.patient.user?.status === 'ACTIVE' ? 'active' : 'inactive',
+            avatar: treatment.patient.user?.profileImage,
+            birthDate: treatment.patient.birthDate
+          })
+        }
+      })
+      
+      // Add patients from appointments (if not already added)
+      appointments.forEach(apt => {
+        if (apt.patient && !patientMap.has(apt.patient.userId)) {
+          patientMap.set(apt.patient.userId, {
+            id: apt.patient.userId,
+            name: `${apt.patient.firstName} ${apt.patient.lastName}`,
+            firstName: apt.patient.firstName,
+            lastName: apt.patient.lastName,
+            email: apt.patient.user?.email || 'N/A',
+            phone: apt.patient.user?.phone || 'N/A',
+            dateOfBirth: apt.patient.birthDate,
+            city: apt.patient.city,
+            gender: apt.patient.gender,
+            status: apt.patient.user?.status === 'ACTIVE' ? 'active' : 'inactive',
+            avatar: apt.patient.user?.profileImage,
+            birthDate: apt.patient.birthDate
+          })
+        }
+      })
+      
+      const transformedPatients = Array.from(patientMap.values())
+      setPatients(transformedPatients)
       
       // Calculate stats from treatments
       const activeTreatments = treatments.filter(t => t.status === 'IN_PROGRESS').length
