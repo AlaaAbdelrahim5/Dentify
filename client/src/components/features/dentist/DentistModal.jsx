@@ -250,14 +250,37 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       isOpen={isOpen}
       onClose={onClose}
       size="4xl"
-      title={
-        <div className="flex items-center gap-3">
-          <FaUserMd className="w-6 h-6 text-teal-600" />
-          <span>{dentist ? 'Edit Dentist' : 'Request New Dentist'}</span>
-        </div>
-      }
+      noPadding
+      showCloseButton={false}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="flex flex-col h-[80vh]">
+        {/* Fixed Header */}
+        <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center gap-3">
+            <FaUserMd className="w-6 h-6 text-teal-600" />
+            <h2 className={`text-xl font-semibold ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              {dentist ? 'Edit Dentist' : 'Request New Dentist'}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode
+                ? 'hover:bg-gray-700 text-gray-400'
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
               {/* General Error */}
               {errors.submit && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -407,32 +430,33 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
                   </p>
                 </div>
               )}
+        </div>
 
-              {/* Actions */}
-              <div className={`flex justify-end gap-3 pt-6 border-t ${
-                isDarkMode ? 'border-gray-700' : 'border-gray-200'
-              }`}>
-                <Button
-                  type="button"
-                  onClick={onClose}
-                  variant="outline"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    dentist ? 'Update Dentist' : 'Send Request'
-                  )}
-                </Button>
-              </div>
-            </form>
+        {/* Fixed Footer */}
+        <div className={`flex justify-end gap-3 px-6 py-4 border-t shrink-0 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="outline"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              dentist ? 'Update Dentist' : 'Send Request'
+            )}
+          </Button>
+        </div>
+      </form>
     </BaseModal>
   )
 }

@@ -37,7 +37,8 @@ import {
   ActionButtons,
   ConfirmationModal,
   DentistModal,
-  DentistDetailsModal
+  DentistDetailsModal,
+  Toast
 } from '../../../components'
 import { dentistsAPI } from '../../../services/api'
 
@@ -48,6 +49,7 @@ const DentistsManagement = () => {
   const [loading, setLoading] = useState(true)
   const [filtering, setFiltering] = useState(false)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSpecialization, setFilterSpecialization] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -111,12 +113,12 @@ const DentistsManagement = () => {
         
         setStats({ total, active, pending, rejected, inactive })
       } else {
-        setError(response?.message || 'Failed to load dentists')
+        setToast({ type: 'error', message: response?.message || 'Failed to load dentists' })
       }
     } catch (error) {
       console.error('Error loading dentists:', error)
       const errorMessage = error.response?.data?.message || error.message || 'Failed to load dentists. Please try again.'
-      setError(errorMessage)
+      setToast({ type: 'error', message: errorMessage })
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -219,17 +221,21 @@ const DentistsManagement = () => {
       if (response && response.success) {
         // Refresh the list to update status
         await loadDentists(true)
+        setToast({ 
+          type: 'success', 
+          message: `Dentist ${action === 'activate' ? 'activated' : 'deactivated'} successfully!` 
+        })
         setShowConfirmModal(false)
         setDentistToToggle(null)
         setConfirmAction(null)
       } else {
-        setError(response?.message || `Failed to ${action} dentist`)
+        setToast({ type: 'error', message: response?.message || `Failed to ${action} dentist` })
         setShowConfirmModal(false)
       }
     } catch (error) {
       console.error(`Error ${action}ing dentist:`, error)
       const errorMessage = error.response?.data?.message || error.message || `Failed to ${action} dentist. Please try again.`
-      setError(errorMessage)
+      setToast({ type: 'error', message: errorMessage })
       setShowConfirmModal(false)
     }
   }
@@ -267,10 +273,11 @@ const DentistsManagement = () => {
           ))
           setIsModalOpen(false)
           setSelectedDentist(null)
+          setToast({ type: 'success', message: 'Dentist updated successfully!' })
           // Refresh to update stats
           loadDentists(true)
         } else {
-          setError(response.message || 'Failed to update dentist')
+          setToast({ type: 'error', message: response.message || 'Failed to update dentist' })
         }
       } else {
         // Add new dentist
@@ -285,17 +292,20 @@ const DentistsManagement = () => {
           }
           setDentists(prev => [newDentist, ...prev])
           setIsModalOpen(false)
-          alert('Dentist request sent successfully. Status: PENDING - Awaiting admin approval.')
+          setToast({ 
+            type: 'success', 
+            message: 'Dentist request sent successfully! Status: Pending - Awaiting admin approval.' 
+          })
           // Refresh to update stats
           loadDentists(true)
         } else {
-          setError(response.message || 'Failed to create dentist request')
+          setToast({ type: 'error', message: response.message || 'Failed to create dentist request' })
         }
       }
     } catch (error) {
       console.error('Error saving dentist:', error)
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save dentist. Please try again.'
-      setError(errorMessage)
+      setToast({ type: 'error', message: errorMessage })
     }
   }
 
@@ -378,9 +388,17 @@ const DentistsManagement = () => {
     <tr key={dentist._id} className={isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
-            <FaUserMd className="w-5 h-5 text-white" />
-          </div>
+          {dentist.userId?.profileImage || dentist.user?.profileImage ? (
+            <img
+              src={dentist.userId?.profileImage || dentist.user?.profileImage}
+              alt={`Dr. ${dentist.firstName} ${dentist.lastName}`}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-linear-to-r from-teal-600 to-cyan-600 flex items-center justify-center">
+              <FaUserMd className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div className="ml-3">
             <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Dr. {dentist.firstName} {dentist.lastName}
@@ -487,32 +505,6 @@ const DentistsManagement = () => {
         }}
       />
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="text-red-400">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
-            </div>
-            <div className="ml-auto">
-              <button
-                onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Search and Filters */}
       <Card className="p-4">
         <FilterBar {...filterProps} />
@@ -564,6 +556,15 @@ const DentistsManagement = () => {
         itemName={dentistToToggle ? `Dr. ${dentistToToggle.firstName} ${dentistToToggle.lastName}` : ''}
         itemType="Dentist"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
