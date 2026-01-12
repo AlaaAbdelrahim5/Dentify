@@ -728,13 +728,7 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
       return notFoundResponse(res, 'Dentist');
     }
 
-    // Update user status to REJECTED
-    await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { status: 'REJECTED' }
-    });
-
-    // Send notification to clinic
+    // Send notification to clinic before deleting
     try {
       await sendNotification(
         dentist.clinicId,
@@ -753,8 +747,13 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
     } catch (notifError) {
       console.error('Failed to send clinic notification:', notifError);
     }
+
+    // Delete the user (cascade will delete dentist record)
+    await prisma.user.delete({
+      where: { id: parseInt(id) }
+    });
     
-    return successResponse(res, { reason }, 'Dentist rejected successfully');
+    return successResponse(res, { reason }, 'Dentist rejected and removed successfully');
   } catch (error) {
     return errorResponse(res, 'Failed to reject dentist');
   }

@@ -242,9 +242,7 @@ enum UserRole {
 enum UserStatus {
   ACTIVE
   PENDING
-  REJECTED
   DEACTIVATED
-  DELETED
 }
 
 enum Gender {
@@ -272,7 +270,6 @@ enum PaymentMethod {
 
 enum RequestStatus {
   REQUESTED
-  IN_PROGRESS
   COMPLETED
   CANCELLED
 }

@@ -75,11 +75,6 @@ export const getStatusDisplay = (status) => {
         label: 'Pending',
         className: 'bg-amber-100 text-amber-800 border-amber-500 font-medium dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
       }
-    case 'rejected':
-      return {
-        label: 'Rejected',
-        className: 'bg-red-100 text-red-800 border-red-500 font-medium dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
-      }
     case 'deactivated':
       return {
         label: 'Deactivated',
@@ -177,11 +172,6 @@ export const getStatusColor = (status, isDarkMode = false) => {
       return isDarkMode 
         ? 'bg-gray-900/30 text-gray-400 border-gray-600' 
         : 'bg-gray-100 text-gray-700 border-gray-400'
-    
-    case 'REJECTED':
-      return isDarkMode 
-        ? 'bg-red-900/30 text-red-400 border-red-600' 
-        : 'bg-red-100 text-red-700 border-red-400'
     
     default:
       return isDarkMode 

@@ -30,13 +30,6 @@ router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), asyn
       }
     });
 
-    const inProgress = await prisma.radiologyRequest.count({
-      where: { 
-        ...whereClause,
-        status: 'IN_PROGRESS'
-      }
-    });
-
     const completed = await prisma.radiologyRequest.count({
       where: { 
         ...whereClause,
@@ -507,9 +500,7 @@ router.patch('/:id/status', authenticate, authorize('RadiologyCenter', 'Dentist'
       
       // Notify patient about status change
       let patientMessage = '';
-      if (newStatus === 'IN_PROGRESS') {
-        patientMessage = `Your radiology request for ${radiologyRequest.imagingType} is now being processed.`;
-      } else if (newStatus === 'COMPLETED') {
+      if (newStatus === 'COMPLETED') {
         patientMessage = `Your radiology results for ${radiologyRequest.imagingType} are now available.`;
       } else if (newStatus === 'CANCELLED') {
         patientMessage = `Your radiology request for ${radiologyRequest.imagingType} has been cancelled.`;

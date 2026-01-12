@@ -144,7 +144,6 @@ export const DAYS_OF_WEEK = [
 export const STATUS_OPTIONS = [
   { value: 'PENDING', label: 'Pending Approval' },
   { value: 'ACTIVE', label: 'Active' },
-  { value: 'REJECTED', label: 'Rejected' },
   { value: 'DEACTIVATED', label: 'Deactivated' }
 ]
 

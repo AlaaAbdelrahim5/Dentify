@@ -94,11 +94,6 @@ export const getStatusColors = (status, isDarkMode = false) => {
       text: isDarkMode ? COLORS.yellow[400] : COLORS.yellow[700],
       border: isDarkMode ? COLORS.yellow[600] : COLORS.yellow[400],
     },
-    'IN_PROGRESS': {
-      bg: isDarkMode ? COLORS.green[900] + '4D' : COLORS.green[100],
-      text: isDarkMode ? COLORS.green[400] : COLORS.green[700],
-      border: isDarkMode ? COLORS.green[600] : COLORS.green[400],
-    },
     'COMPLETED': {
       bg: isDarkMode ? COLORS.blue[900] + '4D' : COLORS.blue[100],
       text: isDarkMode ? COLORS.blue[400] : COLORS.blue[700],
@@ -133,11 +128,6 @@ export const getStatusColors = (status, isDarkMode = false) => {
       bg: isDarkMode ? COLORS.gray[900] + '4D' : COLORS.gray[100],
       text: isDarkMode ? COLORS.gray[400] : COLORS.gray[700],
       border: isDarkMode ? COLORS.gray[600] : COLORS.gray[400],
-    },
-    'REJECTED': {
-      bg: isDarkMode ? COLORS.red[900] + '4D' : COLORS.red[100],
-      text: isDarkMode ? COLORS.red[400] : COLORS.red[700],
-      border: isDarkMode ? COLORS.red[600] : COLORS.red[400],
     },
   };
   

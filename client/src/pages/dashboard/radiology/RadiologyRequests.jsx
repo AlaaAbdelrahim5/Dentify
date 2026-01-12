@@ -221,10 +221,9 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     
     const total = requests.length
     const requested = requests.filter(r => r.status === 'REQUESTED').length
-    const inProgress = requests.filter(r => r.status === 'IN_PROGRESS').length
     const completed = requests.filter(r => r.status === 'COMPLETED').length
     
-    return { total, requested, inProgress, completed }
+    return { total, requested, completed }
   }, [requests, isLoading])
 
   const handleViewDetails = (request) => {
@@ -246,8 +245,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
     switch (status) {
       case 'REQUESTED':
         return <FaClock className="w-4 h-4" />
-      case 'IN_PROGRESS':
-        return <FaExclamationCircle className="w-4 h-4" />
       case 'COMPLETED':
         return <FaCheck className="w-4 h-4" />
       case 'CANCELLED':
@@ -262,7 +259,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const getStatusLabel = (status) => {
     const statusMap = {
       'REQUESTED': 'Requested',
-      'IN_PROGRESS': 'In Progress',
       'COMPLETED': 'Completed',
       'CANCELLED': 'Cancelled'
     }
@@ -316,7 +312,6 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   options: [
                     { value: 'all', label: 'All Status' },
                     { value: 'REQUESTED', label: 'Requested' },
-                    { value: 'IN_PROGRESS', label: 'In Progress' },
                     { value: 'COMPLETED', label: 'Completed' },
                     { value: 'CANCELLED', label: 'Cancelled' }
                   ],
