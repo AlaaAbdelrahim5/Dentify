@@ -31,7 +31,8 @@ import {
   ActionButtons,
   ConfirmationModal,
   SecretaryModal,
-  SecretaryDetailsModal
+  SecretaryDetailsModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
@@ -58,6 +59,7 @@ const SecretariesManagement = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -93,12 +95,12 @@ const SecretariesManagement = () => {
         
         setStats({ total, pending, active })
       } else {
-        setError(response?.message || 'Failed to fetch secretaries')
+        setToast({ type: 'error', message: response?.message || 'Failed to fetch secretaries' })
       }
     } catch (error) {
       console.error('Error fetching secretaries:', error)
       const errorMessage = error.response?.data?.message || error.message || 'Failed to load secretaries'
-      setError(errorMessage)
+      setToast({ type: 'error', message: errorMessage })
     } finally {
       if (isFiltering) {
         setFiltering(false)
@@ -212,14 +214,20 @@ const SecretariesManagement = () => {
 
       if (response.success) {
         setShowConfirmModal(false)
+        setToast({ 
+          type: 'success', 
+          message: `Secretary ${action === 'activate' ? 'activated' : 'deactivated'} successfully!` 
+        })
         // Refresh to get updated data
         fetchSecretaries(true)
       } else {
-        setError(`Failed to ${action} secretary: ` + (response.error || response.message || 'Unknown error'))
+        setToast({ type: 'error', message: `Failed to ${action} secretary: ` + (response.error || response.message || 'Unknown error') })
+        setShowConfirmModal(false)
       }
     } catch (error) {
       console.error(`Error ${action}ing secretary:`, error)
-      setError(`Network error. Please try again. Details: ${error.message}`)
+      setToast({ type: 'error', message: `Network error. Please try again. Details: ${error.message}` })
+      setShowConfirmModal(false)
     }
   }
 
@@ -255,9 +263,10 @@ const SecretariesManagement = () => {
           ))
           setShowEditModal(false)
           setSelectedSecretary(null)
+          setToast({ type: 'success', message: 'Secretary updated successfully!' })
           // No need to refresh - client-side filtering will update automatically
         } else {
-          setError(response.message || 'Failed to update secretary')
+          setToast({ type: 'error', message: response.message || 'Failed to update secretary' })
         }
       } else {
         // Add new secretary - match the expected API structure
@@ -282,17 +291,20 @@ const SecretariesManagement = () => {
           // Add the new secretary to the list
           setSecretaries(prev => [response.data, ...prev])
           setShowAddModal(false)
-          alert('Secretary request sent successfully. Status: PENDING - Awaiting admin approval.')
+          setToast({ 
+            type: 'success', 
+            message: 'Secretary request sent successfully! Status: Pending - Awaiting admin approval.' 
+          })
           // Refresh to update stats
           fetchSecretaries()
         } else {
-          setError(response.message || 'Failed to create secretary')
+          setToast({ type: 'error', message: response.message || 'Failed to create secretary' })
         }
       }
     } catch (error) {
       console.error('Error saving secretary:', error)
       const errorMessage = error.response?.data?.message || error.message || 'Failed to save secretary. Please try again.'
-      setError(errorMessage)
+      setToast({ type: 'error', message: errorMessage })
     }
   }
 
@@ -550,6 +562,15 @@ const SecretariesManagement = () => {
         itemType="Secretary"
         {...confirmProps}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

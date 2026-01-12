@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaUserTie, FaMapMarkerAlt, FaLock } from 'react-icons/fa'
+import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaUserTie, FaMapMarkerAlt, FaLock, FaTimes } from 'react-icons/fa'
 import { Button, Input, BaseModal, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { PALESTINIAN_CITIES } from '../../../utils/constants'
@@ -183,10 +183,38 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={secretary ? 'Edit Secretary' : 'Request New Secretary'}
       size="4xl"
+      noPadding
+      showCloseButton={false}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="flex flex-col h-[80vh]">
+        {/* Fixed Header */}
+        <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center gap-3">
+            <FaUserTie className="w-6 h-6 text-teal-600" />
+            <h2 className={`text-xl font-semibold ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              {secretary ? 'Edit Secretary' : 'Request New Secretary'}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`p-2 rounded-lg transition-colors ${
+              isDarkMode
+                ? 'hover:bg-gray-700 text-gray-400'
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
             {/* General Error */}
             {errors.submit && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -351,10 +379,11 @@ const SecretaryModal = ({ isOpen, onClose, onSave, secretary }) => {
             </p>
           </div>
         )}
+        </div>
 
-        {/* Actions */}
-        <div className={`flex justify-end gap-3 pt-6 border-t ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        {/* Fixed Footer */}
+        <div className={`flex justify-end gap-3 px-6 py-4 border-t shrink-0 ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <Button
             type="button"
