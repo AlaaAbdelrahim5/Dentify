@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FaTooth, FaUserMd, FaCalendarAlt } from 'react-icons/fa'
-import { Card, Button, StatusBadge, WelcomeCard } from '../../../components'
+import { Card, Button, StatusBadge, WelcomeCard, LoadingSpinner } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { appointmentsAPI } from '../../../services/api'
 
@@ -56,19 +56,7 @@ const PatientOverview = ({ userData, onTabChange }) => {
 
       {isLoading ? (
         <Card className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="h-6 w-40 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-            <div className="h-8 w-20 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-          </div>
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
-                <div className="h-5 w-32 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-2"></div>
-                <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded animate-pulse mb-1"></div>
-                <div className="h-4 w-40 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-              </div>
-            ))}
-          </div>
+          <LoadingSpinner size="lg" message="Loading appointments..." />
         </Card>
       ) : upcomingAppointments.length > 0 ? (
         <Card className="p-6">
