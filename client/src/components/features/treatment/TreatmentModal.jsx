@@ -279,6 +279,7 @@ const TreatmentModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    console.log('HandleChange triggered:', { name, value })
     
     // If treatment name is being changed, auto-fill the cost
     if (name === 'treatmentName' && value) {
@@ -557,6 +558,8 @@ const TreatmentModal = ({
                     ]}
                     disabled={!!appointmentData || !!initialData}
                   />
+                  {console.log('Patients prop in modal:', patients)}
+                  {console.log('Form data patientId:', formData.patientId)}
                   {errors.patientId && (
                     <p className="text-red-500 text-sm mt-1">{errors.patientId}</p>
                   )}

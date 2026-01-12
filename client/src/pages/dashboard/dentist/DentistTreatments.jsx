@@ -105,17 +105,43 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
     try {
       setLoading(true)
       setError(null)
-      const [treatmentsRes, patientsRes, appointmentsRes, radiologyRes] = await Promise.all([
+      const [treatmentsRes, appointmentsRes, radiologyRes] = await Promise.all([
         treatmentsAPI.getDentistTreatments(),
-        patientsAPI.getAll(),
         appointmentsAPI.getDentistAppointments(),
         radiologyAPI.getAll('limit=100&isActive=true')
       ])
       
+      console.log('Fetched treatments response:', treatmentsRes)
+      console.log('Fetched appointments response:', appointmentsRes)
+      
       setTreatments(treatmentsRes.treatments || [])
-      setPatients(patientsRes.patients || [])
       setAppointments(appointmentsRes.appointments || [])
       setRadiologyCenters(radiologyRes)
+      
+      // Extract unique patients from treatments and appointments
+      const patientMap = new Map()
+      
+      // Add patients from treatments
+      if (treatmentsRes.treatments) {
+        treatmentsRes.treatments.forEach(treatment => {
+          if (treatment.patient) {
+            patientMap.set(treatment.patient.userId, treatment.patient)
+          }
+        })
+      }
+      
+      // Add patients from appointments
+      if (appointmentsRes.appointments) {
+        appointmentsRes.appointments.forEach(apt => {
+          if (apt.patient && !patientMap.has(apt.patient.userId)) {
+            patientMap.set(apt.patient.userId, apt.patient)
+          }
+        })
+      }
+      
+      const uniquePatients = Array.from(patientMap.values())
+      console.log('Extracted unique patients:', uniquePatients)
+      setPatients(uniquePatients)
     } catch (err) {
       console.error('Error fetching data:', err)
       setError('Failed to load data. Please try again.')
@@ -197,16 +223,14 @@ const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
 
   // Transform patients for modal - MEMOIZED to avoid filtering on every render
   const mockPatients = useMemo(() => {
-    return patients
-      .filter(p => {
-        // Check if this patient has any CONFIRMED appointments
-        return appointments.some(apt => apt.patientId === p.userId && apt.status === 'CONFIRMED')
-      })
-      .map(p => ({
-        id: p.userId,
-        name: `${p.firstName} ${p.lastName}`
-      }))
-  }, [patients, appointments]) // Only recalculate when patients or appointments change
+    // Show all patients - dentist can create treatments for any patient
+    const transformed = patients.map(p => ({
+      id: p.userId,
+      name: `${p.firstName} ${p.lastName}`
+    }))
+    console.log('Mock patients for treatment modal:', transformed)
+    return transformed
+  }, [patients]) // Recalculate when patients change
 
   // Transform radiology centers for modal - MEMOIZED
   const mockRadiologyCenters = useMemo(() => {
