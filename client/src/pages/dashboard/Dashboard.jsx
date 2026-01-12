@@ -25,6 +25,7 @@ import SecretariesManagement from './clinic/SecretariesManagement'
 import { default as ClinicDentistsManagement } from './clinic/DentistsManagement'
 import ClinicInventory from './clinic/ClinicInventory'
 import ClinicExpenses from './clinic/ClinicExpenses'
+import ClinicAnalytics from './clinic/ClinicAnalytics'
 import ClinicSettings from './clinic/ClinicSettings'
 
 // Import dentist components
@@ -130,7 +131,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
           patients: { component: ClinicPatients, label: 'Patients' },
           inventory: { component: ClinicInventory, label: 'Inventory' },
           expenses: { component: ClinicExpenses, label: 'Expenses & Invoices' },
-          analytics: { component: ComingSoon, label: 'Analytics', icon: FaChartBar },
+          analytics: { component: ClinicAnalytics, label: 'Analytics', icon: FaChartBar },
           settings: { component: ClinicSettings, label: 'Settings' }
         }
       },
