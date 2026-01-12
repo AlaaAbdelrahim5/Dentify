@@ -187,7 +187,7 @@ const DentistInventory = () => {
       )}
 
       {/* Header */}
-      <PageHeader
+      {/* <PageHeader
         title="Inventory Overview"
         description="View clinic inventory and record material usage"
         action={{
@@ -196,7 +196,7 @@ const DentistInventory = () => {
           icon: FaClipboardCheck,
           gradient: 'from-teal-600 to-cyan-600'
         }}
-      />
+      /> */}
 
       {/* Stats Overview */}
       <StatsOverview stats={[

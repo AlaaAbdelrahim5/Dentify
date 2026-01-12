@@ -53,13 +53,13 @@ const PatientDetailsModal = ({
   const getStatusColor = (status) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        return 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
       case 'inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        return 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
       case 'new':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
+        return 'bg-blue-100 text-blue-800 border-blue-500 font-medium dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
       default:
-        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        return 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
     }
   }
 
@@ -400,12 +400,12 @@ const PatientDetailsModal = ({
                   {formatDate(appointment.date)} at {appointment.time}
                 </p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-sm ${
+              <span className={`px-3 py-1 rounded-full text-sm border font-medium ${
                 appointment.status === 'completed' 
-                  ? 'bg-green-100 text-green-800'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-400 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
                   : appointment.status === 'scheduled'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-blue-50 text-blue-700 border-blue-400 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
+                    : 'bg-gray-50 text-gray-700 border-gray-400 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
               }`}>
                 {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
               </span>
@@ -495,12 +495,12 @@ const PatientDetailsModal = ({
                     </span>
                   </div>
                   <div>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    <span className={`px-2 py-0.5 rounded-full text-xs border ${
                       treatment.status === 'Completed'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-400 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
                         : treatment.status === 'In Progress'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        ? 'bg-blue-50 text-blue-700 border-blue-400 font-medium dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700'
+                        : 'bg-red-50 text-red-700 border-red-400 font-medium dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
                     }`}>
                       {treatment.status}
                     </span>
@@ -659,10 +659,10 @@ const PatientDetailsModal = ({
             }`}>
               {patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : ''} • {calculateAge(patientData.dateOfBirth)} years
             </p>
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
               patientData.status?.toLowerCase() === 'active'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+                : 'bg-red-100 text-red-800 border-red-500 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
             }`}>
               {patientData.status?.toLowerCase() === 'active' ? (
                 <FaCheckCircle className="w-3 h-3" />

@@ -63,32 +63,32 @@ export const getStatusDisplay = (status) => {
     case 'active':
       return {
         label: 'Active',
-        className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        className: 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
       }
     case 'inactive':
       return {
         label: 'Inactive',
-        className: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        className: 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
       }
     case 'pending':
       return {
         label: 'Pending',
-        className: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
+        className: 'bg-amber-100 text-amber-800 border-amber-500 font-medium dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
       }
     case 'rejected':
       return {
         label: 'Rejected',
-        className: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
+        className: 'bg-red-100 text-red-800 border-red-500 font-medium dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
       }
     case 'deactivated':
       return {
         label: 'Deactivated',
-        className: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        className: 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
       }
     default:
       return {
         label: 'Active',
-        className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        className: 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
       }
   }
 }

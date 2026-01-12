@@ -122,12 +122,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         icon: FaUserTie,
         description: 'Manage clinic secretaries'
       },
-      { 
-        id: 'inventory', 
-        label: 'Inventory', 
-        icon: FaBoxes,
-        description: 'Manage clinic inventory and supplies'
-      },
+      // { 
+      //   id: 'inventory', 
+      //   label: 'Inventory', 
+      //   icon: FaBoxes,
+      //   description: 'Manage clinic inventory and supplies'
+      // },
       { 
         id: 'expenses', 
         label: 'Expenses & Invoices', 
@@ -178,12 +178,12 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         icon: FaUsers,
         description: 'Manage patient records'
       },
-      { 
-        id: 'inventory', 
-        label: 'Inventory', 
-        icon: FaBoxes,
-        description: 'Manage medical supplies and materials'
-      },
+      // { 
+      //   id: 'inventory', 
+      //   label: 'Inventory', 
+      //   icon: FaBoxes,
+      //   description: 'Manage medical supplies and materials'
+      // },
       { 
         id: 'reports', 
         label: 'Reports', 

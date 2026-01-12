@@ -24,39 +24,39 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
       case 'healthy':
         return isDarkMode 
           ? 'bg-green-900/30 text-green-400 border-green-600' 
-          : 'bg-green-100 text-green-700 border-green-400'
+          : 'bg-emerald-50 text-emerald-700 border-emerald-400'
       case 'cavity':
         return isDarkMode 
           ? 'bg-orange-900/30 text-orange-400 border-orange-600' 
-          : 'bg-orange-100 text-orange-700 border-orange-400'
+          : 'bg-orange-50 text-orange-700 border-orange-400'
       case 'root canal':
         return isDarkMode 
           ? 'bg-red-900/30 text-red-400 border-red-600' 
-          : 'bg-red-100 text-red-700 border-red-400'
+          : 'bg-red-50 text-red-700 border-red-400'
       case 'crown':
         return isDarkMode 
           ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
-          : 'bg-blue-100 text-blue-700 border-blue-400'
+          : 'bg-blue-50 text-blue-700 border-blue-400'
       case 'extracted':
         return isDarkMode 
           ? 'bg-gray-900/30 text-gray-500 border-gray-600' 
-          : 'bg-gray-100 text-gray-500 border-gray-400'
+          : 'bg-gray-50 text-gray-700 border-gray-400'
       case 'implant':
         return isDarkMode 
           ? 'bg-purple-900/30 text-purple-400 border-purple-600' 
-          : 'bg-purple-100 text-purple-700 border-purple-400'
+          : 'bg-purple-50 text-purple-700 border-purple-400'
       case 'filling':
         return isDarkMode 
           ? 'bg-indigo-900/30 text-indigo-400 border-indigo-600' 
-          : 'bg-indigo-100 text-indigo-700 border-indigo-400'
+          : 'bg-indigo-50 text-indigo-700 border-indigo-400'
       case 'bridge':
         return isDarkMode 
           ? 'bg-cyan-900/30 text-cyan-400 border-cyan-600' 
-          : 'bg-cyan-100 text-cyan-700 border-cyan-400'
+          : 'bg-cyan-50 text-cyan-700 border-cyan-400'
       default:
         return isDarkMode 
           ? 'bg-gray-800 text-gray-300 border-gray-600' 
-          : 'bg-white text-gray-700 border-gray-300'
+          : 'bg-gray-50 text-gray-700 border-gray-300'
     }
   }
 
@@ -81,7 +81,7 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
         text: 'Completed',
         className: isDarkMode 
           ? 'bg-green-900/30 text-green-400 border-green-600' 
-          : 'bg-green-100 text-green-700 border-green-300'
+          : 'bg-emerald-50 text-emerald-700 border-emerald-400'
       }
     }
     return {
@@ -89,7 +89,7 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
       text: 'In Progress',
       className: isDarkMode 
         ? 'bg-orange-900/30 text-orange-400 border-orange-600' 
-        : 'bg-orange-100 text-orange-700 border-orange-300'
+        : 'bg-blue-50 text-blue-700 border-blue-400'
     }
   }
 
