@@ -15,7 +15,7 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { clinicsAPI, appointmentsAPI } from '../../../services/api'
 import { authUtils } from '../../../utils/auth'
 import { TREATMENT_OPTIONS } from '../../../utils/constants'
-import { convertTo12Hour, addMinutes, getTodayISO } from '../../../utils/helpers'
+import { convertTo12Hour, addMinutes, getTodayISO, getImageUrl } from '../../../utils/helpers'
 
 const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = null }) => {
   const { isDarkMode } = useTheme()
@@ -502,8 +502,25 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                           }`}
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <FaBuilding className="text-teal-600" />
+                            <div className="flex items-center gap-3">
+                              {clinic.user?.profileImage ? (
+                                <img
+                                  src={getImageUrl(clinic.user.profileImage)}
+                                  alt={clinic.clinicName}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : null}
+                              <div 
+                                className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center"
+                                style={{ display: clinic.user?.profileImage ? 'none' : 'flex' }}
+                              >
+                                <FaBuilding className="text-white text-sm" />
+                              </div>
                               <h4 className={`font-semibold ${
                                 isDarkMode ? 'text-white' : 'text-gray-900'
                               }`}>
@@ -565,7 +582,22 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                              {dentist.user?.profileImage ? (
+                                <img
+                                  src={getImageUrl(dentist.user.profileImage)}
+                                  alt={`Dr. ${dentist.firstName} ${dentist.lastName}`}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : null}
+                              <div 
+                                className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center"
+                                style={{ display: dentist.user?.profileImage ? 'none' : 'flex' }}
+                              >
                                 <FaUser className="text-white" />
                               </div>
                               <div>

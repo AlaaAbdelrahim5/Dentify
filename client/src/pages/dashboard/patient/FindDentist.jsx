@@ -30,6 +30,7 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext'
 import { dentistsAPI, appointmentsAPI } from '../../../services/api'
 import { sortByDistance, formatDistance } from '../../../utils/geoUtils'
+import { getImageUrl } from '../../../utils/helpers'
 
 const FindDoctor = () => {
   const { isDarkMode } = useTheme()
@@ -211,7 +212,22 @@ const FindDoctor = () => {
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+          {doctor.user?.profileImage ? (
+            <img
+              src={getImageUrl(doctor.user.profileImage)}
+              alt={`Dr. ${doctor.firstName} ${doctor.lastName}`}
+              className="w-10 h-10 rounded-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null
+                e.target.style.display = 'none'
+                e.target.nextSibling.style.display = 'flex'
+              }}
+            />
+          ) : null}
+          <div 
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center"
+            style={{ display: doctor.user?.profileImage ? 'none' : 'flex' }}
+          >
             <FaUser className="text-white text-sm" />
           </div>
           <div>
@@ -302,6 +318,7 @@ const FindDoctor = () => {
       setToast({ message: 'Appointment booked successfully!', type: 'success' })
     } catch (err) {
       console.error('Error booking appointment:', err)
+      setToast({ message: 'Failed to book appointment. Please try again.', type: 'error' })
       throw err // Re-throw to let modal handle the error
     }
   }
