@@ -217,61 +217,63 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
       onClose={onClose}
       title="Add Payment"
       size="3xl"
+      noPadding
     >
-      {/* Treatment Info */}
-      {currentTreatment && (
-        <div className={`mx-6 mt-6 p-4 rounded-lg border-2 ${
-          isDarkMode ? 'bg-teal-900/20 border-teal-700' : 'bg-teal-50 border-teal-200'
-        }`}>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Total Amount
-              </p>
-              <p className={`text-lg font-semibold ${
-                isDarkMode ? 'text-white' : 'text-gray-800'
-              }`}>
-                ${currentTreatment.totalAmount.toFixed(2)}
-              </p>
-            </div>
-            {(currentTreatment.treatmentDiscount || 0) > 0 && (
+      <div className="flex flex-col max-h-[80vh]">
+        {/* Fixed Treatment Info */}
+        {currentTreatment && (
+          <div className={`flex-shrink-0 mx-6 mt-6 p-4 rounded-lg border-2 ${
+            isDarkMode ? 'bg-teal-900/20 border-teal-700' : 'bg-teal-50 border-teal-200'
+          }`}>
+            <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Total Discount
+                  Total Amount
+                </p>
+                <p className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>
+                  ${currentTreatment.totalAmount.toFixed(2)}
+                </p>
+              </div>
+              {(currentTreatment.treatmentDiscount || 0) > 0 && (
+                <div>
+                  <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Total Discount
+                  </p>
+                  <p className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-orange-400' : 'text-orange-600'
+                  }`}>
+                    ${(currentTreatment.treatmentDiscount || 0).toFixed(2)}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Paid Amount
+                </p>
+                <p className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-green-400' : 'text-green-600'
+                }`}>
+                  ${currentTreatment.paidAmount.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Remaining Balance
                 </p>
                 <p className={`text-lg font-semibold ${
                   isDarkMode ? 'text-orange-400' : 'text-orange-600'
                 }`}>
-                  ${(currentTreatment.treatmentDiscount || 0).toFixed(2)}
+                  ${remainingBalance.toFixed(2)}
                 </p>
               </div>
-            )}
-            <div>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Paid Amount
-              </p>
-              <p className={`text-lg font-semibold ${
-                isDarkMode ? 'text-green-400' : 'text-green-600'
-              }`}>
-                ${currentTreatment.paidAmount.toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Remaining Balance
-              </p>
-              <p className={`text-lg font-semibold ${
-                isDarkMode ? 'text-orange-400' : 'text-orange-600'
-              }`}>
-                ${remainingBalance.toFixed(2)}
-              </p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           {/* Patient Selection - Only show if no treatment is pre-selected */}
           {!treatmentInfo && (
             <>
@@ -581,9 +583,15 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               } focus:outline-none focus:ring-2 focus:ring-teal-500/50`}
             />
           </div>
+          </>
+        )}
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+        {/* Fixed Action Buttons */}
+        {currentTreatment && (
+          <div className={`flex-shrink-0 flex gap-3 px-6 pb-6 pt-4 border-t ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
             <Button
               type="button"
               variant="outline"
@@ -596,15 +604,14 @@ const PaymentModal = ({ isOpen, onClose, onSave, treatmentInfo = null, patients 
               type="submit"
               variant="primary"
               className="flex-1"
-              disabled={!currentTreatment}
+              onClick={handleSubmit}
             >
               <FaSave className="w-4 h-4 mr-2" />
               Record Payment
             </Button>
           </div>
-          </>
         )}
-      </form>
+      </div>
     </BaseModal>
   )
 }

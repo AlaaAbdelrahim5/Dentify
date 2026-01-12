@@ -70,12 +70,23 @@ const DentistRadiology = () => {
     
     try {
       setModalLoading(true)
-      const [patientsRes, radiologyRes, treatmentsRes] = await Promise.all([
-        patientsAPI.getAll(),
+      const [radiologyRes, treatmentsRes] = await Promise.all([
         radiologyAPI.getAll('limit=100&isActive=true'),
         treatmentsAPI.getDentistTreatments()
       ])
-      setPatients(patientsRes.patients || [])
+      
+      // Extract unique patients from treatments
+      const patientMap = new Map()
+      treatmentsRes.treatments?.forEach(treatment => {
+        if (treatment.patient) {
+          const patientId = treatment.patient.userId
+          if (!patientMap.has(patientId)) {
+            patientMap.set(patientId, treatment.patient)
+          }
+        }
+      })
+      setPatients(Array.from(patientMap.values()))
+      
       const centers = radiologyRes.data || radiologyRes.radiology || []
       setRadiologyCenters(centers)
       setTreatments(treatmentsRes.treatments || [])

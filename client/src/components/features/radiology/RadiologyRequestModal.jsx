@@ -167,6 +167,7 @@ const RadiologyRequestModal = ({
       isOpen={isOpen}
       onClose={handleClose}
       size="2xl"
+      noPadding
       title={
         <div className="flex items-center gap-2">
           <div className={`p-2 rounded-lg ${
@@ -189,7 +190,9 @@ const RadiologyRequestModal = ({
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="p-4 space-y-4">
+      <div className="flex flex-col max-h-[75vh]">
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Patient Selection */}
           <div>
             <label className={`block text-xs font-medium mb-1.5 ${
@@ -364,27 +367,31 @@ const RadiologyRequestModal = ({
               } focus:outline-none focus:ring-2 focus:ring-purple-500/50`}
             />
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
-            >
-              <FaSave className="w-4 h-4 mr-2" />
-              {initialData ? 'Update Request' : 'Create Request'}
-            </Button>
-          </div>
-        </form>
+        {/* Fixed Action Buttons */}
+        <div className={`flex-shrink-0 flex gap-2 px-6 pb-4 pt-4 border-t ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            className="flex-1 bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+          >
+            <FaSave className="w-4 h-4 mr-2" />
+            {initialData ? 'Update Request' : 'Create Request'}
+          </Button>
+        </div>
+      </div>
     </BaseModal>
   )
 }

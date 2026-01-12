@@ -246,7 +246,7 @@ const DentistPayments = () => {
       label: 'Amount',
       accessor: 'amount',
       render: (value) => (
-        <span className="font-semibold text-green-600 dark:text-green-400">
+        <span className="font-semibold text-emerald-600 dark:text-green-400">
           ${value.toFixed(2)}
         </span>
       )
@@ -266,8 +266,8 @@ const DentistPayments = () => {
       render: (value) => (
         <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit ${
           value === 'CASH'
-            ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400 border border-green-500/30'
-            : 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/30'
+            ? 'bg-emerald-100 text-emerald-700 dark:bg-green-500/20 dark:text-green-400 border border-emerald-200'
+            : 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200'
         }`}>
           {value === 'CASH' ? (
             <>
