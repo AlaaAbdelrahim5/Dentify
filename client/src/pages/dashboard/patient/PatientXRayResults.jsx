@@ -385,18 +385,15 @@ const PatientXRayResults = () => {
                         <FaClock className="w-4 h-4" />
                         <span>{formatDateHelper(value)}</span>
                       </div>
-                    ) : (
-                      <span className="text-gray-400">Pending</span>
-                    )
+                    ) : null
                   },
                   {
                     label: 'Status',
                     accessor: 'status',
                     render: (value) => (
-                      <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 w-fit ${
+                      <span className={`px-2 py-1 rounded-full text-xs border w-fit ${
                         getStatusColor(value, isDarkMode)
                       }`}>
-                        {getStatusIcon(value)}
                         {getStatusLabel(value)}
                       </span>
                     )
@@ -441,16 +438,6 @@ const PatientXRayResults = () => {
                             className="text-gray-400"
                           >
                             <FaEye className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {row.status !== 'COMPLETED' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            disabled
-                          >
-                            <FaClock className="w-4 h-4 mr-1" />
-                            Pending
                           </Button>
                         )}
                       </div>

@@ -548,10 +548,9 @@ const DentistRadiology = () => {
                     label: 'Status',
                     accessor: 'status',
                     render: (value) => (
-                      <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 w-fit ${
+                      <span className={`px-2 py-1 rounded-full text-xs border w-fit ${
                         getStatusColor(value)
                       }`}>
-                        {getStatusIcon(value)}
                         {value}
                       </span>
                     )

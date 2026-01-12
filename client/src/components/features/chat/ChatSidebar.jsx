@@ -4,6 +4,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useChat } from '../../../contexts/ChatContext';
 import { authUtils } from '../../../utils/auth';
 import { getImageUrl } from '../../../utils/helpers';
+import LoadingSpinner from '../../common/states/LoadingSpinner';
 
 const ChatSidebar = ({ isOpen, onClose }) => {
   const { isDarkMode } = useTheme();
@@ -13,6 +14,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
   const [activeChat, setActiveChat] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [contactSearchTerm, setContactSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,6 +23,7 @@ const ChatSidebar = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
       const token = authUtils.getAccessToken();
       const currentUser = authUtils.getCurrentUser();
@@ -48,6 +51,8 @@ const ChatSidebar = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -152,6 +157,13 @@ const ChatSidebar = ({ isOpen, onClose }) => {
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 px-6">
+              <LoadingSpinner size="lg" message="Loading chats..." />
+            </div>
+          ) : (
+            <>
           {/* Recent Conversations */}
           {conversations.length > 0 ? (
             <div className="px-3 mb-4">
@@ -258,6 +270,8 @@ const ChatSidebar = ({ isOpen, onClose }) => {
               <p className="text-sm text-center font-medium mb-2">No conversations yet</p>
               <p className="text-xs text-center text-gray-400">Start chatting with someone!</p>
             </div>
+          )}
+            </>
           )}
         </div>
 

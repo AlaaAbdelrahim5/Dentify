@@ -1,4 +1,4 @@
-import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash, FaDownload, FaLink, FaFileUpload } from 'react-icons/fa'
+import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash, FaDownload, FaLink, FaFileUpload, FaCheck, FaBan } from 'react-icons/fa'
 import { Card, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { formatDate } from '../../../utils/helpers'
@@ -27,26 +27,28 @@ const RequestCard = ({
 
   const getStatusColor = (status) => {
     const colors = {
-      'PENDING': isDarkMode ? 'bg-yellow-900/30 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
-      'Requested': isDarkMode ? 'bg-yellow-900/30 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
-      'COMPLETED': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
-      'Completed': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
-      'AVAILABLE': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
-      'CANCELLED': isDarkMode ? 'bg-red-900/30 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
-      'Cancelled': isDarkMode ? 'bg-red-900/30 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300'
+      'REQUESTED': isDarkMode ? 'bg-yellow-900/30 text-yellow-400 border-yellow-600' : 'bg-yellow-100 text-yellow-700 border-yellow-400',
+      'PENDING': isDarkMode ? 'bg-yellow-900/30 text-yellow-400 border-yellow-600' : 'bg-yellow-100 text-yellow-700 border-yellow-400',
+      'Requested': isDarkMode ? 'bg-yellow-900/30 text-yellow-400 border-yellow-600' : 'bg-yellow-100 text-yellow-700 border-yellow-400',
+      'COMPLETED': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'bg-blue-100 text-blue-700 border-blue-400',
+      'Completed': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'bg-blue-100 text-blue-700 border-blue-400',
+      'AVAILABLE': isDarkMode ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'bg-blue-100 text-blue-700 border-blue-400',
+      'CANCELLED': isDarkMode ? 'bg-red-900/30 text-red-400 border-red-600' : 'bg-red-100 text-red-700 border-red-400',
+      'Cancelled': isDarkMode ? 'bg-red-900/30 text-red-400 border-red-600' : 'bg-red-100 text-red-700 border-red-400'
     }
     return colors[status] || (isDarkMode ? 'bg-gray-700 text-gray-300 border-gray-600' : 'bg-gray-100 text-gray-600 border-gray-300')
   }
 
   const getStatusIcon = (status) => {
     const icons = {
+      'REQUESTED': <FaClock className="w-3 h-3" />,
       'PENDING': <FaClock className="w-3 h-3" />,
       'Requested': <FaClock className="w-3 h-3" />,
-      'COMPLETED': <FaEye className="w-3 h-3" />,
-      'Completed': <FaEye className="w-3 h-3" />,
-      'AVAILABLE': <FaEye className="w-3 h-3" />,
-      'CANCELLED': <FaTrash className="w-3 h-3" />,
-      'Cancelled': <FaTrash className="w-3 h-3" />
+      'COMPLETED': <FaCheck className="w-3 h-3" />,
+      'Completed': <FaCheck className="w-3 h-3" />,
+      'AVAILABLE': <FaCheck className="w-3 h-3" />,
+      'CANCELLED': <FaBan className="w-3 h-3" />,
+      'Cancelled': <FaBan className="w-3 h-3" />
     }
     return icons[status] || null
   }
@@ -92,10 +94,9 @@ const RequestCard = ({
             </p>
           </div>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs border flex items-center gap-1 ${
+        <span className={`px-2 py-1 rounded-full text-xs border ${
           getStatusColor(request.status)
         }`}>
-          {getStatusIcon(request.status)}
           {getStatusLabel(request.status)}
         </span>
       </div>
@@ -177,112 +178,174 @@ const RequestCard = ({
       </div>
 
       <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-        {/* Eye Button - View Images or disabled */}
+        {/* RADIOLOGY CENTER VIEW */}
         {variant === 'radiology' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => request.reportFile ? onViewImages(request) : onViewDetails(request)}
-            title={request.reportFile ? "View Images" : "View Details"}
-            className={request.reportFile ? "text-teal-600" : "text-blue-600"}
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-        )}
-        
-        {(variant === 'dentist' || variant === 'patient') && request.reportFile && onViewImages && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onViewImages(request)}
-            title="View Images"
-            className="text-teal-600"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-        )}
-
-        {(variant === 'dentist' || variant === 'patient') && !request.reportFile && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            disabled
-            title="No images available"
-            className="text-gray-400"
-          >
-            <FaEye className="w-4 h-4" />
-          </Button>
-        )}
-
-        {/* Download Button - only when reportFile exists */}
-        {request.reportFile && onDownload && variant === 'radiology' && request.status === 'COMPLETED' && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onDownload(request)}
-            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
-            className="text-purple-600"
-          >
-            {isReportFileUrl(request.reportFile) ? (
-              <FaLink className="w-4 h-4" />
-            ) : (
-              <FaDownload className="w-4 h-4" />
+          <>
+            {/* View Images or View Details */}
+            {!isReportFileUrl(request.reportFile) && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => request.reportFile ? onViewImages(request) : onViewDetails(request)}
+                title={request.reportFile ? "View Images" : "View Details"}
+                className={request.reportFile ? "text-teal-600" : "text-blue-600"}
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
             )}
-          </Button>
-        )}
-
-        {request.reportFile && onDownload && (variant === 'dentist' || variant === 'patient') && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onDownload(request)}
-            title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
-            className="text-purple-600"
-          >
-            {isReportFileUrl(request.reportFile) ? (
-              <FaLink className="w-4 h-4" />
-            ) : (
-              <FaDownload className="w-4 h-4" />
+            
+            {/* Upload Result button */}
+            {request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && onEdit && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEdit(request)}
+                title="Upload Result"
+                className="text-green-600"
+              >
+                <FaFileUpload className="w-4 h-4" />
+              </Button>
             )}
-          </Button>
+            
+            {/* Update Result button */}
+            {request.status === 'COMPLETED' && onEdit && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEdit(request)}
+                title="Update Result"
+                className="text-orange-600"
+              >
+                <FaEdit className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Download Report button */}
+            {request.reportFile && request.status === 'COMPLETED' && onDownload && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onDownload(request)}
+                title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+                className="text-purple-600"
+              >
+                {isReportFileUrl(request.reportFile) ? (
+                  <FaLink className="w-4 h-4" />
+                ) : (
+                  <FaDownload className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+          </>
         )}
 
-        {/* Radiology Center - Upload/Update Result buttons */}
-        {variant === 'radiology' && request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && onEdit && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onEdit(request)}
-            title="Upload Result"
-            className="text-green-600"
-          >
-            <FaFileUpload className="w-4 h-4" />
-          </Button>
+        {/* PATIENT VIEW */}
+        {variant === 'patient' && (
+          <>
+            {/* View Images button */}
+            {request.reportFile && !isReportFileUrl(request.reportFile) && onViewImages && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onViewImages(request)}
+                title="View Images"
+                className="text-teal-600"
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Download/View Report button */}
+            {request.reportFile && onDownload && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onDownload(request)}
+                title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+                className="text-purple-600"
+              >
+                {isReportFileUrl(request.reportFile) ? (
+                  <FaLink className="w-4 h-4" />
+                ) : (
+                  <FaDownload className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+            
+            {/* No images available - disabled button */}
+            {!request.reportFile && request.status === 'COMPLETED' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled
+                title="No images available"
+                className="text-gray-400"
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
+            )}
+          </>
         )}
 
-        {variant === 'radiology' && request.status === 'COMPLETED' && onEdit && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onEdit(request)}
-            title="Update Result"
-            className="text-orange-600"
-          >
-            <FaEdit className="w-4 h-4" />
-          </Button>
-        )}
-
-        {/* Dentist - Cancel button only for Requested status */}
-        {variant === 'dentist' && request.status === 'Requested' && onDelete && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onDelete(request)}
-            title="Cancel Request"
-            className="text-red-600"
-          >
-            <FaTrash className="w-4 h-4" />
-          </Button>
+        {/* DENTIST VIEW */}
+        {variant === 'dentist' && (
+          <>
+            {/* View Images button */}
+            {request.reportFile && !isReportFileUrl(request.reportFile) && onViewImages && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onViewImages(request)}
+                title="View Images"
+                className="text-teal-600"
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Download/View Report button */}
+            {request.reportFile && onDownload && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onDownload(request)}
+                title={isReportFileUrl(request.reportFile) ? "View Report" : "Download Report"}
+                className="text-purple-600"
+              >
+                {isReportFileUrl(request.reportFile) ? (
+                  <FaLink className="w-4 h-4" />
+                ) : (
+                  <FaDownload className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+            
+            {/* No images available - disabled button */}
+            {!request.reportFile && request.status !== 'Requested' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled
+                title="No images available"
+                className="text-gray-400"
+              >
+                <FaEye className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Cancel/Delete button for Requested status */}
+            {request.status === 'Requested' && onDelete && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onDelete(request)}
+                title="Cancel Request"
+                className="text-red-600"
+              >
+                <FaTrash className="w-4 h-4" />
+              </Button>
+            )}
+          </>
         )}
       </div>
     </Card>

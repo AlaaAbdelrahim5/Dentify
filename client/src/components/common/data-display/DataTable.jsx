@@ -114,9 +114,10 @@ const DataTable = ({
                       return (
                         <td
                           key={column.key || column.accessor || colIndex}
-                          className={`px-6 py-4 whitespace-nowrap text-sm ${
+                          className={`px-6 py-4 whitespace-nowrap text-sm align-middle ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-900'
                           } ${column.className || ''}`}
+                          style={{ minHeight: '60px', height: '60px' }}
                         >
                           {cellContent}
                         </td>
