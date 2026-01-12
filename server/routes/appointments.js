@@ -226,13 +226,8 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
         { appointmentId: appointment.id, type: 'new_request' }
       );
 
-      // Notify clinic
-      await sendAppointmentNotification(
-        clinicId,
-        'New Appointment Request',
-        `${patientName} requested an appointment with Dr. ${dentistName} on ${dateTimeStr}`,
-        { appointmentId: appointment.id, type: 'new_request' }
-      );
+      // Don't notify clinic when patient requests appointment
+      // Clinic will be notified when dentist confirms/updates the appointment
     } else {
       // Notify patient about confirmed appointment
       await sendAppointmentNotification(

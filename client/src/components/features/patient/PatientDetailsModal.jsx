@@ -28,7 +28,7 @@ import {
   FaStickyNote,
   FaFileAlt
 } from 'react-icons/fa'
-import { Button, StatusBadge, Card, BaseModal } from '../../common'
+import { Button, StatusBadge, Card, BaseModal, LoadingSpinner } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 import TeethHistoryTab from '../treatment/TeethHistoryTab'
@@ -47,6 +47,19 @@ const PatientDetailsModal = ({
 }) => {
   const { isDarkMode} = useTheme()
   const [activeTab, setActiveTab] = useState('information')
+  const [isLoadingTab, setIsLoadingTab] = useState(false)
+
+  const handleTabChange = (tabId) => {
+    if (tabId === activeTab) return
+    
+    setIsLoadingTab(true)
+    setActiveTab(tabId)
+    
+    // Simulate loading time for data fetching
+    setTimeout(() => {
+      setIsLoadingTab(false)
+    }, 500)
+  }
 
   if (!isOpen || !patientData) return null
 
@@ -90,15 +103,20 @@ const PatientDetailsModal = ({
     }
   }
 
-  const renderInformation = () => (
-    <div className="space-y-6">
-      {/* Basic Information */}
-      <div>
-        <h3 className={`text-lg font-semibold mb-6 ${
-          isDarkMode ? 'text-white' : 'text-gray-900'
-        }`}>
-          Basic Information
-        </h3>
+  const renderInformation = () => {
+    if (isLoadingTab && activeTab === 'information') {
+      return <LoadingSpinner message="Loading patient information..." size="md" />
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Basic Information */}
+        <div>
+          <h3 className={`text-lg font-semibold mb-6 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Basic Information
+          </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Patient Name */}
@@ -366,7 +384,8 @@ const PatientDetailsModal = ({
         </p>
       </div>
     </div>
-  )
+    )
+  }
 
   const renderAppointments = () => (
     <div className="space-y-4">
@@ -448,18 +467,23 @@ const PatientDetailsModal = ({
     </div>
   )
 
-  const renderTreatments = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-          Treatment Plans
-        </h3>
-        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          {treatments.length} treatments
-        </span>
-      </div>
+  const renderTreatments = () => {
+    if (isLoadingTab) {
+      return <LoadingSpinner message="Loading treatments..." size="md" />
+    }
 
-      {treatments.length === 0 ? (
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            Treatment Plans
+          </h3>
+          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {treatments.length} treatments
+          </span>
+        </div>
+
+        {treatments.length === 0 ? (
         <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           <FaStethoscope className={`mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} size={48} />
           <p>No treatments found for this patient</p>
@@ -535,8 +559,9 @@ const PatientDetailsModal = ({
         </div>
         ))
       )}
-    </div>
-  )
+      </div>
+    )
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -545,9 +570,17 @@ const PatientDetailsModal = ({
       case 'treatments':
         return renderTreatments()
       case 'teethHistory':
-        return <TeethHistoryTab treatments={treatments} />
+        return isLoadingTab ? (
+          <LoadingSpinner message="Loading teeth history..." size="md" />
+        ) : (
+          <TeethHistoryTab treatments={treatments} />
+        )
       case 'appointments':
-        return <AppointmentsHistoryTab appointments={appointments} />
+        return isLoadingTab ? (
+          <LoadingSpinner message="Loading appointments..." size="md" />
+        ) : (
+          <AppointmentsHistoryTab appointments={appointments} />
+        )
       default:
         return renderInformation()
     }
@@ -592,7 +625,7 @@ const PatientDetailsModal = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
                     activeTab === tab.id
                       ? isDarkMode
@@ -684,7 +717,7 @@ const PatientDetailsModal = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
                     activeTab === tab.id
                       ? isDarkMode

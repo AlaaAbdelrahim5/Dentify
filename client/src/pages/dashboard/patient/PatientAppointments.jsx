@@ -436,12 +436,6 @@ const PatientAppointments = () => {
       <PageHeader
         title="My Appointments"
         description="Manage your dental appointments and bookings"
-        action={{
-          label: 'Book New Appointment',
-          onClick: handleBookAppointment,
-          icon: FaPlus,
-          gradient: 'from-teal-600 to-cyan-600'
-        }}
       />
 
       {/* View Toggle */}

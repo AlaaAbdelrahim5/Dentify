@@ -163,8 +163,11 @@ const FindClinic = () => {
         location.includes(searchQuery.toLowerCase())
 
       const matchesCity = selectedCity === 'all' || clinic.city === selectedCity
+      
+      // Only show active clinics
+      const isActive = clinic.status?.toLowerCase() === 'active' || clinic.user?.status?.toLowerCase() === 'active'
 
-      return matchesSearch && matchesCity
+      return matchesSearch && matchesCity && isActive
     })
 
     // Sort by distance if user location is available (and not failed)
