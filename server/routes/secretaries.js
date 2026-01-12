@@ -8,6 +8,7 @@ const { hashPassword } = require('../helpers/hash');
 const { transformSecretary } = require('../utils/responseTransformers');
 const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
 const { createStatsHandler } = require('../factories/routeHandlers');
+const { sendNotification } = require('../services/notification/notificationService');
 
 // Get secretaries statistics - using reusable handler
 router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('secretary', 'Secretary'));
@@ -236,6 +237,44 @@ router.post('/', authenticate, authorize('Clinic'), async (req, res) => {
     // Create using service
     const result = await createUserWithProfile(userData, profileData, 'secretary');
 
+    // Send notification to all admins about the new secretary request
+    try {
+      // Get clinic info for notification
+      const clinic = await prisma.clinic.findUnique({
+        where: { userId: clinicId },
+        select: { clinicName: true }
+      });
+
+      // Get all admin users
+      const admins = await prisma.user.findMany({
+        where: { role: 'Admin' },
+        select: { id: true }
+      });
+
+      // Send notification to each admin
+      const notificationPromises = admins.map(admin => 
+        sendNotification(
+          admin.id,
+          'New Secretary Request',
+          `${clinic?.clinicName || 'A clinic'} has requested to add ${firstName} ${lastName} as a secretary.`,
+          {
+            type: 'secretary_request',
+            data: {
+              secretaryId: result.userId,
+              clinicId,
+              clinicName: clinic?.clinicName,
+              secretaryName: `${firstName} ${lastName}`
+            }
+          }
+        )
+      );
+
+      await Promise.all(notificationPromises);
+    } catch (notifError) {
+      console.error('Failed to send admin notifications:', notifError);
+      // Don't fail the request if notification fails
+    }
+
     return successResponse(res, transformSecretary(result), 'Secretary created successfully', 201);
   } catch (error) {
     return errorResponse(res, error.message || 'Failed to create secretary', 500);
@@ -442,7 +481,15 @@ router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) =
     // Check if secretary exists
     const secretary = await prisma.secretary.findUnique({
       where: { userId: parseInt(id) },
-      include: { user: true }
+      include: { 
+        user: true,
+        clinic: {
+          select: {
+            userId: true,
+            clinicName: true
+          }
+        }
+      }
     });
 
     if (!secretary) {
@@ -454,6 +501,24 @@ router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) =
       where: { id: parseInt(id) },
       data: { status: 'ACTIVE' }
     });
+
+    // Send notification to clinic
+    try {
+      await sendNotification(
+        secretary.clinicId,
+        'Secretary Request Approved',
+        `Your request to add ${secretary.firstName} ${secretary.lastName} as a secretary has been approved by the admin. The secretary account is now active.`,
+        {
+          type: 'secretary_approved',
+          data: {
+            secretaryId: secretary.userId,
+            secretaryName: `${secretary.firstName} ${secretary.lastName}`
+          }
+        }
+      );
+    } catch (notifError) {
+      console.error('Failed to send clinic notification:', notifError);
+    }
 
     return successResponse(res, null, 'Secretary approved successfully');
   } catch (error) {
@@ -513,7 +578,15 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
     // Check if secretary exists
     const secretary = await prisma.secretary.findUnique({
       where: { userId: parseInt(id) },
-      include: { user: true }
+      include: { 
+        user: true,
+        clinic: {
+          select: {
+            userId: true,
+            clinicName: true
+          }
+        }
+      }
     });
 
     if (!secretary) {
@@ -526,7 +599,24 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
       data: { status: 'REJECTED' }
     });
 
-    // TODO: Send rejection email with reason
+    // Send notification to clinic
+    try {
+      await sendNotification(
+        secretary.clinicId,
+        'Secretary Request Rejected',
+        `Your request to add ${secretary.firstName} ${secretary.lastName} as a secretary has been rejected by the admin.${reason ? ` Reason: ${reason}` : ''}`,
+        {
+          type: 'secretary_rejected',
+          data: {
+            secretaryId: secretary.userId,
+            secretaryName: `${secretary.firstName} ${secretary.lastName}`,
+            reason: reason || ''
+          }
+        }
+      );
+    } catch (notifError) {
+      console.error('Failed to send clinic notification:', notifError);
+    }
     
     return successResponse(res, { reason }, 'Secretary rejected successfully');
   } catch (error) {

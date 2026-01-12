@@ -8,6 +8,7 @@ const { createUserWithProfile, updateUserWithProfile } = require('../services/us
 const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
 const { getClinicIdForUser } = require('../services/appointment/appointmentService');
 const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
+const { sendNotification } = require('../services/notification/notificationService');
 
 // Get dentists statistics - using reusable handler
 router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('dentist', 'Dentist'));
@@ -391,6 +392,45 @@ router.post('/', authenticate, authorize('Clinic', 'Admin'), async (req, res) =>
     // Create using service
     const result = await createUserWithProfile(userData, profileData, 'dentist');
 
+    // Send notification to all admins about the new dentist request
+    try {
+      // Get clinic info for notification
+      const clinic = await prisma.clinic.findUnique({
+        where: { userId: clinicId },
+        select: { clinicName: true }
+      });
+
+      // Get all admin users
+      const admins = await prisma.user.findMany({
+        where: { role: 'Admin' },
+        select: { id: true }
+      });
+
+      // Send notification to each admin
+      const notificationPromises = admins.map(admin => 
+        sendNotification(
+          admin.id,
+          'New Dentist Request',
+          `${clinic?.clinicName || 'A clinic'} has requested to add Dr. ${firstName} ${lastName}. License: ${licenseNumber}`,
+          {
+            type: 'dentist_request',
+            data: {
+              dentistId: result.userId,
+              clinicId,
+              clinicName: clinic?.clinicName,
+              dentistName: `${firstName} ${lastName}`,
+              licenseNumber
+            }
+          }
+        )
+      );
+
+      await Promise.all(notificationPromises);
+    } catch (notifError) {
+      console.error('Failed to send admin notifications:', notifError);
+      // Don't fail the request if notification fails
+    }
+
     return successResponse(res, result, 'Dentist created successfully', 201);
   } catch (error) {
     if (error.message.includes('already exists')) {
@@ -575,7 +615,15 @@ router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) =
     // Check if dentist exists
     const dentist = await prisma.dentist.findUnique({
       where: { userId: parseInt(id) },
-      include: { user: true }
+      include: { 
+        user: true,
+        clinic: {
+          select: {
+            userId: true,
+            clinicName: true
+          }
+        }
+      }
     });
 
     if (!dentist) {
@@ -587,6 +635,25 @@ router.post('/:id/approve', authenticate, authorize('Admin'), async (req, res) =
       where: { id: parseInt(id) },
       data: { status: 'ACTIVE' }
     });
+
+    // Send notification to clinic
+    try {
+      await sendNotification(
+        dentist.clinicId,
+        'Dentist Request Approved',
+        `Your request to add Dr. ${dentist.firstName} ${dentist.lastName} has been approved by the admin. The dentist account is now active.`,
+        {
+          type: 'dentist_approved',
+          data: {
+            dentistId: dentist.userId,
+            dentistName: `${dentist.firstName} ${dentist.lastName}`,
+            licenseNumber: dentist.licenseNumber
+          }
+        }
+      );
+    } catch (notifError) {
+      console.error('Failed to send clinic notification:', notifError);
+    }
 
     return successResponse(res, null, 'Dentist approved successfully');
   } catch (error) {
@@ -646,7 +713,15 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
     // Check if dentist exists
     const dentist = await prisma.dentist.findUnique({
       where: { userId: parseInt(id) },
-      include: { user: true }
+      include: { 
+        user: true,
+        clinic: {
+          select: {
+            userId: true,
+            clinicName: true
+          }
+        }
+      }
     });
 
     if (!dentist) {
@@ -659,7 +734,25 @@ router.post('/:id/reject', authenticate, authorize('Admin'), async (req, res) =>
       data: { status: 'REJECTED' }
     });
 
-    // TODO: Send rejection email with reason
+    // Send notification to clinic
+    try {
+      await sendNotification(
+        dentist.clinicId,
+        'Dentist Request Rejected',
+        `Your request to add Dr. ${dentist.firstName} ${dentist.lastName} has been rejected by the admin.${reason ? ` Reason: ${reason}` : ''}`,
+        {
+          type: 'dentist_rejected',
+          data: {
+            dentistId: dentist.userId,
+            dentistName: `${dentist.firstName} ${dentist.lastName}`,
+            licenseNumber: dentist.licenseNumber,
+            reason: reason || ''
+          }
+        }
+      );
+    } catch (notifError) {
+      console.error('Failed to send clinic notification:', notifError);
+    }
     
     return successResponse(res, { reason }, 'Dentist rejected successfully');
   } catch (error) {
