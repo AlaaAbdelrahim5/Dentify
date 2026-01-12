@@ -244,11 +244,11 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'REQUESTED':
-        return <FaClock className="w-4 h-4" />
+        return <MdPendingActions className="w-3 h-3" />
       case 'COMPLETED':
-        return <FaCheck className="w-4 h-4" />
+        return <FaCheckCircle className="w-3 h-3" />
       case 'CANCELLED':
-        return <FaBan className="w-4 h-4" />
+        return <FaBan className="w-3 h-3" />
       default:
         return null
     }
@@ -446,9 +446,10 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                     label: 'Status',
                     accessor: 'status',
                     render: (value) => (
-                      <span className={`px-2 py-1 rounded-full text-xs border w-fit ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border w-fit ${
                         getStatusColor(value, isDarkMode)
                       }`}>
+                        {getStatusIcon(value)}
                         {getStatusLabel(value)}
                       </span>
                     )

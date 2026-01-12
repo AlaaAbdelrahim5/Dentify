@@ -18,8 +18,10 @@ import {
   FaStethoscope,
   FaLink,
   FaTh,
-  FaListAlt
+  FaListAlt,
+  FaCheckCircle
 } from 'react-icons/fa'
+import { MdPendingActions } from 'react-icons/md'
 import { Card, Button, Input, PageHeader, DataTable, FilterBar, RadiologyRequestModal, ConfirmationModal, Toast, RequestCard, LoadingSpinner, EmptyState } from '../../../components'
 import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { radiologyRequestsAPI, patientsAPI, radiologyAPI, treatmentsAPI } from '../../../services/api'
@@ -157,13 +159,13 @@ const DentistRadiology = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'Requested':
-        return <FaClock className="w-4 h-4" />
+        return <MdPendingActions className="w-3 h-3" />
       case 'In Progress':
-        return <FaExclamationCircle className="w-4 h-4" />
+        return <FaClock className="w-3 h-3" />
       case 'Completed':
-        return <FaCheck className="w-4 h-4" />
+        return <FaCheckCircle className="w-3 h-3" />
       case 'Cancelled':
-        return <FaBan className="w-4 h-4" />
+        return <FaBan className="w-3 h-3" />
       default:
         return null
     }
@@ -548,9 +550,10 @@ const DentistRadiology = () => {
                     label: 'Status',
                     accessor: 'status',
                     render: (value) => (
-                      <span className={`px-2 py-1 rounded-full text-xs border w-fit ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border w-fit ${
                         getStatusColor(value)
                       }`}>
+                        {getStatusIcon(value)}
                         {value}
                       </span>
                     )

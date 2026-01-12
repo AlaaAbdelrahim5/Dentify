@@ -391,9 +391,10 @@ const PatientXRayResults = () => {
                     label: 'Status',
                     accessor: 'status',
                     render: (value) => (
-                      <span className={`px-2 py-1 rounded-full text-xs border w-fit ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border w-fit ${
                         getStatusColor(value, isDarkMode)
                       }`}>
+                        {getStatusIcon(value)}
                         {getStatusLabel(value)}
                       </span>
                     )

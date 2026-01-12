@@ -1,4 +1,5 @@
-import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash, FaDownload, FaLink, FaFileUpload, FaCheck, FaBan } from 'react-icons/fa'
+import { FaXRay, FaCalendarAlt, FaClock, FaStethoscope, FaHospital, FaEye, FaEdit, FaTrash, FaDownload, FaLink, FaFileUpload, FaCheck, FaBan, FaCheckCircle } from 'react-icons/fa'
+import { MdPendingActions } from 'react-icons/md'
 import { Card, Button } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { formatDate } from '../../../utils/helpers'
@@ -41,12 +42,12 @@ const RequestCard = ({
 
   const getStatusIcon = (status) => {
     const icons = {
-      'REQUESTED': <FaClock className="w-3 h-3" />,
-      'PENDING': <FaClock className="w-3 h-3" />,
-      'Requested': <FaClock className="w-3 h-3" />,
-      'COMPLETED': <FaCheck className="w-3 h-3" />,
-      'Completed': <FaCheck className="w-3 h-3" />,
-      'AVAILABLE': <FaCheck className="w-3 h-3" />,
+      'REQUESTED': <MdPendingActions className="w-3 h-3" />,
+      'PENDING': <MdPendingActions className="w-3 h-3" />,
+      'Requested': <MdPendingActions className="w-3 h-3" />,
+      'COMPLETED': <FaCheckCircle className="w-3 h-3" />,
+      'Completed': <FaCheckCircle className="w-3 h-3" />,
+      'AVAILABLE': <FaCheckCircle className="w-3 h-3" />,
       'CANCELLED': <FaBan className="w-3 h-3" />,
       'Cancelled': <FaBan className="w-3 h-3" />
     }
@@ -55,6 +56,7 @@ const RequestCard = ({
 
   const getStatusLabel = (status) => {
     const labels = {
+      'REQUESTED': 'Requested',
       'PENDING': 'Pending',
       'Requested': 'Requested',
       'COMPLETED': 'Completed',
@@ -94,9 +96,10 @@ const RequestCard = ({
             </p>
           </div>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs border ${
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${
           getStatusColor(request.status)
         }`}>
+          {getStatusIcon(request.status)}
           {getStatusLabel(request.status)}
         </span>
       </div>
