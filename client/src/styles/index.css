@@ -50,27 +50,51 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Custom Scrollbar - Light Mode (Default) */
+body ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #14b8a6, #06b6d4);
+body ::-webkit-scrollbar-track {
+  background: #f1f5f9;
   border-radius: 10px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+body ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #14b8a6, #06b6d4);
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+}
+
+body ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #0d9488, #0891b2);
 }
 
-/* Firefox */
-.custom-scrollbar {
+/* Custom Scrollbar - Dark Mode (When body has dark class) */
+body.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 10px;
+}
+
+body.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #14b8a6, #06b6d4);
+  border-radius: 10px;
+  border: 2px solid #1f2937;
+}
+
+body.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0d9488, #0891b2);
+}
+
+/* Firefox Scrollbar - Light Mode */
+body {
   scrollbar-width: thin;
-  scrollbar-color: #14b8a6 transparent;
+  scrollbar-color: #14b8a6 #f1f5f9;
+}
+
+/* Firefox Scrollbar - Dark Mode */
+body.dark {
+  scrollbar-width: thin;
+  scrollbar-color: #14b8a6 #1f2937;
 }
