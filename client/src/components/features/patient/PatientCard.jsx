@@ -12,7 +12,7 @@ import { calculateAge, capitalizeFirstLetter, getStatusDisplay } from '../../../
 
 const PatientCard = ({ patient, onClick }) => {
   const { isDarkMode } = useTheme()
-  const statusDisplay = getStatusDisplay(patient.status)
+  const statusDisplay = getStatusDisplay(patient.status, isDarkMode)
 
   return (
     <Card 

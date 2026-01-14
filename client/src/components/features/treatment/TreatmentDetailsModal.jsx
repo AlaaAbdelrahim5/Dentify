@@ -977,8 +977,12 @@ const TreatmentDetailsModal = ({
                               <span className={`
                                 px-2 py-1 rounded text-xs font-medium inline-flex items-center gap-1
                                 ${payment.method === 'CASH'
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                  ? isDarkMode
+                                    ? 'bg-green-900/40 text-green-300 border border-green-600'
+                                    : 'bg-green-100 text-green-700 border border-green-300'
+                                  : isDarkMode
+                                    ? 'bg-blue-900/40 text-blue-300 border border-blue-600'
+                                    : 'bg-blue-100 text-blue-700 border border-blue-300'
                                 }
                               `}>
                                 <FaDollarSign className="w-3 h-3" />
@@ -1114,12 +1118,20 @@ const TreatmentDetailsModal = ({
                               <span className={`
                                 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
                                 ${appointment.status === 'CONFIRMED'
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                  ? isDarkMode
+                                    ? 'bg-green-900/30 text-green-400 border border-green-600'
+                                    : 'bg-green-100 text-green-800 border border-green-300'
                                   : appointment.status === 'PENDING'
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                  ? isDarkMode
+                                    ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-600'
+                                    : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
                                   : appointment.status === 'CANCELLED'
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                  ? isDarkMode
+                                    ? 'bg-red-900/30 text-red-400 border border-red-600'
+                                    : 'bg-red-100 text-red-800 border border-red-300'
+                                  : isDarkMode
+                                    ? 'bg-blue-900/30 text-blue-400 border border-blue-600'
+                                    : 'bg-blue-100 text-blue-800 border border-blue-300'
                                 }
                               `}>
                                 {appointment.status === 'CONFIRMED' && <FaCheckCircle className="w-3 h-3" />}

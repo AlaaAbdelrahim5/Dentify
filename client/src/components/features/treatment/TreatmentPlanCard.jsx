@@ -114,10 +114,13 @@ const TreatmentPlanCard = ({
           </p>
         )}
 
-        {/* Teeth Status Preview */}
+        {/* Teeth Count */}
         {treatment.teethStatus && treatment.teethStatus.length > 0 && (
-          <div>
-            <TreatmentTeethStatus teethStatus={treatment.teethStatus} compact={true} />
+          <div className="flex items-center gap-2">
+            <FaTooth className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {treatment.teethStatus.filter(tooth => tooth.status === 'Completed').length}/{treatment.teethStatus.length} teeth completed
+            </span>
           </div>
         )}
 

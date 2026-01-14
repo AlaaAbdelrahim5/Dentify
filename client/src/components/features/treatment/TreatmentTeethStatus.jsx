@@ -161,10 +161,16 @@ const TreatmentTeethStatus = ({ teethStatus = [], compact = false, onMarkComplet
                 {tooth.priority && (
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
                     tooth.priority.toLowerCase() === 'high'
-                      ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-600'
+                      ? isDarkMode 
+                        ? 'bg-red-900/30 text-red-400 border-red-600'
+                        : 'bg-red-100 text-red-700 border-red-300'
                       : tooth.priority.toLowerCase() === 'medium'
-                        ? 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-600'
-                        : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-600'
+                        ? isDarkMode
+                          ? 'bg-orange-900/30 text-orange-400 border-orange-600'
+                          : 'bg-orange-100 text-orange-700 border-orange-300'
+                        : isDarkMode
+                          ? 'bg-green-900/30 text-green-400 border-green-600'
+                          : 'bg-green-100 text-green-700 border-green-300'
                   }`}>
                     {tooth.priority} Priority
                   </span>

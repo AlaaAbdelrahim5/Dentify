@@ -374,11 +374,12 @@ const TeethHistoryTab = ({ treatments = [] }) => {
                 label: 'Priority',
                 accessor: 'priority',
                 render: (value) => (
-                  <StatusBadge
-                    status={value?.toLowerCase()}
-                    icon={FaExclamationCircle}
-                    label={value || 'Normal'}
-                  />
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                    getPriorityColor(value)
+                  }`}>
+                    <FaExclamationCircle className="w-3 h-3" />
+                    {value || 'Normal'}
+                  </span>
                 )
               },
               {

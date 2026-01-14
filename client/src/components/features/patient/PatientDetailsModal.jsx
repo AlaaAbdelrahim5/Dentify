@@ -33,6 +33,7 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 import TeethHistoryTab from '../treatment/TeethHistoryTab'
 import AppointmentsHistoryTab from '../appointment/AppointmentsHistoryTab'
+import TreatmentPlanCard from '../treatment/TreatmentPlanCard'
 
 const PatientDetailsModal = ({ 
   isOpen, 
@@ -66,13 +67,21 @@ const PatientDetailsModal = ({
   const getStatusColor = (status) => {
     switch (status) {
       case 'active':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        return isDarkMode
+          ? 'bg-green-900/30 text-green-400 border-green-600 font-medium'
+          : 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium'
       case 'inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        return isDarkMode
+          ? 'bg-gray-900/30 text-gray-400 border-gray-600 font-medium'
+          : 'bg-gray-100 text-gray-800 border-gray-500 font-medium'
       case 'new':
-        return 'bg-blue-100 text-blue-800 border-blue-500 font-medium dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
+        return isDarkMode
+          ? 'bg-blue-900/30 text-blue-400 border-blue-600 font-medium'
+          : 'bg-blue-100 text-blue-800 border-blue-500 font-medium'
       default:
-        return 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        return isDarkMode
+          ? 'bg-green-900/30 text-green-400 border-green-600 font-medium'
+          : 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium'
     }
   }
 
@@ -489,75 +498,14 @@ const PatientDetailsModal = ({
           <p>No treatments found for this patient</p>
         </div>
       ) : (
-        treatments.map((treatment) => (
-        <div key={treatment.id} className={`p-4 rounded-lg border ${
-          isDarkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start gap-3 flex-1">
-              <div className={`p-3 rounded-lg ${
-                isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'
-              }`}>
-                <FaStethoscope className="text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {treatment.treatmentName}
-                  </h4>
-                  {treatment.teethStatus && treatment.teethStatus.length > 0 && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 rounded text-xs">
-                      <FaTooth className="w-3 h-3" />
-                      <span>{treatment.teethStatus.length} Teeth</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 mt-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                      Started: {formatDate(treatment.createdAt)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className={`px-2 py-0.5 rounded-full text-xs border ${
-                      treatment.status === 'Completed'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-400 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-                        : treatment.status === 'In Progress'
-                        ? 'bg-blue-50 text-blue-700 border-blue-400 font-medium dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700'
-                        : 'bg-red-50 text-red-700 border-red-400 font-medium dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
-                    }`}>
-                      {treatment.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Progress */}
-          <div className={`mt-4 pt-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Payment Progress
-              </span>
-              <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                ${treatment.paidAmount.toFixed(2)} / ${treatment.totalAmount.toFixed(2)}
-              </span>
-            </div>
-            <div className={`h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-              <div 
-                className="h-full bg-linear-to-r from-green-500 to-green-600 rounded-full"
-                style={{ width: `${(treatment.paidAmount / treatment.totalAmount) * 100}%` }}
-              />
-            </div>
-            {treatment.totalAmount > treatment.paidAmount && (
-              <p className={`text-sm mt-2 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                Remaining: ${(treatment.totalAmount - treatment.paidAmount).toFixed(2)}
-              </p>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {treatments.map((treatment) => (
+            <TreatmentPlanCard
+              key={treatment.id}
+              treatment={treatment}
+            />
+          ))}
         </div>
-        ))
       )}
       </div>
     )
@@ -694,8 +642,12 @@ const PatientDetailsModal = ({
             </p>
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
               patientData.status?.toLowerCase() === 'active'
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-500 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-                : 'bg-red-100 text-red-800 border-red-500 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
+                ? isDarkMode
+                  ? 'bg-green-900/30 text-green-400 border-green-600'
+                  : 'bg-emerald-100 text-emerald-800 border-emerald-500'
+                : isDarkMode
+                  ? 'bg-red-900/30 text-red-400 border-red-600'
+                  : 'bg-red-100 text-red-800 border-red-500'
             }`}>
               {patientData.status?.toLowerCase() === 'active' ? (
                 <FaCheckCircle className="w-3 h-3" />

@@ -58,32 +58,42 @@ export const formatDate = (dateString) => {
  * @param {string} status - Status value
  * @returns {object} Object with label and className
  */
-export const getStatusDisplay = (status) => {
+export const getStatusDisplay = (status, isDarkMode = false) => {
   switch (status?.toLowerCase()) {
     case 'active':
       return {
         label: 'Active',
-        className: 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        className: isDarkMode 
+          ? 'bg-green-900/30 text-green-400 border-green-700 font-medium' 
+          : 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium'
       }
     case 'inactive':
       return {
         label: 'Inactive',
-        className: 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        className: isDarkMode 
+          ? 'bg-gray-900/30 text-gray-400 border-gray-700 font-medium' 
+          : 'bg-gray-100 text-gray-800 border-gray-500 font-medium'
       }
     case 'pending':
       return {
         label: 'Pending',
-        className: 'bg-amber-100 text-amber-800 border-amber-500 font-medium dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
+        className: isDarkMode 
+          ? 'bg-yellow-900/30 text-yellow-400 border-yellow-700 font-medium' 
+          : 'bg-amber-100 text-amber-800 border-amber-500 font-medium'
       }
     case 'deactivated':
       return {
         label: 'Deactivated',
-        className: 'bg-gray-100 text-gray-800 border-gray-500 font-medium dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-700'
+        className: isDarkMode 
+          ? 'bg-gray-900/30 text-gray-400 border-gray-700 font-medium' 
+          : 'bg-gray-100 text-gray-800 border-gray-500 font-medium'
       }
     default:
       return {
         label: 'Active',
-        className: 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+        className: isDarkMode 
+          ? 'bg-green-900/30 text-green-400 border-green-700 font-medium' 
+          : 'bg-emerald-100 text-emerald-800 border-emerald-500 font-medium'
       }
   }
 }

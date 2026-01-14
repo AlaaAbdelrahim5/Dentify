@@ -176,10 +176,13 @@ const DentistPatients = () => {
         return {
           id: treatment.id,
           treatmentName: treatment.treatmentName,
+          treatmentStatus: statusMap[treatment.status] || treatment.status,
           status: statusMap[treatment.status] || treatment.status,
           createdAt: treatment.createdAt,
+          creationDate: treatment.createdAt,
           totalAmount: treatment.totalAmount || 0,
           paidAmount: treatment.paidAmount || 0,
+          treatmentDiscount: treatment.treatmentDiscount || 0,
           teethStatus: teethStatus,
           description: treatment.description,
           notes: treatment.notes

@@ -9,10 +9,10 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState('week') // week or day
   
-  // Filter out pending and cancelled appointments
+  // Filter out only cancelled appointments
   const filteredAppointments = useMemo(() => {
     const filtered = appointments.filter(apt => 
-      apt.status !== 'PENDING' && apt.status !== 'CANCELLED'
+      apt.status !== 'CANCELLED'
     )
     
     return filtered
@@ -432,6 +432,12 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
             <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               Confirmed
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Pending
             </span>
           </div>
           <div className="flex items-center gap-2">
