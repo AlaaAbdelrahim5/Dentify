@@ -398,7 +398,7 @@ const Home = () => {
                 Get started in minutes, no credit card required.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="secondary" size="xl" className="bg-white text-teal-600 hover:bg-gray-50 shadow-xl">
+                <Button variant="secondary" size="xl" className="bg-white text-teal-600 hover:bg-white">
                   <Link to="/signup" className="flex items-center gap-2">
                     Create Free Account <FaArrowRight />
                   </Link>
