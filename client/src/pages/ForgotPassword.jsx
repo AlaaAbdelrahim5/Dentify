@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaCheck } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { Logo, Button, Input, Card, LoadingSpinner, Alert } from '../components';
@@ -45,34 +46,83 @@ export default function ForgotPassword() {
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
-        }`}></div>
-        <div className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
-        }`}></div>
+        <motion.div 
+          className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
+          }`}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
+          }`}
+          animate={{
+            scale: [1, 1.3, 1],
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <motion.div 
+        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Logo */}
-        <div className="text-center mb-8">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <Logo className="justify-center" size="text-4xl" />
-          <p className={`mt-4 text-lg ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
+          <motion.p 
+            className={`mt-4 text-lg ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             {emailSent 
               ? 'Check your email for reset instructions'
               : 'Reset your password to continue'
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Password Reset Form */}
-        <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
           <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
-            <div className="flex items-center justify-center mb-2">
+            <motion.div 
+              className="flex items-center justify-center mb-2"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.5, delay: 0.5, type: "spring" }}
+            >
               <FaLock className="text-3xl text-white" />
-            </div>
+            </motion.div>
             <h2 className="text-3xl font-bold text-center text-white">
               Forgot Password?
             </h2>
@@ -112,12 +162,22 @@ export default function ForgotPassword() {
             {emailSent ? (
               <div className="space-y-6">
                 <div className="text-center space-y-4">
-                  <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
+                  <motion.div 
+                    className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
                       isDarkMode ? 'bg-teal-900/30' : 'bg-teal-50'
-                    } transition-transform duration-300`}
+                    }`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.5, type: "spring", bounce: 0.5 }}
                   >
-                    <FaCheck className="text-3xl text-green-500" />
-                  </div>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      <FaCheck className="text-3xl text-green-500" />
+                    </motion.div>
+                  </motion.div>
                   
                   <p className={`text-base ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -126,13 +186,18 @@ export default function ForgotPassword() {
                   </p>
                 </div>
 
-                <Button
-                  onClick={() => navigate('/login')}
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Back to Login
-                </Button>
+                  <Button
+                    onClick={() => navigate('/login')}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    Back to Login
+                  </Button>
+                </motion.div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -149,12 +214,16 @@ export default function ForgotPassword() {
                   icon={FaEnvelope}
                 />
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-                  disabled={isLoading || !email}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                    disabled={isLoading || !email}
+                  >
                   {isLoading ? (
                     <div className="flex items-center justify-center gap-2">
                       <LoadingSpinner size="sm" />
@@ -166,6 +235,7 @@ export default function ForgotPassword() {
                     </div>
                   )}
                 </Button>
+                </motion.div>
 
                 {/* Info Box */}
                 <div className={`p-4 rounded-lg border ${
@@ -212,12 +282,21 @@ export default function ForgotPassword() {
             </p>
           </Card.Footer>
         </Card>
+        </motion.div>
 
         {/* Additional Info */}
-        <div className="mt-8 text-center">
-          <div className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
-            isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
-          } shadow-md`}>
+        <motion.div 
+          className="mt-8 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <motion.div 
+            className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
+              isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
+            } shadow-md`}
+            whileHover={{ scale: 1.05 }}
+          >
             <Link to="/" className="hover:text-teal-600 transition-colors flex items-center gap-1">
               🏠 Home
             </Link>
@@ -225,9 +304,9 @@ export default function ForgotPassword() {
             <span className="flex items-center gap-1">🔒 Secure Reset</span>
             <span>•</span>
             <span className="flex items-center gap-1">💬 24/7 Support</span>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

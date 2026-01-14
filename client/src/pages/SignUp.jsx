@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
+import { motion } from 'framer-motion';
 import {
   FaUser,
   FaEnvelope,
@@ -282,26 +283,65 @@ const SignUp = () => {
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
-        }`}></div>
-        <div className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
-        }`}></div>
+        <motion.div 
+          className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
+          }`}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
+          }`}
+          animate={{
+            scale: [1, 1.3, 1],
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
       </div>
 
-      <div className="max-w-4xl mx-auto relative z-10">
+      <motion.div 
+        className="max-w-4xl mx-auto relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Logo */}
-        <div className="text-center mb-6">
+        <motion.div 
+          className="text-center mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <Logo className="justify-center" size="text-4xl" />
           <p className={`mt-3 text-lg ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             Create your patient account to get started
           </p>
-        </div>
+        </motion.div>
 
         {/* Signup Form */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
         <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
           <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
             <h2 className="text-3xl font-bold text-center text-white">
@@ -532,20 +572,25 @@ const SignUp = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="w-full bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-                    disabled={isLoading}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <LoadingSpinner size="sm" />
-                      </div>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                        </div>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </motion.div>
                 </>
               )}
             </form>
@@ -568,12 +613,21 @@ const SignUp = () => {
             </p>
           </Card.Footer>
         </Card>
+        </motion.div>
 
         {/* Additional Info */}
-        <div className="mt-6 text-center">
-          <div className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
-            isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
-          } shadow-md`}>
+        <motion.div 
+          className="mt-6 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <motion.div 
+            className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
+              isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
+            } shadow-md`}
+            whileHover={{ scale: 1.05 }}
+          >
             <Link to="/" className="hover:text-teal-600 transition-colors flex items-center gap-1">
               🏠 Home
             </Link>
@@ -581,9 +635,9 @@ const SignUp = () => {
             <span className="flex items-center gap-1">🔒 Secure & Private</span>
             <span>•</span>
             <span className="flex items-center gap-1">⚡ Fast & Easy</span>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

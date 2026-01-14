@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { motion } from 'framer-motion';
 import {
   FaEnvelope,
   FaLock,
@@ -236,26 +237,65 @@ const Login = () => {
     }`}>
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
-        }`}></div>
-        <div className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
-          isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
-        }`}></div>
+        <motion.div 
+          className={`absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-teal-500' : 'bg-teal-300'
+          }`}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className={`absolute bottom-20 left-20 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+            isDarkMode ? 'bg-cyan-500' : 'bg-cyan-300'
+          }`}
+          animate={{
+            scale: [1, 1.3, 1],
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <motion.div 
+        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Logo */}
-        <div className="text-center mb-8">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <Logo className="justify-center" size="text-4xl" />
           <p className={`mt-4 text-lg ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             Welcome back! Please sign in to continue.
           </p>
-        </div>
+        </motion.div>
 
         {/* Login Form */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
         <Card className="shadow-2xl backdrop-blur-sm bg-opacity-95">
           <Card.Header className={isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-teal-500 to-cyan-500'}>
             <h2 className="text-3xl font-bold text-center text-white">
@@ -383,30 +423,40 @@ const Login = () => {
               </div>
 
               {/* Submit Button */}
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-                disabled={isLoading}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner size="sm" />
+                    </div>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </motion.div>
             </form>
             ) : (
               // 2FA Verification Form
               <form onSubmit={handleVerify2FA} className="space-y-6">
                 <div className="text-center mb-4">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-                    isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
-                  }`}>
+                  <motion.div 
+                    className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+                      isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+                    }`}
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.6, type: "spring" }}
+                  >
                     <FaLock className={`text-3xl ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
-                  </div>
+                  </motion.div>
                   <h3 className={`text-lg font-semibold mb-2 ${
                     isDarkMode ? 'text-white' : 'text-gray-800'
                   }`}>
@@ -444,30 +494,42 @@ const Login = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="lg"
+                  <motion.div
                     className="flex-1"
-                    onClick={handleBack2FA}
-                    disabled={isLoading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    Back
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                    disabled={isLoading || twoFactorCode.length !== 6}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleBack2FA}
+                      disabled={isLoading}
+                    >
+                      Back
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    className="flex-1"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <LoadingSpinner size="sm" />
-                      </div>
-                    ) : (
-                      "Verify"
-                    )}
-                  </Button>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                      disabled={isLoading || twoFactorCode.length !== 6}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <LoadingSpinner size="sm" />
+                        </div>
+                      ) : (
+                        "Verify"
+                      )}
+                    </Button>
+                  </motion.div>
                 </div>
               </form>
             )}
@@ -490,12 +552,21 @@ const Login = () => {
             </p>
           </Card.Footer>
         </Card>
+        </motion.div>
 
         {/* Additional Info */}
-        <div className="mt-8 text-center">
-          <div className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
-            isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
-          } shadow-md`}>
+        <motion.div 
+          className="mt-8 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <motion.div 
+            className={`inline-flex items-center gap-6 text-xs px-6 py-3 rounded-full ${
+              isDarkMode ? 'bg-gray-800 bg-opacity-50 text-gray-400' : 'bg-white bg-opacity-80 text-gray-500'
+            } shadow-md`}
+            whileHover={{ scale: 1.05 }}
+          >
             <Link to="/" className="hover:text-teal-600 transition-colors flex items-center gap-1">
               🏠 Home
             </Link>
@@ -503,9 +574,9 @@ const Login = () => {
             <span className="flex items-center gap-1">🔒 Secure Login</span>
             <span>•</span>
             <span className="flex items-center gap-1">💬 24/7 Support</span>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

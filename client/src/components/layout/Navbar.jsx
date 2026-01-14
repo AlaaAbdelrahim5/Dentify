@@ -147,6 +147,61 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
 
           {/* Navigation Links - Desktop and Mobile */}
           <div className="flex items-center space-x-1 md:space-x-2">
+            {/* Section Navigation - Only on Home Page for Non-Authenticated Users */}
+            {!isAuthenticated && location.pathname === '/' && (
+              <div className="hidden lg:flex items-center space-x-1 mr-4">
+                <a
+                  href="#home"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isDarkMode
+                      ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Home
+                </a>
+                <a
+                  href="#features"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isDarkMode
+                      ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Features
+                </a>
+                <a
+                  href="#roles"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isDarkMode
+                      ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Roles
+                </a>
+                <a
+                  href="#why-us"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isDarkMode
+                      ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Why Us
+                </a>
+                <a
+                  href="#get-started"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isDarkMode
+                      ? 'text-gray-300 hover:text-teal-400 hover:bg-gray-800/50'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-gray-100'
+                  }`}
+                >
+                  Get Started
+                </a>
+              </div>
+            )}
               
               {!isAuthenticated ? (
                 // Unauthenticated user navigation
