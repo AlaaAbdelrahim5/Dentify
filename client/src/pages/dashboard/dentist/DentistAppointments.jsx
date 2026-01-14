@@ -126,26 +126,26 @@ const DentistAppointments = ({ onTabChange }) => {
     const now = new Date()
     return displayAppointments
       .filter(apt => {
-        const aptDate = new Date(apt.appointmentDate)
-        return aptDate >= now && apt.status === 'CONFIRMED'
+        const aptTime = new Date(apt.startTime || apt.appointmentDate)
+        return aptTime >= now && apt.status === 'CONFIRMED'
       })
-      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+      .sort((a, b) => new Date(a.startTime || a.appointmentDate) - new Date(b.startTime || b.appointmentDate))
   }, [displayAppointments])
 
   const pendingAppointments = useMemo(() => {
     return displayAppointments
       .filter(apt => apt.status === 'PENDING')
-      .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+      .sort((a, b) => new Date(a.startTime || a.appointmentDate) - new Date(b.startTime || b.appointmentDate))
   }, [displayAppointments])
 
   const pastAppointments = useMemo(() => {
     const now = new Date()
     return displayAppointments
       .filter(apt => {
-        const aptEndTime = new Date(apt.endTime)
+        const aptEndTime = new Date(apt.endTime || apt.startTime || apt.appointmentDate)
         return aptEndTime < now
       })
-      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+      .sort((a, b) => new Date(b.startTime || b.appointmentDate) - new Date(a.startTime || a.appointmentDate))
   }, [displayAppointments])
 
   const allAppointments = useMemo(() => {

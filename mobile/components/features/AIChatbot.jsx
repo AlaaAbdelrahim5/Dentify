@@ -87,14 +87,19 @@ const AIChatbot = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      // Call the booking API
-      const response = await bookAppointmentViaChatbot({
+      // Prepare booking data
+      const bookingData = {
         dentistId: appointmentDetails.dentistId,
         date: appointmentDetails.date,
         startTime: appointmentDetails.startTime,
         endTime: appointmentDetails.endTime,
         reason: appointmentDetails.reason || 'Consultation'
-      });
+      };
+      
+      console.log('Booking data being sent:', JSON.stringify(bookingData, null, 2));
+      
+      // Call the booking API
+      const response = await bookAppointmentViaChatbot(bookingData);
 
       // Show success message
       const successMessage = {
@@ -109,7 +114,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
       const errorMsg = error.response?.data?.error || 'Failed to book appointment. Please try again.';
       const errorMessage = {
         id: messages.length + 1,
-        text: `I'm sorry, there was an issue booking your appointment: ${errorMsg}`,
+        text: `❌ ${errorMsg}`,
         sender: 'bot',
         timestamp: new Date(),
         isError: true
@@ -256,9 +261,9 @@ const AIChatbot = ({ isOpen, onClose }) => {
                     }
                   : message.isError
                   ? {
-                      backgroundColor: '#FEE2E2',
+                      backgroundColor: isDarkMode ? '#7F1D1D' : '#FEE2E2',
                       borderWidth: 1,
-                      borderColor: '#FCA5A5'
+                      borderColor: isDarkMode ? '#991B1B' : '#FCA5A5'
                     }
                   : {
                       backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
@@ -271,10 +276,15 @@ const AIChatbot = ({ isOpen, onClose }) => {
                 className={`text-sm ${
                   message.sender === 'user' 
                     ? 'text-white' 
+                    : message.isError
+                    ? (isDarkMode ? 'text-red-300' : 'text-red-800')
                     : isDarkMode 
                     ? 'text-gray-100' 
                     : 'text-gray-800'
                 }`}
+                style={{
+                  fontWeight: message.isError ? '600' : '400'
+                }}
               >
                 {message.text}
               </Text>

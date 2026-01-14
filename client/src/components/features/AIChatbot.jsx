@@ -94,14 +94,19 @@ const AIChatbot = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      // Call the booking API
-      const response = await bookAppointmentViaChatbot({
+      // Prepare booking data
+      const bookingData = {
         dentistId: appointmentDetails.dentistId,
         date: appointmentDetails.date,
         startTime: appointmentDetails.startTime,
         endTime: appointmentDetails.endTime,
         reason: appointmentDetails.reason || 'Consultation'
-      });
+      };
+      
+      console.log('Booking data being sent:', JSON.stringify(bookingData, null, 2));
+      
+      // Call the booking API
+      const response = await bookAppointmentViaChatbot(bookingData);
 
       // Show success message
       const successMessage = {
@@ -116,7 +121,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
       const errorMsg = error.response?.data?.error || 'Failed to book appointment. Please try again.';
       const errorMessage = {
         id: messages.length + 1,
-        text: `I'm sorry, there was an issue booking your appointment: ${errorMsg}`,
+        text: `❌ ${errorMsg}`,
         sender: 'bot',
         timestamp: new Date(),
         isError: true

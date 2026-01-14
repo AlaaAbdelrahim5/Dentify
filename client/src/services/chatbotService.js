@@ -98,10 +98,14 @@ export const clearChatHistory = async () => {
  */
 export const bookAppointmentViaChatbot = async (appointmentData) => {
   try {
+    console.log('Web chatbot service - booking appointment:', appointmentData);
     const response = await api.post('/api/chatbot/book-appointment', appointmentData);
+    console.log('Web chatbot service - booking success:', response.data);
     return response.data;
   } catch (error) {
     console.error('Book appointment error:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
     throw error;
   }
 };

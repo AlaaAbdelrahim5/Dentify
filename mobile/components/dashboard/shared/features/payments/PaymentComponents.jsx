@@ -45,8 +45,24 @@ export const PaymentCard = ({ payment, isDarkMode, role = 'patient' }) => {
             {new Date(payment.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </Text>
         </View>
-        <View className={`px-2 py-1 rounded-full ${payment.method === 'CASH' ? 'bg-green-100' : 'bg-blue-100'}`}>
-          <Text className={`text-xs font-medium ${payment.method === 'CASH' ? 'text-green-700' : 'text-blue-700'}`}>
+        <View 
+          className={`px-3 py-1 rounded-full ${
+            payment.method === 'CASH'
+              ? isDarkMode 
+                ? 'bg-green-500/20 border border-green-500/30' 
+                : 'bg-emerald-100 border border-emerald-200'
+              : isDarkMode
+                ? 'bg-blue-500/20 border border-blue-500/30'
+                : 'bg-blue-100 border border-blue-200'
+          }`}
+        >
+          <Text 
+            className={`text-xs font-medium ${
+              payment.method === 'CASH'
+                ? isDarkMode ? 'text-green-400' : 'text-emerald-700'
+                : isDarkMode ? 'text-blue-400' : 'text-blue-600'
+            }`}
+          >
             {payment.method === 'CASH' ? '💵 Cash' : '💳 Card'}
           </Text>
         </View>

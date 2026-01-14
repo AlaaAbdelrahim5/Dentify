@@ -119,6 +119,11 @@ export const getStatusColors = (status, isDarkMode = false) => {
       text: isDarkMode ? COLORS.green[400] : COLORS.green[700],
       border: isDarkMode ? COLORS.green[600] : COLORS.green[400],
     },
+    'IN_PROGRESS': {
+      bg: isDarkMode ? COLORS.green[900] + '4D' : COLORS.green[100],
+      text: isDarkMode ? COLORS.green[400] : COLORS.green[700],
+      border: isDarkMode ? COLORS.green[600] : COLORS.green[400],
+    },
     'INACTIVE': {
       bg: isDarkMode ? COLORS.gray[900] + '4D' : COLORS.gray[100],
       text: isDarkMode ? COLORS.gray[400] : COLORS.gray[700],

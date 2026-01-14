@@ -778,8 +778,24 @@ exports.bookAppointment = async (req, res) => {
     const { dentistId, date, startTime, endTime, reason } = req.body;
     const userId = req.user.id;
 
+    console.log('Booking request received:', {
+      dentistId,
+      date,
+      startTime,
+      endTime,
+      reason,
+      userId,
+      userRole: req.user.role
+    });
+
     // Validate required fields
     if (!dentistId || !date || !startTime || !endTime) {
+      console.error('Missing required fields:', {
+        dentistId: !!dentistId,
+        date: !!date,
+        startTime: !!startTime,
+        endTime: !!endTime
+      });
       return res.status(400).json({
         success: false,
         error: 'Dentist ID, date, start time, and end time are required'
@@ -788,6 +804,7 @@ exports.bookAppointment = async (req, res) => {
 
     // Verify user is a patient
     if (req.user.role !== 'Patient') {
+      console.error('Non-patient user trying to book:', req.user.role);
       return res.status(403).json({
         success: false,
         error: 'Only patients can book appointments'
@@ -832,12 +849,12 @@ exports.bookAppointment = async (req, res) => {
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(endDateTime.getMinutes() + dentist.appointmentDuration);
 
-    // Check if the date is in the past
+    // Check if the appointment time is in the past (not just the date)
     const now = new Date();
-    if (appointmentDate < now) {
+    if (startDateTime < now) {
       return res.status(400).json({
         success: false,
-        error: 'Cannot book appointments in the past'
+        error: 'Cannot book appointments in the past. Please choose a future time slot.'
       });
     }
 

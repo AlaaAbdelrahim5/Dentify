@@ -147,21 +147,19 @@ const PatientAppointments = () => {
   // Separate appointments into upcoming and past
   const upcomingAppointments = appointments
     .filter(apt => {
-      const aptDate = new Date(apt.appointmentDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      return aptDate >= today && apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
+      const aptTime = new Date(apt.startTime || apt.appointmentDate)
+      const now = new Date()
+      return aptTime >= now && apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED'
     })
-    .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+    .sort((a, b) => new Date(a.startTime || a.appointmentDate) - new Date(b.startTime || b.appointmentDate))
 
   const pastAppointments = appointments
     .filter(apt => {
-      const aptDate = new Date(apt.appointmentDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      return aptDate < today || apt.status === 'COMPLETED' || apt.status === 'CANCELLED'
+      const aptTime = new Date(apt.startTime || apt.appointmentDate)
+      const now = new Date()
+      return aptTime < now || apt.status === 'COMPLETED' || apt.status === 'CANCELLED'
     })
-    .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+    .sort((a, b) => new Date(b.startTime || b.appointmentDate) - new Date(a.startTime || a.appointmentDate))
 
   const displayAppointments = activeView === 'upcoming' ? upcomingAppointments : pastAppointments
 

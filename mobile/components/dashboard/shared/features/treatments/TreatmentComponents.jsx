@@ -14,6 +14,20 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookA
     treatment.status !== 'COMPLETED' && 
     treatment.status !== 'CANCELLED';
 
+  // Calculate payment progress
+  const treatmentDiscount = treatment.treatmentDiscount || 0;
+  const effectiveTotal = (treatment.totalAmount || 0) - treatmentDiscount;
+  const paidAmount = treatment.paidAmount || 0;
+  const remainingBalance = Math.max(0, effectiveTotal - paidAmount);
+  const paymentProgress = effectiveTotal > 0 ? Math.min(100, (paidAmount / effectiveTotal) * 100) : 0;
+
+  // Count teeth if available
+  const teethStatus = treatment.teethStatus || [];
+  const totalTeeth = Array.isArray(teethStatus) ? teethStatus.length : 0;
+  const completedTeeth = Array.isArray(teethStatus) 
+    ? teethStatus.filter(tooth => tooth.status === 'Completed').length 
+    : 0;
+
   return (
     <View className={`mb-3 p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}
       style={{
@@ -58,30 +72,90 @@ export const TreatmentCard = ({ treatment, isDarkMode, role = 'patient', onBookA
       </View>
 
       {treatment.description && (
-        <Text className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <Text 
+          className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+          numberOfLines={2}
+        >
           {treatment.description}
         </Text>
       )}
 
-      <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <View>
-          <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Total Amount
-          </Text>
-          <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            ${treatment.totalAmount?.toFixed(2) || '0.00'}
+      {/* Teeth Status */}
+      {totalTeeth > 0 && (
+        <View className="flex-row items-center mt-2">
+          <Ionicons name="medical" size={14} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+          <Text className={`ml-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {completedTeeth}/{totalTeeth} teeth completed
           </Text>
         </View>
-        {treatment.startDate && (
-          <View>
-            <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Started
-            </Text>
-            <Text className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {new Date(treatment.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </Text>
-          </View>
-        )}
+      )}
+
+      {/* Payment Progress */}
+      <View 
+        className={`mt-3 p-3 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}
+      >
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Payment Progress
+          </Text>
+          <Text 
+            className={`text-xs font-bold ${
+              paymentProgress === 100 ? 'text-green-600' : 'text-teal-600'
+            }`}
+          >
+            {paymentProgress.toFixed(0)}%
+          </Text>
+        </View>
+        
+        {/* Progress Bar */}
+        <View 
+          className={`w-full h-2 rounded-full overflow-hidden ${
+            isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+          }`}
+        >
+          <View 
+            className={paymentProgress === 100 ? 'bg-green-600' : 'bg-teal-600'}
+            style={{ width: `${paymentProgress}%`, height: '100%' }}
+          />
+        </View>
+
+        {/* Payment Details */}
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Paid: ${paidAmount.toFixed(2)}
+          </Text>
+          <Text 
+            className={`text-xs font-medium ${
+              remainingBalance > 0 ? 'text-red-600' : 'text-green-600'
+            }`}
+          >
+            {remainingBalance > 0 
+              ? `Balance: $${remainingBalance.toFixed(2)}` 
+              : 'Fully Paid'
+            }
+          </Text>
+        </View>
+      </View>
+
+      {/* Date and Total Amount */}
+      <View className="flex-row items-center justify-between mt-3 pt-3" style={{ borderTopWidth: 1, borderTopColor: isDarkMode ? '#374151' : '#E5E7EB' }}>
+        <View className="flex-row items-center">
+          <Ionicons name="calendar-outline" size={14} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+          <Text className={`ml-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {treatment.startDate 
+              ? new Date(treatment.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : new Date(treatment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            }
+          </Text>
+        </View>
+        <View>
+          <Text className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Total
+          </Text>
+          <Text className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            ${(treatment.totalAmount || 0).toFixed(2)}
+          </Text>
+        </View>
       </View>
 
       {/* Book Appointment Button */}

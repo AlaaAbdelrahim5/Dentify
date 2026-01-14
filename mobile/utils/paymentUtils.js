@@ -23,14 +23,28 @@ export const calculateThisMonth = (payments) => {
 };
 
 /**
+ * Calculate remaining balance from treatments
+ * @param {Array} treatments - Array of treatment objects with totalAmount and paidAmount
+ * @returns {number} Total remaining balance
+ */
+export const calculateRemaining = (treatments) => {
+  return treatments.reduce((sum, t) => {
+    const remaining = (t.totalAmount || 0) - (t.paidAmount || 0);
+    return sum + (remaining > 0 ? remaining : 0);
+  }, 0);
+};
+
+/**
  * Calculate payment statistics
  * @param {Array} payments - Array of payment objects
- * @returns {Object} { total, thisMonth, count }
+ * @param {Array} treatments - Optional array of treatment objects for calculating remaining balance
+ * @returns {Object} { total, thisMonth, remaining, count }
  */
-export const calculatePaymentStats = (payments) => {
+export const calculatePaymentStats = (payments, treatments = []) => {
   return {
     total: calculateTotal(payments),
     thisMonth: calculateThisMonth(payments),
+    remaining: calculateRemaining(treatments),
     count: payments.length
   };
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { paymentsAPI } from '../../../../../services/api';
+import { paymentsAPI, treatmentsAPI } from '../../../../../services/api';
 import SharedPayments from './SharedPayments';
 
 /**
@@ -20,7 +20,21 @@ const RolePayments = ({ role }) => {
     }
   }, [role]);
 
-  return <SharedPayments fetchPaymentsAPI={fetchPaymentsAPI} role={role} />;
+  const fetchTreatmentsAPI = React.useMemo(() => {
+    // Only provide treatments API for patient role
+    if (role === 'patient') {
+      return treatmentsAPI.getPatientTreatments;
+    }
+    return null;
+  }, [role]);
+
+  return (
+    <SharedPayments 
+      fetchPaymentsAPI={fetchPaymentsAPI} 
+      fetchTreatmentsAPI={fetchTreatmentsAPI}
+      role={role} 
+    />
+  );
 };
 
 export default RolePayments;

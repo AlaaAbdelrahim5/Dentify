@@ -10,11 +10,13 @@ import { LoadingState, EmptyState } from '../../overview/OverviewComponents';
 /**
  * SharedPayments - Unified payments component for all roles
  * @param {Function} fetchPaymentsAPI - API function to fetch payments (e.g., paymentsAPI.getDentistPayments)
+ * @param {Function} fetchTreatmentsAPI - Optional API function to fetch treatments (for calculating remaining balance)
  * @param {string} role - User role ('dentist', 'patient', 'secretary')
  */
-const SharedPayments = ({ fetchPaymentsAPI, role }) => {
+const SharedPayments = ({ fetchPaymentsAPI, fetchTreatmentsAPI, role }) => {
   const { isDarkMode } = useTheme();
   const [payments, setPayments] = useState([]);
+  const [treatments, setTreatments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -26,6 +28,12 @@ const SharedPayments = ({ fetchPaymentsAPI, role }) => {
     try {
       const response = await fetchPaymentsAPI();
       setPayments(response.payments || []);
+      
+      // Fetch treatments for patient role to calculate remaining balance
+      if (role === 'patient' && fetchTreatmentsAPI) {
+        const treatmentsResponse = await fetchTreatmentsAPI();
+        setTreatments(treatmentsResponse.treatments || []);
+      }
     } catch (error) {
       console.error('Error fetching payments:', error);
       showErrorAlert(error, 'Failed to load payments');
@@ -40,7 +48,7 @@ const SharedPayments = ({ fetchPaymentsAPI, role }) => {
     fetchPayments();
   };
 
-  const stats = useMemo(() => calculatePaymentStats(payments), [payments]);
+  const stats = useMemo(() => calculatePaymentStats(payments, treatments), [payments, treatments]);
 
   if (loading) {
     return (
@@ -50,11 +58,15 @@ const SharedPayments = ({ fetchPaymentsAPI, role }) => {
     );
   }
 
+  // Show different stats based on role
+  const secondaryLabel = role === 'patient' ? 'Remaining' : 'This Month';
+  const secondaryValue = role === 'patient' ? stats.remaining : stats.thisMonth;
+
   return (
     <View className="flex-1 p-4">
       <View className="flex-row mb-4" style={{ gap: 8 }}>
         <PaymentStatsCard label="Total" value={stats.total} isDarkMode={isDarkMode} />
-        <PaymentStatsCard label="This Month" value={stats.thisMonth} isDarkMode={isDarkMode} />
+        <PaymentStatsCard label={secondaryLabel} value={secondaryValue} isDarkMode={isDarkMode} />
       </View>
 
       <ScrollView
