@@ -183,7 +183,6 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
           dentists: { component: SecretaryDentists, label: 'Dentists' },
           treatments: { component: SecretaryTreatments, label: 'Treatments' },
           payments: { component: SecretaryPayments, label: 'Payments' },
-          reports: { component: ComingSoon, label: 'Reports', icon: FaFileAlt },
           settings: { component: SecretarySettings, label: 'Settings' }
         }
       }

@@ -23,6 +23,8 @@ const DoctorCard = ({
 }) => {
   const { isDarkMode } = useTheme()
   const [imageError, setImageError] = useState(false)
+  
+  console.log('DentistCard - Doctor:', doctor.firstName, doctor.lastName, 'ProfileImage:', doctor.user?.profileImage || doctor.profileImage)
 
   // Extract doctor information
   const fullName = `Dr. ${doctor.firstName} ${doctor.lastName}`
@@ -214,27 +216,40 @@ const DoctorCard = ({
     >
       <Card.Header className="pb-3">
         <div className="flex items-start justify-between mb-3">
-          <div className={`
-            w-12 h-12 rounded-lg flex items-center justify-center
-            ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
-            group-hover:scale-110 transition-transform duration-300
-          `}>
-            <FaUserMd className="w-6 h-6 text-teal-600" />
+          <div className="relative">
+            {(doctor.user?.profileImage || doctor.profileImage) && !imageError ? (
+              <img
+                src={getImageUrl(doctor.user?.profileImage || doctor.profileImage)}
+                alt={fullName}
+                onError={() => setImageError(true)}
+                className="w-12 h-12 rounded-lg object-cover group-hover:scale-110 transition-transform duration-300"
+              />
+            ) : (
+              <div className={`
+                w-12 h-12 rounded-lg flex items-center justify-center
+                ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
+                group-hover:scale-110 transition-transform duration-300
+              `}>
+                <FaUserMd className="w-6 h-6 text-teal-600" />
+              </div>
+            )}
           </div>
           
-          {isActive ? (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              isDarkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-50 text-green-700'
-            }`}>
-              Available
-            </span>
-          ) : (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600'
-            }`}>
-              Unavailable
-            </span>
-          )}
+          {(() => {
+            const status = doctor.user?.status || doctor.status || 'ACTIVE'
+            const statusConfig = {
+              'ACTIVE': { label: 'Active', bgClass: isDarkMode ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-green-50 text-green-700 border border-green-200' },
+              'PENDING': { label: 'Pending', bgClass: isDarkMode ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
+              'DEACTIVATED': { label: 'Deactivated', bgClass: isDarkMode ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-red-50 text-red-700 border border-red-200' },
+              'CANCELLED': { label: 'Cancelled', bgClass: isDarkMode ? 'bg-gray-700 text-gray-400 border border-gray-600' : 'bg-gray-200 text-gray-600 border border-gray-300' }
+            }
+            const statusInfo = statusConfig[status] || statusConfig['ACTIVE']
+            return (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bgClass}`}>
+                {statusInfo.label}
+              </span>
+            )
+          })()}
         </div>
 
         <h3 className={`text-lg font-bold mb-1 ${

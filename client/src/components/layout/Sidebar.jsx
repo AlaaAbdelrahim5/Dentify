@@ -277,12 +277,6 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         label: 'Dentists', 
         icon: FaUserMd,
         description: 'View dentists directory'
-      },
-      { 
-        id: 'reports', 
-        label: 'Reports', 
-        icon: FaChartBar,
-        description: 'Clinic reports and statistics'
       }
     ]
   }

@@ -93,8 +93,15 @@ const TreatmentPlanCard = ({
               <p className={`text-sm ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                {treatment.dentistName || treatment.patientName}
+                {treatment.patientName ? `Patient: ${treatment.patientName}` : treatment.dentistName ? `Dr. ${treatment.dentistName}` : 'N/A'}
               </p>
+              {treatment.patientName && treatment.dentistName && (
+                <p className={`text-xs ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                }`}>
+                  {treatment.dentistName}
+                </p>
+              )}
             </div>
           </div>
           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusDisplay.className}`}>

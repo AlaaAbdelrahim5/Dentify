@@ -14,7 +14,7 @@ import {
   FaArrowLeft,
   FaEye
 } from 'react-icons/fa'
-import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal, FilterBar } from '../../../components'
+import { Card, Button, Input, LoadingSpinner, ErrorState, EmptyState, PageHeader, TreatmentDetailsModal, TreatmentPlanCard, NewAppointmentModal, FilterBar, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { treatmentsAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
 import { sumField, countWhere, calculateRemainingBalance, normalizeStatus } from '../../../utils/helpers'
@@ -39,6 +39,7 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Fetch data on mount
   useEffect(() => {
@@ -173,12 +174,12 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
   const handleSaveAppointment = async (appointmentData) => {
     try {
       await appointmentsAPI.create(appointmentData)
-      alert('Appointment booked successfully!')
+      setToast({ message: 'Appointment booked successfully!', type: 'success' })
       handleCloseAppointmentModal()
       await fetchAllData()
     } catch (error) {
       console.error('Error booking appointment:', error)
-      alert('Failed to book appointment. Please try again.')
+      setToast({ message: error.response?.data?.error || 'Failed to book appointment. Please try again.', type: 'error' })
     }
   }
 
@@ -301,6 +302,15 @@ const SecretaryTreatments = ({ userData, onTabChange }) => {
           clinicId: selectedTreatment.clinicId
         } : null}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }
