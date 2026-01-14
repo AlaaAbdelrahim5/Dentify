@@ -89,6 +89,8 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       // Add patients from treatments
       treatments.forEach(treatment => {
         if (treatment.patient && !patientMap.has(treatment.patient.userId)) {
+          console.log('Treatment patient data:', treatment.patient)
+          console.log('Profile image from treatment:', treatment.patient.user?.profileImage)
           patientMap.set(treatment.patient.userId, {
             id: treatment.patient.userId,
             name: `${treatment.patient.firstName} ${treatment.patient.lastName}`,

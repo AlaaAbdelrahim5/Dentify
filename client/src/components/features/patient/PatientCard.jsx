@@ -13,6 +13,8 @@ import { calculateAge, capitalizeFirstLetter, getStatusDisplay } from '../../../
 const PatientCard = ({ patient, onClick }) => {
   const { isDarkMode } = useTheme()
   const statusDisplay = getStatusDisplay(patient.status, isDarkMode)
+  
+  console.log('PatientCard - Patient:', patient.name, 'Avatar:', patient.avatar)
 
   return (
     <Card 
@@ -24,11 +26,19 @@ const PatientCard = ({ patient, onClick }) => {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <div className={`
-              w-12 h-12 rounded-lg flex items-center justify-center
+              w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden
               ${isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'}
               group-hover:scale-110 transition-transform duration-300
             `}>
-              <FaUser className="w-6 h-6 text-teal-600" />
+              {patient.avatar ? (
+                <img 
+                  src={patient.avatar} 
+                  alt={patient.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FaUser className="w-6 h-6 text-teal-600" />
+              )}
             </div>
             <div>
               <h3 className={`text-lg font-bold ${

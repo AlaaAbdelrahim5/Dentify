@@ -109,7 +109,9 @@ const ClinicAppointments = ({ userData, onTabChange }) => {
       patient: {
         name: `${apt.patient?.firstName || ''} ${apt.patient?.lastName || ''}`,
         phone: apt.patient?.user?.phone || apt.patient?.phone || 'N/A',
-        email: apt.patient?.user?.email || 'N/A'
+        email: apt.patient?.user?.email || 'N/A',
+        profileImage: apt.patient?.user?.profileImage || apt.patient?.profileImage,
+        user: apt.patient?.user
       },
       dentist: {
         name: `Dr. ${apt.dentist?.firstName || ''} ${apt.dentist?.lastName || ''}`,

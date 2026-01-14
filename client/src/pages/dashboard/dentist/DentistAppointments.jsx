@@ -90,7 +90,9 @@ const DentistAppointments = ({ onTabChange }) => {
       patient: {
         name: `${apt.patient.firstName} ${apt.patient.lastName}`,
         phone: apt.patient.user?.phone || apt.patient.phone || 'N/A',
-        email: apt.patient.user?.email || 'N/A'
+        email: apt.patient.user?.email || 'N/A',
+        profileImage: apt.patient.user?.profileImage || apt.patient.profileImage,
+        user: apt.patient.user
       },
       treatment: apt.treatment?.treatmentName || 'General Consultation',
       status: apt.status, // Keep original status (uppercase)

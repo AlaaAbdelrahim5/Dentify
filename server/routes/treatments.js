@@ -85,7 +85,8 @@ router.get('/dentist/my-treatments', authenticate, authorize('Dentist'), async (
               select: {
                 email: true,
                 phone: true,
-                status: true
+                status: true,
+                profileImage: true
               }
             }
           }
@@ -218,7 +219,8 @@ router.get('/clinic/my-treatments', authenticate, authorize('Clinic', 'Secretary
               select: {
                 email: true,
                 phone: true,
-                status: true
+                status: true,
+                profileImage: true
               }
             }
           }

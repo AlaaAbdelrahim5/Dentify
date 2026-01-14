@@ -542,10 +542,23 @@ const PatientDetailsModal = ({
         <Card className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-              }`}>
-                <FaUser className="text-teal-600 text-2xl" />
+              <div className="relative">
+                {patientData.avatar || patientData.user?.profileImage || patientData.profileImage ? (
+                  <img
+                    src={getImageUrl(patientData.avatar || patientData.user?.profileImage || patientData.profileImage)}
+                    alt={`${patientData.firstName || patientData.name} ${patientData.lastName || ''}`}
+                    className="w-16 h-16 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
+                } ${patientData.avatar || patientData.user?.profileImage || patientData.profileImage ? 'hidden' : ''}`}>
+                  <FaUser className="text-teal-600 text-2xl" />
+                </div>
               </div>
               <div>
                 <h2 className={`text-3xl font-bold ${
