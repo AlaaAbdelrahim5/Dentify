@@ -368,39 +368,69 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // Create new treatment
-router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
+router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary'), async (req, res) => {
   try {
-    const dentistId = req.user.id;
+    console.log('Treatment creation request received');
+    console.log('User role:', req.user.role);
+    console.log('Request body:', req.body);
+    
+    // For dentists, use their own ID; for clinic/secretary, use provided dentistId
+    const dentistId = req.user.role === 'Dentist' ? req.user.id : req.body.dentistId;
+    
+    console.log('Resolved dentistId:', dentistId);
+    
     const { 
       patientId, 
       treatmentName, 
       description, 
       totalAmount, 
       notes,
-      teethStatus 
+      teethStatus,
+      status
     } = req.body;
 
     // Validate required fields
     if (!patientId || !treatmentName) {
+      console.log('Validation failed: missing required fields');
       return res.status(400).json({ error: 'Patient ID and treatment name are required' });
     }
 
+    // Validate dentistId for non-dentist users
+    if (req.user.role !== 'Dentist' && !dentistId) {
+      console.log('Validation failed: dentistId required for non-dentist users');
+      return res.status(400).json({ error: 'Dentist ID is required' });
+    }
+
+    console.log('Validating patient existence...');
     // Check if patient exists
     const patient = await validateEntityExists(prisma, 'patient', patientId, 'Patient', res, 'userId');
     if (!patient) return;
+    
+    console.log('Patient found, validating dentist existence...');
+    // Check if dentist exists
+    const dentist = await prisma.dentist.findUnique({
+      where: { userId: parseInt(dentistId) }
+    });
+    
+    if (!dentist) {
+      console.log('Dentist not found with ID:', dentistId);
+      return res.status(400).json({ error: 'Dentist not found' });
+    }
+    
+    console.log('Dentist found, creating treatment...');
 
     const treatment = await prisma.treatment.create({
       data: {
         patientId: parseInt(patientId),
-        dentistId,
+        dentistId: parseInt(dentistId),
         treatmentName,
-        description,
+        description: description || '',
         totalAmount: parseFloat(totalAmount) || 0,
         treatmentDiscount: 0, // Initialize with 0, will be updated when payments with discounts are made
         paidAmount: 0, // Initialize with 0
-        notes,
+        notes: notes || '',
         teethStatus: teethStatus || [],
-        status: 'IN_PROGRESS'
+        status: status || 'IN_PROGRESS'
       },
       include: {
         patient: {
@@ -435,7 +465,11 @@ router.post('/', authenticate, authorize('Dentist'), async (req, res) => {
       treatment 
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create treatment' });
+    console.error('Error creating treatment:', error);
+    res.status(500).json({ 
+      error: 'Failed to create treatment',
+      details: error.message 
+    });
   }
 });
 

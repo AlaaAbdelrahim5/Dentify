@@ -7,7 +7,8 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
   FaVenusMars,
-  FaLock
+  FaLock,
+  FaUserMd
 } from 'react-icons/fa'
 import { Button, BaseModal, Input, Select, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -22,8 +23,10 @@ import { validateEmail } from '../../../utils/validation'
  * @param {Function} onClose - Close modal handler
  * @param {Function} onSave - Save handler
  * @param {Object} patientData - Patient data for editing (null for new patient)
+ * @param {Array} dentists - List of dentists for selection (optional, for clinic/secretary)
+ * @param {boolean} requireDentist - Whether dentist selection is required (for clinic/secretary)
  */
-const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
+const PatientModal = ({ isOpen, onClose, onSave, patientData = null, dentists = [], requireDentist = false }) => {
   const { isDarkMode } = useTheme()
   const isEditMode = !!patientData
   
@@ -36,7 +39,8 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
     phoneNumber: '',
     email: '',
     password: '',
-    city: ''
+    city: '',
+    dentistId: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -163,6 +167,11 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
       newErrors.city = 'City is required'
     }
 
+    // Dentist required for clinic/secretary
+    if (requireDentist && !formData.dentistId) {
+      newErrors.dentistId = 'Please select a dentist'
+    }
+
     // Password required for new patients only
     if (!isEditMode) {
       if (!formData.phoneNumber) {
@@ -214,7 +223,8 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
         phoneNumber: '',
         email: '',
         password: '',
-        city: ''
+        city: '',
+        dentistId: ''
       })
     }
     setErrors({})
@@ -298,6 +308,42 @@ const PatientModal = ({ isOpen, onClose, onSave, patientData = null }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Dentist Assignment - Only for clinic/secretary and new patients */}
+              {!isEditMode && requireDentist && dentists.length > 0 && (
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    <FaUserMd className="text-teal-600" />
+                    Dentist Assignment
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <Select
+                      label="Select Dentist *"
+                      name="dentistId"
+                      value={formData.dentistId}
+                      onChange={handleInputChange}
+                      error={errors.dentistId}
+                      options={[
+                        { value: '', label: 'Select a dentist' },
+                        ...dentists.map(d => ({
+                          value: d.userId || d.id,
+                          label: `Dr. ${d.firstName} ${d.lastName}${d.specialization ? ` - ${d.specialization.join(', ')}` : ''}`
+                        }))
+                      ]}
+                      placeholder="Choose which dentist will treat this patient"
+                      icon={FaUserMd}
+                    />
+                    <p className={`text-sm ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      This patient will be assigned to the selected dentist and will appear in their patient list.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Account & Contact Information - Only for new patients */}
               {!isEditMode && (

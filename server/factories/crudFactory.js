@@ -29,7 +29,7 @@ const getStats = async (modelName, role = null, useUserCount = false) => {
       inactive = await prisma.user.count({
         where: {
           role,
-          status: { in: ['PENDING', 'DEACTIVATED', 'DELETED'] }
+          status: { in: ['PENDING', 'DEACTIVATED'] }
         }
       });
     } else {
@@ -46,7 +46,7 @@ const getStats = async (modelName, role = null, useUserCount = false) => {
       inactive = await prisma.user.count({
         where: {
           role: role || modelName.charAt(0).toUpperCase() + modelName.slice(1),
-          status: { in: ['PENDING', 'DEACTIVATED', 'DELETED'] }
+          status: { in: ['PENDING', 'DEACTIVATED'] }
         }
       });
     }

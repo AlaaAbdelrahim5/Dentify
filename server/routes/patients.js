@@ -251,8 +251,8 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Create new patient (for dentists/clinics/admins)
-router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Admin'), async (req, res) => {
+// Create new patient (for dentists/clinics/secretaries/admins)
+router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
   try {
     const { email, password, phone, firstName, lastName, gender, birthDate, city } = req.body;
 

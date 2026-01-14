@@ -10,11 +10,12 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
   FaBirthdayCake,
-  FaArrowLeft
+  FaArrowLeft,
+  FaPlus
 } from 'react-icons/fa'
-import { Card, Button, Input, PageHeader, StatsOverview, PatientDetailsModal, PatientCard, LoadingState, ErrorState, EmptyState, FilterBar } from '../../../components'
+import { Card, Button, Input, PageHeader, StatsOverview, PatientDetailsModal, PatientCard, PatientModal, LoadingState, ErrorState, EmptyState, FilterBar, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
-import { patientsAPI, treatmentsAPI, appointmentsAPI } from '../../../services/api'
+import { patientsAPI, treatmentsAPI, appointmentsAPI, dentistsAPI } from '../../../services/api'
 import { calculateRemainingBalance } from '../../../utils/helpers'
 import { useDebounce } from '../../../hooks'
 
@@ -32,6 +33,12 @@ const ClinicPatients = ({ userData, onTabChange }) => {
   const [patientAppointments, setPatientAppointments] = useState([])
   const [patientPayments, setPatientPayments] = useState([])
   
+  // Add Patient Modal states
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false)
+  const [dentists, setDentists] = useState([])
+  const [loadingDentists, setLoadingDentists] = useState(false)
+  const [toast, setToast] = useState(null)
+  
   // Stats state
   const [stats, setStats] = useState({
     totalPatients: 0,
@@ -43,7 +50,25 @@ const ClinicPatients = ({ userData, onTabChange }) => {
   // Fetch patients on mount
   useEffect(() => {
     fetchPatientsAndStats()
+    fetchClinicDentists()
   }, [])
+
+  const fetchClinicDentists = async () => {
+    try {
+      setLoadingDentists(true)
+      const response = await dentistsAPI.getForClinic()
+      const allDentists = response.data || response || []
+      // Filter to show only ACTIVE dentists
+      const activeDentists = allDentists.filter(d => 
+        d.userId?.status === 'ACTIVE' || d.user?.status === 'ACTIVE'
+      )
+      setDentists(activeDentists)
+    } catch (error) {
+      console.error('Error fetching dentists:', error)
+    } finally {
+      setLoadingDentists(false)
+    }
+  }
 
   const fetchPatientsAndStats = async () => {
     try {
@@ -208,6 +233,71 @@ const ClinicPatients = ({ userData, onTabChange }) => {
     setSelectedPatient(null)
   }
 
+  const handleAddPatient = () => {
+    setShowAddPatientModal(true)
+  }
+
+  const handleSaveNewPatient = async (patientData) => {
+    try {
+      // Create the patient
+      const apiData = {
+        email: patientData.email,
+        password: patientData.password,
+        phone: patientData.phone,
+        firstName: patientData.firstName,
+        lastName: patientData.lastName,
+        gender: patientData.gender || 'Male',
+        birthDate: patientData.dateOfBirth,
+        city: patientData.city
+      }
+
+      const response = await patientsAPI.create(apiData)
+      const createdPatient = response.patient
+
+      // If a dentist was selected, create an initial treatment to link them
+      if (patientData.dentistId) {
+        try {
+          console.log('Creating treatment with data:', {
+            patientId: createdPatient.userId,
+            dentistId: parseInt(patientData.dentistId),
+            treatmentName: 'Initial Consultation',
+            description: 'Patient registered to dentist',
+            status: 'IN_PROGRESS',
+            totalAmount: 0,
+            notes: 'Patient assigned during registration'
+          });
+          
+          const treatmentResponse = await treatmentsAPI.create({
+            patientId: createdPatient.userId,
+            dentistId: parseInt(patientData.dentistId),
+            treatmentName: 'Initial Consultation',
+            description: 'Patient registered to dentist',
+            status: 'IN_PROGRESS',
+            totalAmount: 0,
+            notes: 'Patient assigned during registration'
+          })
+          
+          console.log('Treatment created successfully:', treatmentResponse);
+        } catch (treatmentError) {
+          console.error('Error creating initial treatment:', treatmentError)
+          console.error('Error details:', treatmentError.response || treatmentError.message)
+          // Don't throw - patient was created successfully
+        }
+      }
+
+      setToast({ message: 'Patient added successfully!', type: 'success' })
+      setShowAddPatientModal(false)
+      
+      // Refresh the patient list
+      fetchPatientsAndStats()
+    } catch (error) {
+      console.error('Error creating patient:', error)
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create patient'
+      setToast({ message: errorMessage, type: 'error' })
+      throw error // Re-throw to prevent modal from closing
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Show View Patient Page */}
@@ -243,53 +333,77 @@ const ClinicPatients = ({ userData, onTabChange }) => {
       {/* Show Patients List Page */}
       {currentPage === 'list' && (
         <>
-      {/* Page Header */}
-      <PageHeader
-        title="Clinic Patients"
-        description="View and manage patient records"
+          {/* Page Header */}
+          <PageHeader
+            title="Clinic Patients"
+            description="View and manage patient records"
+            action={{
+              label: 'Add New Patient',
+              onClick: handleAddPatient,
+              icon: FaPlus,
+              gradient: 'from-teal-600 to-cyan-600'
+            }}
+          />
+
+          {/* Search Bar */}
+          <Card className="p-4">
+            <FilterBar
+              searchTerm={searchTerm}
+              onSearchChange={(e) => setSearchTerm(e.target.value)}
+              debouncedSearchTerm={debouncedSearchTerm}
+              searchPlaceholder="Search patients by name, email, or phone..."
+              filters={[]}
+              onClearFilters={handleClearFilters}
+              filtering={filtering}
+            />
+          </Card>
+
+          {/* Patients Display */}
+          {loading ? (
+            <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+              <LoadingState message="Loading patients..." />
+            </Card>
+          ) : error ? (
+            <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+              <ErrorState 
+                message={error}
+                onRetry={fetchPatientsAndStats}
+              />
+            </Card>
+          ) : displayPatients.length === 0 ? (
+            <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+              <EmptyState
+                icon={FaUser}
+                title="No patients found"
+                description="No patients match your current search"
+              />
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayPatients.map((patient) => (
+                <PatientCard key={patient.id} patient={patient} onClick={handleViewPatient} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Add Patient Modal */}
+      <PatientModal
+        isOpen={showAddPatientModal}
+        onClose={() => setShowAddPatientModal(false)}
+        onSave={handleSaveNewPatient}
+        dentists={dentists}
+        requireDentist={true}
       />
 
-      {/* Search Bar */}
-      <Card className="p-4">
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          debouncedSearchTerm={debouncedSearchTerm}
-          searchPlaceholder="Search patients by name, email, or phone..."
-          filters={[]}
-          onClearFilters={handleClearFilters}
-          filtering={filtering}
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
-      </Card>
-
-      {/* Patients Display */}
-      {loading ? (
-        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
-          <LoadingState message="Loading patients..." />
-        </Card>
-      ) : error ? (
-        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
-          <ErrorState 
-            message={error}
-            onRetry={fetchPatientsAndStats}
-          />
-        </Card>
-      ) : displayPatients.length === 0 ? (
-        <Card className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
-          <EmptyState
-            icon={FaUser}
-            title="No patients found"
-            description="No patients match your current search"
-          />
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayPatients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} onClick={handleViewPatient} />
-          ))}
-        </div>
-      )}
-        </>
       )}
     </div>
   )
