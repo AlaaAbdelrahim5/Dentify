@@ -174,24 +174,6 @@ const RequestDetailsModal = ({ request, isOpen, onClose, onStatusUpdate }) => {
         <div className={`flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
-          {request.status === 'REQUESTED' && onStatusUpdate && (
-            <Button
-              onClick={() => handleStatusChange('IN_PROGRESS')}
-              disabled={isUpdating}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Mark as In Progress
-            </Button>
-          )}
-          {request.status === 'IN_PROGRESS' && onStatusUpdate && (
-            <Button
-              onClick={() => handleStatusChange('COMPLETED')}
-              disabled={isUpdating}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              Mark as Completed
-            </Button>
-          )}
           <Button
             onClick={onClose}
             variant="secondary"

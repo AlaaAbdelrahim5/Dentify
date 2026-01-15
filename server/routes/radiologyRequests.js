@@ -37,6 +37,13 @@ router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), asyn
       }
     });
 
+    const cancelled = await prisma.radiologyRequest.count({
+      where: { 
+        ...whereClause,
+        status: 'CANCELLED'
+      }
+    });
+
     // For radiology center, also get completed today and this month
     let completedToday = 0;
     let completedThisMonth = 0;
@@ -76,12 +83,13 @@ router.get('/stats', authenticate, authorize('Dentist', 'RadiologyCenter'), asyn
         completedThisMonth,
         total,
         requested,
-        inProgress,
+        cancelled,
         completed
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch radiology request statistics' });
+    console.error('Error fetching radiology request statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch radiology request statistics', details: error.message });
   }
 });
 

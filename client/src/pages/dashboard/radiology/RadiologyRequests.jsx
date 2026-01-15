@@ -37,7 +37,8 @@ import {
   PageHeader,
   LoadingSpinner,
   RequestDetailsModal,
-  UploadResultModal
+  UploadResultModal,
+  Toast
 } from '../../../components'
 import ImageViewerModal from '../../../components/features/radiology/ImageViewerModal'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -56,6 +57,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
   const [viewMode, setViewMode] = useState('table') // table or grid
   const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
 
   // Check if reportFile is a URL (not base64)
   const isReportFileUrl = (reportFile) => {
@@ -169,11 +171,15 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         const data = await response.json()
         setRequests(data.radiologyRequests || data.data || data.requests || [])
       } else {
-        setError('Failed to load requests. Please try again.')
+        const errorMsg = 'Failed to load requests. Please try again.'
+        setError(errorMsg)
+        setToast({ type: 'error', message: errorMsg })
       }
     } catch (error) {
       console.error('Error fetching requests:', error)
-      setError('Failed to load requests. Please try again.')
+      const errorMsg = 'Failed to load requests. Please check your connection.'
+      setError(errorMsg)
+      setToast({ type: 'error', message: errorMsg })
     } finally {
       setIsLoading(false)
     }
@@ -292,9 +298,13 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         if (onStatsUpdate) {
           onStatsUpdate()
         }
+        setToast({ type: 'success', message: 'Request status updated successfully!' })
+      } else {
+        setToast({ type: 'error', message: 'Failed to update request status.' })
       }
     } catch (error) {
       console.error('Error updating status:', error)
+      setToast({ type: 'error', message: 'An error occurred while updating status.' })
     }
   }
 
@@ -597,6 +607,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
             if (onStatsUpdate) {
               onStatsUpdate()
             }
+            setToast({ type: 'success', message: 'Result uploaded successfully!' })
           }}
         />
       )}
@@ -611,6 +622,14 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           images={selectedRequest.reportFile}
           patientName={selectedRequest.patientName}
           imagingType={selectedRequest.imagingType}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
         />
       )}
     </div>
