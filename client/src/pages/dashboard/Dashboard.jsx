@@ -53,6 +53,7 @@ import PatientSettings from './patient/PatientSettings'
 // Import radiology components
 import RadiologyOverview from './radiology/RadiologyOverview'
 import RadiologyRequests from './radiology/RadiologyRequests'
+import RadiologyAnalytics from './radiology/RadiologyAnalytics'
 import RadiologySettings from './radiology/RadiologySettings'
 
 // Import secretary components
@@ -170,6 +171,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
         tabs: {
           overview: { component: RadiologyOverview, label: 'Overview' },
           requests: { component: RadiologyRequests, label: 'Requests' },
+          analytics: { component: RadiologyAnalytics, label: 'Analytics' },
           settings: { component: RadiologySettings, label: 'Settings' }
         }
       },

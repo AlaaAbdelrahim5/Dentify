@@ -113,7 +113,9 @@ const FindDoctor = () => {
 
   // Get unique specialties from doctors
   const specialties = useMemo(() => {
-    const specs = [...new Set(doctors.map(d => d.specialty).filter(Boolean))]
+    // Flatten all specializations from all doctors (since specialization is an array)
+    const allSpecs = doctors.flatMap(d => d.specialization || [])
+    const specs = [...new Set(allSpecs)].filter(Boolean)
     return specs.sort()
   }, [doctors])
 
@@ -128,15 +130,16 @@ const FindDoctor = () => {
     const filtered = doctors.filter(doctor => {
       const fullName = `${doctor.firstName} ${doctor.lastName}`.toLowerCase()
       const clinicName = doctor.clinic?.clinicName?.toLowerCase() || ''
-      const specialty = doctor.specialty || ''
+      const specializations = doctor.specialization || []
       const location = doctor.clinic?.city || ''
 
       const matchesSearch = searchQuery === '' || 
         fullName.includes(searchQuery.toLowerCase()) ||
         clinicName.includes(searchQuery.toLowerCase()) ||
-        specialty.toLowerCase().includes(searchQuery.toLowerCase())
+        specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()))
 
-      const matchesSpecialty = selectedSpecialty === 'all' || doctor.specialty === selectedSpecialty
+      const matchesSpecialty = selectedSpecialty === 'all' || 
+        (specializations && specializations.includes(selectedSpecialty))
 
       const matchesLocation = selectedLocation === 'all' || doctor.clinic?.city === selectedLocation
 
@@ -235,7 +238,9 @@ const FindDoctor = () => {
               Dr. {doctor.firstName} {doctor.lastName}
             </div>
             <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {doctor.specialty || 'General Dentistry'}
+              {(doctor.specialization && doctor.specialization.length > 0) 
+                ? doctor.specialization[0] 
+                : 'General Dentistry'}
             </div>
           </div>
         </div>

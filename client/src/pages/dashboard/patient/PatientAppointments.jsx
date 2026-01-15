@@ -249,19 +249,23 @@ const PatientAppointments = () => {
               <img
                 src={getImageUrl(appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage)}
                 alt={`Dr. ${appointment.dentist?.firstName} ${appointment.dentist?.lastName}`}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover border-2 border-teal-500/20"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'flex'
+                  if (e.target.nextSibling) {
+                    e.target.nextSibling.style.display = 'flex'
+                  }
                 }}
               />
             ) : null}
             <div 
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center"
-              style={{ display: appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage ? 'none' : 'flex' }}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-sm"
+              style={{ display: (appointment.dentist?.user?.profileImage || appointment.dentist?.profileImage) ? 'none' : 'flex' }}
             >
-              <FaUser className="text-white text-sm" />
+              <span className="text-white text-sm font-semibold">
+                {appointment.dentist?.firstName?.[0]}{appointment.dentist?.lastName?.[0]}
+              </span>
             </div>
             <div>
               <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

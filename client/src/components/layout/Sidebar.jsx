@@ -239,6 +239,11 @@ const Sidebar = ({ activeTab, setActiveTab, userType, stats = {}, dashboardTitle
         id: 'requests', 
         label: 'Imaging Requests', 
         icon: FaFileImage
+      },
+      { 
+        id: 'analytics', 
+        label: 'Analytics', 
+        icon: FaChartBar
       }
     ],
     secretary: [

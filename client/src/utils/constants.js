@@ -191,6 +191,21 @@ export const RADIOLOGY_STATUS_OPTIONS = [
   { value: 'Cancelled', label: 'Cancelled' }
 ]
 
+// Imaging Types for Radiology Centers
+export const IMAGING_TYPES = [
+  'X-Ray',
+  'Panoramic X-Ray',
+  'CBCT',
+  'CT',
+  '3D Imaging',
+  'MRI',
+  'Periapical',
+  'Bitewing',
+  'Occlusal',
+  'Cephalometric',
+  'Ultrasound'
+]
+
 // Treatment Priority Options
 export const PRIORITY_OPTIONS = [
   { value: 'Low', label: 'Low' },

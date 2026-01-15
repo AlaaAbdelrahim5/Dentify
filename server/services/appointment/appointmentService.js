@@ -23,7 +23,8 @@ const appointmentInclude = {
         select: {
           id: true,
           email: true,
-          phone: true
+          phone: true,
+          profileImage: true
         }
       }
     }

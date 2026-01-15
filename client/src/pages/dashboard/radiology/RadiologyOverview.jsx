@@ -11,8 +11,6 @@ import { useTheme } from '../../../contexts/ThemeContext'
 
 const RadiologyOverview = ({ currentUser, userData, stats, onTabChange }) => {
   const { isDarkMode } = useTheme()
-
-  // Ensure stats has default values
   const safeStats = {
     totalRequests: stats?.totalRequests || 0,
     pendingRequests: stats?.pendingRequests || 0,

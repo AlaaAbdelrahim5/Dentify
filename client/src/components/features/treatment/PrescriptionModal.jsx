@@ -294,7 +294,8 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
       size="4xl"
       noPadding
     >
-      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700">
+      {/* Fixed Header */}
+      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
           isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
         }`}>
@@ -316,12 +317,13 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
         </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {/* Patient & Treatment Info */}
-        <div className={`p-4 rounded-lg border ${
-          isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
+      {/* Scrollable Content */}
+      <form onSubmit={handleSubmit} className="flex flex-col max-h-[calc(90vh-180px)]">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          {/* Patient & Treatment Info */}
+          <div className={`p-4 rounded-lg border ${
+            isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className={`font-medium ${
@@ -460,30 +462,31 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrint}
-            >
-              <FaPrint className="w-4 h-4 mr-2" />
-              Preview & Print
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              <FaPrescriptionBottle className="w-4 h-4 mr-2" />
-              Save Prescription
-            </Button>
-          </div>
-        </form>
+        {/* Fixed Footer with Action Buttons */}
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePrint}
+          >
+            <FaPrint className="w-4 h-4 mr-2" />
+            Preview & Print
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary">
+            <FaPrescriptionBottle className="w-4 h-4 mr-2" />
+            Save Prescription
+          </Button>
+        </div>
+      </form>
     </BaseModal>
   )
 }

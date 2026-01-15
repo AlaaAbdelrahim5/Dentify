@@ -15,7 +15,7 @@ import {
 import { Card, Button, Input, LoadingSpinner, ProfileImageUpload, TwoFactorAuth, LocationPicker, PhoneInput, Toast } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'
-import { PALESTINIAN_CITIES, COUNTRY_CODES } from '../../../utils/constants'
+import { PALESTINIAN_CITIES, COUNTRY_CODES, IMAGING_TYPES } from '../../../utils/constants'
 
 const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
   const { isDarkMode } = useTheme()
@@ -103,6 +103,7 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
         email: user?.email || '',
         countryCode: parsedCountryCode,
         phoneNumber: parsedPhoneNumber,
+        profileImage: userData.user?.profileImage || userData.profileImage || '',
         coordinates: userData.coordinates || '',
         createdAt: userData.user?.createdAt || userData.createdAt || '',
         status: userData.user?.status || userData.status || ''
@@ -558,60 +559,74 @@ const RadiologySettings = ({ userData, onUpdate, refreshData }) => {
           <h3 className={`text-lg font-semibold mb-4 ${
             isDarkMode ? 'text-white' : 'text-gray-800'
           }`}>
-            Supported Imaging Types
+            Supported Imaging Types <span className="text-red-500">*</span>
           </h3>
           
-          <div className="space-y-3">
-            {/* Display existing types */}
+          {!isEditing ? (
             <div className="flex flex-wrap gap-2">
-              {formData.supportedTypes.map((type, index) => (
-                <span
-                  key={index}
-                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+              {formData.supportedTypes.length > 0 ? (
+                formData.supportedTypes.map((type, index) => (
+                  <span
+                    key={index}
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                      isDarkMode
+                        ? 'bg-blue-900 text-blue-200'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
+                    {type}
+                  </span>
+                ))
+              ) : (
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  No imaging types selected
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 p-4 rounded-lg border ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600' 
+                : 'bg-gray-50 border-gray-200'
+            }`}>
+              {IMAGING_TYPES.map((type) => (
+                <label
+                  key={type}
+                  className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                     isDarkMode
-                      ? 'bg-blue-900 text-blue-200'
-                      : 'bg-blue-100 text-blue-800'
+                      ? 'hover:bg-gray-600'
+                      : 'hover:bg-gray-100'
                   }`}
                 >
-                  {type}
-                  {isEditing && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveType(type)}
-                      className="hover:text-red-500"
-                    >
-                      ×
-                    </button>
-                  )}
-                </span>
+                  <input
+                    type="checkbox"
+                    checked={formData.supportedTypes.includes(type)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          supportedTypes: [...prev.supportedTypes, type]
+                        }))
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          supportedTypes: prev.supportedTypes.filter(t => t !== type)
+                        }))
+                      }
+                    }}
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  />
+                  <span className={`text-sm ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
+                    {type}
+                  </span>
+                </label>
               ))}
             </div>
-
-            {/* Add new type */}
-            {isEditing && (
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  placeholder="e.g., X-ray, CT, MRI, 3D Imaging"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleAddType()
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddType}
-                  variant="secondary"
-                >
-                  Add
-                </Button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
           {isEditing && (

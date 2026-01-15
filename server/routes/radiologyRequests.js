@@ -187,6 +187,13 @@ router.get('/center/my-requests', authenticate, authorize('RadiologyCenter'), as
                 phone: true,
                 profileImage: true
               }
+            },
+            clinic: {
+              select: {
+                clinicName: true,
+                city: true,
+                location: true
+              }
             }
           }
         },
