@@ -215,8 +215,12 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
 
   // Filter requests - use useMemo for performance
   const filteredRequests = useMemo(() => {
-    return transformedRequests.filter(request => {
-      const matchesSearch = request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    console.log('Filtering with searchTerm:', searchTerm, 'Status:', selectedStatus, 'Type:', selectedImagingType)
+    console.log('Total requests:', transformedRequests.length)
+    
+    const filtered = transformedRequests.filter(request => {
+      const matchesSearch = searchTerm === '' || 
+                           request.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.dentistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            request.imagingType.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -226,6 +230,9 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       
       return matchesSearch && matchesStatus && matchesImagingType
     })
+    
+    console.log('Filtered requests:', filtered.length)
+    return filtered
   }, [transformedRequests, searchTerm, selectedStatus, selectedImagingType])
 
   // Calculate stats - use useMemo for performance
@@ -336,7 +343,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                     { value: 'COMPLETED', label: 'Completed' },
                     { value: 'CANCELLED', label: 'Cancelled' }
                   ],
-                  placeholder: 'Filter by status'
+                  placeholder: ''
                 },
                 {
                   value: selectedImagingType,
