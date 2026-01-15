@@ -1,7 +1,7 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck, FaUsers, FaChartLine, FaLock, FaCloud } from 'react-icons/fa'
+import { FaTooth, FaCalendarAlt, FaUserMd, FaHospital, FaUserShield, FaXRay, FaStar, FaArrowRight, FaCheck, FaUsers, FaChartLine, FaLock, FaCloud, FaUserTie } from 'react-icons/fa'
 import { MdDashboard, MdSchedule, MdMedicalServices, MdVerified } from 'react-icons/md'
 import { Navbar, Button, Card, Logo, LoadingSpinner } from '../components'
 import { useTheme } from '../contexts/ThemeContext'
@@ -61,39 +61,39 @@ const Home = () => {
   
   const features = [
     {
-      icon: FaUserMd,
-      title: "Complete Patient Management",
-      description: "Centralized patient records with treatment history, appointments, and comprehensive medical documentation all in one place.",
+      icon: FaUsers,
+      title: "Patient Management System",
+      description: "Centralized patient records including personal information, treatment history, appointments, payments, and prescriptions with secure access control.",
       color: "from-blue-500 to-cyan-500"
     },
     {
       icon: FaCalendarAlt,
-      title: "Intelligent Scheduling",
-      description: "Smart appointment booking system with real-time availability, automated reminders, and conflict prevention.",
+      title: "Appointment Scheduling",
+      description: "Book and manage appointments with real-time availability tracking, status updates, and support for multiple clinics and dentists.",
       color: "from-purple-500 to-pink-500"
     },
     {
       icon: MdMedicalServices,
-      title: "Treatment Planning",
-      description: "Create detailed treatment plans with cost estimation, session tracking, and progress monitoring for optimal patient care.",
+      title: "Treatment & Payment Tracking",
+      description: "Manage treatment plans with detailed tooth status tracking, session notes, digital prescriptions, and integrated payment management with multiple payment methods.",
       color: "from-green-500 to-teal-500"
     },
     {
       icon: FaXRay,
-      title: "Radiology Integration",
-      description: "Seamlessly request X-rays and receive digital results from integrated radiology centers directly in the system.",
+      title: "Radiology Management",
+      description: "Request and manage X-ray imaging through integrated radiology centers with support for multiple imaging types and digital result delivery.",
       color: "from-orange-500 to-red-500"
     },
     {
       icon: FaHospital,
-      title: "Multi-Clinic Support",
-      description: "Manage multiple clinic locations with dedicated staff, schedules, and resources from a unified platform.",
+      title: "Multi-Clinic & Staff Management",
+      description: "Clinics can manage multiple dentists and secretaries with individual schedules, working hours, and role-based access permissions.",
       color: "from-teal-500 to-green-500"
     },
     {
       icon: FaUserShield,
-      title: "Secure & Compliant",
-      description: "Enterprise-grade security with role-based access control ensuring data privacy and regulatory compliance.",
+      title: "Role-Based Access Control",
+      description: "Six distinct user roles (Admin, Clinic, Dentist, Secretary, Patient, Radiology) with customized dashboards and secure authentication including 2FA support.",
       color: "from-indigo-500 to-purple-500"
     }
   ]
@@ -102,26 +102,38 @@ const Home = () => {
     {
       type: "System Admin",
       icon: FaUserShield,
-      description: "Complete system oversight and configuration",
-      features: ["Create & manage clinics", "Setup radiology centers", "User administration", "System-wide analytics & reports"]
+      description: "Complete system oversight and management",
+      features: ["Manage clinics and radiology centers", "Approve dentist registrations", "Oversee secretaries and patients", "Access system-wide analytics"]
     },
     {
-      type: "Clinic Manager",
+      type: "Clinic Owner",
       icon: FaHospital,
-      description: "Multi-location clinic operations management",
-      features: ["Manage dentist teams", "Secretary coordination", "Clinic resource allocation", "Performance monitoring"]
+      description: "Comprehensive clinic operations management",
+      features: ["Manage dentists and secretaries", "View appointments and treatments", "Track payments and analytics", "Configure available treatments and prices"]
     },
     {
       type: "Dentist",
       icon: FaUserMd,
-      description: "Comprehensive patient care and treatment",
-      features: ["Patient management system", "Treatment planning & tracking", "Appointment scheduling", "Digital X-ray requests", "Payment processing"]
+      description: "Complete patient care and treatment delivery",
+      features: ["Manage patient records and history", "Create treatment plans with prescriptions", "Schedule and track appointments", "Request radiology imaging", "Process payments with discounts"]
     },
     {
       type: "Patient",
       icon: FaTooth,
-      description: "Convenient care access and health tracking",
-      features: ["Online appointment booking", "Treatment history access", "Digital X-ray results", "Payment history", "Multi-clinic selection"]
+      description: "Easy access to dental care and records",
+      features: ["Book appointments with dentists", "View treatment history and prescriptions", "Access X-ray results", "Track payment history", "Search for clinics and dentists"]
+    },
+    {
+      type: "Secretary",
+      icon: FaUserTie,
+      description: "Clinic administrative support",
+      features: ["Manage clinic appointments", "View patient records", "Access treatment information", "Monitor payment status"]
+    },
+    {
+      type: "Radiology Center",
+      icon: FaXRay,
+      description: "Diagnostic imaging service provider",
+      features: ["Receive imaging requests", "Upload X-ray results", "Manage supported imaging types", "Track request history"]
     }
   ]
 
@@ -226,8 +238,8 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              All-in-one platform to manage patients, appointments, treatments, and staff. 
-              Built for modern dental practices who want efficiency without complexity.
+              Comprehensive platform designed to streamline patient management, appointment scheduling, 
+              treatments, payments, and radiology requests for dental clinics of all sizes.
             </motion.p>
             
             <motion.div 
@@ -264,7 +276,7 @@ const Home = () => {
               </motion.div>
             </motion.div>
 
-            {/* Stats */}
+            {/* Key Features Highlight */}
             <motion.div 
               className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8"
               initial={{ opacity: 0, y: 30 }}
@@ -272,10 +284,10 @@ const Home = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
             >
               {[
-                { value: '100+', label: 'Active Clinics' },
-                { value: '5000+', label: 'Patients Managed' },
-                { value: '99.9%', label: 'Uptime' }
-              ].map((stat, index) => (
+                { icon: FaUsers, label: '6 User Roles' },
+                { icon: FaCalendarAlt, label: 'Smart Scheduling' },
+                { icon: FaXRay, label: 'Radiology Integration' }
+              ].map((item, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.5 }}
@@ -283,8 +295,8 @@ const Home = () => {
                   transition={{ duration: 0.5, delay: 0.9 + index * 0.1 }}
                   whileHover={{ scale: 1.1 }}
                 >
-                  <div className="text-3xl font-bold text-teal-500 mb-1">{stat.value}</div>
-                  <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{stat.label}</div>
+                  <item.icon className="text-3xl text-teal-500 mb-2 mx-auto" />
+                  <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{item.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -582,7 +594,7 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                Start Managing Smarter Today
+                Start Managing Your Dental Practice Today
               </motion.h2>
               <motion.p 
                 className="text-lg mb-8 opacity-95 max-w-2xl mx-auto"
@@ -591,8 +603,8 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
-                Join hundreds of dental professionals transforming their practice management. 
-                Get started in minutes, no credit card required.
+                A comprehensive dental management system designed to help clinics, dentists, and patients 
+                streamline appointments, treatments, and records. Create your account and get started.
               </motion.p>
               <motion.div 
                 className="flex flex-col sm:flex-row gap-4 justify-center"

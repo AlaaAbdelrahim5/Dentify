@@ -200,6 +200,9 @@ const Navbar = ({ showDashboardInfo = false, dashboardTitle = "", onToggleSideba
                 >
                   Get Started
                 </a>
+                <div className="ml-2">
+                  <ThemeToggle />
+                </div>
               </div>
             )}
               

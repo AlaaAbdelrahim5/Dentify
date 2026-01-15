@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { HiOutlineSparkles } from 'react-icons/hi';
+import { FiTrash2 } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   sendChatMessage, 
@@ -210,7 +211,7 @@ const AIChatbot = ({ isOpen, onClose }) => {
             className="w-9 h-9 hover:bg-white/20 rounded-xl transition-all duration-200 flex items-center justify-center backdrop-blur-sm active:scale-95"
             title="Clear chat history"
           >
-            <span className="text-lg">🗑️</span>
+            <FiTrash2 className="w-5 h-5 text-white" />
           </button>
           <button
             onClick={handleClose}

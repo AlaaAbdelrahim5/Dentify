@@ -9,10 +9,10 @@ const ThemeToggle = ({ className = '' }) => {
     <button
       onClick={toggleTheme}
       className={`
-        relative p-2 rounded-lg transition-all duration-300 ease-in-out shadow-sm hover:shadow-md
+        p-2.5 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95
         ${isDarkMode 
-          ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-teal-400 border border-gray-600' 
-          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-teal-600 border border-gray-200'
+          ? 'hover:bg-gray-800/70 text-gray-400 hover:text-teal-400 hover:shadow-lg hover:shadow-teal-500/10' 
+          : 'hover:bg-gray-100 text-gray-600 hover:text-teal-600 hover:shadow-md'
         }
         ${className}
       `}

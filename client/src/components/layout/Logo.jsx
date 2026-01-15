@@ -6,7 +6,7 @@ const Logo = ({ className = "", size = "text-3xl" }) => {
   
   return (
     <div className={`flex items-center space-x-3 ${className}`}>
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 p-3 rounded-xl shadow-lg">
+      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 p-3 rounded-xl">
         <FaTooth className={`${size} text-white`} />
       </div>
       <div className="flex flex-col">
