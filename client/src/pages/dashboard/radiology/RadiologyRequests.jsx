@@ -290,12 +290,14 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Imaging Requests"
-        description="Manage and process radiology imaging requests"
-      />
+    <div className="flex flex-col h-[calc(100vh-80px)] overflow-x-hidden">
+      {/* Fixed Header Section */}
+      <div className="flex-none space-y-4">
+        {/* Page Header */}
+        <PageHeader
+          title="Imaging Requests"
+          description="Manage and process radiology imaging requests"
+        />
 
       {/* Filters and View Mode */}
       <Card className={`p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -362,7 +364,10 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           </div>
         </div>
       </Card>
+      </div>
 
+      {/* Scrollable Content Section */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden my-4">
       {/* Requests - Table or Grid View */}
       {isLoading ? (
         <Card className="p-8 text-center">
@@ -518,6 +523,8 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
           )}
         </>
       )}
+      </div>
+      {/* End of Scrollable Content */}
 
       {/* Modals */}
       {isDetailsModalOpen && selectedRequest && (

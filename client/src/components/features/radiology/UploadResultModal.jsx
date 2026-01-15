@@ -316,14 +316,17 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
       onClose={onClose}
       size="2xl"
       title="Upload Radiology Result"
+      noPadding
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Request Info */}
-        <div className={`p-3 rounded-lg border ${isDarkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
-          <p className={`text-sm ${isDarkMode ? 'text-blue-200' : 'text-blue-800'}`}>
-            Request #{request.id} - {request.imagingType}
-          </p>
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh]">
+        {/* Fixed Top Section */}
+        <div className="flex-shrink-0 p-6 pb-4 space-y-4">
+          {/* Request Info */}
+          <div className={`p-3 rounded-lg border ${isDarkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
+            <p className={`text-sm ${isDarkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+              Request #{request.id} - {request.imagingType}
+            </p>
+          </div>
           {error && (
             <div className={`flex items-start gap-3 p-4 rounded-xl border-l-4 ${
               isDarkMode 
@@ -337,6 +340,10 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Scrollable Content Section */}
+        <div className="flex-1 overflow-y-auto px-6 space-y-5">
 
           {/* Patient Info Card */}
           <div className={`p-4 rounded-xl border ${
@@ -629,39 +636,40 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
               }`}
             />
           </div>
+        </div>
 
-          {/* Footer with gradient buttons */}
-          <div className={`flex justify-end gap-3 pt-4 border-t ${
-            isDarkMode ? 'border-gray-700' : 'border-gray-200'
-          }`}>
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="secondary"
-              disabled={isSubmitting}
-              className="px-6 py-3 rounded-xl font-medium"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              variant="primary"
-            >
-              {isSubmitting ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <FaCloudUploadAlt className="w-5 h-5 mr-2" />
-                  Upload Result
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+        {/* Fixed Bottom Section */}
+        <div className={`flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
+          <Button
+            type="button"
+            onClick={onClose}
+            variant="secondary"
+            disabled={isSubmitting}
+            className="px-6 py-3 rounded-xl font-medium"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            variant="primary"
+          >
+            {isSubmitting ? (
+              <>
+                <LoadingSpinner size="sm" className="mr-2" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <FaCloudUploadAlt className="w-5 h-5 mr-2" />
+                Upload Result
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </BaseModal>
   )
 }
