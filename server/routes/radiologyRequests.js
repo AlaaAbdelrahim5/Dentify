@@ -153,7 +153,8 @@ router.get('/center/my-requests', authenticate, authorize('RadiologyCenter'), as
               select: {
                 id: true,
                 email: true,
-                phone: true
+                phone: true,
+                profileImage: true
               }
             }
           }
@@ -164,7 +165,8 @@ router.get('/center/my-requests', authenticate, authorize('RadiologyCenter'), as
               select: {
                 id: true,
                 email: true,
-                phone: true
+                phone: true,
+                profileImage: true
               }
             }
           }

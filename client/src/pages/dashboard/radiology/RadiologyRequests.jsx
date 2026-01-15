@@ -180,11 +180,20 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   }
 
   // Transform requests for display - use useMemo for performance
-  const transformedRequests = useMemo(() => 
-    requests.map(r => ({
+  const transformedRequests = useMemo(() => {
+    // Debug: log first request to see structure
+    if (requests.length > 0) {
+      console.log('Sample request data:', requests[0])
+    }
+    
+    return requests.map(r => ({
       ...r,
       patientName: `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.trim(),
+      patientInitials: `${r.patient?.firstName?.[0] || ''}${r.patient?.lastName?.[0] || ''}`.toUpperCase(),
+      patientImage: r.patient?.user?.profileImage || r.patient?.profileImage || null,
       dentistName: `Dr. ${r.dentist?.firstName || ''} ${r.dentist?.lastName || ''}`.trim(),
+      dentistInitials: `${r.dentist?.firstName?.[0] || ''}${r.dentist?.lastName?.[0] || ''}`.toUpperCase(),
+      dentistImage: r.dentist?.user?.profileImage || r.dentist?.profileImage || null,
       formattedRequestDate: new Date(r.requestDate).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -196,7 +205,7 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
         year: 'numeric'
       }) : null
     }))
-  , [requests])
+  }, [requests])
 
   // Filter requests - use useMemo for performance
   const filteredRequests = useMemo(() => {
@@ -406,9 +415,27 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   {
                     label: 'Patient',
                     accessor: 'patientName',
-                    render: (value) => (
-                      <div className="flex items-center gap-2">
-                        <FaUser className="text-gray-500 w-4 h-4" />
+                    render: (value, row) => (
+                      <div className="flex items-center gap-3">
+                        {row.patientImage ? (
+                          <img 
+                            src={row.patientImage} 
+                            alt={value}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-blue-200"
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                              isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
+                            }`}
+                          >
+                            {row.patientInitials || 'P'}
+                          </div>
+                        )}
                         <span className="font-medium">{value}</span>
                       </div>
                     )
@@ -416,9 +443,27 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
                   {
                     label: 'Dentist',
                     accessor: 'dentistName',
-                    render: (value) => (
-                      <div className="flex items-center gap-2">
-                        <FaStethoscope className="text-teal-500 w-4 h-4" />
+                    render: (value, row) => (
+                      <div className="flex items-center gap-3">
+                        {row.dentistImage ? (
+                          <img 
+                            src={row.dentistImage} 
+                            alt={value}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-teal-200"
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                              isDarkMode ? 'bg-teal-600' : 'bg-teal-500'
+                            }`}
+                          >
+                            {row.dentistInitials || 'D'}
+                          </div>
+                        )}
                         <span>{value}</span>
                       </div>
                     )
