@@ -108,22 +108,32 @@ const DentistRadiology = () => {
       'CANCELLED': 'Cancelled'
     }
     
-    return radiologyRequests.map(r => ({
-      id: r.id,
-      patientId: r.patientId,
-      patientName: `${r.patient.firstName} ${r.patient.lastName}`,
-      dentistId: r.dentistId,
-      radiologyCenterId: r.radiologyCenterId,
-      radiologyCenterName: r.radiologyCenter.centerName,
-      treatmentId: r.treatmentId,
-      treatmentName: r.treatment?.treatmentName || null,
-      requestDate: r.requestDate,
-      availableDate: r.availableDate,
-      imagingType: r.imagingType,
-      reportFile: r.reportFile,
-      status: statusMap[r.status] || r.status,
-      notes: r.notes || ''
-    }))
+    return radiologyRequests.map(r => {
+      const patientName = `${r.patient.firstName} ${r.patient.lastName}`
+      const patientInitials = `${r.patient.firstName.charAt(0)}${r.patient.lastName.charAt(0)}`
+      const centerInitials = r.radiologyCenter.centerName.split(' ').map(word => word.charAt(0)).join('').slice(0, 2).toUpperCase()
+      
+      return {
+        id: r.id,
+        patientId: r.patientId,
+        patientName,
+        patientImage: r.patient?.user?.profileImage || null,
+        patientInitials,
+        dentistId: r.dentistId,
+        radiologyCenterId: r.radiologyCenterId,
+        radiologyCenterName: r.radiologyCenter.centerName,
+        centerImage: r.radiologyCenter?.user?.profileImage || null,
+        centerInitials,
+        treatmentId: r.treatmentId,
+        treatmentName: r.treatment?.treatmentName || null,
+        requestDate: r.requestDate,
+        availableDate: r.availableDate,
+        imagingType: r.imagingType,
+        reportFile: r.reportFile,
+        status: statusMap[r.status] || r.status,
+        notes: r.notes || ''
+      }
+    })
   }, [radiologyRequests])
 
   // Transform patients for modal - use useMemo
@@ -504,7 +514,24 @@ const DentistRadiology = () => {
                     accessor: 'patientName',
                     render: (value, row) => (
                       <div className="flex items-center gap-2">
-                        <FaUser className="text-gray-500 w-4 h-4" />
+                        {row.patientImage ? (
+                          <img
+                            src={row.patientImage}
+                            alt={value}
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                            isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'
+                          } ${row.patientImage ? 'hidden' : 'flex'}`}
+                        >
+                          {row.patientInitials}
+                        </div>
                         <span className="font-medium">{value}</span>
                       </div>
                     )
@@ -522,9 +549,26 @@ const DentistRadiology = () => {
                   {
                     label: 'Radiology Center',
                     accessor: 'radiologyCenterName',
-                    render: (value) => (
+                    render: (value, row) => (
                       <div className="flex items-center gap-2">
-                        <FaHospital className="text-teal-500 w-4 h-4" />
+                        {row.centerImage ? (
+                          <img
+                            src={row.centerImage}
+                            alt={value}
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                            isDarkMode ? 'bg-teal-900 text-teal-300' : 'bg-teal-100 text-teal-700'
+                          } ${row.centerImage ? 'hidden' : 'flex'}`}
+                        >
+                          {row.centerInitials}
+                        </div>
                         <span>{value}</span>
                       </div>
                     )
