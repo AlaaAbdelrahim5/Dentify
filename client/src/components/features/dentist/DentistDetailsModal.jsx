@@ -200,22 +200,26 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
               }`}>
                 Status
               </p>
-              <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${
+                (dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE'
+                  ? isDarkMode
+                    ? 'bg-green-900/20 text-green-400 border-green-800'
+                    : 'bg-green-100 text-green-800 border-green-200'
+                  : (dentistData.user?.status || dentistData.userId?.status) === 'PENDING'
+                    ? isDarkMode
+                      ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800'
+                      : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                    : isDarkMode
+                      ? 'bg-red-900/20 text-red-400 border-red-800'
+                      : 'bg-red-100 text-red-800 border-red-200'
+              }`}>
                 <span className={`w-2 h-2 rounded-full ${
                   (dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE' ? 'bg-green-500' :
                   (dentistData.user?.status || dentistData.userId?.status) === 'PENDING' ? 'bg-yellow-500' : 'bg-red-500'
                 }`}></span>
-                <p className={`font-semibold ${
-                  (dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE' 
-                    ? isDarkMode ? 'text-green-400' : 'text-green-600'
-                    : (dentistData.user?.status || dentistData.userId?.status) === 'PENDING'
-                    ? isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
-                    : isDarkMode ? 'text-red-400' : 'text-red-600'
-                }`}>
-                  {(dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE' ? 'Active' :
-                   (dentistData.user?.status || dentistData.userId?.status) === 'PENDING' ? 'Pending' : 'Inactive'}
-                </p>
-              </div>
+                {(dentistData.user?.status || dentistData.userId?.status) === 'ACTIVE' ? 'Active' :
+                 (dentistData.user?.status || dentistData.userId?.status) === 'PENDING' ? 'Pending' : 'Inactive'}
+              </span>
             </div>
           </div>
         </div>
@@ -521,12 +525,18 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
           }`}>
             Dentist
           </p>
-          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
             dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE'
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+              ? isDarkMode
+                ? 'bg-green-900/20 text-green-400 border-green-800'
+                : 'bg-green-100 text-green-800 border-green-200'
               : dentistData.user?.status === 'PENDING' || dentistData.userId?.status === 'PENDING'
-              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+              ? isDarkMode
+                ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800'
+                : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+              : isDarkMode
+                ? 'bg-red-900/20 text-red-400 border-red-800'
+                : 'bg-red-100 text-red-800 border-red-200'
           }`}>
             <StatusIcon className="w-3 h-3" />
             {statusInfo.label}

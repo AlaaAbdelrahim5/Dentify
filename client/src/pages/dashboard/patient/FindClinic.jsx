@@ -324,28 +324,6 @@ const FindClinic = () => {
     }
   }
 
-  // Show loading while getting location
-  if (!locationChecked) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Find a Clinic"
-          description="Search and browse dental clinics"
-        />
-        <div className={`p-12 text-center rounded-lg ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white'
-        }`}>
-          <LoadingSpinner />
-          <p className={`mt-4 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Getting your location...
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   // Error state
   if (error) {
     return (

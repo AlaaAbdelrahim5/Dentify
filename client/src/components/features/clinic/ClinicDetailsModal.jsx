@@ -170,15 +170,19 @@ const ClinicDetailsModal = ({
             }`}>
               Dental Clinic
             </p>
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
               isActive
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                ? isDarkMode
+                  ? 'bg-green-900/20 text-green-400 border-green-800'
+                  : 'bg-green-100 text-green-800 border-green-200'
+                : isDarkMode
+                  ? 'bg-red-900/20 text-red-400 border-red-800'
+                  : 'bg-red-100 text-red-800 border-red-200'
             }`}>
               {isActive ? (
-                <><FaCheckCircle className="w-2.5 h-2.5" /> Active</>
+                <><FaCheckCircle className="w-3 h-3" /> Active</>
               ) : (
-                <><FaTimesCircle className="w-2.5 h-2.5" /> Inactive</>
+                <><FaTimesCircle className="w-3 h-3" /> Inactive</>
               )}
             </span>
           </div>

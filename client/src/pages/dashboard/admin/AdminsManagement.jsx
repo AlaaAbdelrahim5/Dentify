@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   FaUsers,
   FaUserShield,
@@ -15,6 +15,7 @@ import {
 import { formatDate as formatDateHelper, getImageUrl } from '../../../utils/helpers'
 import { validateEmail } from '../../../utils/validation'
 import { useManagementPage } from '../../../hooks'
+import { STATUS_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants'
 import { 
   Button, 
   Input, 
@@ -36,6 +37,10 @@ import { adminAPI } from '../../../services/api'
 
 const AdminsManagement = () => {
   const { isDarkMode } = useTheme()
+
+  // Additional filters
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterGender, setFilterGender] = useState('')
 
   // Use unified management hook
   const {
@@ -70,7 +75,12 @@ const AdminsManagement = () => {
     hideToast
   } = useManagementPage({
     fetchFn: async (params) => {
-      const response = await adminAPI.getAllAdmins(params)
+      const queryParams = {
+        ...params,
+        ...(filterStatus && { status: filterStatus }),
+        ...(filterGender && { gender: filterGender })
+      }
+      const response = await adminAPI.getAllAdmins(queryParams)
       return {
         success: response.success,
         data: response.data || [],
@@ -98,6 +108,11 @@ const AdminsManagement = () => {
       inactive: '-'
     }
   })
+
+  // Refresh when filters change
+  useEffect(() => {
+    refresh()
+  }, [filterStatus, filterGender])
 
   // Debug: Log confirmToggleStatus function on mount
   console.log('AdminsManagement rendered')
@@ -133,11 +148,28 @@ const AdminsManagement = () => {
     searchTerm,
     onSearchChange: (e) => setSearchTerm(e.target.value),
     debouncedSearchTerm,
-    filters: [],
-    onClearFilters: () => setSearchTerm(''),
+    filters: [
+      {
+        label: 'Status',
+        value: filterStatus,
+        onChange: (e) => setFilterStatus(e.target.value),
+        options: STATUS_OPTIONS
+      },
+      {
+        label: 'Gender',
+        value: filterGender,
+        onChange: (e) => setFilterGender(e.target.value),
+        options: GENDER_OPTIONS
+      }
+    ],
+    onClearFilters: () => {
+      setSearchTerm('')
+      setFilterStatus('')
+      setFilterGender('')
+    },
     filtering,
     searchPlaceholder: 'Search admins by name or email...'
-  }), [searchTerm, debouncedSearchTerm, filtering, setSearchTerm])
+  }), [searchTerm, debouncedSearchTerm, filterStatus, filterGender, filtering, setSearchTerm])
 
   const columns = [
     { key: 'admin', label: 'Admin' },

@@ -204,18 +204,20 @@ const PatientDetailsModal = ({
               }`}>
                 Status
               </p>
-              <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border ${
+                patientData.status?.toLowerCase() === 'active'
+                  ? isDarkMode
+                    ? 'bg-green-900/20 text-green-400 border-green-800'
+                    : 'bg-green-100 text-green-800 border-green-200'
+                  : isDarkMode
+                    ? 'bg-red-900/20 text-red-400 border-red-800'
+                    : 'bg-red-100 text-red-800 border-red-200'
+              }`}>
                 <span className={`w-2 h-2 rounded-full ${
-                  patientData.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                  patientData.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-red-500'
                 }`}></span>
-                <p className={`font-semibold ${
-                  patientData.status?.toLowerCase() === 'active' 
-                    ? isDarkMode ? 'text-green-400' : 'text-green-600'
-                    : isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1).toLowerCase() || 'Inactive'}
-                </p>
-              </div>
+                {patientData.status?.charAt(0).toUpperCase() + patientData.status?.slice(1).toLowerCase() || 'Inactive'}
+              </span>
             </div>
           </div>
 

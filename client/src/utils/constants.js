@@ -66,22 +66,31 @@ export const COUNTRY_CODES = [
 ]
 
 // Cities as select options (for dropdowns)
-export const CITY_OPTIONS = PALESTINIAN_CITIES.map(city => ({
-  value: city,
-  label: city
-}))
+export const CITY_OPTIONS = [
+  { value: '', label: 'All Cities' },
+  ...PALESTINIAN_CITIES.map(city => ({
+    value: city,
+    label: city
+  }))
+]
 
 // Cities as lowercase options (for some forms that use lowercase values)
-export const CITY_OPTIONS_LOWERCASE = PALESTINIAN_CITIES.map(city => ({
-  value: city.toLowerCase().replace(/\s+/g, '_'),
-  label: city
-}))
+export const CITY_OPTIONS_LOWERCASE = [
+  { value: '', label: 'All Cities' },
+  ...PALESTINIAN_CITIES.map(city => ({
+    value: city.toLowerCase().replace(/\s+/g, '_'),
+    label: city
+  }))
+]
 
 // Cities with underscore format (for radiology and other specific forms)
-export const CITY_OPTIONS_UNDERSCORE = PALESTINIAN_CITIES.map(city => ({
-  value: city.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_'),
-  label: city
-}))
+export const CITY_OPTIONS_UNDERSCORE = [
+  { value: '', label: 'All Cities' },
+  ...PALESTINIAN_CITIES.map(city => ({
+    value: city.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_'),
+    label: city
+  }))
+]
 
 // Dental Specializations
 export const DENTAL_SPECIALIZATIONS = [
@@ -114,6 +123,7 @@ export const SPECIALIZATION_OPTIONS = DENTAL_SPECIALIZATIONS.map(spec => ({
 
 // Gender Options
 export const GENDER_OPTIONS = [
+  { value: '', label: 'All Genders' },
   { value: 'Male', label: 'Male' },
   { value: 'Female', label: 'Female' }
 ]
@@ -142,16 +152,21 @@ export const DAYS_OF_WEEK = [
 
 // Status Options
 export const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
   { value: 'PENDING', label: 'Pending Approval' },
   { value: 'ACTIVE', label: 'Active' },
-  { value: 'DEACTIVATED', label: 'Deactivated' }
+  { value: 'DEACTIVATED', label: 'Deactivated' },
+  { value: 'REJECTED', label: 'Rejected' }
 ]
 
 // Dental Specializations as select options for dropdowns
-export const DENTAL_SPECIALIZATIONS_OPTIONS = DENTAL_SPECIALIZATIONS.map(spec => ({
-  value: spec,
-  label: spec
-}))
+export const DENTAL_SPECIALIZATIONS_OPTIONS = [
+  { value: '', label: 'All Specializations' },
+  ...DENTAL_SPECIALIZATIONS.map(spec => ({
+    value: spec,
+    label: spec
+  }))
+]
 
 // Treatment Status Options
 export const TREATMENT_STATUS_OPTIONS = [

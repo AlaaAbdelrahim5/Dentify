@@ -289,37 +289,6 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
     return colors[color] || colors.blue
   }
 
-  const quickActions = [
-    {
-      title: 'Add New Clinic',
-      description: 'Register a new dental clinic',
-      icon: FaHospital,
-      gradient: 'from-teal-600 to-cyan-600',
-      action: () => navigate('/admin/dashboard', { state: { activeTab: 'clinics' } })
-    },
-    {
-      title: 'Manage Dentists',
-      description: 'View and approve dentists',
-      icon: FaUserMd,
-      gradient: 'from-blue-600 to-indigo-600',
-      action: () => navigate('/admin/dashboard', { state: { activeTab: 'dentists' } })
-    },
-    {
-      title: 'View Patients',
-      description: 'Browse patient records',
-      icon: FaUsers,
-      gradient: 'from-purple-600 to-pink-600',
-      action: () => navigate('/admin/dashboard', { state: { activeTab: 'patients' } })
-    },
-    {
-      title: 'Radiology Centers',
-      description: 'Manage radiology centers',
-      icon: FaXRay,
-      gradient: 'from-green-600 to-teal-600',
-      action: () => navigate('/admin/dashboard', { state: { activeTab: 'radiology' } })
-    }
-  ]
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -379,40 +348,6 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
           }
         ]} />
       )}
-
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <Card
-              key={index}
-              className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
-                isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-              }`}
-              onClick={action.action}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${action.gradient} flex items-center justify-center flex-shrink-0`}>
-                  <action.icon className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {action.title}
-                  </h3>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {action.description}
-                  </p>
-                </div>
-                <FaArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -563,14 +498,22 @@ const AdminOverview = ({ stats, setStats, refreshData }) => {
                           {formatDate(activity.time)}
                         </p>
                         {activity.status && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
                             activity.status === 'ACTIVE'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              ? isDarkMode
+                                ? 'bg-green-900/20 text-green-400 border-green-800'
+                                : 'bg-green-100 text-green-800 border-green-200'
                               : activity.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              ? isDarkMode
+                                ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800'
+                                : 'bg-yellow-100 text-yellow-700 border-yellow-200'
                               : activity.status === 'DEACTIVATED'
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                              ? isDarkMode
+                                ? 'bg-red-900/20 text-red-400 border-red-800'
+                                : 'bg-red-100 text-red-800 border-red-200'
+                              : isDarkMode
+                                ? 'bg-gray-800 text-gray-400 border-gray-700'
+                                : 'bg-gray-100 text-gray-800 border-gray-300'
                           }`}>
                             {activity.status}
                           </span>

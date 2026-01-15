@@ -131,37 +131,6 @@ const ClinicOverview = ({ userData, stats: propStats, onTabChange }) => {
     })
   }
 
-  const quickActions = [
-    {
-      title: 'New Appointment',
-      description: 'Schedule a new appointment',
-      icon: FaCalendarPlus,
-      gradient: 'from-teal-600 to-cyan-600',
-      onClick: () => onTabChange?.('appointments')
-    },
-    {
-      title: 'Add Secretary',
-      description: 'Register a new secretary',
-      icon: FaUserPlus,
-      gradient: 'from-blue-600 to-indigo-600',
-      onClick: () => onTabChange?.('secretaries')
-    },
-    {
-      title: 'View Analytics',
-      description: 'Check clinic performance',
-      icon: FaChartLine,
-      gradient: 'from-purple-600 to-pink-600',
-      onClick: () => onTabChange?.('analytics')
-    },
-    {
-      title: 'Clinic Settings',
-      description: 'Manage clinic configuration',
-      icon: FaCog,
-      gradient: 'from-gray-600 to-slate-600',
-      onClick: () => onTabChange?.('settings')
-    }
-  ]
-
   // Ensure default stats values
   const clinicStats = {
     totalSecretaries: stats?.totalSecretaries || 0,
@@ -230,33 +199,6 @@ const ClinicOverview = ({ userData, stats: propStats, onTabChange }) => {
         }
       ]} />
       )}
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {quickActions.map((action, index) => (
-          <Card 
-            key={index}
-            className={`p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-            }`}
-            onClick={action.onClick}
-          >
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className={`p-4 rounded-xl bg-gradient-to-br ${action.gradient} shadow-lg`}>
-                <action.icon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {action.title}
-                </h3>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {action.description}
-                </p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
 
       {/* Recent Appointments */}
       <Card className="p-6">

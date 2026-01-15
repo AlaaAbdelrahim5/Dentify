@@ -25,7 +25,7 @@ import {
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { secretariesAPI } from '../../../services/api'
-import { CITY_OPTIONS, STATUS_OPTIONS } from '../../../utils/constants'
+import { CITY_OPTIONS, STATUS_OPTIONS, GENDER_OPTIONS } from '../../../utils/constants'
 import { formatDate as formatDateHelper, calculateAge, getImageUrl } from '../../../utils/helpers'
 import { useManagementPage } from '../../../hooks'
 
@@ -149,10 +149,7 @@ const SecretariesManagement = () => {
         onChange: (e) => {
           setFilterGender(e.target.value)
         },
-        options: [
-          { value: 'male', label: 'Male' },
-          { value: 'female', label: 'Female' }
-        ]
+        options: GENDER_OPTIONS
       },
       {
         label: 'Status',

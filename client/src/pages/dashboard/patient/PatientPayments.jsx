@@ -173,7 +173,6 @@ const PatientPayments = () => {
             <FaUserMd className="text-gray-500 w-4 h-4" />
             <span className="font-medium">{value}</span>
           </div>
-          <span className="text-xs text-gray-500">{payment.dentistSpecialization}</span>
         </div>
       )
     },
