@@ -215,7 +215,7 @@ const DentistRadiology = () => {
       
       const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus
       const matchesImagingType = selectedImagingType === 'all' || 
-                                 request.imagingType?.trim() === selectedImagingType.trim()
+                                 request.imagingType?.toLowerCase().trim() === selectedImagingType.toLowerCase().trim()
       
       return matchesSearch && matchesStatus && matchesImagingType
     })
@@ -405,7 +405,6 @@ const DentistRadiology = () => {
                   options: [
                     { value: 'all', label: 'All Status' },
                     { value: 'Requested', label: 'Requested' },
-                    { value: 'In Progress', label: 'In Progress' },
                     { value: 'Completed', label: 'Completed' },
                     { value: 'Cancelled', label: 'Cancelled' }
                   ],
@@ -475,11 +474,11 @@ const DentistRadiology = () => {
       <Card>
         <EmptyState
           icon={FaXRay}
-          title={mockRadiologyRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
-          description={mockRadiologyRequests.length === 0 
+          title={transformedRequests.length === 0 ? 'No radiology requests yet' : 'No requests match your filters'}
+          description={transformedRequests.length === 0 
             ? 'Create your first radiology request to get started'
             : 'Try adjusting your search or filter criteria'}
-          action={mockRadiologyRequests.length === 0 ? (
+          action={transformedRequests.length === 0 ? (
             <Button 
               variant="primary" 
               onClick={handleNewRequest}
