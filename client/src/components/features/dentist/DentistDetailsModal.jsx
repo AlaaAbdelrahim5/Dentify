@@ -333,7 +333,18 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
   )
 
   const renderSchedule = () => {
-    const workingHours = dentistData.workingHours || []
+    // Parse workingHours - handle JSON string or array
+    let workingHours = []
+    try {
+      if (typeof dentistData.workingHours === 'string') {
+        workingHours = JSON.parse(dentistData.workingHours)
+      } else if (Array.isArray(dentistData.workingHours)) {
+        workingHours = dentistData.workingHours
+      }
+    } catch (error) {
+      console.error('Error parsing working hours:', error)
+    }
+
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     return (
@@ -356,29 +367,39 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
             </p>
           </div>
           
-          {workingHours.length > 0 ? (
+          {workingHours && workingHours.length > 0 ? (
             <div className="space-y-2">
               {daysOfWeek.map((day, index) => {
-                const daySchedule = workingHours.find(wh => wh.day === day || wh.day === index)
+                // Try multiple matching strategies
+                const daySchedule = workingHours.find(wh => 
+                  wh.day === day || 
+                  wh.day === index || 
+                  wh.day === day.toLowerCase() ||
+                  wh.day === index.toString()
+                )
                 
                 return (
                   <div 
                     key={day}
-                    className="flex justify-between items-center py-1"
+                    className={`flex justify-between items-center py-2 px-3 rounded ${
+                      daySchedule && daySchedule.start && daySchedule.end 
+                        ? isDarkMode ? 'bg-gray-700/30' : 'bg-white'
+                        : ''
+                    }`}
                   >
                     <span className={`font-medium ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
                       {day}
                     </span>
-                    {daySchedule && daySchedule.startTime && daySchedule.endTime ? (
-                      <span className={`${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    {daySchedule && (daySchedule.start || daySchedule.startTime) && (daySchedule.end || daySchedule.endTime) ? (
+                      <span className={`font-medium ${
+                        isDarkMode ? 'text-teal-400' : 'text-teal-600'
                       }`}>
-                        {daySchedule.startTime} - {daySchedule.endTime}
+                        {daySchedule.start || daySchedule.startTime} - {daySchedule.end || daySchedule.endTime}
                       </span>
                     ) : (
-                      <span className={`text-sm ${
+                      <span className={`text-sm font-medium ${
                         isDarkMode ? 'text-gray-500' : 'text-gray-400'
                       }`}>
                         Closed
