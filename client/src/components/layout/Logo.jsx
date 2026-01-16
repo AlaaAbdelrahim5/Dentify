@@ -15,7 +15,7 @@ const Logo = ({ className = "", size = "text-3xl" }) => {
         </h1>
         <p className={`text-sm font-medium ${
           isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>Dental Clinic Management</p>
+        }`}>Dental Clinic Management System</p>
       </div>
     </div>
   )

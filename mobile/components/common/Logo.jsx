@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+import { Appearance, useColorScheme } from 'react-native';
 
 const Logo = ({ size = 'md', showSubtitle = true, className = '', align = 'center' }) => {
   const sizes = {
@@ -29,8 +31,18 @@ const Logo = ({ size = 'md', showSubtitle = true, className = '', align = 'cente
 
   const currentSize = sizes[size] || sizes.md;
 
+  const colorScheme = useColorScheme() || Appearance.getColorScheme() || 'light';
+  // Memoize subtitle style for performance
+  const subtitleStyle = useMemo(() => [
+    styles.subtitle,
+    { fontSize: currentSize.subtitleSize },
+    colorScheme === 'dark'
+      ? { color: '#cbd5e1' } // softer gray for dark mode
+      : { color: '##383838' } // softer gray for light mode
+  ], [colorScheme, currentSize.subtitleSize]);
+
   return (
-    <View style={[styles.container, { alignItems: align }]}>
+    <View style={[styles.container, { alignItems: align }]}> 
       <View style={styles.logoRow}>
         <View
           style={{
@@ -68,12 +80,12 @@ const Logo = ({ size = 'md', showSubtitle = true, className = '', align = 'cente
           </LinearGradient>
         </View>
         <View style={styles.textContainer}>
-          <Text style={[styles.title, { fontSize: currentSize.textSize }]}>
+          <Text style={[styles.title, { fontSize: currentSize.textSize }]}> 
             Dentify
           </Text>
           {showSubtitle && (
-            <Text style={[styles.subtitle, { fontSize: currentSize.subtitleSize }]}>
-              Dental Clinic Management
+            <Text style={subtitleStyle}> 
+              DCMS
             </Text>
           )}
         </View>
@@ -113,7 +125,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
   },
   subtitle: {
-    color: '#4b5563',
     fontWeight: '600',
     letterSpacing: 0.2,
   },
