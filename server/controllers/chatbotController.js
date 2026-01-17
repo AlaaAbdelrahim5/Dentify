@@ -195,8 +195,126 @@ exports.chat = async (req, res) => {
       const booking = response.appointmentBooking;
       console.log('📋 Booking Request:', JSON.stringify(booking, null, 2));
       
+      // Handle "first available slot" request WITHOUT specific dentist (show available dentists)
+      if (booking.type === 'find_first_available' && !booking.dentistName) {
+        // Determine start date
+        let startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        
+        if (booking.date) {
+          startDate = new Date(booking.date);
+          startDate.setHours(0, 0, 0, 0);
+        }
+
+        // Find all dentists who have availability on this date/time preference
+        const availableDentists = [];
+        
+        for (const dentist of dentists) {
+          // Get existing appointments for this dentist on the requested date
+          const startOfDay = new Date(startDate);
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date(startDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          
+          const existingAppointments = await prisma.appointment.findMany({
+            where: {
+              dentistId: dentist.userId,
+              appointmentDate: {
+                gte: startOfDay,
+                lte: endOfDay
+              },
+              status: { not: 'CANCELLED' }
+            },
+            orderBy: { startTime: 'asc' }
+          });
+          
+          // Use centralized slot generation function
+          const availableSlots = generateAvailableSlots(
+            dentist, 
+            startDate, 
+            existingAppointments,
+            { timePreference: booking.timePreference }
+          );
+          
+          if (availableSlots.length > 0) {
+            availableDentists.push({
+              userId: dentist.userId,
+              name: `Dr. ${dentist.firstName} ${dentist.lastName}`,
+              specialization: dentist.specialization,
+              city: dentist.city,
+              clinic: dentist.clinic?.clinicName,
+              appointmentDuration: dentist.appointmentDuration,
+              availableSlotsCount: availableSlots.length
+            });
+          }
+        }
+
+        if (availableDentists.length > 0) {
+          // Format date for display
+          const displayDate = startDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          
+          const timePreferenceText = booking.timePreference 
+            ? ` in the ${booking.timePreference}` 
+            : '';
+          
+          const dentistListText = availableDentists.map((d, idx) => 
+            `${idx + 1}. ${d.name} (ID: ${d.userId}) - ${d.specialization.join(', ')} at ${d.clinic}, ${d.city} (Duration: ${d.appointmentDuration} minutes)`
+          ).join('\n');
+          
+          const followUpMessage = `Available dentists for ${displayDate}${timePreferenceText}:\n${dentistListText}\n\nPlease present these dentists nicely to the patient and ask them to select one.`;
+          
+          // Build year-month-day format for date
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, '0');
+          const day = String(startDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
+          
+          const updatedContext = {
+            ...context,
+            availableDentists,
+            requestedDateTime: {
+              date: dateStr,
+              displayDate,
+              timePreference: booking.timePreference
+            }
+          };
+          
+          const followUpResponse = await geminiService.chat(userId, followUpMessage, updatedContext);
+          
+          return res.json({
+            success: true,
+            data: {
+              ...followUpResponse,
+              availableDentists,
+              requestedDateTime: updatedContext.requestedDateTime
+            }
+          });
+        } else {
+          const displayDate = startDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          const timePreferenceText = booking.timePreference 
+            ? ` in the ${booking.timePreference}` 
+            : '';
+          const noSlotsMessage = `Unfortunately, no dentists are available on ${displayDate}${timePreferenceText}. Would you like to try a different date or time?`;
+          const followUpResponse = await geminiService.chat(userId, noSlotsMessage, context);
+          
+          return res.json({
+            success: true,
+            data: followUpResponse
+          });
+        }
+      }
       // Handle "first available slot" request with specific dentist
-      if (booking.type === 'find_first_available' && booking.dentistName) {
+      else if (booking.type === 'find_first_available' && booking.dentistName) {
         // Find the dentist by name (case-insensitive partial match)
         const dentistNameLower = booking.dentistName.toLowerCase().replace('dr. ', '').replace('dr ', '');
         const matchedDentist = dentists.find(d => {

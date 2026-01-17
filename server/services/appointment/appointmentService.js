@@ -132,20 +132,23 @@ function generateAvailableSlots(dentist, date, existingAppointments = [], option
   const [endHour, endMinute] = workingHours.end.split(':').map(Number);
   const duration = dentist.appointmentDuration || 30;
   
-  // Set time range filter if specified
+  // Set time range filter if specified, respecting dentist's actual working hours
   let timeRangeStart = null;
   let timeRangeEnd = null;
   if (options.timePreference) {
     const pref = options.timePreference.toLowerCase();
     if (pref === 'morning') {
-      timeRangeStart = 8;
-      timeRangeEnd = 12;
+      // Morning: start of working hours until 12:00 (or working end if earlier)
+      timeRangeStart = startHour;
+      timeRangeEnd = Math.min(12, endHour);
     } else if (pref === 'afternoon') {
-      timeRangeStart = 12;
-      timeRangeEnd = 17;
+      // Afternoon: 12:00 (or start of working hours if later) until 17:00 (or working end if earlier)
+      timeRangeStart = Math.max(12, startHour);
+      timeRangeEnd = Math.min(17, endHour);
     } else if (pref === 'evening') {
-      timeRangeStart = 17;
-      timeRangeEnd = 20;
+      // Evening: 17:00 (or start of working hours if later) until end of working hours
+      timeRangeStart = Math.max(17, startHour);
+      timeRangeEnd = endHour;
     }
   }
   
