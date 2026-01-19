@@ -92,7 +92,10 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('overview') // Default to overview initially
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize from localStorage or location state if available
+    return location.state?.activeTab || localStorage.getItem('dashboardActiveTab') || 'overview'
+  })
   const [currentUser, setCurrentUser] = useState(null)
   const [userData, setUserData] = useState(null)
   const [stats, setStats] = useState({})
@@ -215,25 +218,20 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
         // Get dashboard config for this user's role
         const config = getDashboardConfig(user.role)
         
-        // Validate and set active tab
-        const savedTab = localStorage.getItem('dashboardActiveTab')
-        
-        // Check if navigating to settings via state
-        if (location.state?.activeTab) {
-          const requestedTab = location.state.activeTab
-          // Validate the requested tab exists for this user role
-          if (config.tabs[requestedTab]) {
-            setActiveTab(requestedTab)
-          } else {
-            setActiveTab('overview')
+        // Validate current active tab for this user's role
+        // Only change if the current tab is invalid for this role
+        setActiveTab(prevTab => {
+          // Check if navigating to specific tab via state
+          if (location.state?.activeTab && config.tabs[location.state.activeTab]) {
+            return location.state.activeTab
           }
-        } else if (savedTab && config.tabs[savedTab]) {
-          // Use saved tab only if it's valid for this user's role
-          setActiveTab(savedTab)
-        } else {
-          // Default to overview if saved tab is invalid
-          setActiveTab('overview')
-        }
+          // Validate current tab exists for this user role
+          if (config.tabs[prevTab]) {
+            return prevTab // Keep current tab if valid
+          }
+          // Default to overview only if current tab is invalid
+          return 'overview'
+        })
         
         // Fetch user-specific data based on role
         await fetchUserData(user)
