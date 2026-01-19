@@ -10,7 +10,7 @@ import {
   FaClock,
   FaPrint
 } from 'react-icons/fa'
-import { BaseModal, Button, Input, Card } from '../../common'
+import { BaseModal, Button, Input } from '../../common'
 import { getTodayISO } from '../../../utils/helpers'
 
 const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo }) => {
@@ -292,37 +292,31 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
       isOpen={isOpen}
       onClose={onClose}
       size="4xl"
-      noPadding
-    >
-      {/* Fixed Header */}
-      <div className="flex items-center gap-3 p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-          isDarkMode ? 'bg-teal-900' : 'bg-teal-100'
-        }`}>
-          <FaPrescriptionBottle className="text-teal-600 text-xl" />
-        </div>
-        <div>
-          <h2 className={`text-xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
+      title={
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${
+            isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
           }`}>
-            Create Prescription
-          </h2>
-          {patientInfo && (
-            <p className={`text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              For {patientInfo.name}
-            </p>
-          )}
+            <FaPrescriptionBottle className="w-5 h-5 text-teal-600" />
+          </div>
+          <div>
+            <span>Create Prescription</span>
+            {patientInfo && (
+              <p className={`text-sm font-normal ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                For {patientInfo.name}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Scrollable Content */}
-      <form onSubmit={handleSubmit} className="flex flex-col max-h-[calc(90vh-180px)]">
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
           {/* Patient & Treatment Info */}
-          <div className={`p-4 rounded-lg border ${
-            isDarkMode ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          <div className={`p-4 rounded-lg ${
+            isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
           }`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
@@ -387,8 +381,8 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
 
             <div className="space-y-4">
               {medications.map((medication, index) => (
-                <Card key={medication.id} className={`p-4 ${
-                  isDarkMode ? 'bg-gray-900/50' : 'bg-gray-50'
+                <div key={medication.id} className={`p-4 rounded-lg border ${
+                  isDarkMode ? 'bg-gray-700/30 border-gray-600' : 'bg-white border-gray-200'
                 }`}>
                   <div className="flex items-start justify-between mb-4">
                     <h4 className={`font-medium ${
@@ -458,14 +452,16 @@ const PrescriptionModal = ({ isOpen, onClose, onSave, patientInfo, treatmentInfo
                       />
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Fixed Footer with Action Buttons */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10">
+        {/* Footer */}
+        <div className={`flex items-center justify-end gap-3 p-6 border-t ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
+        }`}>
           <Button
             type="button"
             variant="outline"
