@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
   FaChartLine,
   FaChartBar,
@@ -29,17 +29,12 @@ import { safeJsonParse, ensureArray } from '../../../utils/helpers'
 const DentistReports = () => {
   const { isDarkMode } = useTheme()
   const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState('month') // week, month, quarter, year, custom
-  const [activeTab, setActiveTab] = useState('overview') // overview, financial, clinical, patients
+  const [dateRange, setDateRange] = useState('month') // week, month, quarter, year
   
   // Data states
   const [treatments, setTreatments] = useState([])
   const [appointments, setAppointments] = useState([])
   const [payments, setPayments] = useState([])
-  
-  // Date range states
-  const [customStartDate, setCustomStartDate] = useState('')
-  const [customEndDate, setCustomEndDate] = useState('')
 
   useEffect(() => {
     fetchAllData()
@@ -65,7 +60,7 @@ const DentistReports = () => {
   }
 
   // Date filtering logic
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const now = new Date()
     let startDate = new Date()
     
@@ -82,30 +77,25 @@ const DentistReports = () => {
       case 'year':
         startDate.setFullYear(now.getFullYear() - 1)
         break
-      case 'custom':
-        return {
-          start: customStartDate ? new Date(customStartDate) : new Date(0),
-          end: customEndDate ? new Date(customEndDate) : now
-        }
       default:
         startDate.setMonth(now.getMonth() - 1)
     }
     
     return { start: startDate, end: now }
-  }
+  }, [dateRange])
 
-  const filterDataByDateRange = (data, dateField = 'createdAt') => {
+  const filterDataByDateRange = useCallback((data, dateField = 'createdAt') => {
     const { start, end } = getDateRange()
     return data.filter(item => {
       const itemDate = new Date(item[dateField])
       return itemDate >= start && itemDate <= end
     })
-  }
+  }, [getDateRange])
 
   // Filtered data
-  const filteredTreatments = useMemo(() => filterDataByDateRange(treatments), [treatments, dateRange, customStartDate, customEndDate])
-  const filteredAppointments = useMemo(() => filterDataByDateRange(appointments, 'appointmentDate'), [appointments, dateRange, customStartDate, customEndDate])
-  const filteredPayments = useMemo(() => filterDataByDateRange(payments), [payments, dateRange, customStartDate, customEndDate])
+  const filteredTreatments = useMemo(() => filterDataByDateRange(treatments), [treatments, dateRange, filterDataByDateRange])
+  const filteredAppointments = useMemo(() => filterDataByDateRange(appointments, 'appointmentDate'), [appointments, dateRange, filterDataByDateRange])
+  const filteredPayments = useMemo(() => filterDataByDateRange(payments, 'paymentDate'), [payments, dateRange, filterDataByDateRange])
 
   // Financial Metrics
   const financialMetrics = useMemo(() => {
@@ -249,11 +239,6 @@ const DentistReports = () => {
     )
   }
 
-  const exportToCSV = () => {
-    // Implementation for CSV export
-    alert('Export functionality - Coming soon!')
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -378,83 +363,13 @@ const DentistReports = () => {
                   {range.charAt(0).toUpperCase() + range.slice(1)}
                 </Button>
               ))}
-              <Button
-                variant={dateRange === 'custom' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setDateRange('custom')}
-                className={dateRange === 'custom' ? 'bg-linear-to-r from-teal-600 to-cyan-600' : ''}
-              >
-                Custom
-              </Button>
-            </div>
-
-            {dateRange === 'custom' && (
-              <div className="flex gap-2 items-center">
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                />
-                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>to</span>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                />
-              </div>
-            )}
-
-            <div className="ml-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportToCSV}
-                className="flex items-center gap-2"
-              >
-                <FaFileExport />
-                Export Report
-              </Button>
             </div>
           </div>
         </Card.Content>
       </Card>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-        {[
-          { id: 'overview', label: 'Overview', icon: FaChartLine },
-          { id: 'financial', label: 'Financial', icon: FaDollarSign },
-          { id: 'clinical', label: 'Clinical', icon: FaTooth },
-          { id: 'patients', label: 'Patients', icon: FaUsers }
-        ].map(tab => (
-          <Button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            variant={activeTab === tab.id ? 'primary' : 'ghost'}
-            className={`flex items-center gap-2 border-b-2 rounded-none ${
-              activeTab === tab.id
-                ? 'border-teal-600 text-teal-600'
-                : 'border-transparent'
-            }`}
-          >
-            <tab.icon />
-            {tab.label}
-          </Button>
-        ))}
-      </div>
-
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
+      {/* Overview Section */}
+      <div className="space-y-6">
         <div className="space-y-6">
           {/* Key Metrics */}
           <div>
@@ -602,7 +517,26 @@ const DentistReports = () => {
                 </h3>
               </Card.Header>
               <Card.Content className="space-y-3 p-6">
-                {treatmentMetrics.topTreatments.length > 0 ? (
+                {loading ? (
+                  [...Array(5)].map((_, i) => (
+                    <div key={i} className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                          <div className="space-y-2">
+                            <div className={`h-4 w-32 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                            <div className={`h-3 w-24 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-right">
+                          <div className={`h-6 w-12 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse ml-auto`}></div>
+                          <div className={`h-3 w-16 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse ml-auto`}></div>
+                        </div>
+                      </div>
+                      <div className={`w-full h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse`}></div>
+                    </div>
+                  ))
+                ) : treatmentMetrics.topTreatments.length > 0 ? (
                   treatmentMetrics.topTreatments.map(([treatment, count], index) => {
                     const colors = [
                       'from-teal-600 to-cyan-600',
@@ -655,10 +589,10 @@ const DentistReports = () => {
             </Card>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Financial Tab */}
-      {activeTab === 'financial' && (
+      {/* Financial Section */}
+      <div className="space-y-6">
         <div className="space-y-6">
           {/* Financial Summary Cards */}
           <div>
@@ -747,10 +681,10 @@ const DentistReports = () => {
             </Card.Content>
           </Card>
         </div>
-      )}
+      </div>
 
-      {/* Clinical Tab */}
-      {activeTab === 'clinical' && (
+      {/* Clinical Section */}
+      <div className="space-y-6">
         <div className="space-y-6">
           {/* Treatment Status Overview */}
           <div>
@@ -920,10 +854,10 @@ const DentistReports = () => {
             </Card>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Patients Tab */}
-      {activeTab === 'patients' && (
+      {/* Patients Section */}
+      <div className="space-y-6">
         <div className="space-y-6">
           {/* Patient Overview */}
           <div>
@@ -1082,7 +1016,7 @@ const DentistReports = () => {
             </Card>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

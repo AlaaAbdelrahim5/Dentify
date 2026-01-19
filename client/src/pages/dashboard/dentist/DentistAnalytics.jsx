@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
   FaChartLine,
   FaChartBar,
@@ -14,8 +14,7 @@ import {
   FaCalendarCheck,
   FaClock,
   FaCheckCircle,
-  FaFilter,
-  FaDownload
+  FaFilter
 } from 'react-icons/fa'
 import { Card, Button, PageHeader } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -56,7 +55,7 @@ const DentistAnalytics = () => {
   }
 
   // Generate time series data for charts
-  const generateTimeSeriesData = () => {
+  const generateTimeSeriesData = useCallback(() => {
     const now = new Date()
     const periods = []
     let periodsCount = 12 // Default for year view
@@ -97,7 +96,7 @@ const DentistAnalytics = () => {
     }
     
     return periods
-  }
+  }, [dateRange])
 
   // Calculate revenue trend data
   const revenueData = useMemo(() => {
@@ -105,8 +104,8 @@ const DentistAnalytics = () => {
     
     return periods.map(period => {
       const periodPayments = payments.filter(p => {
-        if (!p.createdAt) return false
-        const paymentDate = new Date(p.createdAt)
+        if (!p.paymentDate) return false
+        const paymentDate = new Date(p.paymentDate)
         if (isNaN(paymentDate.getTime())) return false
         
         if (dateRange === 'month') {
@@ -124,7 +123,7 @@ const DentistAnalytics = () => {
       const revenue = periodPayments.reduce((sum, p) => sum + (p.amount || 0), 0)
       return { label: period.label, value: revenue }
     })
-  }, [payments, dateRange])
+  }, [payments, dateRange, generateTimeSeriesData])
 
   // Calculate treatments trend data
   const treatmentsData = useMemo(() => {
@@ -150,7 +149,7 @@ const DentistAnalytics = () => {
       
       return { label: period.label, value: periodTreatments.length }
     })
-  }, [treatments, dateRange])
+  }, [treatments, dateRange, generateTimeSeriesData])
 
   // Calculate patients trend data
   const patientsData = useMemo(() => {
@@ -177,7 +176,7 @@ const DentistAnalytics = () => {
       const uniquePatients = new Set(periodTreatments.map(t => t.patientId))
       return { label: period.label, value: uniquePatients.size }
     })
-  }, [treatments, dateRange])
+  }, [treatments, dateRange, generateTimeSeriesData])
 
   // Calculate appointments trend data
   const appointmentsData = useMemo(() => {
@@ -203,7 +202,7 @@ const DentistAnalytics = () => {
       
       return { label: period.label, value: periodAppointments.length }
     })
-  }, [appointments, dateRange])
+  }, [appointments, dateRange, generateTimeSeriesData])
 
   // Get current chart data based on view
   const getCurrentChartData = () => {
@@ -415,15 +414,6 @@ const DentistAnalytics = () => {
                 ))}
               </div>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <FaDownload />
-              Export Charts
-            </Button>
           </div>
         </Card.Content>
       </Card>
