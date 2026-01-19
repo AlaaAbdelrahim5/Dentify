@@ -46,6 +46,15 @@ const ClinicDetailsModal = ({
   // Determine if clinic is active
   const isActive = clinic?.user?.status === 'ACTIVE'
 
+  const convertTo12Hour = (time24) => {
+    if (!time24) return ''
+    const [hours, minutes] = time24.split(':')
+    const hour = parseInt(hours, 10)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${hour12}:${minutes} ${period}`
+  }
+
   useEffect(() => {
     if (isOpen && clinic) {
       fetchDentists()
@@ -422,7 +431,7 @@ const ClinicDetailsModal = ({
                           <span className={`${
                             isDarkMode ? 'text-gray-400' : 'text-gray-600'
                           }`}>
-                            {schedule.startTime} - {schedule.endTime}
+                            {convertTo12Hour(schedule.startTime)} - {convertTo12Hour(schedule.endTime)}
                           </span>
                         </div>
                       ));
@@ -437,7 +446,7 @@ const ClinicDetailsModal = ({
                           <span className={`${
                             isDarkMode ? 'text-gray-400' : 'text-gray-600'
                           }`}>
-                            {schedule.isOpen ? `${schedule.start} - ${schedule.end}` : 'Closed'}
+                            {schedule.isOpen ? `${convertTo12Hour(schedule.start)} - ${convertTo12Hour(schedule.end)}` : 'Closed'}
                           </span>
                         </div>
                       ));

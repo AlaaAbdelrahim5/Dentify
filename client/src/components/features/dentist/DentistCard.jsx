@@ -189,15 +189,6 @@ const DoctorCard = ({
                   >
                     View Profile
                   </Button>
-                  {isActive && (
-                    <Button
-                      onClick={() => onBookAppointment(doctor)}
-                      size="sm"
-                    >
-                      <FaCalendarAlt className="mr-2" />
-                      Book Appointment
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
@@ -373,34 +364,18 @@ const DoctorCard = ({
 
       {/* Actions */}
       <Card.Footer className="pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={(e) => {
-              e.stopPropagation()
-              onViewProfile(doctor)
-            }}
-          >
-            <FaEye className="w-3 h-3 mr-1" />
-            Profile
-          </Button>
-          {isActive && (
-            <Button
-              variant="primary"
-              size="sm"
-              className="flex-1"
-              onClick={(e) => {
-                e.stopPropagation()
-                onBookAppointment(doctor)
-              }}
-            >
-              <FaCalendarAlt className="w-3 h-3 mr-1" />
-              Book
-            </Button>
-          )}
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={(e) => {
+            e.stopPropagation()
+            onViewProfile(doctor)
+          }}
+        >
+          <FaEye className="w-3 h-3 mr-1" />
+          View Profile
+        </Button>
       </Card.Footer>
     </Card>
   )

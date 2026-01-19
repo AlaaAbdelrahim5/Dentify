@@ -28,7 +28,7 @@ import { Button, Card, StatusBadge, BaseModal } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { calculateAge, formatDate, getImageUrl } from '../../../utils/helpers'
 
-const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
+const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit, onBookAppointment }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -41,6 +41,15 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const convertTo12Hour = (time24) => {
+    if (!time24) return ''
+    const [hours, minutes] = time24.split(':')
+    const hour = parseInt(hours, 10)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${hour12}:${minutes} ${period}`
   }
 
   const getStatusInfo = (status) => {
@@ -381,30 +390,46 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
                 return (
                   <div 
                     key={day}
-                    className={`flex justify-between items-center py-2 px-3 rounded ${
+                    className={`py-2 px-3 rounded ${
                       daySchedule && daySchedule.start && daySchedule.end 
                         ? isDarkMode ? 'bg-gray-700/30' : 'bg-white'
                         : ''
                     }`}
                   >
-                    <span className={`font-medium ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      {day}
-                    </span>
-                    {daySchedule && (daySchedule.start || daySchedule.startTime) && (daySchedule.end || daySchedule.endTime) ? (
+                    <div className="flex justify-between items-center">
                       <span className={`font-medium ${
-                        isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
-                        {daySchedule.start || daySchedule.startTime} - {daySchedule.end || daySchedule.endTime}
+                        {day}
                       </span>
-                    ) : (
-                      <span className={`text-sm font-medium ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`}>
-                        Closed
-                      </span>
-                    )}
+                      {daySchedule && daySchedule.isWorking === true && (daySchedule.start || daySchedule.startTime) && (daySchedule.end || daySchedule.endTime) ? (
+                        <div className="text-right">
+                          <div className={`font-medium ${
+                            isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                          }`}>
+                            {convertTo12Hour(daySchedule.start || daySchedule.startTime)} - {convertTo12Hour(daySchedule.end || daySchedule.endTime)}
+                          </div>
+                          {daySchedule.breaks && Array.isArray(daySchedule.breaks) && daySchedule.breaks.length > 0 && (
+                            <div className={`text-xs mt-1 ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
+                              Break: {daySchedule.breaks.map((brk, i) => (
+                                <span key={i}>
+                                  {convertTo12Hour(brk.start)} - {convertTo12Hour(brk.end)}
+                                  {i < daySchedule.breaks.length - 1 ? ', ' : ''}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className={`text-sm font-medium ${
+                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                        }`}>
+                          Closed
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -563,6 +588,17 @@ const DentistDetailsModal = ({ isOpen, onClose, dentistData, onEdit }) => {
             {statusInfo.label}
           </span>
         </div>
+        {onBookAppointment && (dentistData.user?.status === 'ACTIVE' || dentistData.userId?.status === 'ACTIVE') && (
+          <Button
+            onClick={() => onBookAppointment(dentistData)}
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <FaCalendarAlt className="w-4 h-4" />
+            Book Appointment
+          </Button>
+        )}
       </div>
 
       {/* Scrollable Content */}

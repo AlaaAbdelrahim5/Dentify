@@ -24,7 +24,8 @@ import {
   ErrorState,
   ConfirmationModal,
   NewAppointmentModal,
-  SessionCostModal
+  SessionCostModal,
+  Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
 import { authUtils } from '../../../utils/auth'

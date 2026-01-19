@@ -461,6 +461,7 @@ const FindDoctor = () => {
           setSelectedDoctor(null)
         }}
         dentistData={selectedDoctor}
+        onBookAppointment={handleBookAppointment}
       />
 
       {/* Clinic Details Modal */}

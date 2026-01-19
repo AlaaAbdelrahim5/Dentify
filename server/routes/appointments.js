@@ -226,8 +226,27 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
         { appointmentId: appointment.id, type: 'new_request' }
       );
 
-      // Don't notify clinic when patient requests appointment
-      // Clinic will be notified when dentist confirms/updates the appointment
+      // Notify clinic secretaries about new appointment request
+      try {
+        const secretaries = await prisma.secretary.findMany({
+          where: { 
+            clinicId,
+            user: { status: 'ACTIVE' }
+          },
+          select: { userId: true }
+        });
+
+        for (const secretary of secretaries) {
+          await sendAppointmentNotification(
+            secretary.userId,
+            'New Appointment Request',
+            `${patientName} requested an appointment with Dr. ${dentistName} on ${dateTimeStr}`,
+            { appointmentId: appointment.id, type: 'new_request' }
+          );
+        }
+      } catch (err) {
+        console.error('Error notifying secretaries:', err);
+      }
     } else {
       // Notify patient about confirmed appointment
       await sendAppointmentNotification(
@@ -236,6 +255,28 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
         `Your appointment with Dr. ${dentistName} is confirmed for ${dateTimeStr}`,
         { appointmentId: appointment.id, type: 'confirmed' }
       );
+
+      // Notify clinic secretaries about confirmed appointment
+      try {
+        const secretaries = await prisma.secretary.findMany({
+          where: { 
+            clinicId,
+            user: { status: 'ACTIVE' }
+          },
+          select: { userId: true }
+        });
+
+        for (const secretary of secretaries) {
+          await sendAppointmentNotification(
+            secretary.userId,
+            'Appointment Confirmed',
+            `Appointment with ${patientName} and Dr. ${dentistName} confirmed for ${dateTimeStr}`,
+            { appointmentId: appointment.id, type: 'confirmed' }
+          );
+        }
+      } catch (err) {
+        console.error('Error notifying secretaries:', err);
+      }
     }
 
     res.status(201).json({ 
@@ -431,6 +472,30 @@ router.put('/:id', authenticate, async (req, res) => {
           `Your appointment with Dr. ${dentistName} has been confirmed for ${dateTimeStr}`,
           { appointmentId: appointment.id, type: 'confirmed' }
         );
+
+        // Notify secretaries
+        try {
+          const secretaries = await prisma.secretary.findMany({
+            where: { 
+              clinicId: appointment.clinicId,
+              user: { status: 'ACTIVE' }
+            },
+            select: { userId: true }
+          });
+
+          for (const secretary of secretaries) {
+            if (secretary.userId !== req.user.id) {
+              await sendAppointmentNotification(
+                secretary.userId,
+                'Appointment Confirmed',
+                `Appointment with ${patientName} and Dr. ${dentistName} confirmed for ${dateTimeStr}`,
+                { appointmentId: appointment.id, type: 'confirmed' }
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error notifying secretaries:', err);
+        }
       } else if (status === 'CANCELLED') {
         // Notify patient and dentist
         await sendAppointmentNotification(
@@ -448,6 +513,30 @@ router.put('/:id', authenticate, async (req, res) => {
             { appointmentId: appointment.id, type: 'cancelled' }
           );
         }
+
+        // Notify secretaries
+        try {
+          const secretaries = await prisma.secretary.findMany({
+            where: { 
+              clinicId: appointment.clinicId,
+              user: { status: 'ACTIVE' }
+            },
+            select: { userId: true }
+          });
+
+          for (const secretary of secretaries) {
+            if (secretary.userId !== req.user.id) {
+              await sendAppointmentNotification(
+                secretary.userId,
+                'Appointment Cancelled',
+                `Appointment with ${patientName} and Dr. ${dentistName} on ${dateTimeStr} has been cancelled`,
+                { appointmentId: appointment.id, type: 'cancelled' }
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error notifying secretaries:', err);
+        }
       } else if (status === 'COMPLETED') {
         // Notify patient
         await sendAppointmentNotification(
@@ -456,6 +545,30 @@ router.put('/:id', authenticate, async (req, res) => {
           `Your appointment with Dr. ${dentistName} has been completed`,
           { appointmentId: appointment.id, type: 'completed' }
         );
+
+        // Notify secretaries
+        try {
+          const secretaries = await prisma.secretary.findMany({
+            where: { 
+              clinicId: appointment.clinicId,
+              user: { status: 'ACTIVE' }
+            },
+            select: { userId: true }
+          });
+
+          for (const secretary of secretaries) {
+            if (secretary.userId !== req.user.id) {
+              await sendAppointmentNotification(
+                secretary.userId,
+                'Appointment Completed',
+                `Appointment with ${patientName} and Dr. ${dentistName} has been completed`,
+                { appointmentId: appointment.id, type: 'completed' }
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error notifying secretaries:', err);
+        }
       }
     }
 
@@ -483,6 +596,30 @@ router.put('/:id', authenticate, async (req, res) => {
           `Appointment with ${patientName} has been rescheduled to ${newDateTimeStr}`,
           { appointmentId: appointment.id, type: 'rescheduled' }
         );
+      }
+
+      // Notify secretaries
+      try {
+        const secretaries = await prisma.secretary.findMany({
+          where: { 
+            clinicId: appointment.clinicId,
+            user: { status: 'ACTIVE' }
+          },
+          select: { userId: true }
+        });
+
+        for (const secretary of secretaries) {
+          if (secretary.userId !== req.user.id) {
+            await sendAppointmentNotification(
+              secretary.userId,
+              'Appointment Rescheduled',
+              `Appointment with ${patientName} and Dr. ${dentistName} rescheduled to ${newDateTimeStr}`,
+              { appointmentId: appointment.id, type: 'rescheduled' }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Error notifying secretaries:', err);
       }
     }
 
