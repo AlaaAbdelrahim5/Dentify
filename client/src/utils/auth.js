@@ -205,7 +205,7 @@ export const authUtils = {
       localStorage.setItem('dentify_logout_performed', 'true');
       
       // Clear dashboard state to ensure fresh start on next login
-      localStorage.removeItem('dashboardActiveTab');
+      sessionStorage.removeItem('dashboardActiveTab');
       
       // Dispatch custom logout event for same-tab logout detection
       window.dispatchEvent(new Event('logout'));

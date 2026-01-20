@@ -94,7 +94,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
   const { isDarkMode } = useTheme()
   const [activeTab, setActiveTab] = useState(() => {
     // Initialize from localStorage or location state if available
-    return location.state?.activeTab || localStorage.getItem('dashboardActiveTab') || 'overview'
+    return location.state?.activeTab || sessionStorage.getItem('dashboardActiveTab') || 'overview'
   })
   const [settingsSubTab, setSettingsSubTab] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
@@ -258,7 +258,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
 
   // Save active tab to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('dashboardActiveTab', activeTab)
+    sessionStorage.setItem('dashboardActiveTab', activeTab)
   }, [activeTab])
 
   // Fetch appointments for dentist
