@@ -110,13 +110,15 @@ const bookingKnowledgeBase = [
     query: 'How to check if dentist is working at specific time',
     intent: 'validation',
     keywords: ['working hours', 'schedule', 'hours', 'open', 'closed', 'business hours'],
-    context: 'Working hours are stored as array of day objects with start/end times and breaks.',
+    context: 'Working hours are stored as array of day objects with start/end times and breaks using day names.',
     tips: [
-      'workingHours format: [{day: 0-6, startTime: "HH:MM", endTime: "HH:MM", breaks: [{start, end}]}]',
-      'day 0 = Sunday, 6 = Saturday',
-      'Check if slot falls within startTime and endTime',
-      'Exclude breaks from available time',
-      'Handle overnight shifts (endTime < startTime)'
+      'workingHours format: [{day: "Monday", start: "HH:MM", end: "HH:MM", breaks: [{start: "HH:MM", end: "HH:MM"}]}]',
+      'day field uses day names: "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"',
+      'start and end fields use 24-hour format (e.g., "09:00", "17:00")',
+      'Check if slot falls within start and end times',
+      'Exclude breaks from available time slots',
+      'Compare times as minutes from midnight for accuracy',
+      'Handle edge cases: overnight shifts, no working hours for specific day'
     ]
   },
   {
@@ -125,13 +127,15 @@ const bookingKnowledgeBase = [
     query: 'How to handle date and time correctly',
     intent: 'technical',
     keywords: ['time', 'date', 'timezone', 'UTC', 'local time'],
-    context: 'Always use local time components, not UTC conversion.',
+    context: 'Always use local time components without timezone conversion to avoid date shifts.',
     tips: [
-      'Use: new Date(year, month-1, day, hours, minutes, 0)',
-      'Do NOT use: new Date(dateString).setHours()',
-      'Parse date strings to components first',
-      'Store times in ISO format for database',
-      'Display times in user\'s local timezone'
+      'For date strings like "2026-01-15": Parse as components, create Date with new Date(year, month-1, day, hours, minutes, 0)',
+      'NEVER use new Date("YYYY-MM-DD") directly as it may apply UTC offset',
+      'Format: "YYYY-MM-DD" for dates, "YYYY-MM-DDTHH:mm:ss" for ISO timestamps',
+      'When getting day of week: use getDay() on properly constructed local date',
+      'For time comparisons: convert to minutes since midnight',
+      'Example: "09:30" → (9 * 60 + 30) = 570 minutes',
+      'Always validate parsed dates are not Invalid Date'
     ]
   },
   {
@@ -140,13 +144,71 @@ const bookingKnowledgeBase = [
     query: 'How to ensure no double booking',
     intent: 'validation',
     keywords: ['conflict', 'double book', 'overlap', 'busy', 'available'],
-    context: 'Check database for overlapping appointments.',
+    context: 'Check database for overlapping appointments to prevent double booking.',
     tips: [
-      'Query appointments for same dentist and date',
-      'Check if new slot overlaps: (newStart < existingEnd) && (newEnd > existingStart)',
-      'Consider appointment duration',
-      'Include buffer time between appointments if needed',
-      'Filter by status = SCHEDULED only'
+      'Query appointments for same dentist and date range',
+      'Check overlap: (newStart < existingEnd) && (newEnd > existingStart)',
+      'Use dentist.appointmentDuration to calculate slot end time',
+      'Filter by status not equal to CANCELLED',
+      'Compare times as Date objects for accuracy',
+      'Include appointments with status: PENDING, CONFIRMED, SCHEDULED'
+    ]
+  },
+  {
+    id: 'duration_calculation',
+    scenario: 'Calculating appointment end time from duration',
+    query: 'How to properly calculate appointment end time',
+    intent: 'technical',
+    keywords: ['duration', 'end time', 'calculate', 'minutes', 'appointment length'],
+    context: 'Each dentist has specific appointment duration that must be used for calculations. CRITICAL: Only use times that were provided by the system in requestedDateTime context.',
+    tips: [
+      '⚠️ CRITICAL: NEVER create your own start times - ONLY use times from requestedDateTime in context',
+      '⚠️ The backend has already validated available slots - do NOT suggest different times',
+      'Get dentist.appointmentDuration (usually 30, 45, or 60 minutes)',
+      'Use EXACT startTime from requestedDateTime.time (this was already validated by backend)',
+      'Parse start time to get hours and minutes',
+      'Add duration to minutes: totalMinutes = startMinutes + duration',
+      'Handle overflow: if totalMinutes >= 60, add hours and subtract 60 from minutes',
+      'Example: 11:00 + 45 mins → 11 hrs, 0 mins + 45 → 11 hrs, 45 mins',
+      'Example: 14:30 + 45 mins → 14 hrs, 30 mins + 45 → 14 hrs, 75 mins → 15 hrs, 15 mins',
+      'Format result as "HH:MM" with zero padding',
+      'Create ISO timestamp: date + "T" + formattedTime + ":00"',
+      '⚠️ NEVER suggest times outside working hours, breaks, or past appointments'
+    ]
+  },
+  {
+    id: 'date_parsing_natural_language',
+    scenario: 'Parsing natural language date expressions',
+    query: 'How to convert tomorrow, next week, etc. to actual dates',
+    intent: 'technical',
+    keywords: ['tomorrow', 'today', 'next week', 'next monday', 'parse date', 'date conversion'],
+    context: 'Users often use natural language for dates that need to be converted to YYYY-MM-DD format.',
+    tips: [
+      'Get current date: const today = new Date(); today.setHours(0, 0, 0, 0)',
+      '"today" → use today',
+      '"tomorrow" → add 1 day to today',
+      '"next Monday/Tuesday/etc." → find next occurrence of that weekday',
+      '"in X days" → add X days to today',
+      'Always output as YYYY-MM-DD format',
+      'Validate the resulting date is in the future',
+      'Handle month boundaries correctly (e.g., Jan 31 + 1 day = Feb 1)'
+    ]
+  },
+  {
+    id: 'time_preference_filtering',
+    scenario: 'Filtering slots by time preference (morning/afternoon/evening)',
+    query: 'How to filter available slots by time of day',
+    intent: 'technical',
+    keywords: ['morning', 'afternoon', 'evening', 'time preference', 'filter slots'],
+    context: 'Users may prefer certain times of day, which should filter available slots.',
+    tips: [
+      'Morning: 08:00-12:00 (8 AM to noon)',
+      'Afternoon: 12:00-17:00 (noon to 5 PM)',
+      'Evening: 17:00-21:00 (5 PM to 9 PM)',
+      'Filter slots after checking working hours and conflicts',
+      'Respect dentist working hours boundaries',
+      'If preference is "morning" but dentist starts at 13:00, no slots available',
+      'Return empty array if no slots match preference'
     ]
   }
 ];

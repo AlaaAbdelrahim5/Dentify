@@ -96,6 +96,7 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
     // Initialize from localStorage or location state if available
     return location.state?.activeTab || localStorage.getItem('dashboardActiveTab') || 'overview'
   })
+  const [settingsSubTab, setSettingsSubTab] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [userData, setUserData] = useState(null)
   const [stats, setStats] = useState({})
@@ -485,11 +486,17 @@ const UnifiedDashboard = ({ onOpenChatbot }) => {
       appointments,
       onAppointmentClick: handleAppointmentClick,
       onAddAppointment: handleAddAppointment,
+      onNavigateToSettings: setSettingsSubTab,
       isDarkMode
     }
     
+    // Add initialTab prop for settings page
+    if (activeTab === 'settings' && settingsSubTab) {
+      componentProps.initialTab = settingsSubTab
+    }
+    
     return <Component {...componentProps} />
-  }, [activeTab, currentUser, userData, stats, appointments, isDarkMode])
+  }, [activeTab, currentUser, userData, stats, appointments, isDarkMode, settingsSubTab])
 
   // Loading state
   if (isLoading) {

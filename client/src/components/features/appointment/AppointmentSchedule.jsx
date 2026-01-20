@@ -4,7 +4,7 @@ import { useTheme } from '../../../contexts/ThemeContext'
 import { Button } from '../../common'
 import { convertTo12Hour } from '../../../utils/helpers'
 
-const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmentClick, dentistData = null }) => {
+const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmentClick, dentistData = null, onNavigateToSchedule }) => {
   const { isDarkMode } = useTheme()
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [viewMode, setViewMode] = useState('week') // week or day
@@ -77,26 +77,28 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return dates
   }, [currentWeek, getWorkingDaysMap])
 
+  // Check if working hours are configured
+  const hasWorkingHours = useMemo(() => {
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours) || dentistData.workingHours.length === 0) {
+      return false
+    }
+    
+    // Check if at least one day has working hours set
+    const hasAtLeastOneWorkingDay = dentistData.workingHours.some(schedule => 
+      schedule.isWorking !== false && schedule.start && schedule.end
+    )
+    
+    return hasAtLeastOneWorkingDay
+  }, [dentistData])
+
   // Generate time slots based on dentist working hours and appointment duration
   const timeSlots = useMemo(() => {
     // Get appointment duration in minutes (default 30)
     const appointmentDuration = dentistData?.appointmentDuration || 30
     
     if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours) || dentistData.workingHours.length === 0) {
-      // Default: 8 AM - 8 PM
-      const slots = []
-      const startHour = 8
-      const endHour = 20
-      const totalMinutes = (endHour - startHour) * 60
-      
-      for (let minute = 0; minute < totalMinutes; minute += appointmentDuration) {
-        const hour = Math.floor(minute / 60) + startHour
-        const min = minute % 60
-        if (hour <= endHour) {
-          slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
-        }
-      }
-      return slots
+      // Return empty array if no working hours configured
+      return []
     }
 
     // Find earliest start and latest end from working hours
@@ -151,6 +153,40 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     
     return grouped
   }, [filteredAppointments])
+
+  // Check if a time slot is during break time
+  const isBreakTime = (date, timeSlot) => {
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours)) {
+      return false
+    }
+    
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayOfWeek = dayNames[date.getDay()]
+    
+    // Find the schedule for this day
+    const daySchedule = dentistData.workingHours.find(schedule => schedule.day === dayOfWeek)
+    
+    if (!daySchedule || !daySchedule.breaks || !Array.isArray(daySchedule.breaks)) {
+      return false
+    }
+    
+    // Parse the time slot
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+    const slotStartMinutes = slotHour * 60 + slotMinute
+    
+    // Check if slot falls within any break period
+    return daySchedule.breaks.some(breakPeriod => {
+      if (!breakPeriod.start || !breakPeriod.end) return false
+      
+      const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
+      const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number)
+      
+      const breakStartMinutes = breakStartHour * 60 + breakStartMinute
+      const breakEndMinutes = breakEndHour * 60 + breakEndMinute
+      
+      return slotStartMinutes >= breakStartMinutes && slotStartMinutes < breakEndMinutes
+    })
+  }
 
   // Get appointments for a specific time slot (shows appointments that START in or near this slot)
   const getAppointmentsForSlot = (date, timeSlot) => {
@@ -303,48 +339,76 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <div className="min-w-225">
-          {/* Day Headers */}
-          <div 
-            className={`grid border-b sticky top-0 z-10 ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
-            }`}
-            style={{ gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
-          >
-            <div className={`p-3 text-center text-xs font-semibold ${
+        {!hasWorkingHours ? (
+          // No Working Hours Set - Display Message
+          <div className={`p-12 text-center ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <FaClock className={`w-16 h-16 mx-auto mb-4 ${
+              isDarkMode ? 'text-gray-600' : 'text-gray-400'
+            }`} />
+            <h3 className={`text-xl font-semibold mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              No Working Hours Set
+            </h3>
+            <p className={`text-sm mb-6 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              Time
-            </div>
-            {weekDates.map((date, index) => {
-              const dateObj = new Date(date)
-              return (
-                <div
-                  key={index}
-                  className={`p-3 text-center ${
-                    isToday(dateObj)
-                      ? isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'
-                      : ''
-                  }`}
-                >
-                  <div className={`text-xs font-semibold ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    {dateObj.toLocaleDateString('en-US', { weekday: 'short' })}
-                  </div>
-                  <div className={`text-lg font-bold mt-1 ${
-                    isToday(dateObj)
-                      ? 'text-teal-600'
-                      : isDarkMode
-                        ? 'text-white'
-                        : 'text-gray-800'
-                  }`}>
-                    {dateObj.getDate()}
-                  </div>
-                </div>
-              )
-            })}
+              Please configure your working hours to view and manage your schedule.
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => onNavigateToSchedule?.('settings:schedule')}
+              className="inline-flex items-center gap-2"
+            >
+              <FaClock className="w-4 h-4" />
+              Set Working Hours
+            </Button>
           </div>
+        ) : (
+          <div className="min-w-225">
+            {/* Day Headers */}
+            <div 
+              className={`grid border-b sticky top-0 z-10 ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
+              }`}
+              style={{ gridTemplateColumns: `120px repeat(${weekDates.length}, 1fr)` }}
+            >
+              <div className={`p-3 text-center text-xs font-semibold ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                Time
+              </div>
+              {weekDates.map((date, index) => {
+                const dateObj = new Date(date)
+                return (
+                  <div
+                    key={index}
+                    className={`p-3 text-center ${
+                      isToday(dateObj)
+                        ? isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'
+                        : ''
+                    }`}
+                  >
+                    <div className={`text-xs font-semibold ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                    }`}>
+                      {dateObj.toLocaleDateString('en-US', { weekday: 'short' })}
+                    </div>
+                    <div className={`text-lg font-bold mt-1 ${
+                      isToday(dateObj)
+                        ? 'text-teal-600'
+                        : isDarkMode
+                          ? 'text-white'
+                          : 'text-gray-800'
+                    }`}>
+                      {dateObj.getDate()}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
 
           {/* Time Grid */}
           <div className="relative">
@@ -369,6 +433,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                 {weekDates.map((date, dateIndex) => {
                   const dateObj = new Date(date)
                   const appointments = getAppointmentsForSlot(dateObj, time)
+                  const isBreak = isBreakTime(dateObj, time)
                   
                   return (
                     <div
@@ -376,11 +441,22 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                       className={`relative p-1 border-r ${
                         isDarkMode ? 'border-gray-700' : 'border-gray-300'
                       } ${
-                        isToday(dateObj) 
-                          ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
-                          : ''
+                        isBreak
+                          ? (isDarkMode ? 'bg-red-900/30' : 'bg-red-100')
+                          : isToday(dateObj) 
+                            ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
+                            : ''
                       }`}
                     >
+                      {isBreak && (
+                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
+                          <span className={`text-xs font-medium ${
+                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          }`}>
+                            Break
+                          </span>
+                        </div>
+                      )}
                       {appointments.map((apt, aptIndex) => (
                         <div
                           key={apt.id || aptIndex}
@@ -418,6 +494,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* Legend */}

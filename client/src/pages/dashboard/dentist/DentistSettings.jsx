@@ -21,9 +21,9 @@ import { toISODateString, ensureArray } from '../../../utils/helpers'
 import { PALESTINIAN_CITIES, COUNTRY_CODES, DENTAL_SPECIALIZATIONS } from '../../../utils/constants'
 import DentistSchedule from './DentistSchedule'
 
-const DentistSettings = () => {
+const DentistSettings = ({ initialTab }) => {
   const { isDarkMode } = useTheme()
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState(initialTab || 'profile')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -63,6 +63,13 @@ const DentistSettings = () => {
   useEffect(() => {
     fetchDentistProfile()
   }, [])
+  
+  // Handle initial tab changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
 
   const fetchDentistProfile = async () => {
     try {

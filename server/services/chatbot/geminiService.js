@@ -57,19 +57,26 @@ Important guidelines:
 When a patient wants to book an appointment, FIRST extract all information they've already provided:
 
 **Date Parsing - Be Smart:**
-- "tomorrow" → Add 1 day to TODAY'S DATE (January 4, 2026)
-- "today" → Use TODAY'S DATE
+- TODAY is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} (${new Date().toISOString().split('T')[0]})
+- "today" → Use ${new Date().toISOString().split('T')[0]}
+- "tomorrow" → Add 1 day to TODAY → ${new Date(Date.now() + 86400000).toISOString().split('T')[0]}
 - "next Monday/Tuesday/etc." → Calculate next occurrence of that day
-- "January 5" or "Jan 5" → Use that date in current year
+- "January 5" or "Jan 5" → Use that date in current year (2026-01-05)
 - "in 3 days" → Add 3 days to current date
-- ALWAYS output date as YYYY-MM-DD format
+- ALWAYS output date as YYYY-MM-DD format (e.g., 2026-01-20)
+- VALIDATE: Ensure parsed date is not in the past
 
 **Time Parsing - Handle Natural Language:**
-- "morning" / "in the morning" → Find slots between 8:00-12:00
-- "afternoon" / "in the afternoon" → Find slots between 12:00-17:00  
-- "evening" → Find slots between 17:00-20:00
-- "2 PM" / "2pm" / "14:00" → Use exact time (convert PM: add 12 except for 12 PM)
+- "morning" / "in the morning" → timePreference: "morning" (find slots 8:00-12:00)
+- "afternoon" / "in the afternoon" → timePreference: "afternoon" (find slots 12:00-17:00)
+- "evening" → timePreference: "evening" (find slots 17:00-21:00)
+- "2 PM" / "2pm" / "14:00" → Exact time conversion:
+  * 12 AM (midnight) → 00:00
+  * 1 AM - 11 AM → same (e.g., 9 AM → 09:00)
+  * 12 PM (noon) → 12:00
+  * 1 PM - 11 PM → add 12 (e.g., 2 PM → 14:00, 9 PM → 21:00)
 - If time preference given (morning/afternoon/evening), use "find_first_available" with that preference
+- VALIDATE: Ensure time is in valid 24-hour format (00:00 to 23:59)
 
 **Dentist Preference:**
 - Extract any dentist name mentioned (e.g., "Dr. Ala'a Abdelrahim", "Dr. Smith")
@@ -109,10 +116,22 @@ If patient provides a specific time (like "2 PM", "14:00"):
 \`\`\`
 
 **SCENARIO C - Missing Information:**
-ONLY if patient hasn't provided enough information, ask specifically for what's missing:
-- Missing date: "When would you like to schedule your appointment?"
-- Missing time/preference: "What time works best for you? (or morning/afternoon/evening)"
-- Do NOT ask questions if information was already provided in their message!
+ONLY if patient hasn't provided enough information, ask specifically for what's missing.
+
+BEFORE asking questions, CHECK what patient already said:
+- Did they mention a date (today, tomorrow, specific date)?
+- Did they mention time preference (morning, afternoon, evening, specific time)?
+- Did they mention a dentist name?
+
+ASK SMART QUESTIONS:
+- Missing date AND time: "When would you like your appointment? (e.g., tomorrow afternoon, Monday at 2 PM)"
+- Missing only date: "What day works for you? (e.g., tomorrow, next Monday, January 25)"
+- Missing only time: "What time works best? (morning, afternoon, evening, or a specific time like 2 PM)"
+
+AVOID REDUNDANT QUESTIONS:
+❌ If patient said "tomorrow afternoon", DON'T ask "When would you like to schedule?"
+❌ If patient said "2 PM Monday", DON'T ask "What time?"
+✓ Extract the information and proceed with booking flow
 
 **Step 2A: When First Available Slot is Found**
 (Only after find_first_available request)
@@ -150,53 +169,62 @@ Simply present the dentists nicely and ask patient to select:
 2. Dr. [Name] - [Specializations]
    Clinic: [Clinic Name], [City]
 
-Please select which dentist you'd like to see by telling me the doctor's name or number."
+Please select which dentist you'd like to see by telling me the dentist's name or number."
 
 **Step 3: When Patient Selects Dentist**
+When a patient selects a dentist from the available list, you MUST:
 
-2. Dr. [Name] - [Specializations]
-   Clinic: [Clinic Name], [City]
+**CRITICAL: NEVER CREATE YOUR OWN TIMES - ONLY USE SYSTEM-PROVIDED TIMES**
 
-Please select which dentist you'd like to see by telling me the doctor's name or number."
+The backend has already validated available slots. You must ONLY use the exact date and time that were provided in the context when the available dentists were shown.
 
-**Step 3: When Patient Selects Dentist**
-Look for the dentist name or number in the patient's response.
-Match it to one from the available list (check the context for availableDentists or AVAILABLE DENTISTS FOR BOOKING).
+**REQUIRED VALUES FROM CONTEXT:**
+1. requestedDateTime.date - The validated date (YYYY-MM-DD format)
+2. requestedDateTime.time - The validated time (HH:MM format) that was already confirmed as available
+3. Selected dentist's userId - From the availableDentists list
+4. Selected dentist's appointmentDuration - From the availableDentists list
 
-CRITICAL - EXTRACT THESE FROM THE MATCHED DENTIST:
-- dentistId: the userId field from the matched dentist
-- appointmentDuration: the appointmentDuration or Duration field from the matched dentist (MUST use the exact value from the list above)
+**STEP-BY-STEP PROCESS:**
 
-EXAMPLE WITH DR. ALA'A ABDELRAHIM:
-If the list shows "Name: Dr. Ala'a Abdelrahim, ID: 5, Duration: 45 minutes"
-Then: dentistId = 5, appointmentDuration = 45
+1. Match the dentist - Find the dentist patient selected in availableDentists array
+2. Get requestedDateTime - Extract date and time from context.requestedDateTime
+3. Get dentist details - Extract userId and appointmentDuration from matched dentist
+4. Calculate end time:
+   - Given startTime from requestedDateTime.time (example: "14:00")
+   - Given duration from matched dentist's appointmentDuration (example: 45 minutes)
+   - Parse hours: startHours = parseInt(startTime.split(':')[0])
+   - Parse minutes: startMinutes = parseInt(startTime.split(':')[1])
+   - Add duration: totalMinutes = startMinutes + duration
+   - Calculate end: endHours = startHours + Math.floor(totalMinutes / 60)
+   - Calculate end minutes: endMinutes = totalMinutes % 60
+   - Format with zero padding to get endTime string
 
-IMPORTANT TIME CALCULATION STEPS:
-1. Get the date from requestedDateTime.date or REQUESTED APPOINTMENT TIME (e.g., "2026-01-15")
-2. Get the time from requestedDateTime.time or REQUESTED APPOINTMENT TIME (e.g., "11:00")
-3. Create startTime: date + "T" + time + ":00" (e.g., "2026-01-15T11:00:00")
-4. Calculate end time by adding appointmentDuration minutes:
-   - Extract hours and minutes from start time
-   - Add appointmentDuration to minutes
-   - If minutes >= 60: add 1 to hours, subtract 60 from minutes
-   - Format as: date + "T" + padded_hours + ":" + padded_minutes + ":00"
+5. Build ISO timestamps:
+   - startTime ISO: requestedDateTime.date + "T" + requestedDateTime.time + ":00"
+   - endTime ISO: requestedDateTime.date + "T" + calculatedEndTime + ":00"
 
-CONCRETE CALCULATION EXAMPLE:
-- Start time: "11:00" (11 hours, 0 minutes)
-- Duration: 45 minutes
-- Calculation: 0 + 45 = 45 minutes, hours stay 11
-- End time: "11:45" → "2026-01-15T11:45:00"
+**EXAMPLE:**
+Context shows:
+- requestedDateTime: date "2026-01-22", time "14:00"
+- availableDentists: userId 5, name "Dr. Smith", appointmentDuration 45
+- Patient selects: "Dr. Smith"
 
-ANOTHER EXAMPLE:
-- Start time: "14:30" (14 hours, 30 minutes)
-- Duration: 45 minutes
-- Calculation: 30 + 45 = 75 minutes → 75 >= 60, so hours = 14 + 1 = 15, minutes = 75 - 60 = 15
-- End time: "15:15" → "2026-01-15T15:15:00"
+Your JSON output must use these exact values:
+type: "appointment_booking"
+dentistId: 5
+date: "2026-01-22"
+startTime: "2026-01-22T14:00:00"
+endTime: "2026-01-22T14:45:00"
+reason: "Consultation"
+time: "2:00 PM"
 
-VERIFY YOUR CALCULATION:
-- If duration is 45 min and start is 11:00, end MUST be 11:45 (NOT 11:30)
-- If duration is 30 min and start is 11:00, end MUST be 11:30
-- If duration is 60 min and start is 14:00, end MUST be 15:00
+**ABSOLUTE REQUIREMENTS:**
+- MUST use requestedDateTime.date from context - this was already validated
+- MUST use requestedDateTime.time from context - this was already checked for availability
+- MUST use appointmentDuration from the matched dentist in availableDentists
+- MUST calculate endTime correctly using the formula above
+- NEVER make up or guess times
+- NEVER use a different date or time than what's in requestedDateTime
 
 Output ONLY this JSON:
 
@@ -337,31 +365,55 @@ For non-booking questions, provide helpful conversational responses without JSON
       
       // Add first available slot information if present
       if (context.firstAvailableSlot) {
-        fullPrompt += `\n**FIRST AVAILABLE SLOT FOUND:**\n`;
+        fullPrompt += `\n**🎯 FIRST AVAILABLE SLOT FOUND:**\n`;
         fullPrompt += `Dentist: ${context.firstAvailableSlot.dentist.name} (ID: ${context.firstAvailableSlot.dentist.userId})\n`;
         fullPrompt += `Date: ${context.firstAvailableSlot.displayDate} (${context.firstAvailableSlot.date})\n`;
         fullPrompt += `Time: ${context.firstAvailableSlot.displayTime} (${context.firstAvailableSlot.time})\n`;
         fullPrompt += `Start Time: ${context.firstAvailableSlot.startTime}\n`;
         fullPrompt += `End Time: ${context.firstAvailableSlot.endTime}\n`;
         fullPrompt += `Duration: ${context.firstAvailableSlot.dentist.appointmentDuration} minutes\n`;
-        fullPrompt += `\nGenerate the appointment_booking JSON with these EXACT values. Do NOT recalculate the times.\n`;
+        fullPrompt += `\n✅ Generate the appointment_booking JSON with these EXACT values.\n`;
+        fullPrompt += `⚠️ DO NOT recalculate the times - use the provided startTime and endTime as-is.\n`;
+        fullPrompt += `\nJSON Structure Required:\n`;
+        fullPrompt += `{\n`;
+        fullPrompt += `  "type": "appointment_booking",\n`;
+        fullPrompt += `  "dentistId": ${context.firstAvailableSlot.dentist.userId},\n`;
+        fullPrompt += `  "date": "${context.firstAvailableSlot.date}",\n`;
+        fullPrompt += `  "startTime": "${context.firstAvailableSlot.startTime}",\n`;
+        fullPrompt += `  "endTime": "${context.firstAvailableSlot.endTime}",\n`;
+        fullPrompt += `  "reason": "Consultation",\n`;
+        fullPrompt += `  "time": "${context.firstAvailableSlot.displayTime}"\n`;
+        fullPrompt += `}\n`;
       }
       
       // Add available dentists for booking if present
       if (context.availableDentists && context.availableDentists.length > 0) {
-        fullPrompt += `\n**AVAILABLE DENTISTS FOR BOOKING:**\n`;
+        fullPrompt += `\n**📋 AVAILABLE DENTISTS FOR BOOKING:**\n`;
         context.availableDentists.forEach((dentist, idx) => {
           fullPrompt += `${idx + 1}. Name: ${dentist.name}, ID: ${dentist.userId}, Duration: ${dentist.appointmentDuration} minutes, Specialization: ${dentist.specialization.join(', ')}, Clinic: ${dentist.clinic}, City: ${dentist.city}\n`;
         });
-        fullPrompt += `\nWhen patient selects a dentist, extract the appointmentDuration from the above list and use it to calculate the end time.\n`;
+        fullPrompt += `\n⚠️ CRITICAL: When patient selects a dentist:\n`;
+        fullPrompt += `1. Find the EXACT dentist from the list above\n`;
+        fullPrompt += `2. Use that dentist's appointmentDuration (NOT a default value)\n`;
+        fullPrompt += `3. Calculate end time: startTime + appointmentDuration\n`;
+        fullPrompt += `4. Verify your calculation matches the examples in the system prompt\n`;
       }
       
       // Add requested date/time for booking if present
       if (context.requestedDateTime) {
-        fullPrompt += `\n**REQUESTED APPOINTMENT TIME:**\n`;
+        fullPrompt += `\n**📅 REQUESTED APPOINTMENT TIME:**\n`;
         fullPrompt += `Date: ${context.requestedDateTime.date}\n`;
         fullPrompt += `Time: ${context.requestedDateTime.time}\n`;
-        fullPrompt += `Day: ${context.requestedDateTime.dayOfWeek}\n`;
+        if (context.requestedDateTime.dayOfWeek) {
+          fullPrompt += `Day: ${context.requestedDateTime.dayOfWeek}\n`;
+        }
+        if (context.requestedDateTime.displayDate) {
+          fullPrompt += `Display: ${context.requestedDateTime.displayDate}\n`;
+        }
+        if (context.requestedDateTime.timePreference) {
+          fullPrompt += `Time Preference: ${context.requestedDateTime.timePreference}\n`;
+        }
+        fullPrompt += `\n✅ Use these values when creating the appointment booking JSON.\n`;
       }
       
             // Add conversation history
@@ -374,10 +426,29 @@ For non-booking questions, provide helpful conversational responses without JSON
       
       fullPrompt += `\nPatient: ${userMessage}\nAssistant:`;
 
-      // Generate response
-      const result = await this.model.generateContent(fullPrompt);
-      const response = await result.response;
-      const aiMessage = response.text();
+      // Generate response with retry logic for overloaded API
+      let aiMessage;
+      let retries = 3;
+      let delay = 1000; // Start with 1 second
+      
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const result = await this.model.generateContent(fullPrompt);
+          const response = await result.response;
+          aiMessage = response.text();
+          break; // Success - exit retry loop
+        } catch (error) {
+          // Check if it's a 503 overload error
+          if (error.status === 503 && attempt < retries) {
+            console.log(`⚠️ Gemini API overloaded (attempt ${attempt}/${retries}). Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff: 1s, 2s, 4s
+          } else {
+            // If it's the last attempt or different error, throw it
+            throw error;
+          }
+        }
+      }
 
       // Store in conversation history (keep last 10 messages to manage token usage)
       history.push({ role: 'user', content: userMessage });
@@ -400,7 +471,7 @@ For non-booking questions, provide helpful conversational responses without JSON
       
       // Fallback response
       return {
-        message: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment, or contact our clinic directly for immediate assistance.",
+        message: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.",
         error: true,
         timestamp: new Date()
       };

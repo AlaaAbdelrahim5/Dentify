@@ -723,7 +723,9 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
                     scaleY(${flipVertical ? -1 : 1})
                   `,
                   filter: `
-                    saturate(${saturation}%)
+                    brightness(${brightness}%) 
+                    contrast(${contrast}%) 
+                    saturate(${saturation / 100})
                     ${isInverted ? 'invert(1)' : ''} 
                     ${sharpness > 0 ? `contrast(${100 + sharpness}%) brightness(${100 - sharpness * 0.1}%)` : ''}
                     drop-shadow(0 25px 50px rgba(0,0,0,0.5))
@@ -749,7 +751,7 @@ const ImageViewerModal = ({ isOpen, onClose, images = [], initialIndex = 0, pati
                   filter: `
                     brightness(${brightness}%) 
                     contrast(${contrast}%) 
-                    saturate(${saturation}%)
+                    saturate(${saturation / 100})
                     ${isInverted ? 'invert(1)' : ''} 
                     ${sharpness > 0 ? `contrast(${100 + sharpness}%) brightness(${100 - sharpness * 0.1}%)` : ''}
                     drop-shadow(0 25px 50px rgba(0,0,0,0.5))

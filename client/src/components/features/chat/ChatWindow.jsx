@@ -1,36 +1,61 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChat } from '../../../contexts/ChatContext';
-import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiMessageSquare } from 'react-icons/fi';
+import { FiSend, FiPaperclip, FiSmile, FiMoreVertical, FiMessageSquare, FiX } from 'react-icons/fi';
 import { formatDistanceToNow } from '../../../utils/dateUtils';
 import { LoadingSpinner } from '../../common';
 import { getImageUrl } from '../../../utils/helpers';
+import { useTheme } from '../../../contexts/ThemeContext';
 
-const ChatWindow = ({ conversation, otherUser }) => {
-  const { messages, sendChatMessage, markConversationAsRead, userId } = useChat();
+const ChatWindow = ({ conversation, otherUser, user, onClose, miniMode = false }) => {
+  const { isDarkMode } = useTheme();
+  const { messages, sendChatMessage, markConversationAsRead, activeConversation, userId } = useChat();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Support both prop patterns: (conversation, otherUser) or (user)
+  const displayUser = otherUser || user;
+  const conv = conversation || activeConversation;
+
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll to bottom when new messages arrive or messages change
+    if (messages.length > 0) {
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
+    }
   }, [messages]);
 
   useEffect(() => {
+    // Scroll to bottom immediately after loading completes
+    if (!isLoadingMessages && messages.length > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' });
+      }, 100);
+    }
+  }, [isLoadingMessages]);
+
+  useEffect(() => {
     // Mark messages as read when opening conversation
-    if (conversation?.id) {
-      setIsLoadingMessages(true);
-      markConversationAsRead(conversation.id);
-      // Give a brief moment for messages to load
-      const timer = setTimeout(() => {
-        setIsLoadingMessages(false);
-      }, 500);
-      return () => clearTimeout(timer);
+    if (conv?.id) {
+      // Only show loading spinner the first time
+      if (!hasLoadedOnce) {
+        setIsLoadingMessages(true);
+        const timer = setTimeout(() => {
+          setIsLoadingMessages(false);
+          setHasLoadedOnce(true);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+      markConversationAsRead(conv.id);
     } else {
       setIsLoadingMessages(false);
+      setHasLoadedOnce(false);
     }
-  }, [conversation?.id, markConversationAsRead]);
+  }, [conv?.id, markConversationAsRead, hasLoadedOnce]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -51,7 +76,47 @@ const ChatWindow = ({ conversation, otherUser }) => {
     }
   };
 
-  if (!conversation) {
+  // Helper function to format date
+  const formatDate = (date) => {
+    const messageDate = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (messageDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (messageDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
+
+  // Helper function to group messages by date
+  const groupMessagesByDate = (messages) => {
+    const groups = [];
+    let currentGroup = null;
+
+    messages.forEach((message) => {
+      const messageDate = message.createdAt?.seconds 
+        ? new Date(message.createdAt.seconds * 1000).toDateString()
+        : message.createdAt?.toDate
+        ? message.createdAt.toDate().toDateString()
+        : new Date().toDateString();
+
+      if (!currentGroup || currentGroup.date !== messageDate) {
+        currentGroup = { date: messageDate, messages: [] };
+        groups.push(currentGroup);
+      }
+      currentGroup.messages.push(message);
+    });
+
+    return groups;
+  };
+
+  const messageGroups = groupMessagesByDate(messages);
+
+  if (!conv) {
     return (
       <div className="flex-1 flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center px-6">
@@ -69,16 +134,168 @@ const ChatWindow = ({ conversation, otherUser }) => {
     );
   }
 
+  // Mini mode (popup window)
+  if (miniMode) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="p-4 flex items-center justify-between shrink-0 bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 shadow-lg">
+          <div className="flex items-center gap-3">
+            {displayUser?.profileImage ? (
+              <img
+                src={getImageUrl(displayUser.profileImage)}
+                alt={displayUser.name}
+                className="w-10 h-10 rounded-full object-cover border-2 border-white/50 shadow-md"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-md border-2 border-white/50">
+                <span className="text-white font-bold text-base">
+                  {displayUser?.name?.[0]?.toUpperCase() || '?'}
+                </span>
+              </div>
+            )}
+            <div>
+              <h3 className="text-white font-bold text-base">{displayUser?.name}</h3>
+              <p className="text-white/90 text-xs capitalize font-medium">{displayUser?.role}</p>
+            </div>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-white/20 transition-all duration-200 text-white hover:scale-110"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Messages */}
+        <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${
+          isDarkMode ? 'bg-linear-to-b from-gray-900 to-gray-800' : 'bg-linear-to-b from-gray-50 to-white'
+        }`}>
+          {isLoadingMessages ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <LoadingSpinner size="lg" message="Loading messages..." />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className={`flex flex-col items-center justify-center h-full ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-lg ${
+                isDarkMode 
+                  ? 'bg-gradient-to-br from-gray-800 to-gray-700' 
+                  : 'bg-gradient-to-br from-teal-100 to-cyan-100'
+              }`}>
+                <FiMessageSquare className={`w-8 h-8 ${
+                  isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                }`} />
+              </div>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>Start your conversation</p>
+            </div>
+          ) : (
+            <>
+              {messageGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className="space-y-3">
+                  {/* Date separator */}
+                  <div className="flex items-center justify-center my-4">
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                      isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 border border-gray-200'
+                    }`}>
+                      {formatDate(group.date)}
+                    </div>
+                  </div>
+                  {/* Messages for this date */}
+                  {group.messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex mb-3 ${
+                        message.senderId === userId ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 ${
+                          message.senderId === userId
+                            ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white rounded-br-sm'
+                            : isDarkMode
+                            ? 'bg-gray-700 text-white rounded-bl-sm border border-gray-600'
+                            : 'bg-white text-gray-900 rounded-bl-sm border border-gray-200'
+                        }`}
+                      >
+                        <p className="text-sm wrap-break-word leading-relaxed">{message.text || message.message || message.content || 'No message'}</p>
+                        <p className={`text-[10px] mt-1.5 ${
+                          message.senderId === userId
+                            ? 'text-teal-100'
+                            : isDarkMode
+                            ? 'text-gray-400'
+                            : 'text-gray-500'
+                        }`}>
+                          {message.createdAt && new Date(message.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className={`p-4 border-t shrink-0 ${
+          isDarkMode ? 'border-gray-700 bg-gray-900/80 backdrop-blur-sm' : 'border-gray-200 bg-white/80 backdrop-blur-sm'
+        }`}>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(e)}
+              placeholder="Type a message..."
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 border-2 ${
+                isDarkMode
+                  ? 'bg-gray-800 text-white placeholder-gray-400 focus:ring-teal-500 focus:border-teal-500 border-gray-700'
+                  : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-teal-500 focus:border-teal-500 border-gray-300'
+              }`}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              className={`p-3 rounded-xl transition-all duration-200 shrink-0 shadow-lg ${
+                newMessage.trim()
+                  ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white hover:shadow-xl hover:scale-105'
+                  : isDarkMode
+                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-50'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+              }`}
+            >
+              <FiSend className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full page mode (default)
+
+  // Full page mode (default)
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
       {/* Chat Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <div className="relative">
-            {otherUser?.profileImage ? (
+            {displayUser?.profileImage ? (
               <img
-                src={getImageUrl(otherUser.profileImage)}
-                alt={otherUser.name}
+                src={getImageUrl(displayUser.profileImage)}
+                alt={displayUser.name}
                 className="w-12 h-12 rounded-full object-cover shadow-lg ring-2 ring-teal-100 dark:ring-teal-900"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -86,17 +303,17 @@ const ChatWindow = ({ conversation, otherUser }) => {
                 }}
               />
             ) : null}
-            <div className={`w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900 ${otherUser?.profileImage ? 'hidden' : ''}`}>
-              {otherUser?.name?.[0]?.toUpperCase() || '?'}
+            <div className={`w-12 h-12 bg-linear-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-teal-100 dark:ring-teal-900 ${displayUser?.profileImage ? 'hidden' : ''}`}>
+              {displayUser?.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"></div>
           </div>
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-              {otherUser?.name || 'Unknown User'}
+              {displayUser?.name || 'Unknown User'}
             </h3>
             <p className="text-sm text-teal-600 dark:text-teal-400 font-medium capitalize">
-              {otherUser?.role || 'User'}
+              {displayUser?.role || 'User'}
             </p>
           </div>
         </div>
@@ -125,32 +342,44 @@ const ChatWindow = ({ conversation, otherUser }) => {
           </div>
         ) : (
           <>
-            {messages.map((message) => {
-              const isSender = message.senderId === userId;
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${isSender ? 'justify-end' : 'justify-start'} animate-fadeIn`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md xl:max-w-lg ${
-                      isSender
-                        ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform duration-200'
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200'
-                    } rounded-2xl px-4 py-3`}
-                  >
-                    <p className="text-sm wrap-break-word leading-relaxed">{message.message}</p>
-                    <p
-                      className={`text-xs mt-1.5 ${
-                        isSender ? 'text-teal-100' : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                    >
-                      {message.createdAt && formatDistanceToNow(message.createdAt.toDate())}
-                    </p>
+            {messageGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="space-y-4">
+                {/* Date separator */}
+                <div className="flex items-center justify-center my-6">
+                  <div className="px-4 py-1.5 bg-white dark:bg-gray-800 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-md border border-gray-200 dark:border-gray-700">
+                    {formatDate(group.date)}
                   </div>
                 </div>
-              );
-            })}
+                {/* Messages for this date */}
+                {group.messages.map((message) => {
+                  const isSender = message.senderId === userId;
+                  const messageDate = message.createdAt?.toDate ? message.createdAt.toDate() : new Date();
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex mb-4 ${isSender ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                    >
+                      <div
+                        className={`max-w-xs lg:max-w-md xl:max-w-lg ${
+                          isSender
+                            ? 'bg-linear-to-r from-teal-600 via-cyan-600 to-blue-600 text-white shadow-lg transform hover:scale-[1.02] transition-transform duration-200'
+                            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-200'
+                        } rounded-2xl px-4 py-3`}
+                      >
+                        <p className="text-sm wrap-break-word leading-relaxed">{message.message}</p>
+                        <p
+                          className={`text-xs mt-1.5 ${
+                            isSender ? 'text-teal-100' : 'text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
+                          {messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
             <div ref={messagesEndRef} />
           </>
         )}

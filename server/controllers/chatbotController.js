@@ -102,6 +102,16 @@ exports.chat = async (req, res) => {
           }
         },
         take: 20
+      }).then(dentists => {
+        console.log(`[DENTISTS] Fetched ${dentists.length} dentists from database`);
+        dentists.forEach((d, idx) => {
+          console.log(`  ${idx + 1}. Dr. ${d.firstName} ${d.lastName} - Duration: ${d.appointmentDuration}min`);
+          console.log(`     Working Hours Type: ${typeof d.workingHours}, Array: ${Array.isArray(d.workingHours)}`);
+          if (d.workingHours) {
+            console.log(`     Working Hours:`, JSON.stringify(d.workingHours).substring(0, 150));
+          }
+        });
+        return dentists;
       }),
       
       // Get all treatments (grouped by treatment name to show available treatment types)
@@ -304,12 +314,23 @@ exports.chat = async (req, res) => {
           const timePreferenceText = booking.timePreference 
             ? ` in the ${booking.timePreference}` 
             : '';
-          const noSlotsMessage = `Unfortunately, no dentists are available on ${displayDate}${timePreferenceText}. Would you like to try a different date or time?`;
-          const followUpResponse = await geminiService.chat(userId, noSlotsMessage, context);
+          
+          const noSlotsMessage = `I'm sorry, but there are no available appointments on ${displayDate}${timePreferenceText}. This could be because:
+- All time slots are fully booked
+- Dentists don't work on this day
+- The requested time is outside working hours
+
+Would you like me to:
+1. Check availability on a different date?
+2. Show you the first available slot${booking.timePreference ? ' for any time of day' : ''}?
+3. See availability for the next few days?`;
           
           return res.json({
             success: true,
-            data: followUpResponse
+            data: {
+              message: noSlotsMessage,
+              readyToBook: false
+            }
           });
         }
       }
@@ -340,6 +361,8 @@ exports.chat = async (req, res) => {
         let startDate = new Date();
         startDate.setHours(0, 0, 0, 0);
         
+        const wasSpecificDateRequested = !!booking.date;
+        
         if (booking.date) {
           // If specific date provided, start from that date
           startDate = new Date(booking.date);
@@ -350,7 +373,10 @@ exports.chat = async (req, res) => {
         }
         
         // Search for first available slot
-        for (let daysAhead = 0; daysAhead < 30 && !firstAvailableSlot; daysAhead++) {
+        // If specific date was requested, only check that date. Otherwise search 30 days.
+        const maxDaysToCheck = wasSpecificDateRequested ? 1 : 30;
+        
+        for (let daysAhead = 0; daysAhead < maxDaysToCheck && !firstAvailableSlot; daysAhead++) {
           const checkDate = new Date(startDate);
           checkDate.setDate(startDate.getDate() + daysAhead);
           
@@ -463,13 +489,57 @@ exports.chat = async (req, res) => {
             }
           });
         } else {
-          const noSlotsMessage = `Unfortunately, ${booking.dentistName} has no available appointments in the next 30 days. Would you like to see other available dentists?`;
-          const followUpResponse = await geminiService.chat(userId, noSlotsMessage, context);
-          
-          return res.json({
-            success: true,
-            data: followUpResponse
-          });
+          // No slots found - provide specific error message based on context
+          if (wasSpecificDateRequested) {
+            const requestedDateDisplay = startDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            const timePreferenceText = booking.timePreference ? ` in the ${booking.timePreference}` : '';
+            
+            const noSlotsMessage = `I'm sorry, but ${booking.dentistName} is not available on ${requestedDateDisplay}${timePreferenceText}. This could be because:
+- They don't work on this day
+- All time slots are fully booked
+- The requested time is outside their working hours
+- It's during their break time
+
+Would you like me to:
+1. Find their first available slot on any other day${booking.timePreference ? ' ' + booking.timePreference : ''}?
+2. Check a different date?
+3. Show you other available dentists for ${requestedDateDisplay}${timePreferenceText}?`;
+            
+            // Return message directly without AI paraphrasing to preserve detailed information
+            return res.json({
+              success: true,
+              data: {
+                message: noSlotsMessage,
+                readyToBook: false
+              }
+            });
+          } else {
+            // No date specified, searched 30 days
+            const timePreferenceText = booking.timePreference ? ` ${booking.timePreference} appointments` : ' appointments';
+            const noSlotsMessage = `I'm sorry, but ${booking.dentistName} has no available${timePreferenceText} in the next 30 days. This could be because:
+- Their schedule is fully booked
+- They haven't set up working hours yet
+- They don't work during the requested time period
+
+Would you like me to:
+1. Show you other available dentists?
+2. Check availability beyond 30 days?
+3. Remove the time preference filter${booking.timePreference ? ' (currently: ' + booking.timePreference + ')' : ''}?`;
+            
+            // Return message directly without AI paraphrasing to preserve detailed information
+            return res.json({
+              success: true,
+              data: {
+                message: noSlotsMessage,
+                readyToBook: false
+              }
+            });
+          }
         }
       }
       // Check if it's an availability check request
@@ -611,13 +681,37 @@ exports.chat = async (req, res) => {
             }
           });
         } else {
-          // No dentists available
-          const noAvailabilityMessage = `No dentists are available at ${requestedTime} on ${booking.date}. Please suggest alternative times to the patient.`;
-          const followUpResponse = await geminiService.chat(userId, noAvailabilityMessage, context);
+          // No dentists available at the requested time
+          const displayDate = requestedDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          
+          // Convert time to 12-hour format for display
+          const [hour24, min] = requestedTime.split(':');
+          const hour12 = parseInt(hour24) > 12 ? parseInt(hour24) - 12 : (parseInt(hour24) === 0 ? 12 : parseInt(hour24));
+          const ampm = parseInt(hour24) >= 12 ? 'PM' : 'AM';
+          const displayTime = `${hour12}:${min} ${ampm}`;
+          
+          const noAvailabilityMessage = `I'm sorry, but no dentists are available at ${displayTime} on ${displayDate}. This time slot may be:
+- Outside of working hours
+- During a break time
+- Already booked
+- On a non-working day
+
+Would you like me to:
+1. Find the first available time on ${displayDate}?
+2. Suggest alternative dates?
+3. Show you all available dentists for a different time?`;
           
           return res.json({
             success: true,
-            data: followUpResponse
+            data: {
+              message: noAvailabilityMessage,
+              readyToBook: false
+            }
           });
         }
       }
@@ -647,6 +741,17 @@ exports.chat = async (req, res) => {
     console.error('Chat error:', error);
     console.error('Error stack:', error.stack);
     console.error('Error message:', error.message);
+    
+    // Check if it's a Gemini API overload error
+    if (error.status === 503) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI service is temporarily busy',
+        message: 'Our AI assistant is experiencing high demand right now. Please try again in a few moments.',
+        retryAfter: 3000 // Suggest retry after 3 seconds
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to process chat message',
@@ -908,7 +1013,7 @@ exports.bookAppointment = async (req, res) => {
 
     // Validate required fields
     if (!dentistId || !date || !startTime || !endTime) {
-      console.error('Missing required fields:', {
+      console.error('❌ Missing required fields:', {
         dentistId: !!dentistId,
         date: !!date,
         startTime: !!startTime,
@@ -916,16 +1021,16 @@ exports.bookAppointment = async (req, res) => {
       });
       return res.status(400).json({
         success: false,
-        error: 'Dentist ID, date, start time, and end time are required'
+        error: 'Missing required booking information. Please ensure dentist, date, and time are selected.'
       });
     }
 
     // Verify user is a patient
     if (req.user.role !== 'Patient') {
-      console.error('Non-patient user trying to book:', req.user.role);
+      console.error('❌ Non-patient user trying to book:', req.user.role);
       return res.status(403).json({
         success: false,
-        error: 'Only patients can book appointments'
+        error: 'Only patients can book appointments through the chatbot.'
       });
     }
 
@@ -943,36 +1048,129 @@ exports.bookAppointment = async (req, res) => {
     });
 
     if (!dentist) {
+      console.error('❌ Dentist not found:', dentistId);
       return res.status(404).json({
         success: false,
-        error: 'Dentist not found'
+        error: 'The selected dentist could not be found. Please try selecting another dentist.'
       });
     }
 
     if (dentist.user.status !== 'ACTIVE') {
+      console.error('❌ Dentist not active:', dentist.user.status);
       return res.status(400).json({
         success: false,
-        error: 'Dentist is not available'
+        error: 'The selected dentist is currently unavailable. Please choose another dentist.'
       });
     }
 
     const clinicId = dentist.clinicId;
 
-    // Parse dates
+    // Parse dates and validate
     const appointmentDate = new Date(date);
+    if (isNaN(appointmentDate.getTime())) {
+      console.error('❌ Invalid date format:', date);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid date format. Please try booking again.'
+      });
+    }
+
     const startDateTime = new Date(startTime);
+    if (isNaN(startDateTime.getTime())) {
+      console.error('❌ Invalid start time format:', startTime);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid time format. Please try booking again.'
+      });
+    }
     
     // Calculate end time based on dentist's appointment duration
     // This ensures we always use the correct duration from the database
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(endDateTime.getMinutes() + dentist.appointmentDuration);
+    
+    console.log('📅 Appointment timing:', {
+      date: appointmentDate.toISOString().split('T')[0],
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
+      duration: dentist.appointmentDuration
+    });
 
     // Check if the appointment time is in the past (not just the date)
     const now = new Date();
     if (startDateTime < now) {
+      console.error('❌ Appointment in the past:', { startDateTime, now });
       return res.status(400).json({
         success: false,
         error: 'Cannot book appointments in the past. Please choose a future time slot.'
+      });
+    }
+
+    // Validate against dentist's working hours
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = dayNames[appointmentDate.getDay()];
+    
+    if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
+      const daySchedule = dentist.workingHours.find(day => day.day === dayOfWeek);
+      
+      // Check if dentist works on this day
+      if (!daySchedule || !daySchedule.isWorking || !daySchedule.start || !daySchedule.end || daySchedule.start === '' || daySchedule.end === '') {
+        console.error('❌ Dentist does not work on this day:', { dayOfWeek, daySchedule });
+        return res.status(400).json({
+          success: false,
+          error: `The dentist does not work on ${dayOfWeek}s. Please choose a different day.`
+        });
+      }
+      
+      // Check if time is within working hours
+      const requestedTimeMinutes = startDateTime.getHours() * 60 + startDateTime.getMinutes();
+      const [startHour, startMin] = daySchedule.start.split(':').map(Number);
+      const [endHour, endMin] = daySchedule.end.split(':').map(Number);
+      const workStartMinutes = startHour * 60 + startMin;
+      const workEndMinutes = endHour * 60 + endMin;
+      
+      const appointmentEndMinutes = endDateTime.getHours() * 60 + endDateTime.getMinutes();
+      
+      if (requestedTimeMinutes < workStartMinutes || appointmentEndMinutes > workEndMinutes) {
+        const workHoursDisplay = `${daySchedule.start} - ${daySchedule.end}`;
+        console.error('❌ Time outside working hours:', { 
+          requested: `${startDateTime.getHours()}:${startDateTime.getMinutes()}`, 
+          workingHours: workHoursDisplay 
+        });
+        return res.status(400).json({
+          success: false,
+          error: `This time is outside the dentist's working hours. Working hours on ${dayOfWeek}: ${workHoursDisplay}`
+        });
+      }
+      
+      // Check if time falls during a break
+      if (daySchedule.breaks && Array.isArray(daySchedule.breaks)) {
+        for (const breakTime of daySchedule.breaks) {
+          const [breakStartHour, breakStartMin] = breakTime.start.split(':').map(Number);
+          const [breakEndHour, breakEndMin] = breakTime.end.split(':').map(Number);
+          const breakStartMinutes = breakStartHour * 60 + breakStartMin;
+          const breakEndMinutes = breakEndHour * 60 + breakEndMin;
+          
+          // Check if appointment overlaps with break
+          if (requestedTimeMinutes < breakEndMinutes && appointmentEndMinutes > breakStartMinutes) {
+            const breakDisplay = `${breakTime.start} - ${breakTime.end}`;
+            console.error('❌ Time during break:', { 
+              requested: `${startDateTime.getHours()}:${String(startDateTime.getMinutes()).padStart(2, '0')}`, 
+              break: breakDisplay 
+            });
+            return res.status(400).json({
+              success: false,
+              error: `This time falls during the dentist's break (${breakDisplay}). Please choose a different time.`
+            });
+          }
+        }
+      }
+    } else {
+      // No working hours configured
+      console.error('❌ Dentist has no working hours configured');
+      return res.status(400).json({
+        success: false,
+        error: 'The dentist has not configured their working hours. Please contact the clinic or choose another dentist.'
       });
     }
 
@@ -1002,15 +1200,30 @@ exports.bookAppointment = async (req, res) => {
             ]
           }
         ]
+      },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true
       }
     });
 
     if (conflictingAppointment) {
+      const conflictTime = new Date(conflictingAppointment.startTime).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      console.error('❌ Time slot conflict:', {
+        requested: startDateTime.toISOString(),
+        conflict: conflictingAppointment.startTime.toISOString()
+      });
       return res.status(409).json({
         success: false,
-        error: 'This time slot is already booked. Please choose another time.'
+        error: `This time slot is no longer available. There's a conflicting appointment at ${conflictTime}. Please choose another time.`
       });
     }
+
+    console.log('✅ No conflicts found, creating appointment...');
 
     // Create the appointment
     const { appointmentInclude } = require('../services/appointment/appointmentService');
@@ -1056,16 +1269,18 @@ exports.bookAppointment = async (req, res) => {
       success: true,
       data: {
         appointment,
-        message: `Appointment requested successfully! Your appointment with Dr. ${dentistName} on ${dateTimeStr} is pending confirmation.`
+        message: `✓ Appointment requested successfully! Your consultation with Dr. ${dentistName} on ${dateTimeStr} is pending confirmation. You'll receive a notification once confirmed.`
       }
     });
+    
+    console.log('✅ Appointment booked successfully:', appointment.id);
   } catch (error) {
-    console.error('Book appointment error:', error);
+    console.error('❌ Book appointment error:', error);
     console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Failed to book appointment',
-      details: error.message
+      error: 'An error occurred while booking your appointment. Please try again or contact support.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

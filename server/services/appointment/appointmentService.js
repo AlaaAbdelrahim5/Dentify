@@ -118,19 +118,35 @@ function generateAvailableSlots(dentist, date, existingAppointments = [], option
   const dayOfWeek = dayNames[date.getDay()];
   const slots = [];
   
+  console.log(`\n[SLOTS] Generating slots for dentist ${dentist.firstName} ${dentist.lastName}`);
+  console.log(`[DATE] ${date.toDateString()} (${dayOfWeek})`);
+  console.log(`[DURATION] ${dentist.appointmentDuration} minutes`);
+  console.log(`[WORKING HOURS]`, JSON.stringify(dentist.workingHours, null, 2));
+  
   // Get working hours for the day
   let workingHours = null;
   if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
     workingHours = dentist.workingHours.find(day => day.day === dayOfWeek);
+    console.log(`[FOUND] Schedule for ${dayOfWeek}:`, JSON.stringify(workingHours, null, 2));
+  } else {
+    console.log(`[ERROR] No workingHours array found for dentist`);
   }
   
   if (!workingHours || !workingHours.start || !workingHours.end) {
+    console.log(`[ERROR] Dentist doesn't work on ${dayOfWeek}`);
     return []; // Dentist doesn't work on this day
   }
   
   const [startHour, startMinute] = workingHours.start.split(':').map(Number);
   const [endHour, endMinute] = workingHours.end.split(':').map(Number);
   const duration = dentist.appointmentDuration || 30;
+  
+  console.log(`[HOURS] ${workingHours.start} - ${workingHours.end}`);
+  console.log(`[DURATION] Appointment duration: ${duration} minutes`);
+  console.log(`[EXISTING] ${existingAppointments.length} appointments`);
+  if (options.timePreference) {
+    console.log(`[FILTER] Time preference: ${options.timePreference}`);
+  }
   
   // Set time range filter if specified, respecting dentist's actual working hours
   let timeRangeStart = null;
@@ -183,6 +199,7 @@ function generateAvailableSlots(dentist, date, existingAppointments = [], option
       
       // Check if slot is during break
       let isDuringBreak = false;
+      let breakEndTime = null;
       if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
         for (const breakTime of workingHours.breaks) {
           const [breakStartHour, breakStartMinute] = breakTime.start.split(':').map(Number);
@@ -194,28 +211,39 @@ function generateAvailableSlots(dentist, date, existingAppointments = [], option
           
           if (currentTime < breakEnd && slotEnd > breakStart) {
             isDuringBreak = true;
+            breakEndTime = new Date(breakEnd);
             break;
           }
         }
       }
       
-      if (!isDuringBreak) {
-        // Check for conflicts with existing appointments
-        const hasConflict = existingAppointments.some(apt => {
-          return currentTime < apt.endTime && slotEnd > apt.startTime;
+      if (isDuringBreak) {
+        // Skip to the end of the break for next iteration
+        currentTime = new Date(breakEndTime);
+        continue;
+      }
+      
+      // Check for conflicts with existing appointments
+      const hasConflict = existingAppointments.some(apt => {
+        return currentTime < apt.endTime && slotEnd > apt.startTime;
+      });
+      
+      if (!hasConflict) {
+        slots.push({
+          startTime: new Date(currentTime),
+          endTime: new Date(slotEnd),
+          time: `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`
         });
-        
-        if (!hasConflict) {
-          slots.push({
-            startTime: new Date(currentTime),
-            endTime: new Date(slotEnd),
-            time: `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}`
-          });
-        }
       }
     }
     
     currentTime.setMinutes(currentTime.getMinutes() + duration);
+  }
+  
+  console.log(`[RESULT] Generated ${slots.length} available slots`);
+  if (slots.length > 0) {
+    console.log(`   First slot: ${slots[0].time}`);
+    console.log(`   Last slot: ${slots[slots.length - 1].time}`);
   }
   
   return slots;
