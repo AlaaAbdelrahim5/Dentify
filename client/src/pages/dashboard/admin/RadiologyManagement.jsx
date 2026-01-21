@@ -506,7 +506,10 @@ const RadiologyManagement = () => {
       {/* Edit Center Modal */}
       <RadiologyModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedCenter(null)
+        }}
         center={selectedCenter}
         onSave={handleCenterSave}
       />

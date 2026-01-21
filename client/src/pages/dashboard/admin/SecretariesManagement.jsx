@@ -4,6 +4,7 @@ import {
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
+  FaEdit,
   FaCheckCircle,
   FaTimesCircle,
   FaEye,
@@ -21,6 +22,7 @@ import {
   ActionButtons,
   ConfirmationModal,
   SecretaryDetailsModal,
+  SecretaryModal,
   Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -58,9 +60,11 @@ const SecretariesManagement = () => {
     goToPage,
     stats,
     showDetailsModal,
+    showEditModal,
     selectedItem: selectedSecretary,
     selectedCrudItem,
     handleViewDetails,
+    handleEdit,
     closeAllModals,
     showConfirmModal,
     confirmAction,
@@ -272,6 +276,13 @@ const SecretariesManagement = () => {
                 variant: 'default',
                 key: 'view'
               },
+              {
+                icon: FaEdit,
+                onClick: () => handleEdit(secretary),
+                title: 'Edit',
+                variant: 'default',
+                key: 'edit'
+              },
               // Show approve/reject for PENDING secretaries
               ...(isPending ? [
                 {
@@ -375,6 +386,26 @@ const SecretariesManagement = () => {
         secretary={selectedSecretary}
         onClose={closeAllModals}
       />
+
+      {/* Edit Secretary Modal */}
+      {selectedSecretary && (
+        <SecretaryModal
+          isOpen={showEditModal}
+          onClose={closeAllModals}
+          secretary={selectedSecretary}
+          onSave={async (secretaryData) => {
+            try {
+              await secretariesAPI.update(selectedSecretary.userId?.id || selectedSecretary.userId, secretaryData)
+              closeAllModals()
+              refresh()
+              // Show success toast handled by hook
+            } catch (error) {
+              console.error('Error updating secretary:', error)
+              throw error
+            }
+          }}
+        />
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal {...confirmProps} />

@@ -9,7 +9,8 @@ import {
   FaMapMarkerAlt,
   FaGraduationCap,
   FaCertificate,
-  FaLock
+  FaLock,
+  FaSave
 } from 'react-icons/fa'
 import { Button, Input, Select, BaseModal, PhoneInput } from '../../common'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -45,7 +46,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
   useEffect(() => {
     if (dentist) {
       // Parse phone number into country code and number
-      const fullPhone = dentist.userId?.phone || '';
+      const fullPhone = dentist.user?.phone || '';
       let parsedCountryCode = '+970';
       let parsedPhoneNumber = '';
       
@@ -64,7 +65,7 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       setFormData({
         firstName: dentist.firstName || '',
         lastName: dentist.lastName || '',
-        email: dentist.userId?.email || '',
+        email: dentist.user?.email || '',
         countryCode: parsedCountryCode,
         phoneNumber: parsedPhoneNumber,
         password: '', // Don't populate password for existing users
@@ -152,23 +153,25 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
     setIsLoading(true)
     
     try {
-      const dentistData = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        licenseNumber: formData.licenseNumber.trim(),
-        specialization: ['General Dentistry'],
-        birthDate: formData.birthDate,
-        gender: formData.gender,
-        city: formData.city || (dentist?.address?.city) || 'Ramallah',
-        appointmentDuration: parseInt(formData.appointmentDuration),
-        // User data for creating or updating the user account
-        email: formData.email.trim(),
-        phone: `${formData.countryCode}${formData.phoneNumber}`,
-        ...(formData.password && { password: formData.password }),
-        role: 'Dentist'
+      const requestData = {
+        userData: {
+          email: formData.email.trim(),
+          phone: `${formData.countryCode}${formData.phoneNumber}`,
+          ...(formData.password && { password: formData.password })
+        },
+        dentistData: {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          licenseNumber: formData.licenseNumber.trim(),
+          specialization: ['General Dentistry'],
+          birthDate: formData.birthDate,
+          gender: formData.gender,
+          city: formData.city || (dentist?.address?.city) || 'Ramallah',
+          appointmentDuration: parseInt(formData.appointmentDuration)
+        }
       }
 
-      await onSave(dentistData)
+      await onSave(requestData)
       // Don't close modal here - let the parent component handle it after successful save
     } catch (error) {
       console.error('Error saving dentist:', error)
@@ -250,43 +253,25 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
       isOpen={isOpen}
       onClose={onClose}
       size="4xl"
-      noPadding
-      showCloseButton={false}
-    >
-      <form onSubmit={handleSubmit} className="flex flex-col h-[80vh]">
-        {/* Fixed Header */}
-        <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center gap-3">
-            <FaUserMd className="w-6 h-6 text-teal-600" />
-            <h2 className={`text-xl font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              {dentist ? 'Edit Dentist' : 'Request New Dentist'}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode
-                ? 'hover:bg-gray-700 text-gray-400'
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
+      title={
+        <div className="flex items-center gap-3">
+          <FaUserMd className="w-6 h-6 text-teal-600" />
+          <span>{dentist ? 'Edit Dentist' : 'Request New Dentist'}</span>
         </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-              {/* General Error */}
-              {errors.submit && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-700 text-sm">{errors.submit}</p>
-                </div>
-              )}
+      }
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="overflow-y-auto overflow-x-hidden max-h-[calc(90vh-250px)] pr-2 space-y-6">
+          {/* General Error */}
+          {errors.submit && (
+            <div className={`p-4 rounded-lg border ${
+              isDarkMode 
+                ? 'bg-red-900/20 border-red-800 text-red-400' 
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              <p className="text-sm">{errors.submit}</p>
+            </div>
+          )}
 
               {/* Personal Information */}
               <div>
@@ -432,9 +417,9 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
               )}
         </div>
 
-        {/* Fixed Footer */}
-        <div className={`flex justify-end gap-3 px-6 py-4 border-t shrink-0 ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        {/* Action Buttons */}
+        <div className={`flex justify-end gap-3 pt-6 border-t ${
+          isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
           <Button
             type="button"
@@ -450,9 +435,15 @@ const DentistModal = ({ isOpen, onClose, onSave, dentist }) => {
             className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </>
             ) : (
-              dentist ? 'Update Dentist' : 'Send Request'
+              <>
+                <FaSave className="w-4 h-4" />
+                {dentist ? 'Update Dentist' : 'Send Request'}
+              </>
             )}
           </Button>
         </div>

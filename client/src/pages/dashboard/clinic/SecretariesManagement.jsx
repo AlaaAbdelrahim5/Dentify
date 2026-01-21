@@ -236,53 +236,28 @@ const SecretariesManagement = () => {
       setError(null)
       
       if (selectedSecretary) {
-        // Edit existing secretary - structure data according to API expectations
+        // Edit existing secretary - data is already structured correctly from modal
         const updateData = {
-          userData: {
-            email: secretaryData.userId.email,
-            phone: secretaryData.userId.phone,
-            ...(secretaryData.userId.password && { password: secretaryData.userId.password })
-          },
-          secretaryData: {
-            firstName: secretaryData.firstName,
-            lastName: secretaryData.lastName,
-            birthDate: secretaryData.birthDate,
-            gender: secretaryData.gender,
-            address: {
-              city: secretaryData.address.city
-            }
-          }
+          userData: secretaryData.userData,
+          secretaryData: secretaryData.secretaryData
         }
         
         const response = await secretariesAPI.update(selectedSecretary._id, updateData)
         
         if (response.success) {
-          // Update the secretary in the list
-          setSecretaries(prev => prev.map(s => 
-            s._id === selectedSecretary._id ? response.data : s
-          ))
           setShowEditModal(false)
           setSelectedSecretary(null)
           setToast({ type: 'success', message: 'Secretary updated successfully!' })
-          // No need to refresh - client-side filtering will update automatically
+          // Refresh to reload all data from backend
+          await fetchSecretaries(true)
         } else {
           setToast({ type: 'error', message: response.message || 'Failed to update secretary' })
         }
       } else {
-        // Add new secretary - match the expected API structure
+        // Add new secretary - data is already structured correctly from modal
         const createData = {
-          firstName: secretaryData.firstName,
-          lastName: secretaryData.lastName,
-          birthDate: secretaryData.birthDate,
-          gender: secretaryData.gender,
-          address: {
-            city: secretaryData.address.city
-          },
-          userId: {
-            email: secretaryData.userId.email,
-            phone: secretaryData.userId.phone,
-            password: secretaryData.userId.password
-          }
+          ...secretaryData.secretaryData,
+          userId: secretaryData.userData
         }
         
         const response = await secretariesAPI.create(createData)

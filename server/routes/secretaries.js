@@ -348,10 +348,11 @@ router.put('/me', authenticate, authorize('Secretary'), async (req, res) => {
 });
 
 // Update secretary
-router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
+router.put('/:id', authenticate, authorize('Clinic', 'Admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const clinicId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
     const { userData, secretaryData } = req.body;
 
     // Validate required fields
@@ -375,8 +376,8 @@ router.put('/:id', authenticate, authorize('Clinic'), async (req, res) => {
       return notFoundResponse(res, 'Secretary');
     }
 
-    // Check if secretary belongs to this clinic
-    if (existingSecretary.clinicId !== clinicId) {
+    // Check if secretary belongs to this clinic (skip for Admin)
+    if (!isAdmin && existingSecretary.clinicId !== clinicId) {
       return errorResponse(res, 'Unauthorized to update this secretary', 403);
     }
 

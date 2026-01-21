@@ -54,7 +54,11 @@ export const ThemeProvider = ({ children }) => {
 }, [isDarkMode]);
 
   const toggleTheme = () => {
-    setIsDarkMode(prev => !prev)
+    // Save the new theme preference before refreshing
+    const newTheme = !isDarkMode;
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    // Refresh the page immediately
+    window.location.reload();
   }
 
   const value = {

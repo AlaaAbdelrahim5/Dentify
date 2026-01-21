@@ -290,8 +290,8 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
 
       const data = await response.json();
 
-      if (data.success) {
-        onSave(data.data, center ? "updated" : "created");
+      if (data.success || response.ok) {
+        onSave(data.data || data.radiologyCenter, center ? "updated" : "created");
         onClose();
       } else {
         // Handle specific validation errors
@@ -300,7 +300,7 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
         } else {
           setErrors({
             general:
-              data.message || "An error occurred while saving the center",
+              data.error || data.message || "An error occurred while saving the center",
           });
         }
       }
@@ -522,8 +522,8 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
               >
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={onClose}
+                  variant="outline"
                   disabled={loading}
                 >
                   Cancel
@@ -531,14 +531,18 @@ const RadiologyModal = ({ isOpen, onClose, center = null, onSave }) => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600"
+                  className="flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600"
                 >
                   {loading ? (
-                    <LoadingSpinner size="sm" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <FaSave className="w-4 h-4" />
                   )}
-                  {center ? "Update Center" : "Create Center"}
+                  {loading
+                    ? "Saving..."
+                    : center
+                    ? "Update Center"
+                    : "Add Center"}
                 </Button>
               </div>
             </form>

@@ -252,6 +252,13 @@ const PatientsManagement = () => {
               variant: 'default',
               key: 'view'
             },
+            {
+              icon: FaEdit,
+              onClick: () => handleEdit(patient),
+              title: 'Edit',
+              variant: 'default',
+              key: 'edit'
+            },
             // Show deactivate for ACTIVE patients
             ...(patient.user?.status === 'ACTIVE' ? [
               {

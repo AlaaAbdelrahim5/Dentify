@@ -4,6 +4,7 @@ import {
   FaUserShield,
   FaPlus,
   FaEye,
+  FaEdit,
   FaTimes,
   FaEnvelope,
   FaPhone,
@@ -29,6 +30,7 @@ import {
   ConfirmationModal,
   Toast,
   AddAdminModal,
+  AdminEditModal,
   AdminDetailsModal,
   Card,
 } from '../../../components'
@@ -56,10 +58,12 @@ const AdminsManagement = () => {
     stats,
     showDetailsModal,
     showAddModal,
+    showEditModal,
     selectedItem: selectedAdmin,
     selectedCrudItem,
     handleViewDetails,
     handleAdd,
+    handleEdit,
     closeAllModals,
     handleSaveSuccess,
     showConfirmModal,
@@ -242,6 +246,12 @@ const AdminsManagement = () => {
               variant: 'default'
             },
             {
+              icon: FaEdit,
+              onClick: () => handleEdit(admin),
+              title: 'Edit',
+              variant: 'default'
+            },
+            {
               icon: admin.userId?.status === 'active' ? FaTimesCircle : FaCheckCircle,
               onClick: () => {
                 console.log('Toggle Status clicked for:', admin.fullName, 'Current status:', admin.userId?.status)
@@ -320,6 +330,16 @@ const AdminsManagement = () => {
         onClose={closeAllModals}
         onSave={handleSaveSuccess}
       />
+
+      {/* Edit Admin Modal */}
+      {selectedAdmin && (
+        <AdminEditModal
+          isOpen={showEditModal}
+          onClose={closeAllModals}
+          admin={selectedAdmin}
+          onSave={handleSaveSuccess}
+        />
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal {...confirmProps} />

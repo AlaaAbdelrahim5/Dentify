@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import { 
   FaUserMd, 
-  FaPlus, 
+  FaPlus,
+  FaEdit, 
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
@@ -24,6 +25,7 @@ import {
   ActionButtons,
   ConfirmationModal,
   DentistDetailsModal,
+  DentistModal,
   Toast
 } from '../../../components'
 import { useTheme } from '../../../contexts/ThemeContext'
@@ -54,9 +56,11 @@ const DentistsManagement = () => {
     goToPage,
     stats,
     showDetailsModal,
+    showEditModal,
     selectedItem: selectedDentist,
     selectedCrudItem,
     handleViewDetails,
+    handleEdit,
     closeAllModals,
     showConfirmModal,
     confirmAction,
@@ -259,6 +263,13 @@ const DentistsManagement = () => {
               variant: 'default',
               key: 'view'
             },
+            {
+              icon: FaEdit,
+              onClick: () => handleEdit(dentist),
+              title: 'Edit',
+              variant: 'default',
+              key: 'edit'
+            },
             // Show approve/reject for PENDING dentists
             ...(dentist.user?.status === 'PENDING' ? [
               {
@@ -361,6 +372,26 @@ const DentistsManagement = () => {
         dentistData={selectedDentist}
         onClose={closeAllModals}
       />
+
+      {/* Edit Dentist Modal */}
+      {selectedDentist && (
+        <DentistModal
+          isOpen={showEditModal}
+          onClose={closeAllModals}
+          dentist={selectedDentist}
+          onSave={async (dentistData) => {
+            try {
+              await dentistsAPI.update(selectedDentist.userId, dentistData)
+              closeAllModals()
+              refresh()
+              // Show success toast handled by hook
+            } catch (error) {
+              console.error('Error updating dentist:', error)
+              throw error
+            }
+          }}
+        />
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal {...confirmProps} />

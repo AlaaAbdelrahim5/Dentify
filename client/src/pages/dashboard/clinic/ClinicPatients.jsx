@@ -207,13 +207,16 @@ const ClinicPatients = ({ userData, onTabChange }) => {
         id: treatment.id,
         treatmentName: treatment.treatmentName,
         description: treatment.description,
-        status: treatment.status === 'COMPLETED' ? 'Completed' : 
+        treatmentStatus: treatment.status === 'COMPLETED' ? 'Completed' : 
                 treatment.status === 'IN_PROGRESS' ? 'In Progress' : 'Cancelled',
-        createdAt: treatment.createdAt,
+        creationDate: treatment.createdAt,
         totalAmount: treatment.totalAmount || 0,
         paidAmount: treatment.paidAmount || 0,
+        treatmentDiscount: treatment.treatmentDiscount || 0,
         notes: treatment.notes,
-        teethStatus: treatment.teethStatus || []
+        teethStatus: treatment.teethStatus || [],
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        dentistName: treatment.dentist ? `${treatment.dentist.firstName} ${treatment.dentist.lastName}` : 'N/A'
       }))
       
       setPatientTreatments(transformedTreatments)

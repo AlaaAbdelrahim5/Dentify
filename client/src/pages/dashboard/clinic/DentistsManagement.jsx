@@ -245,44 +245,30 @@ const DentistsManagement = () => {
       setError(null)
       
       if (selectedDentist) {
-        // Edit existing dentist
+        // Edit existing dentist - data is already structured correctly from modal
         const updateData = {
-          userData: {
-            email: dentistData.email,
-            phone: dentistData.phone,
-            ...(dentistData.password && { password: dentistData.password })
-          },
-          dentistData: {
-            firstName: dentistData.firstName,
-            lastName: dentistData.lastName,
-            licenseNumber: dentistData.licenseNumber,
-            specialization: dentistData.specialization,
-            birthDate: dentistData.birthDate,
-            gender: dentistData.gender,
-            city: dentistData.city,
-            appointmentDuration: dentistData.appointmentDuration,
-            workingHours: dentistData.workingHours,
-            socialLinks: dentistData.socialLinks
-          }
+          userData: dentistData.userData,
+          dentistData: dentistData.dentistData
         }
         
         const response = await dentistsAPI.update(selectedDentist._id, updateData)
         if (response.success) {
-          setDentists(prev => prev.map(d => 
-            d._id === selectedDentist._id ? response.data : d
-          ))
           setIsModalOpen(false)
           setSelectedDentist(null)
           setToast({ type: 'success', message: 'Dentist updated successfully!' })
-          // Refresh to update stats
-          loadDentists(true)
+          // Refresh to reload all data from backend
+          await loadDentists(true)
         } else {
           setToast({ type: 'error', message: response.message || 'Failed to update dentist' })
         }
       } else {
-        // Add new dentist
+        // Add new dentist - data is already structured correctly from modal
+        const createData = {
+          ...dentistData.dentistData,
+          userId: dentistData.userData
+        }
         
-        const response = await dentistsAPI.create(dentistData)
+        const response = await dentistsAPI.create(createData)
         if (response.success) {
           // Map the new dentist data to match the structure
           const newDentist = {

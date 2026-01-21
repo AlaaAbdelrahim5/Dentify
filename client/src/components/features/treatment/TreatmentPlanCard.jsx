@@ -112,15 +112,6 @@ const TreatmentPlanCard = ({
       </Card.Header>
 
       <Card.Content className="space-y-4">
-        {/* Description */}
-        {treatment.description && (
-          <p className={`text-sm line-clamp-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            {treatment.description}
-          </p>
-        )}
-
         {/* Teeth Count */}
         {treatment.teethStatus && treatment.teethStatus.length > 0 && (
           <div className="flex items-center gap-2">

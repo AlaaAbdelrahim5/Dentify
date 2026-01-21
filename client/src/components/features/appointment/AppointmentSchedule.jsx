@@ -101,39 +101,79 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       return []
     }
 
-    // Find earliest start and latest end from working hours
-    let earliestHour = 24
-    let latestHour = 0
+    // Collect all unique time slots across all working days (including breaks)
+    const allSlotsSet = new Set()
     
-    dentistData.workingHours.forEach(schedule => {
-      if (schedule.start) {
-        const startHour = parseInt(schedule.start.split(':')[0])
-        earliestHour = Math.min(earliestHour, startHour)
+    dentistData.workingHours.forEach(daySchedule => {
+      if (!daySchedule.isWorking || !daySchedule.start || !daySchedule.end) {
+        return
       }
-      if (schedule.end) {
-        const endHour = parseInt(schedule.end.split(':')[0])
-        latestHour = Math.max(latestHour, endHour)
+      
+      const [startHour, startMinute] = daySchedule.start.split(':').map(Number)
+      const [endHour, endMinute] = daySchedule.end.split(':').map(Number)
+      const endTimeInMinutes = endHour * 60 + endMinute
+      
+      let currentHour = startHour
+      let currentMinute = startMinute
+      
+      while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+        const slotStartInMinutes = currentHour * 60 + currentMinute
+        const slotEndInMinutes = slotStartInMinutes + appointmentDuration
+        
+        // Check if appointment fits within working hours
+        if (slotEndInMinutes > endTimeInMinutes) {
+          break
+        }
+        
+        // Check if this slot is during a break
+        let isDuringBreak = false
+        let breakEndTime = null
+        
+        if (daySchedule.breaks && Array.isArray(daySchedule.breaks)) {
+          for (const breakPeriod of daySchedule.breaks) {
+            if (!breakPeriod.start || !breakPeriod.end) continue
+            
+            const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
+            const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number)
+            
+            const breakStartMinutes = breakStartHour * 60 + breakStartMinute
+            const breakEndMinutes = breakEndHour * 60 + breakEndMinute
+            
+            // Slot is during break if it starts within the break period
+            if (slotStartInMinutes >= breakStartMinutes && slotStartInMinutes < breakEndMinutes) {
+              isDuringBreak = true
+              breakEndTime = { hour: breakEndHour, minute: breakEndMinute }
+              break
+            }
+          }
+        }
+        
+        // Add slot (including break slots)
+        const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+        allSlotsSet.add(timeSlot)
+        
+        if (isDuringBreak && breakEndTime) {
+          // Skip to the end of the break for next iteration
+          currentHour = breakEndTime.hour
+          currentMinute = breakEndTime.minute
+          continue
+        }
+        
+        // Move to next slot
+        currentMinute += appointmentDuration
+        if (currentMinute >= 60) {
+          currentHour += Math.floor(currentMinute / 60)
+          currentMinute = currentMinute % 60
+        }
       }
     })
-
-    // Default to 8-20 if no valid hours found
-    if (earliestHour === 24 || latestHour === 0) {
-      earliestHour = 8
-      latestHour = 20
-    }
-
-    // Generate slots based on appointment duration
-    const slots = []
-    const totalMinutes = (latestHour - earliestHour) * 60
     
-    for (let minute = 0; minute < totalMinutes; minute += appointmentDuration) {
-      const hour = Math.floor(minute / 60) + earliestHour
-      const min = minute % 60
-      if (hour <= latestHour) {
-        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
-      }
-    }
-    return slots
+    // Convert to array and sort
+    return Array.from(allSlotsSet).sort((a, b) => {
+      const [aHour, aMin] = a.split(':').map(Number)
+      const [bHour, bMin] = b.split(':').map(Number)
+      return (aHour * 60 + aMin) - (bHour * 60 + bMin)
+    })
   }, [dentistData])
 
   // Group filtered appointments by date
@@ -154,7 +194,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return grouped
   }, [filteredAppointments])
 
-  // Check if a time slot is during break time
+  // Check if a time slot would overlap with break time (considering appointment duration)
   const isBreakTime = (date, timeSlot) => {
     if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours)) {
       return false
@@ -174,8 +214,90 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
     const slotStartMinutes = slotHour * 60 + slotMinute
     
-    // Check if slot falls within any break period
+    // Get appointment duration to calculate slot end time
+    const appointmentDuration = dentistData?.appointmentDuration || 30
+    const slotEndMinutes = slotStartMinutes + appointmentDuration
+    
+    // Check if slot overlaps with any break period
+    // Using the same logic as appointmentSlots.js utility
     return daySchedule.breaks.some(breakPeriod => {
+      if (!breakPeriod.start || !breakPeriod.end) return false
+      
+      const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
+      const [breakEndHour, breakEndMinute] = breakPeriod.end.split(':').map(Number)
+      
+      const breakStartMinutes = breakStartHour * 60 + breakStartMinute
+      const breakEndMinutes = breakEndHour * 60 + breakEndMinute
+      
+      // Slot is during/overlapping break if it starts during break OR ends during break OR encompasses break
+      // This matches the logic: slotStart >= breakStart && slotStart < breakEnd
+      return slotStartMinutes >= breakStartMinutes && slotStartMinutes < breakEndMinutes
+    })
+  }
+
+  // Check if a time slot is outside working hours for a specific day
+  const isOutsideWorkingHours = (date, timeSlot) => {
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours)) {
+      return false
+    }
+    
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayOfWeek = dayNames[date.getDay()]
+    
+    // Find the schedule for this day
+    const daySchedule = dentistData.workingHours.find(schedule => schedule.day === dayOfWeek)
+    
+    // If day is not working or no schedule found, it's outside working hours
+    if (!daySchedule || daySchedule.isWorking === false || !daySchedule.start || !daySchedule.end) {
+      return true
+    }
+    
+    // Parse the time slot
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+    const slotStartMinutes = slotHour * 60 + slotMinute
+    
+    // Get appointment duration to calculate slot end time
+    const appointmentDuration = dentistData?.appointmentDuration || 30
+    const slotEndMinutes = slotStartMinutes + appointmentDuration
+    
+    // Parse working hours
+    const [startHour, startMinute] = daySchedule.start.split(':').map(Number)
+    const [endHour, endMinute] = daySchedule.end.split(':').map(Number)
+    
+    const workStartMinutes = startHour * 60 + startMinute
+    const workEndMinutes = endHour * 60 + endMinute
+    
+    // Slot is outside working hours if:
+    // 1. It starts before work starts
+    // 2. It starts at or after work ends
+    // 3. It would end after work ends (appointment would run past closing time)
+    return slotStartMinutes < workStartMinutes || 
+           slotStartMinutes >= workEndMinutes || 
+           slotEndMinutes > workEndMinutes
+  }
+
+  // Get the break label and time range for a specific time slot
+  const getBreakInfo = (date, timeSlot) => {
+    if (!dentistData?.workingHours || !Array.isArray(dentistData.workingHours)) {
+      return { label: 'Break', timeRange: null }
+    }
+    
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayOfWeek = dayNames[date.getDay()]
+    
+    // Find the schedule for this day
+    const daySchedule = dentistData.workingHours.find(schedule => schedule.day === dayOfWeek)
+    
+    if (!daySchedule || !daySchedule.breaks || !Array.isArray(daySchedule.breaks)) {
+      return { label: 'Break', timeRange: null }
+    }
+    
+    // Parse the time slot
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+    const slotStartMinutes = slotHour * 60 + slotMinute
+    
+    // Find the matching break period
+    const matchingBreak = daySchedule.breaks.find(breakPeriod => {
       if (!breakPeriod.start || !breakPeriod.end) return false
       
       const [breakStartHour, breakStartMinute] = breakPeriod.start.split(':').map(Number)
@@ -186,33 +308,36 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       
       return slotStartMinutes >= breakStartMinutes && slotStartMinutes < breakEndMinutes
     })
+    
+    if (matchingBreak) {
+      return {
+        label: matchingBreak.label || 'Break',
+        timeRange: `${convertTo12Hour(matchingBreak.start)} - ${convertTo12Hour(matchingBreak.end)}`
+      }
+    }
+    
+    return { label: 'Break', timeRange: null }
   }
 
-  // Get appointments for a specific time slot (shows appointments that START in or near this slot)
+  // Get appointments for a specific time slot (shows appointments that START at this exact slot)
   const getAppointmentsForSlot = (date, timeSlot) => {
     const dateObj = new Date(date)
     dateObj.setHours(0, 0, 0, 0) // Reset time for consistent comparison
     const dateStr = dateObj.toDateString()
     const dayAppointments = appointmentsByDate[dateStr] || []
     
-    // Get appointment duration for slot calculation
-    const appointmentDuration = dentistData?.appointmentDuration || 30
-    
     // Parse the time slot
     const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
-    const slotStartMinutes = slotHour * 60 + slotMinute
-    const slotEndMinutes = slotStartMinutes + appointmentDuration
     
     const matchedApts = dayAppointments.filter(apt => {
       if (!apt.startTime) return false
       
       const startTime = new Date(apt.startTime)
-      const hours = startTime.getHours()
-      const minutes = startTime.getMinutes()
-      const aptStartMinutes = hours * 60 + minutes
+      const aptHour = startTime.getHours()
+      const aptMinute = startTime.getMinutes()
       
-      // Show appointment if it starts within this time slot
-      return aptStartMinutes >= slotStartMinutes && aptStartMinutes < slotEndMinutes
+      // Show appointment ONLY in the exact slot where it starts
+      return aptHour === slotHour && aptMinute === slotMinute
     })
     
     return matchedApts
@@ -264,6 +389,14 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return compareDate.getTime() === today.getTime()
   }
 
+  const isPast = (date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const compareDate = new Date(date)
+    compareDate.setHours(0, 0, 0, 0)
+    return compareDate.getTime() < today.getTime()
+  }
+
   const getStatusColor = (status) => {
     const statusUpper = status?.toUpperCase()
     
@@ -298,6 +431,28 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       <div className={`p-4 border-b ${
         isDarkMode ? 'border-gray-700' : 'border-gray-200'
       }`}>
+        {/* Working Hours Summary */}
+        {hasWorkingHours && dentistData?.appointmentDuration && (
+          <div className={`mb-3 p-3 rounded-lg ${
+            isDarkMode ? 'bg-gray-750' : 'bg-gray-50'
+          }`}>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <FaClock className={`w-4 h-4 ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`} />
+                  <span className={`text-sm font-medium ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Slot Duration: <span className="text-teal-600">{dentistData.appointmentDuration}min</span>
+                  </span>
+                </div>
+                <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Click on available slots to schedule appointments
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Navigation */}
         <div className="flex items-center justify-between">
@@ -382,29 +537,47 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
               </div>
               {weekDates.map((date, index) => {
                 const dateObj = new Date(date)
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                const dayOfWeek = dayNames[dateObj.getDay()]
+                const daySchedule = dentistData?.workingHours?.find(schedule => schedule.day === dayOfWeek)
+                const isDatePast = isPast(dateObj)
+                
                 return (
                   <div
                     key={index}
                     className={`p-3 text-center ${
                       isToday(dateObj)
                         ? isDarkMode ? 'bg-teal-500/20' : 'bg-teal-50'
-                        : ''
+                        : isDatePast
+                          ? isDarkMode ? 'bg-gray-900/50' : 'bg-gray-100'
+                          : ''
                     }`}
                   >
                     <div className={`text-xs font-semibold ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      isDatePast
+                        ? isDarkMode ? 'text-gray-600' : 'text-gray-500'
+                        : isDarkMode ? 'text-gray-400' : 'text-gray-600'
                     }`}>
                       {dateObj.toLocaleDateString('en-US', { weekday: 'short' })}
                     </div>
                     <div className={`text-lg font-bold mt-1 ${
                       isToday(dateObj)
                         ? 'text-teal-600'
-                        : isDarkMode
-                          ? 'text-white'
-                          : 'text-gray-800'
+                        : isDatePast
+                          ? isDarkMode ? 'text-gray-600' : 'text-gray-500'
+                          : isDarkMode
+                            ? 'text-white'
+                            : 'text-gray-800'
                     }`}>
                       {dateObj.getDate()}
                     </div>
+                    {daySchedule && daySchedule.start && daySchedule.end && (
+                      <div className={`text-[10px] mt-1 ${
+                        isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
+                        {convertTo12Hour(daySchedule.start)} - {convertTo12Hour(daySchedule.end)}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -412,6 +585,62 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
           {/* Time Grid */}
           <div className="relative">
+            {/* Current Time Indicator - shown across all day columns */}
+            {(() => {
+              const now = new Date()
+              const currentHour = now.getHours()
+              const currentMinute = now.getMinutes()
+              const currentTimeInMinutes = currentHour * 60 + currentMinute
+              
+              // Find if current time falls within the displayed time slots
+              const appointmentDuration = dentistData?.appointmentDuration || 30
+              
+              // Find the earliest and latest time in the grid
+              if (timeSlots.length > 0) {
+                const [firstSlotHour, firstSlotMin] = timeSlots[0].split(':').map(Number)
+                const firstSlotMinutes = firstSlotHour * 60 + firstSlotMin
+                
+                const lastSlot = timeSlots[timeSlots.length - 1]
+                const [lastSlotHour, lastSlotMin] = lastSlot.split(':').map(Number)
+                const lastSlotMinutes = lastSlotHour * 60 + lastSlotMin + appointmentDuration
+                
+                // Check if current time is within the calendar range
+                if (currentTimeInMinutes >= firstSlotMinutes && currentTimeInMinutes <= lastSlotMinutes) {
+                  // Calculate position from top
+                  const minutesFromStart = currentTimeInMinutes - firstSlotMinutes
+                  const totalGridMinutes = lastSlotMinutes - firstSlotMinutes
+                  const slotHeight = 60 // px per slot
+                  const totalHeight = (totalGridMinutes / appointmentDuration) * slotHeight
+                  const topPosition = (minutesFromStart / totalGridMinutes) * totalHeight
+                  
+                  return (
+                    <div 
+                      className="absolute left-0 right-0 z-20 pointer-events-none"
+                      style={{ top: `${topPosition}px` }}
+                    >
+                      <div className="flex items-center">
+                        {/* Time label */}
+                        <div className={`w-30 flex items-center justify-center ${
+                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
+                        } text-white text-[10px] font-bold py-0.5 rounded-r`}>
+                          {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </div>
+                        {/* Line across calendar */}
+                        <div className={`flex-1 h-0.5 ${
+                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
+                        }`} />
+                      </div>
+                      {/* Red dot at the start */}
+                      <div className={`absolute left-30 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${
+                        isDarkMode ? 'bg-red-600' : 'bg-red-500'
+                      }`} />
+                    </div>
+                  )
+                }
+              }
+              return null
+            })()}
+            
             {timeSlots.map((time, timeIndex) => (
               <div
                 key={time}
@@ -434,6 +663,10 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                   const dateObj = new Date(date)
                   const appointments = getAppointmentsForSlot(dateObj, time)
                   const isBreak = isBreakTime(dateObj, time)
+                  const isOutside = isOutsideWorkingHours(dateObj, time)
+                  const breakInfo = isBreak ? getBreakInfo(dateObj, time) : null
+                  const isAvailable = !isBreak && !isOutside && appointments.length === 0
+                  const isDatePast = isPast(dateObj)
                   
                   return (
                     <div
@@ -441,49 +674,123 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                       className={`relative p-1 border-r ${
                         isDarkMode ? 'border-gray-700' : 'border-gray-300'
                       } ${
-                        isBreak
-                          ? (isDarkMode ? 'bg-red-900/30' : 'bg-red-100')
-                          : isToday(dateObj) 
-                            ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
-                            : ''
-                      }`}
+                        isOutside
+                          ? (isDarkMode ? 'bg-gray-900/50' : 'bg-gray-200/50')
+                          : isBreak
+                            ? (isDarkMode ? 'bg-red-900/30' : 'bg-red-100')
+                            : isToday(dateObj) 
+                              ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
+                              : isDatePast
+                                ? (isDarkMode ? 'bg-gray-900/30' : 'bg-gray-100/70')
+                                : isAvailable
+                                  ? (isDarkMode ? 'hover:bg-teal-500/5 cursor-pointer' : 'hover:bg-teal-50 cursor-pointer')
+                                  : ''
+                      } ${
+                        isOutside ? 'cursor-not-allowed' : ''
+                      } transition-colors duration-150`}
+                      onClick={() => {
+                        if (!isBreak && !isOutside && isAvailable) {
+                          // Navigate to treatments page for empty available slots
+                          if (onNavigateToSchedule) {
+                            onNavigateToSchedule('treatments')
+                          }
+                        }
+                      }}
+                      title={
+                        isOutside 
+                          ? 'Outside working hours' 
+                          : isBreak 
+                            ? `${breakInfo?.label} (${breakInfo?.timeRange})`
+                            : isAvailable
+                              ? 'Click to add treatment'
+                              : ''
+                      }
                     >
-                      {isBreak && (
+                      {/* Outside working hours overlay */}
+                      {isOutside && (
                         <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-                          <span className={`text-xs font-medium ${
-                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          <div className={`text-center ${
+                            isDarkMode ? 'text-gray-600' : 'text-gray-400'
                           }`}>
-                            Break
-                          </span>
+                            <div className="text-[10px] font-medium">Closed</div>
+                          </div>
                         </div>
                       )}
+                      
+                      {/* Break time overlay */}
+                      {isBreak && !isOutside && breakInfo && (
+                        <div className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-1`}>
+                          <div className={`text-center ${
+                            isDarkMode ? 'text-red-400' : 'text-red-600'
+                          }`}>
+                            <div className="text-[10px] font-semibold">{breakInfo.label}</div>
+                            {breakInfo.timeRange && (
+                              <div className="text-[9px] mt-0.5 opacity-90">{breakInfo.timeRange}</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Available slot indicator */}
+                      {isAvailable && !isBreak && !isOutside && (
+                        <div className={`absolute top-1 right-1 pointer-events-none`}>
+                          <FaPlus className={`w-2 h-2 ${
+                            isDarkMode ? 'text-teal-500/50' : 'text-teal-600/50'
+                          }`} />
+                        </div>
+                      )}
+                      
+                      {/* Appointments */}
                       {appointments.map((apt, aptIndex) => (
                         <div
                           key={apt.id || aptIndex}
                           className={`
-                            absolute left-1 right-1 rounded-lg border-l-4 p-2 cursor-pointer
-                            transition-all hover:shadow-lg hover:z-10
+                            absolute left-1 right-1 rounded-md border-l-[3px] p-1.5 cursor-pointer
+                            transition-all hover:shadow-md hover:z-10 overflow-hidden
                             ${getStatusColor(apt.status)}
                           `}
                           style={{
                             height: `${getAppointmentHeight(apt) - 4}px`,
-                            maxHeight: '120px'
+                            minHeight: '52px'
                           }}
-                          onClick={() => onAppointmentClick?.(apt)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Navigate to appointments page when clicking on an appointment
+                            if (onNavigateToSchedule) {
+                              onNavigateToSchedule('appointments')
+                            }
+                          }}
                         >
-                          <div className="text-xs font-semibold truncate">
+                          {/* Patient Name */}
+                          <div className="text-[11px] font-semibold truncate leading-tight">
                             {apt.patient?.name || `${apt.patient?.firstName} ${apt.patient?.lastName}`}
                           </div>
-                          <div className="text-xs opacity-80 truncate mt-0.5">
+                          
+                          {/* Treatment */}
+                          <div className="text-[10px] opacity-75 truncate leading-tight mt-0.5">
                             {apt.treatment?.treatmentName || 'Consultation'}
                           </div>
-                          <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
-                            <FaClock className="w-2.5 h-2.5" />
-                            {new Date(apt.startTime).toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit',
-                              hour12: true
-                            })}
+                          
+                          {/* Time Range */}
+                          <div className="flex items-center gap-0.5 text-[9px] opacity-70 mt-1 leading-tight">
+                            <FaClock className="w-2 h-2 shrink-0" />
+                            <span className="truncate font-medium">
+                              {new Date(apt.startTime).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                              {apt.endTime && (
+                                <>
+                                  {' - '}
+                                  {new Date(apt.endTime).toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </>
+                              )}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -498,30 +805,62 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
       </div>
 
       {/* Legend */}
-      <div className={`p-4 border-t flex items-center gap-6 ${
+      <div className={`p-4 border-t ${
         isDarkMode ? 'border-gray-700' : 'border-gray-200'
       }`}>
-        <span className={`text-xs font-medium ${
-          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>Status:</span>
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Confirmed
-            </span>
+        <div className="flex flex-col gap-3">
+          {/* Appointment Status */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className={`text-xs font-semibold ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Appointment Status:</span>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Confirmed
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Pending
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Completed
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Pending
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Completed
-            </span>
+          
+          {/* Time Slot Types */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className={`text-xs font-semibold ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Time Slots:</span>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded ${isDarkMode ? 'bg-teal-500/10 border border-teal-500/30' : 'bg-teal-50 border border-teal-200'}`}></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Available (Click to add treatment)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Break Time
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded ${isDarkMode ? 'bg-gray-900/50' : 'bg-gray-200/50'}`}></div>
+                <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Outside Working Hours
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

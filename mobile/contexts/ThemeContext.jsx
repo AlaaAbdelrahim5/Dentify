@@ -41,8 +41,12 @@ export const ThemeProvider = ({ children }) => {
   const toggleTheme = async () => {
     try {
       const newTheme = !isDarkMode;
-      setIsDarkMode(newTheme);
+      // Save the new theme preference before refreshing
       await AsyncStorage.setItem('theme', newTheme ? 'dark' : 'light');
+      // Refresh the app immediately
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
     } catch (error) {
       // Silent fail
     }
