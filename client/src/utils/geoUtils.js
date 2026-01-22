@@ -7,6 +7,19 @@
  * @returns {number} Distance in kilometers
  */
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  // Validate inputs
+  if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+    console.warn('Invalid coordinates for distance calculation:', { lat1, lon1, lat2, lon2 })
+    return Infinity
+  }
+
+  // Check for valid coordinate ranges
+  if (lat1 < -90 || lat1 > 90 || lat2 < -90 || lat2 > 90 ||
+      lon1 < -180 || lon1 > 180 || lon2 < -180 || lon2 > 180) {
+    console.warn('Coordinates out of valid range:', { lat1, lon1, lat2, lon2 })
+    return Infinity
+  }
+
   const R = 6371 // Radius of the Earth in kilometers
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
@@ -15,6 +28,13 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   const distance = R * c
+  
+  // Validate result
+  if (isNaN(distance) || distance < 0) {
+    console.warn('Invalid distance calculation result:', distance)
+    return Infinity
+  }
+  
   return distance
 }
 
@@ -31,13 +51,41 @@ const toRad = (degrees) => {
  * @returns {Array|null} [lat, lng] or null if invalid
  */
 export const parseCoordinates = (coords) => {
-  if (!coords) return null
+  if (!coords) {
+    return null
+  }
   
   try {
-    const [lat, lng] = coords.split(',').map(c => parseFloat(c.trim()))
-    if (isNaN(lat) || isNaN(lng)) return null
+    // Handle both string and potential object formats
+    if (typeof coords !== 'string') {
+      console.warn('Coordinates not in string format:', coords)
+      return null
+    }
+
+    const parts = coords.split(',').map(c => c.trim())
+    
+    if (parts.length !== 2) {
+      console.warn('Invalid coordinate format (expected 2 parts):', coords)
+      return null
+    }
+
+    const [lat, lng] = parts.map(c => parseFloat(c))
+    
+    // Validate parsed values
+    if (isNaN(lat) || isNaN(lng)) {
+      console.warn('Could not parse coordinates to numbers:', coords)
+      return null
+    }
+
+    // Validate coordinate ranges
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      console.warn('Coordinates out of valid range:', { lat, lng })
+      return null
+    }
+
     return [lat, lng]
   } catch (error) {
+    console.warn('Error parsing coordinates:', coords, error)
     return null
   }
 }

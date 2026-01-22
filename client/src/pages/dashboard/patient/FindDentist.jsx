@@ -11,7 +11,10 @@ import {
   FaEnvelope,
   FaPhone,
   FaList,
-  FaTh
+  FaTh,
+  FaExclamationCircle,
+  FaRedo,
+  FaCheckCircle
 } from 'react-icons/fa'
 import { 
   PageHeader, 
@@ -40,6 +43,9 @@ const FindDoctor = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [error, setError] = useState(null)
   const [userLocation, setUserLocation] = useState(null)
+  const [locationChecked, setLocationChecked] = useState(false)
+  const [locationError, setLocationError] = useState(null)
+  const [isRetryingLocation, setIsRetryingLocation] = useState(false)
   const [viewMode, setViewMode] = useState('table') // 'table' or 'grid'
   
   // Filter states
@@ -62,27 +68,85 @@ const FindDoctor = () => {
     }
   }, [searchQuery, selectedSpecialty, selectedLocation])
 
-  // Initial load
+  // Initial load and get location
   useEffect(() => {
     fetchDoctors()
-    
-    // Get user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude])
-        },
-        (error) => {
-          
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000
-        }
-      )
-    }
+    getLocationWithRetry()
   }, [])
+
+  // Function to get user location with better error handling
+  const getLocationWithRetry = async (isRetry = false) => {
+    if (isRetry) {
+      setIsRetryingLocation(true)
+    }
+
+    try {
+      if (!('geolocation' in navigator)) {
+        setLocationError('Geolocation is not supported by your browser')
+        setUserLocation(null)
+        setLocationChecked(true)
+        if (isRetry) setIsRetryingLocation(false)
+        return
+      }
+
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Location request timed out')), 10000)
+      })
+
+      // Create the geolocation promise
+      const geoPromise = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve([position.coords.latitude, position.coords.longitude]),
+          (error) => reject(error),
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000
+          }
+        )
+      })
+
+      const location = await Promise.race([geoPromise, timeoutPromise])
+      setUserLocation(location)
+      setLocationError(null)
+      setLocationChecked(true)
+      
+      if (isRetry) {
+        setToast({
+          type: 'success',
+          message: 'Location detected successfully! Distances are now shown.'
+        })
+      }
+    } catch (error) {
+      console.error('Geolocation error:', error)
+      
+      let errorMessage = 'Unable to get your location'
+      
+      if (error.code === 1) {
+        errorMessage = 'Location permission denied. Please enable location access to see distances.'
+      } else if (error.code === 2) {
+        errorMessage = 'Location unavailable. Please check your device settings.'
+      } else if (error.code === 3 || error.message.includes('timeout')) {
+        errorMessage = 'Location request timed out. Click retry to try again.'
+      }
+      
+      setLocationError(errorMessage)
+      setUserLocation(null)
+      setLocationChecked(true)
+      
+      if (!isRetry) {
+        setToast({
+          type: 'warning',
+          message: errorMessage
+        })
+      }
+    } finally {
+      if (isRetry) {
+        setIsRetryingLocation(false)
+      }
+    }
+  }
 
   const fetchDoctors = async (isFiltering = false) => {
     try {
@@ -352,7 +416,60 @@ const FindDoctor = () => {
         description="Search and browse qualified dentists"
       />
 
-      {/* Filters and View Toggle */}
+      {/* Location Status Banner */}
+      {locationChecked && locationError && (
+        <Card className={`p-4 border-l-4 ${
+          isDarkMode 
+            ? 'bg-yellow-900/20 border-yellow-500' 
+            : 'bg-yellow-50 border-yellow-500'
+        }`}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <FaExclamationCircle className={`mt-0.5 ${
+                isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+              }`} />
+              <div>
+                <h4 className={`font-semibold mb-1 ${
+                  isDarkMode ? 'text-yellow-300' : 'text-yellow-800'
+                }`}>
+                  Location Access Unavailable
+                </h4>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-yellow-200' : 'text-yellow-700'
+                }`}>
+                  {locationError}
+                </p>
+                <p className={`text-xs mt-1 ${
+                  isDarkMode ? 'text-yellow-300/70' : 'text-yellow-600'
+                }`}>
+                  Distances to dentists cannot be shown without your location.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => getLocationWithRetry(true)}
+              disabled={isRetryingLocation}
+              className={isDarkMode ? 'border-yellow-500 text-yellow-400 hover:bg-yellow-500/10' : 'border-yellow-600 text-yellow-700 hover:bg-yellow-100'}
+            >
+              {isRetryingLocation ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Retrying...
+                </>
+              ) : (
+                <>
+                  <FaRedo className="mr-2" />
+                  Retry
+                </>
+              )}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+
       <Card className="p-4">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="flex-1 w-full md:w-auto">
