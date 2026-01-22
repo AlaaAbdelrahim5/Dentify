@@ -316,9 +316,9 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] overflow-x-hidden">
+    <div className="flex flex-col">
       {/* Fixed Header Section */}
-      <div className="flex-none space-y-4">
+      <div className="space-y-4">
         {/* Page Header */}
         <PageHeader
           title="Imaging Requests"
@@ -392,8 +392,8 @@ const RadiologyRequests = ({ radiologyData, onStatsUpdate }) => {
       </Card>
       </div>
 
-      {/* Scrollable Content Section */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden my-4">
+      {/* Content Section */}
+      <div className="my-4">
       {/* Requests - Table or Grid View */}
       {isLoading ? (
         <Card className="p-8 text-center">
