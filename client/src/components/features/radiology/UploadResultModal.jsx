@@ -639,34 +639,23 @@ const UploadResultModal = ({ request, isOpen, onClose, onSuccess }) => {
         </div>
 
         {/* Fixed Bottom Section */}
-        <div className={`flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t ${
+        <div className={`flex justify-end gap-3 p-6 pt-4 border-t ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
           <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            variant="secondary"
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-xl font-medium"
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting}
             variant="primary"
+            disabled={isSubmitting}
           >
-            {isSubmitting ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <FaCloudUploadAlt className="w-5 h-5 mr-2" />
-                Upload Result
-              </>
-            )}
+            {isSubmitting ? 'Uploading...' : 'Upload Result'}
           </Button>
         </div>
       </form>
