@@ -397,6 +397,19 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
     return compareDate.getTime() < today.getTime()
   }
 
+  // Check if a specific time slot has passed
+  const isPastTimeSlot = (date, timeSlot) => {
+    const now = new Date()
+    const slotDate = new Date(date)
+    
+    // Parse the time slot
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number)
+    slotDate.setHours(slotHour, slotMinute, 0, 0)
+    
+    // Return true if the slot time has passed
+    return slotDate.getTime() < now.getTime()
+  }
+
   const getStatusColor = (status) => {
     const statusUpper = status?.toUpperCase()
     
@@ -665,7 +678,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                   const isBreak = isBreakTime(dateObj, time)
                   const isOutside = isOutsideWorkingHours(dateObj, time)
                   const breakInfo = isBreak ? getBreakInfo(dateObj, time) : null
-                  const isAvailable = !isBreak && !isOutside && appointments.length === 0
+                  const isPastSlot = isPastTimeSlot(dateObj, time)
+                  const isAvailable = !isBreak && !isOutside && !isPastSlot && appointments.length === 0
                   const isDatePast = isPast(dateObj)
                   
                   return (
@@ -678,18 +692,24 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                           ? (isDarkMode ? 'bg-gray-900/50' : 'bg-gray-200/50')
                           : isBreak
                             ? (isDarkMode ? 'bg-red-900/30' : 'bg-red-100')
-                            : isToday(dateObj) 
-                              ? (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
-                              : isDatePast
+                            : isToday(dateObj)
+                              ? isPastSlot
+                                ? (isDarkMode ? 'bg-teal-500/5' : 'bg-teal-50/30')
+                                : (isDarkMode ? 'bg-teal-500/10' : 'bg-teal-50/50')
+                              : isPastSlot
                                 ? (isDarkMode ? 'bg-gray-900/30' : 'bg-gray-100/70')
-                                : isAvailable
-                                  ? (isDarkMode ? 'hover:bg-teal-500/5 cursor-pointer' : 'hover:bg-teal-50 cursor-pointer')
-                                  : ''
+                                : isDatePast
+                                  ? (isDarkMode ? 'bg-gray-900/30' : 'bg-gray-100/70')
+                                  : isAvailable
+                                    ? (isDarkMode ? 'hover:bg-teal-500/5 cursor-pointer' : 'hover:bg-teal-50 cursor-pointer')
+                                    : ''
                       } ${
-                        isOutside ? 'cursor-not-allowed' : ''
+                        isOutside || isPastSlot ? 'cursor-not-allowed' : ''
+                      } ${
+                        isToday(dateObj) && isAvailable ? (isDarkMode ? 'hover:bg-teal-500/15' : 'hover:bg-teal-100') : ''
                       } transition-colors duration-150`}
                       onClick={() => {
-                        if (!isBreak && !isOutside && isAvailable) {
+                        if (!isBreak && !isOutside && !isPastSlot && isAvailable) {
                           // Navigate to treatments page for empty available slots
                           if (onNavigateToSchedule) {
                             onNavigateToSchedule('treatments')
@@ -698,14 +718,27 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
                       }}
                       title={
                         isOutside 
-                          ? 'Outside working hours' 
-                          : isBreak 
-                            ? `${breakInfo?.label} (${breakInfo?.timeRange})`
-                            : isAvailable
-                              ? 'Click to add treatment'
-                              : ''
+                          ? 'Outside working hours'
+                          : isPastSlot
+                            ? 'Time slot has passed'
+                            : isBreak 
+                              ? `${breakInfo?.label} (${breakInfo?.timeRange})`
+                              : isAvailable
+                                ? 'Click to add treatment'
+                                : ''
                       }
                     >
+                      {/* Past time slot indicator */}
+                      {isPastSlot && !isOutside && !isBreak && (
+                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
+                          <div className={`text-center ${
+                            isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                          }`}>
+                            <div className="text-[10px] font-medium">Past</div>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Outside working hours overlay */}
                       {isOutside && (
                         <div className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
