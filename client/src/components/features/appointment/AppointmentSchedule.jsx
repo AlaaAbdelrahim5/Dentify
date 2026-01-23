@@ -598,62 +598,6 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
 
           {/* Time Grid */}
           <div className="relative">
-            {/* Current Time Indicator - shown across all day columns */}
-            {(() => {
-              const now = new Date()
-              const currentHour = now.getHours()
-              const currentMinute = now.getMinutes()
-              const currentTimeInMinutes = currentHour * 60 + currentMinute
-              
-              // Find if current time falls within the displayed time slots
-              const appointmentDuration = dentistData?.appointmentDuration || 30
-              
-              // Find the earliest and latest time in the grid
-              if (timeSlots.length > 0) {
-                const [firstSlotHour, firstSlotMin] = timeSlots[0].split(':').map(Number)
-                const firstSlotMinutes = firstSlotHour * 60 + firstSlotMin
-                
-                const lastSlot = timeSlots[timeSlots.length - 1]
-                const [lastSlotHour, lastSlotMin] = lastSlot.split(':').map(Number)
-                const lastSlotMinutes = lastSlotHour * 60 + lastSlotMin + appointmentDuration
-                
-                // Check if current time is within the calendar range
-                if (currentTimeInMinutes >= firstSlotMinutes && currentTimeInMinutes <= lastSlotMinutes) {
-                  // Calculate position from top
-                  const minutesFromStart = currentTimeInMinutes - firstSlotMinutes
-                  const totalGridMinutes = lastSlotMinutes - firstSlotMinutes
-                  const slotHeight = 60 // px per slot
-                  const totalHeight = (totalGridMinutes / appointmentDuration) * slotHeight
-                  const topPosition = (minutesFromStart / totalGridMinutes) * totalHeight
-                  
-                  return (
-                    <div 
-                      className="absolute left-0 right-0 z-20 pointer-events-none"
-                      style={{ top: `${topPosition}px` }}
-                    >
-                      <div className="flex items-center">
-                        {/* Time label */}
-                        <div className={`w-30 flex items-center justify-center ${
-                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
-                        } text-white text-[10px] font-bold py-0.5 rounded-r`}>
-                          {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </div>
-                        {/* Line across calendar */}
-                        <div className={`flex-1 h-0.5 ${
-                          isDarkMode ? 'bg-red-600' : 'bg-red-500'
-                        }`} />
-                      </div>
-                      {/* Red dot at the start */}
-                      <div className={`absolute left-30 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${
-                        isDarkMode ? 'bg-red-600' : 'bg-red-500'
-                      }`} />
-                    </div>
-                  )
-                }
-              }
-              return null
-            })()}
-            
             {timeSlots.map((time, timeIndex) => (
               <div
                 key={time}
