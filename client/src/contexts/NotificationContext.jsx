@@ -25,6 +25,20 @@ export const NotificationProvider = ({ children }) => {
   const [fcmToken, setFcmToken] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
+  // Register service worker on mount
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
   useEffect(() => {
     // Get user from token
     const token = authUtils.getAccessToken();
@@ -51,35 +65,24 @@ export const NotificationProvider = ({ children }) => {
       
       setCurrentUserId(userIdStr);
 
-      // Request notification permission
+      // Request notification permission and get FCM token
       requestNotificationPermission().then(token => {
         if (token) {
+          console.log('FCM Token obtained:', token);
           setFcmToken(token);
           // Save FCM token to backend
           saveFcmTokenToBackend(token);
+        } else {
+          console.warn('Failed to get FCM token. Permission:', Notification.permission);
         }
       });
 
-      // Listen for notifications - convert userId to string
-      
+      // Listen for notifications from Firestore
       const unsubscribe = getUserNotifications(userIdStr, (notifs) => {
         setNotifications(notifs);
         const unread = notifs.filter(n => !n.read).length;
         setUnreadCount(unread);
       });
-
-      // Listen for foreground messages
-      onMessageListener()
-        .then((payload) => {
-          // Show browser notification
-          if (Notification.permission === 'granted') {
-            new Notification(payload.notification.title, {
-              body: payload.notification.body,
-              icon: '/logo.png'
-            });
-          }
-        })
-        .catch((err) => {});
 
       return () => {
         unsubscribe && unsubscribe();
@@ -90,6 +93,32 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(0);
     }
   }, [currentUserId]);
+
+  // Separate effect for foreground message listener
+  useEffect(() => {
+    const setupForegroundListener = async () => {
+      try {
+        const payload = await onMessageListener();
+        console.log('Foreground message received:', payload);
+        
+        // Show browser notification
+        if (Notification.permission === 'granted' && payload?.notification) {
+          new Notification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: '/logo.png',
+            badge: '/badge.png'
+          });
+        }
+        
+        // Re-setup the listener (since it only fires once)
+        setupForegroundListener();
+      } catch (err) {
+        console.error('Foreground message listener error:', err);
+      }
+    };
+
+    setupForegroundListener();
+  }, []);
 
   // Separate effect to watch for storage changes (login/logout events)
   useEffect(() => {
@@ -132,11 +161,11 @@ export const NotificationProvider = ({ children }) => {
     try {
       const accessToken = authUtils.getAccessToken();
       if (!accessToken) {
-        console.log('No access token available, skipping FCM token save');
+        console.warn('No access token available, skipping FCM token save');
         return;
       }
       
-      await fetch(`${import.meta.env.VITE_API_URL}/api/users/fcm-token`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/fcm-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,6 +173,13 @@ export const NotificationProvider = ({ children }) => {
         },
         body: JSON.stringify({ fcmToken: token })
       });
+
+      if (response.ok) {
+        console.log('FCM token saved to backend successfully');
+      } else {
+        const error = await response.json();
+        console.error('Failed to save FCM token:', error);
+      }
     } catch (error) {
       console.error('Error saving FCM token:', error);
     }

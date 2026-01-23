@@ -6,7 +6,7 @@ const { db, admin } = require('../../config/firebase-admin');
  */
 
 /**
- * Send notification to user via Firestore
+ * Send notification to user via Firestore and FCM push notification
  * @param {number|string} userId - User ID to send notification to
  * @param {string} title - Notification title
  * @param {string} body - Notification body
@@ -18,6 +18,7 @@ const sendNotification = async (userId, title, body, options = {}) => {
   try {
     const { type = 'general', data = {} } = options;
 
+    // Save notification to Firestore
     await db.collection('notifications').add({
       userId: String(userId),
       title,
@@ -27,6 +28,44 @@ const sendNotification = async (userId, title, body, options = {}) => {
       read: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
+
+    // Send FCM push notification
+    try {
+      // Get user's FCM token from Firestore
+      const userDoc = await db.collection('users').doc(String(userId)).get();
+      
+      if (userDoc.exists && userDoc.data().fcmToken) {
+        const fcmToken = userDoc.data().fcmToken;
+        
+        // Convert all data values to strings (FCM requirement)
+        const stringData = {};
+        if (data && typeof data === 'object') {
+          Object.keys(data).forEach(key => {
+            stringData[key] = String(data[key]);
+          });
+        }
+        
+        const message = {
+          notification: {
+            title,
+            body
+          },
+          data: {
+            type: String(type),
+            ...stringData
+          },
+          token: fcmToken
+        };
+
+        await admin.messaging().send(message);
+        console.log(`FCM notification sent to user ${userId}`);
+      } else {
+        console.log(`No FCM token found for user ${userId}`);
+      }
+    } catch (fcmError) {
+      // Log FCM error but don't fail the whole notification
+      console.error('FCM send error:', fcmError);
+    }
 
     return { success: true };
   } catch (error) {
