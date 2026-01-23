@@ -27,7 +27,7 @@ export const generateTimeSlots = (workingHours, duration = 30) => {
     
     if (slotEndInMinutes > endTimeInMinutes) break;
     
-    // Check if slot is during a break
+    // Check if slot overlaps with a break
     let isDuringBreak = false;
     if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
       for (const breakPeriod of workingHours.breaks) {
@@ -36,7 +36,8 @@ export const generateTimeSlots = (workingHours, duration = 30) => {
         const breakStartMinutes = breakStartHour * 60 + breakStartMinute;
         const breakEndMinutes = breakEndHour * 60 + breakEndMinute;
         
-        if (slotStartInMinutes >= breakStartMinutes && slotStartInMinutes < breakEndMinutes) {
+        // Check if slot overlaps with break: slot starts before break ends AND slot ends after break starts
+        if (slotStartInMinutes < breakEndMinutes && slotEndInMinutes > breakStartMinutes) {
           isDuringBreak = true;
           currentHour = breakEndHour;
           currentMinute = breakEndMinute;

@@ -198,7 +198,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
         break
       }
       
-      // Check if this slot is during a break
+      // Check if this slot overlaps with a break
       let isDuringBreak = false
       let breakEndTime = null
       if (workingHours.breaks && Array.isArray(workingHours.breaks)) {
@@ -210,8 +210,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSave, preselectedDoctor = nul
           const breakStartMinutes = breakStartHour * 60 + breakStartMinute
           const breakEndMinutes = breakEndHour * 60 + breakEndMinute
           
-          // Slot is during break if it's >= break start AND < break end
-          if (slotMinutes >= breakStartMinutes && slotMinutes < breakEndMinutes) {
+          // Check if slot overlaps with break: slot starts before break ends AND slot ends after break starts
+          if (slotMinutes < breakEndMinutes && slotEndInMinutes > breakStartMinutes) {
             isDuringBreak = true
             breakEndTime = { hour: breakEndHour, minute: breakEndMinute }
             break

@@ -233,7 +233,7 @@ exports.chat = async (req, res) => {
                 gte: startOfDay,
                 lte: endOfDay
               },
-              status: { not: 'CANCELLED' }
+              status: { notIn: ['CANCELLED', 'COMPLETED'] }
             },
             orderBy: { startTime: 'asc' }
           });
@@ -393,7 +393,7 @@ Would you like me to:
                 gte: startOfDay,
                 lte: endOfDay
               },
-              status: { not: 'CANCELLED' }
+              status: { notIn: ['CANCELLED', 'COMPLETED'] }
             },
             orderBy: { startTime: 'asc' }
           });
@@ -612,7 +612,7 @@ Would you like me to:
                         gte: startOfDay,
                         lte: endOfDay
                       },
-                      status: { not: 'CANCELLED' },
+                      status: { notIn: ['CANCELLED', 'COMPLETED'] },
                       OR: [
                         {
                           AND: [
@@ -967,7 +967,7 @@ exports.getAvailableSlots = async (req, res) => {
           gte: startOfDay,
           lte: endOfDay
         },
-        status: { not: 'CANCELLED' }
+        status: { notIn: ['CANCELLED', 'COMPLETED'] }
       },
       select: {
         startTime: true,
@@ -1179,7 +1179,7 @@ exports.bookAppointment = async (req, res) => {
       where: {
         dentistId: parseInt(dentistId),
         appointmentDate,
-        status: { not: 'CANCELLED' },
+        status: { notIn: ['CANCELLED', 'COMPLETED'] },
         OR: [
           {
             AND: [

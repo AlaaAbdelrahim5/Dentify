@@ -166,7 +166,7 @@ router.post('/', authenticate, authorize('Patient', 'Clinic', 'Dentist', 'Secret
       where: {
         dentistId,
         appointmentDate: new Date(appointmentDate),
-        status: { not: 'CANCELLED' },
+        status: { notIn: ['CANCELLED', 'COMPLETED'] },
         OR: [
           {
             AND: [
@@ -391,7 +391,7 @@ router.put('/:id', authenticate, async (req, res) => {
         where: {
           dentistId: existingAppointment.dentistId,
           appointmentDate: checkDate,
-          status: { not: 'CANCELLED' },
+          status: { notIn: ['CANCELLED', 'COMPLETED'] },
           id: { not: parseInt(id) },
           OR: [
             {
@@ -967,7 +967,7 @@ router.get('/dentist/:dentistId/available-slots', authenticate, async (req, res)
           gte: startOfDay,
           lte: endOfDay
         },
-        status: { not: 'CANCELLED' }
+        status: { notIn: ['CANCELLED', 'COMPLETED'] }
       },
       select: {
         startTime: true,

@@ -116,8 +116,8 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
           </TouchableOpacity>
         )}
         
-        {/* PENDING status: Show Confirm + Cancel for dentist */}
-        {isPending && role === 'dentist' && (
+        {/* PENDING status: Show Confirm + Cancel for dentist and secretary */}
+        {isPending && (role === 'dentist' || role === 'secretary') && (
           <>
             {onConfirm && (
               <TouchableOpacity
@@ -144,8 +144,8 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
           </>
         )}
         
-        {/* CONFIRMED status: Show Complete + Cancel for dentist */}
-        {isConfirmed && role === 'dentist' && (
+        {/* CONFIRMED status: Show Complete + Cancel for dentist and secretary */}
+        {isConfirmed && (role === 'dentist' || role === 'secretary') && (
           <>
             {onComplete && (
               <TouchableOpacity
@@ -172,8 +172,8 @@ export const AppointmentCard = ({ appointment, isDarkMode, role = 'patient', onC
           </>
         )}
         
-        {/* For patient or secretary roles, show only cancel if available */}
-        {role !== 'dentist' && (isPending || isConfirmed) && onCancel && (
+        {/* For patient role, show only cancel if available */}
+        {role === 'patient' && (isPending || isConfirmed) && onCancel && (
           <TouchableOpacity
             onPress={() => onCancel(appointment)}
             className="flex-1 py-2 rounded-lg"

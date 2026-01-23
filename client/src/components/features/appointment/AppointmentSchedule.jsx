@@ -125,7 +125,7 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
           break
         }
         
-        // Check if this slot is during a break
+        // Check if this slot overlaps with a break
         let isDuringBreak = false
         let breakEndTime = null
         
@@ -139,8 +139,8 @@ const AppointmentSchedule = ({ appointments = [], onAddAppointment, onAppointmen
             const breakStartMinutes = breakStartHour * 60 + breakStartMinute
             const breakEndMinutes = breakEndHour * 60 + breakEndMinute
             
-            // Slot is during break if it starts within the break period
-            if (slotStartInMinutes >= breakStartMinutes && slotStartInMinutes < breakEndMinutes) {
+            // Check if slot overlaps with break: slot starts before break ends AND slot ends after break starts
+            if (slotStartInMinutes < breakEndMinutes && slotEndInMinutes > breakStartMinutes) {
               isDuringBreak = true
               breakEndTime = { hour: breakEndHour, minute: breakEndMinute }
               break
