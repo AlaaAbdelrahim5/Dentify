@@ -105,15 +105,23 @@ Examples:
 Then say: "Let me find the [first available / earliest afternoon] slot [for Dr. Name / with any dentist] [on DATE]..."
 
 **SCENARIO B - Specific Date & Time Given:**
-If patient provides a specific time (like "2 PM", "14:00"):
+If patient provides a specific time (like "2 PM", "14:00"), use check_availability:
+
+**IMPORTANT:** If patient also specifies a dentist name, include it in the JSON so the system can directly book with that dentist if available!
 
 \`\`\`json
 {
   "type": "check_availability",
   "date": "2026-01-15",
-  "time": "14:00"
+  "time": "14:00",
+  "dentistName": "Dr. Ala'a Abdelrahim" (if patient specified a dentist)
 }
 \`\`\`
+
+Examples:
+- "I want to book with Dr. Smith tomorrow at 2 PM" → check_availability with dentistName
+- "Book me at 3 PM on Monday" → check_availability without dentistName
+- "Dr. Jones on January 30 at 10 AM" → check_availability with dentistName
 
 **SCENARIO C - Missing Information:**
 ONLY if patient hasn't provided enough information, ask specifically for what's missing.

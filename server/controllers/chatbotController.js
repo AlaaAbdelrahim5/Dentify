@@ -544,6 +544,16 @@ Would you like me to:
       }
       // Check if it's an availability check request
       else if (booking.type === 'check_availability' && booking.date && booking.time) {
+        // Check if patient specified a dentist name
+        let targetDentist = null;
+        if (booking.dentistName) {
+          const dentistNameLower = booking.dentistName.toLowerCase().replace('dr. ', '').replace('dr ', '');
+          targetDentist = dentists.find(d => {
+            const fullName = `${d.firstName} ${d.lastName}`.toLowerCase();
+            return fullName.includes(dentistNameLower) || dentistNameLower.includes(fullName);
+          });
+        }
+
         // Find dentists available at the specified time
         const requestedDate = new Date(booking.date);
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -564,10 +574,11 @@ Would you like me to:
           }
         }
         
-        // Filter dentists by availability
+        // Filter dentists by availability (check only target dentist if specified)
+        const dentistsToCheck = targetDentist ? [targetDentist] : dentists;
         const availableDentists = [];
         
-        for (const dentist of dentists) {
+        for (const dentist of dentistsToCheck) {
           // Check if dentist works on this day
           if (dentist.workingHours && Array.isArray(dentist.workingHours)) {
             const daySchedule = dentist.workingHours.find(day => day.day === dayOfWeek);
@@ -648,6 +659,74 @@ Would you like me to:
         
         // Now send available dentists back to AI to generate a proper response
         if (availableDentists.length > 0) {
+          // If patient specified a dentist and they're available, proceed directly to booking
+          if (targetDentist && availableDentists.length === 1) {
+            const dentist = availableDentists[0];
+            
+            // Calculate start and end times
+            const [hours, minutes] = requestedTime.split(':');
+            const startDateTime = new Date(booking.date);
+            startDateTime.setHours(parseInt(hours), parseInt(minutes || 0), 0, 0);
+            
+            const endDateTime = new Date(startDateTime);
+            endDateTime.setMinutes(endDateTime.getMinutes() + (dentist.appointmentDuration || 30));
+            
+            // Format time for display
+            const timeHour = parseInt(hours);
+            const displayTime = timeHour > 12 
+              ? `${timeHour - 12}:${minutes || '00'} PM` 
+              : timeHour === 12 
+              ? `12:${minutes || '00'} PM` 
+              : `${timeHour}:${minutes || '00'} AM`;
+            
+            const displayDate = requestedDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            
+            // Create booking information message
+            const bookingMessage = `Great! ${booking.dentistName} is available on ${displayDate} at ${displayTime}. Generate the appointment booking JSON with dentistId=${dentist.userId}, date=${booking.date}, startTime=${startDateTime.toISOString()}, endTime=${endDateTime.toISOString()}, time=${displayTime}`;
+            
+            const bookingContext = {
+              ...context,
+              firstAvailableSlot: {
+                dentist: {
+                  userId: dentist.userId,
+                  name: dentist.name,
+                  appointmentDuration: dentist.appointmentDuration
+                },
+                date: booking.date,
+                time: requestedTime,
+                displayTime,
+                displayDate,
+                startTime: startDateTime.toISOString(),
+                endTime: endDateTime.toISOString()
+              }
+            };
+            
+            const followUpResponse = await geminiService.chat(userId, bookingMessage, bookingContext);
+            
+            // Clean up the message
+            let cleanMessage = followUpResponse.message;
+            cleanMessage = cleanMessage.replace(/```json[\s\S]*?```/g, '');
+            cleanMessage = cleanMessage.replace(/\{[\s\S]*?"type"\s*:\s*"appointment_booking"[\s\S]*?\}/g, '');
+            cleanMessage = cleanMessage.replace(/\.\.\.+/g, '').trim();
+            
+            followUpResponse.message = cleanMessage;
+            followUpResponse.readyToBook = true;
+            
+            return res.json({
+              success: true,
+              data: {
+                ...followUpResponse,
+                firstAvailableSlot: bookingContext.firstAvailableSlot
+              }
+            });
+          }
+          
+          // Otherwise, show list of available dentists for selection
           const dentistListText = availableDentists.map((d, idx) => 
             `${idx + 1}. ${d.name} (ID: ${d.userId}) - ${d.specialization.join(', ')} at ${d.clinic}, ${d.city} (Duration: ${d.appointmentDuration} minutes)`
           ).join('\n');
@@ -695,16 +774,17 @@ Would you like me to:
           const ampm = parseInt(hour24) >= 12 ? 'PM' : 'AM';
           const displayTime = `${hour12}:${min} ${ampm}`;
           
-          const noAvailabilityMessage = `I'm sorry, but no dentists are available at ${displayTime} on ${displayDate}. This time slot may be:
+          const dentistSpecific = targetDentist ? ` ${booking.dentistName}` : '';
+          const noAvailabilityMessage = `I'm sorry, but${dentistSpecific ? dentistSpecific + ' is' : ' no dentists are'} not available at ${displayTime} on ${displayDate}. This time slot may be:
 - Outside of working hours
 - During a break time
 - Already booked
 - On a non-working day
 
 Would you like me to:
-1. Find the first available time on ${displayDate}?
+1. Find the first available time${dentistSpecific ? ' with' + dentistSpecific : ''} on ${displayDate}?
 2. Suggest alternative dates?
-3. Show you all available dentists for a different time?`;
+3. Show you${dentistSpecific ? ' other' : ' all'} available dentists for a different time?`;
           
           return res.json({
             success: true,
