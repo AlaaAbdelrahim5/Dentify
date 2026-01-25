@@ -185,7 +185,8 @@ const DentistPatients = () => {
           treatmentDiscount: treatment.treatmentDiscount || 0,
           teethStatus: teethStatus,
           description: treatment.description,
-          notes: treatment.notes
+          notes: treatment.notes,
+          dentistName: treatment.dentist ? `Dr. ${treatment.dentist.firstName} ${treatment.dentist.lastName}` : null
         }
       })
       
