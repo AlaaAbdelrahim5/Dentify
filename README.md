@@ -263,8 +263,6 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in `backend/` (see the [Environment Variables](#environment-variables) section).
-
 Run database migrations:
 
 ```bash
