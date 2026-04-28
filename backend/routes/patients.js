@@ -1,0 +1,417 @@
+const express = require('express');
+const router = express.Router();
+const { authenticate, authorize } = require('../middleware/auth');
+const prisma = require('../config/database');
+const { updateUserWithProfile } = require('../services/user/userService');
+const { createStatsHandler, createGetProfileHandler } = require('../factories/routeHandlers');
+const { standardUserSelect, buildWhereClause } = require('../utils/queryHelpers');
+const { paginatedResponse, calculatePagination } = require('../helpers/response');
+const { hashPassword } = require('../helpers/hash');
+
+// Get patients statistics - using reusable handler
+router.get('/stats', authenticate, authorize('Admin'), createStatsHandler('patient', 'Patient'));
+
+// Get current patient's profile - using reusable handler
+router.get('/me', authenticate, authorize('Patient'), createGetProfileHandler('patient'));
+
+// Update current patient's profile - using consolidated user service
+router.put('/me', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, birthDate, gender, city, phone } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !birthDate || !gender || !city) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'All required fields must be provided' 
+      });
+    }
+
+    // Prepare update data
+    const userData = phone ? { phone } : {};
+    const profileData = { firstName, lastName, birthDate, gender, city };
+
+    // Update using service
+    const result = await updateUserWithProfile(userId, userData, profileData, 'patient');
+
+    res.json({ 
+      success: true,
+      data: result,
+      message: 'Patient profile updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update patient profile' 
+    });
+  }
+});
+
+// Get current patient's radiology requests
+router.get('/my-radiology-requests', authenticate, authorize('Patient'), async (req, res) => {
+  try {
+    const patientId = req.user.id;
+    const { status, imagingType } = req.query;
+
+    const where = { patientId };
+    if (status && status !== 'all') {
+      where.status = status.toUpperCase().replace(' ', '_');
+    }
+    if (imagingType && imagingType !== 'all') {
+      where.imagingType = imagingType;
+    }
+
+    const radiologyRequests = await prisma.radiologyRequest.findMany({
+      where,
+      include: {
+        dentist: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            specialization: true
+          }
+        },
+        radiologyCenter: {
+          select: {
+            userId: true,
+            centerName: true,
+            city: true,
+            location: true
+          }
+        },
+        treatment: {
+          select: {
+            id: true,
+            treatmentName: true,
+            description: true
+          }
+        }
+      },
+      orderBy: {
+        requestDate: 'desc'
+      }
+    });
+
+    res.json({ 
+      success: true,
+      data: radiologyRequests 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch radiology requests' });
+  }
+});
+
+// Get all patients
+router.get('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, city, status, gender } = req.query;
+    
+    // Define search fields for patients
+    const searchFields = ['firstName', 'lastName', 'user.email', 'user.phone'];
+    
+    // Build custom filters for gender
+    const customFilters = {};
+    if (gender) {
+      customFilters.gender = gender;
+    }
+    
+    // Build filter where clause based on query parameters
+    const filterWhere = buildWhereClause({
+      search,
+      searchFields,
+      city,
+      status,
+      customFilters
+    });
+    
+    // For Clinic or Secretary, filter patients by their clinic
+    let whereClause = {};
+    
+    if (req.user.role === 'Clinic' || req.user.role === 'Secretary') {
+      let clinicId;
+      
+      if (req.user.role === 'Clinic') {
+        // For clinic users, the userId is directly the clinicId
+        const clinic = await prisma.clinic.findUnique({
+          where: { userId: req.user.id },
+          select: { userId: true }
+        });
+        
+        if (!clinic) {
+          return res.status(404).json({ error: 'Clinic profile not found' });
+        }
+        
+        clinicId = clinic.userId;
+      } else if (req.user.role === 'Secretary') {
+        // Get secretary's clinic
+        const secretary = await prisma.secretary.findUnique({
+          where: { userId: req.user.id },
+          select: { clinicId: true }
+        });
+        
+        if (!secretary) {
+          return res.status(404).json({ error: 'Secretary profile not found' });
+        }
+        
+        clinicId = secretary.clinicId;
+      }
+      
+      // Get all dentists in the clinic
+      const dentistsInClinic = await prisma.dentist.findMany({
+        where: { clinicId },
+        select: { userId: true }
+      });
+      
+      const dentistIds = dentistsInClinic.map(d => d.userId);
+      
+      // Get all patients who have treatments with these dentists
+      const treatments = await prisma.treatment.findMany({
+        where: { dentistId: { in: dentistIds } },
+        select: { patientId: true },
+        distinct: ['patientId']
+      });
+      
+      const patientIds = treatments.map(t => t.patientId);
+      
+      // Merge role-based filter with query filters
+      if (filterWhere.AND) {
+        whereClause = {
+          AND: [
+            { userId: { in: patientIds } },
+            ...filterWhere.AND
+          ]
+        };
+      } else {
+        whereClause = { userId: { in: patientIds } };
+      }
+    } else {
+      whereClause = filterWhere;
+    }
+    
+    // Get total count
+    const total = await prisma.patient.count({ where: whereClause });
+    
+    // Calculate pagination
+    const pagination = calculatePagination(page, limit, total);
+    
+    // Fetch patients
+    const patients = await prisma.patient.findMany({
+      where: whereClause,
+      skip: pagination.skip,
+      take: pagination.limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+    
+    return paginatedResponse(res, patients, pagination, 'Patients fetched successfully');
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch patients' });
+  }
+});
+
+// Get patient by ID
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const patient = await prisma.patient.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    res.json({ patient });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch patient' });
+  }
+});
+
+// Create new patient (for dentists/clinics/secretaries/admins)
+router.post('/', authenticate, authorize('Dentist', 'Clinic', 'Secretary', 'Admin'), async (req, res) => {
+  try {
+    const { email, password, phone, firstName, lastName, gender, birthDate, city } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !phone || !firstName || !lastName || !birthDate || !city) {
+      return res.status(400).json({ error: 'All required fields must be provided' });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Create user and patient in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          phone,
+          role: 'Patient',
+          status: 'ACTIVE'
+        }
+      });
+
+      // Create patient profile
+      const patient = await tx.patient.create({
+        data: {
+          userId: user.id,
+          firstName,
+          lastName,
+          gender: gender || null,
+          birthDate: new Date(birthDate),
+          city
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              status: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return patient;
+    });
+
+    res.status(201).json({ 
+      message: 'Patient created successfully', 
+      patient: result 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create patient' });
+  }
+});
+
+// Update patient
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, gender, city, birthDate } = req.body;
+
+    // Check if user can update (must be own profile or dentist/clinic/admin)
+    const allowedRoles = ['Patient', 'Dentist', 'Clinic', 'Admin'];
+    if (req.user.id !== id && !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (gender) updateData.gender = gender;
+    if (city) updateData.city = city;
+    if (birthDate) updateData.birthDate = new Date(birthDate);
+
+    const patient = await prisma.patient.update({
+      where: { userId: parseInt(id) },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            status: true,
+            profileImage: true
+          }
+        }
+      }
+    });
+
+    res.json({ 
+      success: true,
+      data: patient,
+      message: 'Patient updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update patient' });
+  }
+});
+
+// Toggle patient status (activate/deactivate)
+router.patch('/:id/toggle-status', authenticate, authorize('Admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if patient exists
+    const existingPatient = await prisma.patient.findUnique({
+      where: { userId: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingPatient) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Patient not found' 
+      });
+    }
+
+    // Toggle status: ACTIVE <-> DEACTIVATED
+    const currentStatus = existingPatient.user.status;
+    const newStatus = currentStatus === 'ACTIVE' ? 'DEACTIVATED' : 'ACTIVE';
+
+    // Update status
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { status: newStatus }
+    });
+
+    const message = newStatus === 'ACTIVE' ? 'Patient activated successfully' : 'Patient deactivated successfully';
+    return res.json({ 
+      success: true,
+      data: { status: newStatus },
+      message 
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to toggle patient status' 
+    });
+  }
+});
+
+module.exports = router;

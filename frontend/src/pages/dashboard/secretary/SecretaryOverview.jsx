@@ -1,0 +1,228 @@
+import { useState, useEffect } from 'react'
+import { 
+  FaCalendarAlt,
+  FaUsers,
+  FaClock,
+  FaCheckCircle,
+  FaUserMd,
+  FaPhone,
+  FaUserTie
+} from 'react-icons/fa'
+import { Card, Button, StatsOverview, LoadingSpinner, StatusBadge, WelcomeCard } from '../../../components'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { appointmentsAPI, patientsAPI, dentistsAPI } from '../../../services/api'
+
+const SecretaryOverview = ({ userData, stats: propStats, onTabChange }) => {
+  const { isDarkMode } = useTheme()
+  const [todayAppointments, setTodayAppointments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    totalDentists: 0
+  })
+
+  // Fetch all data
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+      
+      // Get today's date range
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // Fetch appointments and dentists using API methods
+      const [appointmentsRes, dentistsRes] = await Promise.allSettled([
+        appointmentsAPI.getClinicAppointments(),
+        dentistsAPI.getForClinic()
+      ])
+
+      // Parse appointments - backend returns { appointments: [...] }
+      let appointments = []
+      if (appointmentsRes.status === 'fulfilled') {
+        appointments = appointmentsRes.value?.appointments || []
+      }
+      
+      // Filter today's appointments using startTime
+      const todayAppts = appointments.filter(apt => {
+        const aptDate = new Date(apt.startTime)
+        aptDate.setHours(0, 0, 0, 0)
+        return aptDate.getTime() === today.getTime()
+      })
+      
+      setTodayAppointments(todayAppts)
+
+      // Calculate unique patients from appointments (clinic-specific)
+      const uniquePatientIds = new Set()
+      appointments.forEach(apt => {
+        if (apt.patientId) {
+          uniquePatientIds.add(apt.patientId)
+        }
+      })
+      const patientsCount = uniquePatientIds.size
+
+      // Parse dentists - backend returns { success: true, data: [...] }
+      let dentistsCount = 0
+      if (dentistsRes.status === 'fulfilled') {
+        const dentists = dentistsRes.value?.data || []
+        dentistsCount = dentists.length
+      }
+
+      setStats({
+        totalPatients: patientsCount,
+        totalDentists: dentistsCount
+      })
+    } catch (error) {
+      console.error('Error fetching secretary data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Get stats with defaults - count only PENDING appointments (not CONFIRMED, COMPLETED, or CANCELLED)
+  const secretaryStats = {
+    todayAppointments: todayAppointments.length || 0,
+    pendingAppointments: todayAppointments.filter(a => a.status === 'PENDING').length || 0,
+    confirmedAppointments: todayAppointments.filter(a => a.status === 'CONFIRMED').length || 0,
+    totalPatients: stats.totalPatients || 0,
+    totalDentists: stats.totalDentists || 0
+  }
+
+  // Sort today's appointments by time (ascending)
+  const sortedTodayAppointments = [...todayAppointments].sort((a, b) => {
+    const timeA = new Date(a.startTime).getTime()
+    const timeB = new Date(b.startTime).getTime()
+    return timeA - timeB
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <WelcomeCard
+        title={`Welcome, ${userData?.firstName || 'Secretary'}!`}
+        subtitle={`${userData?.clinic?.clinicName || 'Clinic'} • ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+        icon={FaUserTie}
+        iconGradient="from-purple-600 to-pink-600"
+      />
+
+      {/* Stats Cards */}
+      <StatsOverview stats={[
+        {
+          label: 'Today\'s Appointments',
+          value: secretaryStats.todayAppointments,
+          icon: FaCalendarAlt,
+          gradient: 'from-blue-600 to-cyan-600'
+        },
+        {
+          label: 'Pending',
+          value: secretaryStats.pendingAppointments,
+          icon: FaClock,
+          gradient: 'from-yellow-600 to-orange-600'
+        },
+        {
+          label: 'Confirmed',
+          value: secretaryStats.confirmedAppointments,
+          icon: FaCheckCircle,
+          gradient: 'from-green-600 to-teal-600'
+        },
+        {
+          label: 'Total Patients',
+          value: secretaryStats.totalPatients,
+          icon: FaUsers,
+          gradient: 'from-purple-600 to-pink-600'
+        },
+        {
+          label: 'Dentists',
+          value: secretaryStats.totalDentists,
+          icon: FaUserMd,
+          gradient: 'from-teal-600 to-cyan-600'
+        }
+      ]} />
+
+      {/* Today's Schedule */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+            Today's Schedule
+          </h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onTabChange?.('appointments')}
+          >
+            View All
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <LoadingSpinner size="md" text="Loading appointments..." />
+          </div>
+        ) : todayAppointments.length === 0 ? (
+          <div className="text-center py-8">
+            <FaCalendarAlt className={`w-12 h-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>No appointments scheduled for today</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sortedTodayAppointments.slice(0, 5).map((appointment) => (
+              <div
+                key={appointment.id}
+                className={`p-4 rounded-lg border ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800' 
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                } transition-colors cursor-pointer`}
+                onClick={() => onTabChange?.('appointments')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className={`p-3 rounded-lg ${
+                      isDarkMode ? 'bg-teal-900/30' : 'bg-teal-100'
+                    }`}>
+                      <FaClock className={`w-5 h-5 ${
+                        isDarkMode ? 'text-teal-400' : 'text-teal-600'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                          {appointment.patient?.firstName} {appointment.patient?.lastName}
+                        </p>
+                        <StatusBadge status={appointment.status} label={appointment.status} />
+                      </div>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        with Dr. {appointment.dentist?.firstName} {appointment.dentist?.lastName}
+                      </p>
+                      {appointment.patient?.user?.phone && (
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} flex items-center gap-1 mt-1`}>
+                          <FaPhone className="w-3 h-3" />
+                          {appointment.patient.user.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-lg font-bold ${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`}>
+                      {new Date(appointment.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </p>
+                    {appointment.reason && (
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                        {appointment.reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+export default SecretaryOverview

@@ -1,0 +1,170 @@
+import { useState, useCallback } from 'react'
+
+/**
+ * Custom hook for managing CRUD operations with confirmation dialogs
+ * Eliminates duplicate create, update, delete logic across management pages
+ * 
+ * @param {Object} api - API object with create, update, delete methods
+ * @param {Function} onSuccess - Callback after successful operation
+ * @param {Function} onError - Callback after failed operation
+ * @returns {Object} CRUD state and handlers
+ */
+export const useCRUD = (api = {}, onSuccess = null, onError = null) => {
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  /**
+   * Prepare confirmation modal for any action
+   */
+  const confirmOperation = useCallback((item, action) => {
+    console.log('=== confirmOperation called ===')
+    console.log('Item:', item)
+    console.log('Action:', action)
+    
+    setSelectedItem(item)
+    setConfirmAction(action)
+    setShowConfirmModal(true)
+    
+    console.log('Modal should be shown now')
+  }, [])
+
+  /**
+   * Execute the confirmed action
+   */
+  const executeOperation = useCallback(async (customFnOrEvent = null) => {
+    if (!selectedItem || !confirmAction) return
+
+    setIsProcessing(true)
+
+    try {
+      let response
+      const action = confirmAction
+      
+      // Check if customFnOrEvent is actually a function (not an event object)
+      const customFn = typeof customFnOrEvent === 'function' ? customFnOrEvent : null
+
+      // If custom function provided, use it
+      if (customFn) {
+        response = await customFn(selectedItem, action)
+      } else {
+        // Otherwise use standard API methods
+        switch (action) {
+          case 'delete':
+            response = await api.delete?.(selectedItem._id || selectedItem.id)
+            break
+          case 'activate':
+          case 'deactivate':
+            console.log('Toggle status - Item:', selectedItem)
+            console.log('Toggle status - ID:', selectedItem._id || selectedItem.id)
+            response = await api.toggleStatus?.(selectedItem._id || selectedItem.id)
+            console.log('Toggle status - Response:', response)
+            break
+          case 'approve':
+            response = await api.approve?.(selectedItem._id || selectedItem.id)
+            break
+          case 'reject':
+            response = await api.reject?.(selectedItem._id || selectedItem.id)
+            break
+          default:
+            console.warn('Unknown action:', action)
+            return
+        }
+      }
+
+      if (response?.success || response?.data) {
+        onSuccess?.({ action, item: selectedItem, response })
+      } else {
+        console.error('Toggle status failed - Response:', response)
+        onError?.({ action, item: selectedItem, error: response?.message || 'Operation failed' })
+      }
+    } catch (error) {
+      console.error(`Error executing ${confirmAction}:`, error)
+      onError?.({ action: confirmAction, item: selectedItem, error: error.message })
+    } finally {
+      setIsProcessing(false)
+      setShowConfirmModal(false)
+      setSelectedItem(null)
+      setConfirmAction(null)
+    }
+  }, [selectedItem, confirmAction, api, onSuccess, onError])
+
+  /**
+   * Cancel confirmation
+   */
+  const cancelOperation = useCallback(() => {
+    setShowConfirmModal(false)
+    setSelectedItem(null)
+    setConfirmAction(null)
+  }, [])
+
+  /**
+   * Quick helpers for common operations
+   */
+  const confirmDelete = useCallback((item) => confirmOperation(item, 'delete'), [confirmOperation])
+  const confirmToggleStatus = useCallback((item) => {
+    console.log('=== confirmToggleStatus called ===')
+    console.log('Item:', item)
+    console.log('Item user status:', item.user?.status)
+    console.log('Item userId status:', item.userId?.status)
+    
+    const status = item.user?.status || item.userId?.status
+    console.log('Resolved status:', status)
+    
+    const action = status === 'ACTIVE' || status === 'active' ? 'deactivate' : 'activate'
+    console.log('Action to perform:', action)
+    
+    confirmOperation(item, action)
+  }, [confirmOperation])
+  const confirmApprove = useCallback((item) => confirmOperation(item, 'approve'), [confirmOperation])
+  const confirmReject = useCallback((item) => confirmOperation(item, 'reject'), [confirmOperation])
+
+  return {
+    selectedItem,
+    showConfirmModal,
+    confirmAction,
+    isProcessing,
+    confirmOperation,
+    executeOperation,
+    cancelOperation,
+    confirmDelete,
+    confirmToggleStatus,
+    confirmApprove,
+    confirmReject
+  }
+}
+
+/**
+ * Custom hook for managing toast notifications
+ * 
+ * @returns {Object} Toast state and handlers
+ */
+export const useToast = () => {
+  const [toast, setToast] = useState(null)
+
+  const showToast = useCallback((message, type = 'info') => {
+    if (message === null || message === undefined) {
+      setToast(null)
+    } else {
+      setToast({ message, type })
+    }
+  }, [])
+
+  const showSuccess = useCallback((message) => showToast(message, 'success'), [showToast])
+  const showError = useCallback((message) => showToast(message, 'error'), [showToast])
+  const showWarning = useCallback((message) => showToast(message, 'warning'), [showToast])
+  const showInfo = useCallback((message) => showToast(message, 'info'), [showToast])
+  
+  const hideToast = useCallback(() => setToast(null), [])
+
+  return {
+    toast,
+    showToast,
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo,
+    hideToast
+  }
+}

@@ -1,0 +1,855 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useTheme } from '../../../contexts/ThemeContext'
+import {
+  FaStethoscope,
+  FaPlus,
+  FaSearch,
+  FaTh,
+  FaListAlt,
+  FaCheck,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaDollarSign,
+  FaCalendarAlt,
+  FaTooth,
+  FaMoneyBillWave,
+  FaXRay,
+  FaExclamationTriangle,
+  FaArrowLeft,
+  FaSave,
+  FaPrescriptionBottle
+} from 'react-icons/fa'
+import { Card, Button, Input, PageHeader, LoadingSpinner, EmptyState, TreatmentModal, TreatmentDetailsModal, PaymentModal, RadiologyRequestModal, ConfirmationModal, NewAppointmentModal, TreatmentTeethStatus, TreatmentPlanCard, PrescriptionModal, Toast, FilterBar } from '../../../components'
+import { useDebounce } from '../../../hooks'
+import { treatmentsAPI, patientsAPI, radiologyAPI, paymentsAPI, appointmentsAPI } from '../../../services/api'
+import { calculateRemainingBalance, safeJsonParse, ensureArray, sumField, countWhere, normalizeStatus } from '../../../utils/helpers'
+
+const DentistTreatments = ({ appointmentData: propsAppointmentData }) => {
+  const { isDarkMode } = useTheme()
+  const [activeView, setActiveView] = useState('all') // active, completed, all
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('In Progress')
+  const [viewMode, setViewMode] = useState('grid') // grid or list
+  
+  // Page view state: 'list', 'view', 'new', 'edit'
+  const [currentPage, setCurrentPage] = useState('list')
+  
+  // Modals state (now only for smaller modals like payment, radiology, delete)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [isRadiologyModalOpen, setIsRadiologyModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false)
+  const [selectedTreatment, setSelectedTreatment] = useState(null)
+  const [appointmentDataState, setAppointmentDataState] = useState(null)
+  
+  // Data states
+  const [treatments, setTreatments] = useState([])
+  const [patients, setPatients] = useState([])
+  const [appointments, setAppointments] = useState([])
+  const [radiologyCenters, setRadiologyCenters] = useState([])
+  const [payments, setPayments] = useState([])
+  const [prescriptions, setPrescriptions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filtering, setFiltering] = useState(false)
+  const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchAllData()
+  }, [])
+
+  // Debounce search term to avoid excessive filtering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300) // 300ms delay
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // Check if coming from appointment (via props or sessionStorage)
+  useEffect(() => {
+    // Check sessionStorage for appointment context from appointments page
+    const storedContext = sessionStorage.getItem('createTreatmentFromAppointment')
+    if (storedContext) {
+      try {
+        const appointmentContext = JSON.parse(storedContext)
+        setAppointmentDataState(appointmentContext)
+        setCurrentPage('new')
+        // Clear from sessionStorage after using it
+        sessionStorage.removeItem('createTreatmentFromAppointment')
+      } catch (err) {
+        console.error('Error parsing appointment context:', err)
+      }
+    } else if (propsAppointmentData && !appointmentDataState) {
+      setAppointmentDataState(propsAppointmentData)
+      setCurrentPage('new')
+    } else if (!propsAppointmentData && appointmentDataState && !storedContext) {
+      // Clear appointment data when prop is cleared and no sessionStorage data
+      setAppointmentDataState(null)
+    }
+  }, [propsAppointmentData])
+  
+  // Clear appointment context when leaving the new treatment page
+  useEffect(() => {
+    if (currentPage !== 'new' && appointmentDataState?.fromAppointment) {
+      setAppointmentDataState(null)
+    }
+  }, [currentPage])
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const [treatmentsRes, appointmentsRes, radiologyRes] = await Promise.all([
+        treatmentsAPI.getDentistTreatments(),
+        appointmentsAPI.getDentistAppointments(),
+        radiologyAPI.getAll('limit=100&isActive=true')
+      ])
+      
+      console.log('Fetched treatments response:', treatmentsRes)
+      console.log('Fetched appointments response:', appointmentsRes)
+      
+      setTreatments(treatmentsRes.treatments || [])
+      setAppointments(appointmentsRes.appointments || [])
+      setRadiologyCenters(radiologyRes)
+      
+      // Extract unique patients from treatments and appointments
+      const patientMap = new Map()
+      
+      // Add patients from treatments
+      if (treatmentsRes.treatments) {
+        treatmentsRes.treatments.forEach(treatment => {
+          if (treatment.patient) {
+            patientMap.set(treatment.patient.userId, treatment.patient)
+          }
+        })
+      }
+      
+      // Add patients from appointments
+      if (appointmentsRes.appointments) {
+        appointmentsRes.appointments.forEach(apt => {
+          if (apt.patient && !patientMap.has(apt.patient.userId)) {
+            patientMap.set(apt.patient.userId, apt.patient)
+          }
+        })
+      }
+      
+      const uniquePatients = Array.from(patientMap.values())
+      console.log('Extracted unique patients:', uniquePatients)
+      setPatients(uniquePatients)
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to load data. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Transform treatment data from API - MEMOIZED to avoid re-parsing on every render
+  const displayTreatments = useMemo(() => {
+    return treatments.map(treatment => {
+      // Parse teethStatus if it's a string, otherwise use as-is
+      const teethStatus = typeof treatment.teethStatus === 'string'
+        ? ensureArray(safeJsonParse(treatment.teethStatus, []))
+        : ensureArray(treatment.teethStatus)
+
+      // Convert database status to display format
+      const statusMap = {
+        'IN_PROGRESS': 'In Progress',
+        'COMPLETED': 'Completed',
+        'CANCELLED': 'Cancelled'
+      }
+
+      return {
+        id: treatment.id,
+        patientId: treatment.patientId,
+        patientName: `${treatment.patient.firstName} ${treatment.patient.lastName}`,
+        dentistId: treatment.dentistId,
+        treatmentName: treatment.treatmentName,
+        description: treatment.description || '',
+        status: treatment.status, // Keep original status for receipt
+        treatmentStatus: statusMap[treatment.status] || treatment.status,
+        creationDate: treatment.createdAt,
+        totalAmount: treatment.totalAmount || 0,
+        treatmentDiscount: treatment.treatmentDiscount || 0,
+        paidAmount: treatment.paidAmount || 0,
+        notes: treatment.notes || '',
+        priority: 'Medium', // TODO: Add priority field to schema
+        teethStatus: teethStatus,
+        dentist: treatment.dentist, // Include dentist object with nested clinic
+        patient: treatment.patient // Include full patient object
+      }
+    })
+  }, [treatments]) // Only recalculate when treatments data changes
+
+  // Update selectedTreatment when treatments data changes
+  useEffect(() => {
+    if (selectedTreatment && displayTreatments.length > 0) {
+      const updatedTreatment = displayTreatments.find(t => t.id === selectedTreatment.id)
+      if (updatedTreatment) {
+        setSelectedTreatment(updatedTreatment)
+      }
+    }
+  }, [displayTreatments])
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'In Progress':
+      case 'IN_PROGRESS':
+        return isDarkMode 
+          ? 'bg-green-900/30 text-green-400 border-green-600' 
+          : 'bg-green-100 text-green-700 border-green-400'
+      case 'Completed':
+      case 'COMPLETED':
+        return isDarkMode 
+          ? 'bg-blue-900/30 text-blue-400 border-blue-600' 
+          : 'bg-blue-100 text-blue-700 border-blue-400'
+      case 'Cancelled':
+      case 'CANCELLED':
+        return isDarkMode 
+          ? 'bg-red-900/30 text-red-400 border-red-600' 
+          : 'bg-red-100 text-red-700 border-red-400'
+      default:
+        return isDarkMode 
+          ? 'bg-gray-800 text-gray-300 border-gray-600' 
+          : 'bg-white text-gray-700 border-gray-300'
+    }
+  }
+
+  // Transform patients for modal - MEMOIZED to avoid filtering on every render
+  const mockPatients = useMemo(() => {
+    // Show all patients - dentist can create treatments for any patient
+    const transformed = patients.map(p => ({
+      id: p.userId,
+      name: `${p.firstName} ${p.lastName}`
+    }))
+    console.log('Mock patients for treatment modal:', transformed)
+    return transformed
+  }, [patients]) // Recalculate when patients change
+
+  // Transform radiology centers for modal - MEMOIZED
+  const mockRadiologyCenters = useMemo(() => {
+    const centers = radiologyCenters.data || radiologyCenters.radiology || radiologyCenters || []
+    return centers
+      .filter(r => r.user && r.user.status === 'ACTIVE')
+      .map(r => ({
+        id: r.userId,
+        name: r.centerName,
+        supportedTypes: r.supportedTypes || []
+      }))
+  }, [radiologyCenters])
+
+  // Filter treatments - MEMOIZED to avoid filtering on every render
+  const filteredTreatments = useMemo(() => {
+    return displayTreatments.filter(treatment => {
+      const matchesSearch = debouncedSearchTerm === '' || 
+                           treatment.patientName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.treatmentName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           treatment.teethStatus?.some(t => t.toothNumber.toString().includes(debouncedSearchTerm))
+      
+      const matchesView = activeView === 'all' || 
+                         (activeView === 'active' && treatment.treatmentStatus === 'In Progress') ||
+                         (activeView === 'completed' && treatment.treatmentStatus === 'Completed')
+      
+      const matchesStatus = selectedStatus === 'all' || treatment.treatmentStatus === selectedStatus
+      
+      return matchesSearch && matchesView && matchesStatus
+    })
+  }, [displayTreatments, debouncedSearchTerm, activeView, selectedStatus])
+
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedStatus('In Progress')
+  }
+
+  // Fetch payments and prescriptions for a specific treatment
+  const fetchTreatmentPayments = async (treatmentId) => {
+    try {
+      const response = await paymentsAPI.getByTreatment(treatmentId)
+      
+      setPayments(response.payments || [])
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+      setPayments([])
+    }
+  }
+
+  const fetchTreatmentPrescriptions = async (treatmentId) => {
+    try {
+      const response = await treatmentsAPI.getPrescriptions(treatmentId)
+      
+      setPrescriptions(response.prescriptions || [])
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error)
+      setPrescriptions([])
+    }
+  }
+
+  // Navigation handlers
+  const handleBackToList = () => {
+    setCurrentPage('list')
+    setSelectedTreatment(null)
+    setAppointmentDataState(null)
+    setPayments([])
+    setPrescriptions([])
+  }
+
+  // Modal handlers
+  const handleNewTreatment = () => {
+    setSelectedTreatment(null)
+    setCurrentPage('new')
+  }
+
+  const handleSaveNewTreatment = async (treatmentData) => {
+    try {
+      // Prepare data for API (convert string IDs to integers)
+      const apiData = {
+        patientId: parseInt(treatmentData.patientId),
+        treatmentName: treatmentData.treatmentName,
+        description: treatmentData.description,
+        totalAmount: parseFloat(treatmentData.totalAmount) || 0,
+        notes: treatmentData.notes,
+        teethStatus: treatmentData.teethStatus || []
+      }
+      
+      const response = await treatmentsAPI.create(apiData)
+      
+      // If this treatment is linked to an appointment, update the appointment
+      if (treatmentData.appointmentId && response.treatment?.id) {
+        try {
+          const appointmentId = parseInt(treatmentData.appointmentId)
+          
+          const updateResponse = await appointmentsAPI.update(appointmentId, {
+            treatmentId: response.treatment.id
+          })
+        } catch (linkError) {
+          console.error('Error linking appointment to treatment:', linkError)
+          // Don't fail the whole operation if linking fails
+          setToast({ message: 'Treatment created but failed to link with appointment. Please link manually if needed.', type: 'error' })
+        }
+      }
+      
+      setToast({ message: 'Treatment created successfully!', type: 'success' })
+      await fetchAllData()
+      handleBackToList()
+    } catch (error) {
+      console.error('Error creating treatment:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to create treatment. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleUpdateTreatment = async (treatmentData) => {
+    try {
+      // Prepare data for API
+      const apiData = {
+        patientId: parseInt(treatmentData.patientId),
+        treatmentName: treatmentData.treatmentName,
+        description: treatmentData.description,
+        totalAmount: parseFloat(treatmentData.totalAmount) || 0,
+        notes: treatmentData.notes,
+        teethStatus: treatmentData.teethStatus || []
+      }
+      
+      const response = await treatmentsAPI.update(selectedTreatment.id, apiData)
+      
+      setToast({ message: 'Treatment updated successfully!', type: 'success' })
+      await fetchAllData()
+      handleBackToList()
+    } catch (error) {
+      console.error('Error updating treatment:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to update treatment. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleViewTreatment = async (treatment) => {
+    setSelectedTreatment(treatment)
+    setCurrentPage('view')
+    await fetchTreatmentPayments(treatment.id)
+    await fetchTreatmentPrescriptions(treatment.id)
+  }
+
+  const handleRefreshTreatment = async () => {
+    // Refresh the current treatment data after tooth completion
+    if (selectedTreatment) {
+      await fetchAllData()
+    }
+  }
+
+  const handleEditTreatment = async (treatment) => {
+    setSelectedTreatment(treatment)
+    setCurrentPage('edit')
+    await fetchTreatmentPayments(treatment.id)
+    await fetchTreatmentPrescriptions(treatment.id)
+  }
+
+  const handleDeleteTreatment = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    try {
+      await treatmentsAPI.delete(selectedTreatment.id)
+      setToast({ message: 'Treatment deleted successfully!', type: 'success' })
+      await fetchAllData()
+      setIsDeleteModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error deleting treatment:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to delete treatment. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleUpdateStatus = async (treatmentId, newStatus) => {
+    try {
+      // Convert status to database format (e.g., "Completed" -> "COMPLETED")
+      const dbStatus = newStatus.toUpperCase().replace(' ', '_')
+      
+      await treatmentsAPI.update(treatmentId, { status: dbStatus })
+      setToast({ message: 'Treatment status updated successfully!', type: 'success' })
+      await fetchAllData()
+    } catch (error) {
+      console.error('Error updating treatment status:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to update treatment status. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleAddPayment = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsPaymentModalOpen(true)
+  }
+
+  const handleClosePaymentModal = () => {
+    setIsPaymentModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleSavePayment = async (paymentData) => {
+    try {
+      const response = await paymentsAPI.create(paymentData)
+      
+      // Wait a brief moment for database consistency
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Refresh all data to get updated treatment amounts
+      await fetchAllData()
+      
+      setToast({ message: 'Payment recorded successfully!', type: 'success' })
+      setIsPaymentModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to record payment. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleBookAppointment = (treatment) => {
+    setSelectedTreatment(treatment)
+    setIsAppointmentModalOpen(true)
+  }
+
+  const handleCloseAppointmentModal = () => {
+    setIsAppointmentModalOpen(false)
+    setSelectedTreatment(null)
+  }
+
+  const handleSaveAppointment = async (appointmentData) => {
+    try {
+      await appointmentsAPI.create(appointmentData)
+      setToast({ message: 'Appointment booked successfully!', type: 'success' })
+      setIsAppointmentModalOpen(false)
+      setSelectedTreatment(null)
+    } catch (error) {
+      console.error('Error creating appointment:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to book appointment. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleRequestRadiology = (treatment) => {
+    // Don't change selectedTreatment if it's already set (e.g., from view page)
+    // Just open the modal with the current treatment
+    if (!selectedTreatment) {
+      setSelectedTreatment(treatment)
+    }
+    setIsRadiologyModalOpen(true)
+  }
+
+  const handleCloseRadiologyModal = () => {
+    setIsRadiologyModalOpen(false)
+    // Don't clear selectedTreatment - let the page state handle it
+  }
+
+  const handleSaveRadiologyRequest = async (requestData) => {
+    try {
+      
+      // Prepare data for backend - remove requestDate as it's set by backend
+      const apiData = {
+        patientId: parseInt(requestData.patientId),
+        radiologyCenterId: parseInt(requestData.radiologyCenterId),
+        treatmentId: requestData.treatmentId ? parseInt(requestData.treatmentId) : null,
+        imagingType: requestData.imagingType,
+        notes: requestData.notes || ''
+      }
+      
+      const { radiologyRequestsAPI } = await import('../../../services/api')
+      const response = await radiologyRequestsAPI.create(apiData)
+      setToast({ message: 'Radiology request created successfully!', type: 'success' })
+      setIsRadiologyModalOpen(false)
+      // Don't clear selectedTreatment if we're in view mode
+      if (currentPage === 'list') {
+        setSelectedTreatment(null)
+      }
+    } catch (error) {
+      console.error('Error creating radiology request:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to create radiology request. Please try again.', type: 'error' })
+    }
+  }
+
+  const handleCreatePrescription = (treatment) => {
+    // Don't change selectedTreatment if it's already set (e.g., from view page)
+    if (!selectedTreatment) {
+      setSelectedTreatment(treatment)
+    }
+    setIsPrescriptionModalOpen(true)
+  }
+
+  const handleClosePrescriptionModal = () => {
+    setIsPrescriptionModalOpen(false)
+    // Don't clear selectedTreatment - let the page state handle it
+  }
+
+  const handleSavePrescription = async (prescriptionData) => {
+    try {
+      
+      const treatmentId = selectedTreatment?.id || prescriptionData.treatmentId
+      if (!treatmentId) {
+        setToast({ message: 'Treatment ID is missing', type: 'error' })
+        return
+      }
+      
+      // Create prescription via API
+      const response = await treatmentsAPI.createPrescription(treatmentId, prescriptionData)
+      
+      // Refresh prescriptions list if we're viewing the treatment
+      if (currentPage === 'view') {
+        await fetchTreatmentPrescriptions(treatmentId)
+      }
+      
+      setToast({ message: 'Prescription created successfully! You can view it in the Prescriptions tab.', type: 'success' })
+      setIsPrescriptionModalOpen(false)
+      // Don't clear selectedTreatment - it's handled by page navigation
+    } catch (error) {
+      console.error('Error creating prescription:', error)
+      setToast({ message: error.response?.data?.error || 'Failed to create prescription. Please try again.', type: 'error' })
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Show New Treatment Page */}
+      {currentPage === 'new' && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => {
+                // The save handler is called from within the modal
+                // This button is just for visual consistency
+              }}
+              className="flex items-center gap-2"
+              form="treatment-form"
+              type="submit"
+            >
+              <FaSave className="w-4 h-4" />
+              Create Treatment
+            </Button>
+          </div>
+          
+          {/* New Treatment Form - Full Page */}
+          <TreatmentModal
+            isOpen={true}
+            onClose={handleBackToList}
+            onSave={handleSaveNewTreatment}
+            patients={mockPatients}
+            initialData={null}
+            appointmentData={appointmentDataState}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show Edit Treatment Page */}
+      {currentPage === 'edit' && selectedTreatment && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => {
+                // The save handler is called from within the modal
+                // This button is just for visual consistency
+              }}
+              className="flex items-center gap-2"
+              form="treatment-form"
+              type="submit"
+            >
+              <FaSave className="w-4 h-4" />
+              Update Treatment
+            </Button>
+          </div>
+          
+          {/* Edit Treatment Form - Full Page */}
+          <TreatmentModal
+            isOpen={true}
+            onClose={handleBackToList}
+            onSave={handleUpdateTreatment}
+            patients={mockPatients}
+            initialData={selectedTreatment}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show View Treatment Page */}
+      {currentPage === 'view' && selectedTreatment && (
+        <div>
+          {/* Back Button Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBackToList}
+              className="flex items-center gap-2"
+            >
+              <FaArrowLeft className="w-4 h-4" />
+              Back to Treatments
+            </Button>
+            <Button
+              onClick={() => handleEditTreatment(selectedTreatment)}
+              className="flex items-center gap-2"
+            >
+              <FaEdit className="w-4 h-4" />
+              Edit Treatment
+            </Button>
+          </div>
+          
+          {/* Treatment Details Content - Full Page Mode */}
+          <TreatmentDetailsModal
+            isOpen={true}
+            onClose={handleBackToList}
+            treatmentData={selectedTreatment}
+            onEdit={handleEditTreatment}
+            onUpdateStatus={handleUpdateStatus}
+            onAddPayment={handleAddPayment}
+            onRequestRadiology={handleRequestRadiology}
+            onCreatePrescription={handleCreatePrescription}
+            onRefresh={handleRefreshTreatment}
+            payments={payments}
+            prescriptions={prescriptions}
+            asFullPage={true}
+          />
+        </div>
+      )}
+
+      {/* Show Treatments List Page */}
+      {currentPage === 'list' && (
+        <>
+      {/* Page Header */}
+      <PageHeader
+        title="Treatment Management"
+        description="Manage treatment plans and track progress"
+        action={{
+          label: 'New Treatment Plan',
+          onClick: handleNewTreatment,
+          icon: FaPlus
+        }}
+      />
+
+      {/* Filters and Search */}
+      <Card className="p-4">
+        <FilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchPlaceholder="Search treatments, patients, or tooth numbers..."
+          filters={[
+            {
+              value: selectedStatus,
+              onChange: (e) => setSelectedStatus(e.target.value),
+              options: [
+                { value: 'all', label: 'All Status' },
+                { value: 'In Progress', label: 'In Progress' },
+                { value: 'Completed', label: 'Completed' },
+                { value: 'Cancelled', label: 'Cancelled' }
+              ],
+              placeholder: 'Treatment Status'
+            }
+          ]}
+        onClearFilters={handleClearFilters}
+        filtering={filtering}
+      />
+      </Card>
+
+      {/* Treatments Grid/List - Show loading state here */}
+      {loading ? (
+        <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        </Card>
+      ) : error ? (
+        <Card className={`p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="text-center">
+            <FaExclamationTriangle className={`w-12 h-12 mx-auto mb-4 ${
+              isDarkMode ? 'text-red-400' : 'text-red-500'
+            }`} />
+            <p className={`text-lg font-medium mb-2 ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>
+              Error Loading Data
+            </p>
+            <p className={`mb-4 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              {error}
+            </p>
+            <Button onClick={fetchAllData}>
+              Try Again
+            </Button>
+          </div>
+        </Card>
+      ) : filteredTreatments.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={FaStethoscope}
+            title="No treatments found"
+            description="No treatments match your current filters"
+          />
+        </Card>
+      ) : (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+          {filteredTreatments.map((treatment) => (
+            <TreatmentPlanCard 
+              key={treatment.id} 
+              treatment={treatment}
+              onClick={viewMode === 'grid' ? () => handleViewTreatment(treatment) : undefined}
+              onEdit={handleEditTreatment}
+              onDelete={handleDeleteTreatment}
+              onAddPayment={handleAddPayment}
+              onRequestRadiology={handleRequestRadiology}
+              onCreatePrescription={handleCreatePrescription}
+              onMarkComplete={handleUpdateStatus}
+              onBookAppointment={viewMode === 'grid' ? handleBookAppointment : undefined}
+              showActions={viewMode === 'list'}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Close Treatments List Page */}
+      </>
+      )}
+
+      {/* Modals - These work across all pages */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={handleClosePaymentModal}
+        onSave={handleSavePayment}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentName: selectedTreatment.treatmentName,
+          patientName: selectedTreatment.patientName,
+          totalAmount: selectedTreatment.totalAmount,
+          paidAmount: selectedTreatment.paidAmount
+        } : null}
+      />
+
+      <NewAppointmentModal
+        isOpen={isAppointmentModalOpen}
+        onClose={handleCloseAppointmentModal}
+        onSave={handleSaveAppointment}
+        preselectedPatient={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName,
+          treatmentId: selectedTreatment.id
+        } : null}
+      />
+
+      <RadiologyRequestModal
+        isOpen={isRadiologyModalOpen}
+        onClose={handleCloseRadiologyModal}
+        onSave={handleSaveRadiologyRequest}
+        patients={mockPatients}
+        radiologyCenters={mockRadiologyCenters}
+        treatments={displayTreatments}
+        patientInfo={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName
+        } : null}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentName: selectedTreatment.treatmentName
+        } : null}
+      />
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        item={selectedTreatment}
+        action="delete"
+        itemName={selectedTreatment?.treatmentName || 'Treatment'}
+        itemType="Treatment"
+      />
+
+      <PrescriptionModal
+        isOpen={isPrescriptionModalOpen}
+        onClose={handleClosePrescriptionModal}
+        onSave={handleSavePrescription}
+        patientInfo={selectedTreatment ? {
+          id: selectedTreatment.patientId,
+          name: selectedTreatment.patientName
+        } : null}
+        treatmentInfo={selectedTreatment ? {
+          id: selectedTreatment.id,
+          treatmentName: selectedTreatment.treatmentName
+        } : null}
+      />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+export default DentistTreatments
